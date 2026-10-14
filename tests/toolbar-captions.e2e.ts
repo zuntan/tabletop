@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { openTestDesk } from './desk-browser';
 
-test('toolbar captions stay visible and flexible groups keep pin settings beside reactions', { timeout: 45_000 }, async () => {
+test('toolbar captions stay visible and flexible groups keep editing actions together', { timeout: 45_000 }, async () => {
   const { page, call, close, errors } = await openTestDesk('toolbar-captions');
   try {
     await page.setViewportSize({ width: 1920, height: 1080 });
@@ -18,10 +18,10 @@ test('toolbar captions stay visible and flexible groups keep pin settings beside
     assert.equal(new Set(rows).size, 1);
     const centerRows = await page.locator('#authoring-tools > *').evaluateAll(elements => elements.map(element => Math.round(element.getBoundingClientRect().top + element.getBoundingClientRect().height / 2)));
     assert.equal(new Set(centerRows).size, 1);
-    const settings = (await page.locator('#numbering-settings').boundingBox())!;
+    const back = (await page.locator('#back').boundingBox())!;
     const reaction = (await page.locator('#reaction-more').boundingBox())!;
-    assert.equal(settings.y, reaction.y); assert.ok(reaction.x > settings.x);
-    assert.ok(reaction.x - settings.x - settings.width < 10);
+    assert.equal(back.y, reaction.y); assert.ok(reaction.x > back.x);
+    assert.ok(reaction.x - back.x - back.width < 10);
     await page.locator('#zoom-in').click();
     assert.equal(await page.locator('#zoom-reset .tool-icon').innerText(), '125%');
     assert.equal(await page.locator('#zoom-reset .tool-caption').innerText(), '100%へ');
@@ -49,9 +49,9 @@ test('toolbar captions stay visible and flexible groups keep pin settings beside
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       assert.equal(await page.locator('#reaction-more').isVisible(), true);
       assert.equal(await page.locator('[data-add="text"] .tool-caption').isVisible(), true);
-      const pin = (await page.locator('#numbering-settings').boundingBox())!;
+      const back = (await page.locator('#back').boundingBox())!;
       const trigger = (await page.locator('#reaction-more').boundingBox())!;
-      assert.equal(pin.y, trigger.y);
+      assert.equal(back.y, trigger.y);
       await page.locator('#reaction-more').click();
       const palette = (await page.locator('#reaction-palette').boundingBox())!;
       assert.ok(palette.x >= 0 && palette.x + palette.width <= width);

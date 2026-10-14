@@ -6,7 +6,7 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 .toolbar-group .tool-button { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 34px; height: 46px; padding: 4px 6px; white-space: nowrap; }
 .tool-icon { font-size: 18px; line-height: 1; }
 .tool-caption { display: block; font-size: 10px; line-height: 1.1; font-weight: normal; }
-.toolbar-pin-actions { display: flex; flex: none; align-items: center; gap: 6px; }
+.toolbar-edit-actions { display: flex; flex: none; align-items: center; gap: 6px; padding-left: 6px; border-left: 1px solid #e2e8f0; }
 .toolbar-view { margin-left: auto; }
 .toolbar-group button { min-width: 34px; }
 .toolbar-group button[aria-pressed="true"] { background: #dbeafe; border-color: #2563eb; }
@@ -16,7 +16,7 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 #default-width, #default-opacity { width: 58px; }
 #default-colors .color-control { display: flex; gap: 4px; align-items: center; }
 #default-colors .color-trigger { min-width: 40px; }
-#default-colors .color-trigger > span:last-child { display: none; }
+#default-colors .color-value { display: none; }
 #series-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
 #series-settings label { display: flex; flex-direction: column; }
 #series-choice { width: 100%; margin-bottom: 8px; }

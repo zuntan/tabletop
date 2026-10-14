@@ -9,7 +9,7 @@ test('a single toolbar trigger keeps the reaction palette open across target cha
     const more = page.getByRole('button', { name: 'リアクション一覧', exact: true });
     const palette = page.locator('#reaction-palette');
     assert.equal(await page.locator('nav > .toolbar-group').count(), 3);
-    assert.equal(await page.locator('nav #authoring-tools #reaction-controls').count(), 1);
+    assert.equal(await page.locator('nav .toolbar-parts #reaction-controls').count(), 1);
     assert.equal(await page.locator('aside #reaction-controls').count(), 0);
     assert.equal(await page.locator('.reaction-quick [data-reaction]').count(), 0);
     assert.equal(await more.innerText(), 'リアクション ▾');

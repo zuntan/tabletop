@@ -10,7 +10,7 @@ import './authoring.css';
 import { createInlineEditor } from './inline-editor';
 import { createAuthoring } from './authoring';
 import { creationAppearance } from './settings';
-import { groupToolbar } from './toolbar';
+import { groupToolbar, iconButton } from './toolbar';
 import { drawLabelDescription, labelVisualBounds } from './label-description';
 import { gridPoint, gridOrigin } from './grid';
 import { pinPath } from './pin-shape';
@@ -113,9 +113,12 @@ const editor = createInlineEditor($('#workspace'), viewport, (object, patch, fre
 const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'), $<HTMLButtonElement>('#numbering'), $<HTMLButtonElement>('#selection-mode'), operations => {
   if (!busy) attempt(() => execute(operations));
 });
-const pinActions = document.createElement('div'); pinActions.className = 'toolbar-pin-actions';
-pinActions.append($('#numbering-settings'), $('#reaction-controls'));
-$('#authoring-tools').append(pinActions);
+const editActions = document.createElement('div'); editActions.className = 'toolbar-edit-actions';
+editActions.setAttribute('role', 'group'); editActions.setAttribute('aria-label', '重なり順・リアクション');
+for (const [id, icon, label] of [['front', '▣↑', '最前面'], ['back', '▣↓', '最背面']]) {
+  const button = $<HTMLButtonElement>(`#${id}`); iconButton(button, icon, label); editActions.append(button);
+}
+editActions.append($('#reaction-controls')); $('.toolbar-parts').append(editActions);
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });

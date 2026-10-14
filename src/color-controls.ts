@@ -38,6 +38,7 @@ export function colorOperations(objects: DeskObject[], role: Role, color: string
 export function createColorControls(container: HTMLElement, apply: (operations: Operation[]) => void, prefix = '') {
   let objects: DeskObject[] = [];
   let selection = '';
+  const compact = !!container.closest('nav');
   const controls = (['fill', 'stroke', 'text'] as const).map(role => {
     const row = document.createElement('div'); row.className = 'color-control';
     const label = document.createElement('span'); label.textContent = names[role];
@@ -45,7 +46,12 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
     button.className = 'color-trigger'; button.dataset.colorRole = `${prefix}${role}`;
     button.setAttribute('aria-label', `${names[role]}の色`); button.setAttribute('aria-haspopup', 'dialog');
     const dot = document.createElement('span'); dot.className = 'color-dot';
-    const value = document.createElement('span'); button.append(dot, value); row.append(label, button); container.append(row);
+    const value = document.createElement('span'); value.className = 'color-value'; button.append(dot, value);
+    if (compact) {
+      label.className = 'tool-caption'; label.textContent = role === 'stroke' ? '輪郭' : names[role];
+      button.classList.add('tool-button'); button.append(label); row.append(button);
+    } else row.append(label, button);
+    container.append(row);
     let ready = false;
     const pickr = Pickr.create({
       el: button, useAsButton: true, theme: 'nano', appClass: `tabletop-palette palette-${prefix}${role}`,
@@ -63,6 +69,7 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
       dot.style.backgroundColor = color ?? 'transparent';
       dot.classList.toggle('transparent', color === 'transparent'); dot.classList.toggle('mixed', color === null);
       value.textContent = color === 'transparent' ? '透明' : color ?? '複数の色';
+      button.title = `${names[role]}の色：${value.textContent}`;
       if (ready) {
         pickr.setColor(color === 'transparent' || !color ? null : color, true);
         const popup = document.querySelector<HTMLElement>(`.palette-${prefix}${role}`)!;
