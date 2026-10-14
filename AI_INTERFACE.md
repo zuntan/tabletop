@@ -22,6 +22,12 @@
 
 細かい取得は従来の `desk_summary / desk_list / desk_get / desk_settings / desk_changes / desk_selection` も利用できます。`desk_state` は画像データを含む全状態なので大量画像の机では避けてください。
 
+## 指差す（人間の選択とは独立）
+
+質問や注目してほしい対象には `desk_point` の `{ "ids": ["object-id"] }` を使います。緑枠で表示し、人間の青い選択・編集中の入力・文書revision・Undo/Redoは変えません。対象をチャットでも説明し、確認が済んだら `{ "ids": [] }` で解除してください。毎回AI側の指差し集合を置き換えます。
+
+`desk_context / desk_state / desk_selection` の `aiPointing` で現在の指差しIDを読めます。削除された対象と切断時の指差しは解除し、Undoでも復元しません。人間が操作中のジェスチャーでは再試行が必要な場合があります。緑枠に編集ハンドルはありません。編集はオブジェクトIDで行い、指差しは不要です。従来の `desk_select` は人間の編集対象を変えるため、単に「これのこと？」と示す用途には使わないでください。
+
 ## 接続する
 
 `desk_execute` の一括操作で、接続先と矢印を同時に作れます。

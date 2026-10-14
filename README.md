@@ -85,8 +85,9 @@ AI向けの使い方・接続線・ピン体系・画像／SVGの受け渡しは
 | `desk_asset_read` | 画像をMCP imageブロック、SVGをソースで取得。任意で一時ファイル出力 |
 | `desk_asset_import` | ファイル・SVGコード・data URLから追加／画像だけ差し替え |
 | `desk_settings` | 新規作成の既定スタイルとピン体系、次番号 |
-| `desk_selection` | 現在の選択IDと最後に観測したキャンバスポインタ座標 |
-| `desk_select` | 選択IDの変更。履歴・revisionには記録しない |
+| `desk_selection` | 人間の選択ID、AI指差しID（`aiPointing`）、最後に観測したキャンバスポインタ座標 |
+| `desk_select` | 人間の編集用選択を変更。AIの指差しには `desk_point` を使用 |
+| `desk_point` | 人間の青い選択を変えず、緑枠でAIが指差す。`ids: []` で解除。履歴・revisionには記録しない |
 | `desk_changes` | 指定revision以降の変更。`nextRevision`でページ送り |
 | `desk_execute` | 追加・更新・削除・前後関係変更の原子的な一括操作 |
 | `desk_undo` | 操作主体によらず最後の共通操作を取り消す |

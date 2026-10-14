@@ -21,6 +21,7 @@ import './markdown.css';
 import { createSidebar } from './sidebar';
 import './sidebar.css';
 import { selectedConnection } from './connection-creation';
+import { drawAiPointing } from './ai-pointing';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -187,9 +188,10 @@ function drawObject(object: DeskObject) {
   }
   objectsLayer.append(group);
 }
-function drawSelection(preview?: DeskObject[]) {
+function drawSelection(preview?: DeskObject[], scene = preview) {
   overlays.replaceChildren();
   const selected = preview ?? desk.selected().map(id => desk.get(id));
+  drawAiPointing(overlays, desk.pointed().map(id => scene?.find(object => object.id === id) ?? desk.get(id)), camera.zoom, descriptionsVisible);
   for (const object of selected) {
     if (drawEndpointHandles(overlays, object, camera.zoom, selected.length === 1)) continue;
     const visual = labelVisualBounds(object, descriptionsVisible);
@@ -341,7 +343,7 @@ canvas.addEventListener('pointerdown', event => {
 function previewGesture(current: Gesture, point: { x: number; y: number }) {
   const scene = gesturePreview(current, point, camera.zoom);
   updateScenePreview(objectsLayer, scene, current.preview, drawObject); current.preview = scene;
-  drawSelection(scene.filter(o => desk.selected().includes(o.id)));
+  drawSelection(scene.filter(o => desk.selected().includes(o.id)), scene);
   if (current.mode === 'move') for (const object of scene.filter(o => o.type === 'label' && desk.selected().includes(o.id))) {
     const origin = gridOrigin(object), size = 5 / camera.zoom;
     overlays.append(svg('line', { x1: origin.x, y1: origin.y, x2: origin.x, y2: origin.y + size * 2,
@@ -360,7 +362,8 @@ canvas.addEventListener('pointermove', event => {
     const s = screen(event); camera.x = gesture.camera.x + s.x - gesture.screen.x; camera.y = gesture.camera.y + s.y - gesture.screen.y; cameraChanged();
 
   } else {
-    overlays.replaceChildren(svg('rect', { x: Math.min(p.x, gesture.start.x), y: Math.min(p.y, gesture.start.y), width: Math.abs(delta.x), height: Math.abs(delta.y), fill: '#2563eb22', stroke: '#2563eb', 'stroke-width': 1 / camera.zoom }));
+    drawSelection();
+    overlays.append(svg('rect', { x: Math.min(p.x, gesture.start.x), y: Math.min(p.y, gesture.start.y), width: Math.abs(delta.x), height: Math.abs(delta.y), fill: '#2563eb22', stroke: '#2563eb', 'stroke-width': 1 / camera.zoom }));
   }
 });
 function endGesture(event: PointerEvent, cancel = false) {
@@ -464,6 +467,7 @@ function connect(token: string, port: string) {
   if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535 || token.length < 24) { notify('有効なポートと接続トークンを入力してください', true); return; }
   const generation = ++connectionGeneration;
   clearTimeout(reconnectTimer); socket?.close();
+  desk.point([]); drawSelection();
   const status = $('#connection'); status.textContent = '接続中'; status.classList.remove('connected');
   socket = new WebSocket(`ws://127.0.0.1:${port}/bridge?token=${encodeURIComponent(token)}`);
   const ws = socket;
@@ -477,11 +481,13 @@ function connect(token: string, port: string) {
       const result = dispatch(desk, message.request);
       ws.send(JSON.stringify({ id, result }));
       // Read-only requests must not rebuild iframes or steal form edits.
+      if (message.request.method === 'point') drawSelection();
       if (['execute', 'undo', 'redo', 'select'].includes(message.request.method)) render();
     } catch (error) { ws.send(JSON.stringify({ id, error: error instanceof Error ? error.message : String(error) })); }
   };
   ws.onclose = () => {
     if (generation !== connectionGeneration) return;
+    desk.point([]); drawSelection();
     status.textContent = '未接続 · 再接続待ち'; status.classList.remove('connected');
     reconnectTimer = setTimeout(() => connect(token, port), 3000);
   };

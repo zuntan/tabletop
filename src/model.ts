@@ -94,6 +94,7 @@ export class Desk {
   private redoStack: Entry[] = [];
   private changes: Change[] = [];
   private selection: string[] = [];
+  private aiPointing: string[] = [];
   pointer: { x: number; y: number } | null = null;
 
   snapshot(): Snapshot { return structuredClone(this.objects); }
@@ -106,6 +107,13 @@ export class Desk {
       return { ...series, count: labels.length, max: labels.reduce((max, label) => Math.max(max, label.number ?? 0), 0),
         next, nextText: formatNumber(series.format, next) };
     }) };
+  }
+  pointed(): string[] { return [...this.aiPointing]; }
+  point(ids: string[]) {
+    const valid = new Set(this.objects.map(object => object.id));
+    if (ids.some(id => !valid.has(id))) throw new Error('Unknown pointing ID');
+    this.aiPointing = [...new Set(ids)];
+    return { ids: this.pointed() };
   }
   selected(): string[] { return [...this.selection]; }
   select(ids: string[]) {
@@ -216,6 +224,7 @@ export class Desk {
     });
     this.objects = structuredClone(after);
     this.selection = this.selection.filter(id => newMap.has(id));
+    this.aiPointing = this.aiPointing.filter(id => newMap.has(id));
     this.changes.push(structuredClone({ revision: ++this.revision, operation, actor,
       timestamp: new Date().toISOString(), targets, details, ...(settingsChange ? { settings: settingsChange } : {}) }));
   }
@@ -230,6 +239,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('settings') }),
   z.object({ method: z.literal('selection') }),
   z.object({ method: z.literal('select'), ids: z.array(z.string()).max(2000) }),
+  z.object({ method: z.literal('point'), ids: z.array(z.string()).max(2000) }),
   z.object({ method: z.literal('changes'), sinceRevision: z.number().int().nonnegative(), limit: z.number().int().min(1).max(200).default(100) }),
   z.object({ method: z.literal('execute'), ...batchSchema.shape }),
   z.object({ method: z.literal('undo'), actor: z.string().min(1).max(100).default('agent-01') }),
@@ -242,11 +252,12 @@ export function dispatch(desk: Desk, input: unknown): unknown {
     case 'summary': return desk.summary();
     case 'list': return { ...desk.summary(), objects: desk.list() };
     case 'get': return desk.get(request.id);
-    case 'state': return { ...desk.summary(), objects: desk.snapshot(), selection: desk.selected(), settings: desk.settingsSnapshot() };
+    case 'state': return { ...desk.summary(), objects: desk.snapshot(), selection: desk.selected(), aiPointing: desk.pointed(), settings: desk.settingsSnapshot() };
     case 'settings': return desk.listSettings();
     case 'context': return deskContext(desk, request.sinceRevision, request.limit);
-    case 'selection': return { ids: desk.selected(), pointer: desk.pointer };
+    case 'selection': return { ids: desk.selected(), aiPointing: desk.pointed(), pointer: desk.pointer };
     case 'select': return desk.select(request.ids);
+    case 'point': return desk.point(request.ids);
     case 'changes': return desk.getChanges(request.sinceRevision, request.limit);
     case 'execute': {
       const { method: _method, ...batch } = request;
