@@ -20,6 +20,8 @@ test('green AI frames coexist with blue selection without replacing media or int
     const green = page.locator('[data-ai-point="memo"]');
     assert.equal(await page.locator('[data-ai-point]').count(), 3);
     assert.equal(await green.getAttribute('stroke'), '#15803d');
+    assert.equal(await green.getAttribute('stroke-dasharray'), '1 4');
+    assert.equal(await green.getAttribute('stroke-linecap'), 'round');
     assert.equal(await green.getAttribute('x'), '233');
     assert.equal(await green.getAttribute('pointer-events'), 'none');
     assert.equal(await green.getAttribute('data-resize'), null);
@@ -35,6 +37,7 @@ test('green AI frames coexist with blue selection without replacing media or int
     await input.press('Escape');
     await page.locator('#zoom-in').click();
     assert.equal(Number(await green.getAttribute('stroke-width')), 1.6);
+    assert.equal(await green.getAttribute('stroke-dasharray'), '0.8 3.2');
     assert.equal(Number(await green.getAttribute('x')), 240 - 7 / 1.25);
     await page.locator('#zoom-reset').click();
     await call('desk_point', { ids: [] }); assert.equal(await page.locator('[data-ai-point]').count(), 0);

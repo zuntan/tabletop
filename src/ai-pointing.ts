@@ -12,6 +12,7 @@ export function drawAiPointing(layer: SVGGElement, objects: DeskObject[], zoom: 
     const attributes = { x: visual.x - gap, y: visual.y - gap,
       width: visual.width + gap * 2, height: visual.height + gap * 2,
       fill: 'none', stroke: '#15803d', 'stroke-width': 2 / zoom,
+      'stroke-dasharray': `${1 / zoom} ${4 / zoom}`, 'stroke-linecap': 'round',
       'pointer-events': 'none', 'data-ai-point': object.id, 'aria-hidden': 'true' };
     for (const [name, value] of Object.entries(attributes)) frame.setAttribute(name, String(value));
     layer.append(frame);
