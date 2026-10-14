@@ -3,6 +3,7 @@ import { colorOperations, createColorControls } from './color-controls';
 import { isConnector, isShape } from './geometry';
 import { formatSchema, type Series } from './settings';
 import { tightFrame } from './pin-shape';
+import { opacityOperations, transparencyPercent, opacityFromPercent } from './fill-opacity';
 
 export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLElement, button: HTMLButtonElement,
   selectButton: HTMLButtonElement, apply: (operations: Operation[]) => void) {
@@ -10,6 +11,14 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
   toolbar.innerHTML = '<div id="default-colors"></div><label title="線幅">線幅<input id="default-width" type="number" min="0" max="100" step="any"></label><button id="numbering-settings" title="ピン体系" aria-label="ピン体系">⚑⚙</button>';
   const settingsButton = toolbar.querySelector<HTMLButtonElement>('#numbering-settings')!;
   const width = toolbar.querySelector<HTMLInputElement>('#default-width')!;
+  const opacityLabel = document.createElement('label'); opacityLabel.textContent = '塗り透過%';
+  const opacity = document.createElement('input'); opacity.id = 'default-opacity'; opacity.type = 'number';
+  opacity.min = '0'; opacity.max = '100'; opacity.step = '1'; opacity.setAttribute('aria-label', '新規と選択対象の塗り透過（%）');
+  opacityLabel.append(opacity); toolbar.insertBefore(opacityLabel, settingsButton);
+  opacity.onchange = () => {
+    const fillOpacity = opacityFromPercent(opacity.value);
+    apply([{ kind: 'defaults_update', patch: { fillOpacity } }, ...opacityOperations(desk.selected().map(id => desk.get(id)), fillOpacity)]);
+  };
   const defaults = createColorControls(toolbar.querySelector<HTMLElement>('#default-colors')!, operations => {
     const patch = operations[0]?.kind === 'update' ? operations[0].patch : {};
     const key = Object.keys(patch)[0] as 'fill' | 'stroke' | 'textColor';
@@ -33,6 +42,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     <label>書式<select name="format"></select></label><label>形<select name="shape"><option value="pin">ピン</option><option value="text">文字のみ</option><option value="rect">四角</option><option value="ellipse">丸 / 楕円</option><option value="roundedRect">角丸矩形</option></select></label>
     <label>幅<input name="width" type="number" min="1"></label><label>高さ<input name="height" type="number" min="1"></label>
     <label>文字サイズ<input name="fontSize" type="number" min="1" max="1000"></label><label>線幅<input name="strokeWidth" type="number" min="0" max="100" step="any"></label>
+    <label>塗りの透過（%）<input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
     <button id="series-fit" type="button" title="現在の番号と次の番号に合わせて、体系全体の枠をタイトにします">文字に枠を合わせる</button>
     </form><div id="series-colors"></div><small id="series-info"></small>`;
   const choice = panel.querySelector<HTMLSelectElement>('#series-choice')!;
@@ -68,7 +78,8 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
   form.onchange = event => {
     const input = event.target as HTMLInputElement;
     const key = input.name as keyof Series;
-    apply([{ kind: 'series_update', id: chosen, patch: { [key]: ['name', 'format', 'shape'].includes(key) ? input.value : Number(input.value) } }]);
+    apply([{ kind: 'series_update', id: chosen, patch: { [key]: key === 'fillOpacity' ? opacityFromPercent(input.value)
+      : ['name', 'format', 'shape'].includes(key) ? input.value : Number(input.value) } }]);
   };
   function update() {
     const settings = desk.settingsSnapshot();
@@ -81,10 +92,12 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     if (!settings.series.some(item => item.id === chosen)) chosen = settings.series[0].id;
     defaults.update([objectSchema.parse({ id: 'defaults', type: 'rect', ...settings.defaults })]);
     width.value = String(settings.defaults.strokeWidth);
+    opacity.value = String(transparencyPercent(settings.defaults.fillOpacity));
     choice.replaceChildren(...settings.series.map(item => new Option(`${item.name} (${item.id})`, item.id)));
     choice.value = chosen;
     const current = series();
-    for (const input of Array.from(form.elements) as HTMLInputElement[]) if (input.name) input.value = String(current[input.name as keyof Series]);
+    for (const input of Array.from(form.elements) as HTMLInputElement[]) if (input.name) input.value = input.name === 'fillOpacity'
+      ? String(transparencyPercent(current.fillOpacity)) : String(current[input.name as keyof Series]);
     const { name: _name, format: _format, shape: _shape, ...appearance } = current;
     colors.update([objectSchema.parse({ ...appearance, type: 'rect' })]);
     const info = desk.listSettings().series.find(item => item.id === chosen)!;

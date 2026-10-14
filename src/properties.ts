@@ -1,7 +1,8 @@
 import type { DeskObject } from './model';
 import { isConnector } from './geometry';
+import { supportsFill, transparencyPercent, opacityFromPercent } from './fill-opacity';
 
-const fields = ['x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'stroke', 'strokeWidth', 'fontSize', 'text', 'url'] as const;
+const fields = ['x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'fontSize', 'text', 'url'] as const;
 const numeric = new Set(['x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'fontSize']);
 export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   const connector = isConnector(object);
@@ -9,18 +10,21 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
     const input = form.elements.namedItem(name) as HTMLInputElement;
     if (name === 'text') input.closest('label')!.firstChild!.textContent = object.type === 'label' ? '説明文' : ['image', 'svg'].includes(object.type) ? 'タイトル' : 'テキスト';
     if (name === 'url') input.closest('label')!.firstChild!.textContent = ['image', 'svg'].includes(object.type) ? 'URL（任意）' : 'URL';
-    input.value = String(object.type === 'label' && name === 'text' ? object.description ?? '' : object[name] ?? '');
+    input.value = name === 'fillOpacity' ? String(transparencyPercent(object.fillOpacity))
+      : String(object.type === 'label' && name === 'text' ? object.description ?? '' : object[name] ?? '');
     const endpoint = name === 'x2' || name === 'y2';
     const size = name === 'width' || name === 'height';
     input.disabled = (object.type === 'label' && !['x', 'y', 'text'].includes(name)) ||
-      (endpoint && !connector) || (size && connector) || (name === 'url' && !['web', 'link', 'image', 'svg'].includes(object.type));
+      (endpoint && !connector) || (size && connector) || (name === 'fillOpacity' && !supportsFill(object)) ||
+      (name === 'url' && !['web', 'link', 'image', 'svg'].includes(object.type));
     if (endpoint || size) input.closest('label')!.hidden = endpoint ? !connector : connector;
   }
 }
 export function propertyPatch(form: HTMLFormElement, object: DeskObject): Partial<DeskObject> {
   const patch: Record<string, unknown> = {};
   for (const [key, value] of new FormData(form)) {
-    const parsed = numeric.has(key) ? Number(value) : String(value);
+    if (key === 'fillOpacity' && String(value) === String(transparencyPercent(object.fillOpacity))) continue;
+    const parsed = key === 'fillOpacity' ? opacityFromPercent(String(value)) : numeric.has(key) ? Number(value) : String(value);
     const field = object.type === 'label' && key === 'text' ? 'description' : key;
     if (parsed !== (object[field as keyof DeskObject] ?? '')) patch[field] = parsed;
   }

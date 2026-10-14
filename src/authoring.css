@@ -9,7 +9,7 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 @media (max-width: 580px) { #app { height: auto; min-height: 100dvh; } }
 #authoring-tools, #default-colors { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 #authoring-tools label { display: flex; align-items: center; gap: 4px; }
-#default-width { width: 58px; }
+#default-width, #default-opacity { width: 58px; }
 #default-colors .color-control { display: flex; gap: 4px; align-items: center; }
 #default-colors .color-trigger { min-width: 40px; }
 #default-colors .color-trigger > span:last-child { display: none; }
@@ -19,4 +19,7 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 .inline-editor { position: absolute; z-index: 20; padding: 8px; background: white; border: 2px solid #2563eb; border-radius: 8px; box-shadow: 0 4px 18px #0003; }
 .inline-editor textarea, .inline-editor input { width: 100%; box-sizing: border-box; margin-bottom: 6px; }
 .inline-editor small { display: block; font-size: 11px; }
+.inline-editor-actions { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
+.inline-editor-actions select { flex: 1; min-width: 0; font-size: 11px; }
+.inline-editor-actions button { flex: none; }
 .editor-error { color: #b91c1c; }

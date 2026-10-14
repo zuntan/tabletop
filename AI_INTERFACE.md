@@ -38,7 +38,7 @@
 }
 ```
 
-辺は `top / right / bottom / left`。接続先は矩形・角丸矩形・楕円・全種類のピンです。画像・Webカード・Markdownメモへの接続は現時点では対象外です。対象の移動・サイズ変更には追従します。解除は `update` の `patch: { "endBinding": null }`（またはstartBinding）。解除時の端点は保持します。
+辺は `top / right / bottom / left`。接続先は矩形・角丸矩形・楕円・全種類のピン・Markdownメモの枠です。画像・Webカードへの接続は現時点では対象外です。対象の移動・サイズ変更には追従します。解除は `update` の `patch: { "endBinding": null }`（またはstartBinding）。解除時の端点は保持します。UIは選択した1〜2個から自動接続を選べますが、MCPの追加はBindingを明示する方式のままです。
 
 ## 連番として扱う
 
@@ -49,6 +49,8 @@
 ## Markdownメモ
 
 `type: "text"` の `text` がMarkdown原文。文字色は `textColor`、背景は `fill`、輪郭は `stroke` です。既定の背景・輪郭は透明。図形の `text` はプレーンテキスト・中央配置です。Markdown対応範囲は [AUTHORING.md](./AUTHORING.md) を参照してください。
+
+`fillOpacity` は塗りの不透明度0〜1で、文字・輪郭の不透明度とは独立です。新規作成の既定値と新規ピン体系は0.3（70%透過）。既存オブジェクトにこの属性がない場合のスキーマ既定値は1です。`defaults_update`・個別 `update`・`series_update` で変更でき、既存のオブジェクトは既定値の変更だけでは変わりません。画像やカードの本体はこの属性で薄くしません。
 
 ## 画像／SVGの読み取り
 

@@ -20,6 +20,7 @@ import { drawMarkdown } from './markdown';
 import './markdown.css';
 import { createSidebar } from './sidebar';
 import './sidebar.css';
+import { selectedConnection } from './connection-creation';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -56,6 +57,7 @@ app.innerHTML = `
           <label hidden>終点X<input name="x2" type="number" step="any" disabled></label><label hidden>終点Y<input name="y2" type="number" step="any" disabled></label>
           <label>幅<input name="width" type="number" min="1" step="any"></label><label>高さ<input name="height" type="number" min="1" step="any"></label>
           <label hidden>塗り<input name="fill" type="text"></label><label hidden>線<input name="stroke" type="text"></label>
+          <label>塗りの透過（%）<input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
           <label>線幅<input name="strokeWidth" type="number" min="0" step="any"></label><label>文字サイズ<input name="fontSize" type="number" min="1"></label>
           <label class="wide">テキスト<textarea name="text" rows="3"></textarea></label>
           <label class="wide">URL<input name="url" type="url"></label>
@@ -147,7 +149,7 @@ function drawObject(object: DeskObject) {
   if (isConnector(object)) {
     drawConnector(group, object, camera.zoom); objectsLayer.append(group); return;
   }
-  const style = { fill: object.fill, stroke: object.stroke, 'stroke-width': object.strokeWidth };
+  const style = { fill: object.fill, 'fill-opacity': object.fillOpacity, stroke: object.stroke, 'stroke-width': object.strokeWidth };
   const shape = object.type === 'label' ? object.labelShape : object.type;
   if (shape === 'rect' || shape === 'roundedRect') group.append(svg('rect', { width: w, height: h,
     rx: shape === 'roundedRect' ? Math.min(object.cornerRadius, w / 2, h / 2) : 0, ...style }));
@@ -251,6 +253,7 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
   const object = objectSchema.parse({ id: `${type}-${crypto.randomUUID().slice(0, 8)}`, type, ...(gridEnabled ? gridPoint(center) : center),
     ...creationAppearance(type, desk.settingsSnapshot().defaults),
     ...(type === 'text' ? { width: 280, height: 80 } : {}),
+    ...(['line', 'arrow'].includes(type) ? selectedConnection(desk.selected().map(id => desk.get(id))) : {}),
     ...(['web', 'link'].includes(type) ? { width: type === 'web' ? 480 : 320, height: type === 'web' ? 340 : 60 } : {}), ...extra });
   if (['text', 'web', 'link'].includes(type)) { editor.open(object, true); return; }
   execute([{ kind: 'add', object }]); desk.select([object.id]);

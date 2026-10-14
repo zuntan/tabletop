@@ -38,6 +38,7 @@ export const objectSchema = z.object({
   width: dimension.default(180),
   height: dimension.default(100),
   fill: color.default('#dbeafe'),
+  fillOpacity: z.number().finite().min(0).max(1).default(1),
   stroke: color.default('#334155'),
   strokeWidth: z.number().finite().min(0).max(100).default(2),
   text: z.string().max(100_000).default(''),

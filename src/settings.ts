@@ -5,6 +5,7 @@ import { tightFrame } from './pin-shape';
 export const colorSchema = z.string().regex(/^(#[0-9a-fA-F]{3,8}|transparent|[a-zA-Z]{1,20})$/);
 export const appearanceSchema = z.object({
   fill: colorSchema.default('#dbeafe'),
+  fillOpacity: z.number().finite().min(0).max(1).default(0.3),
   stroke: colorSchema.default('#334155'),
   textColor: colorSchema.default('#0f172a'),
   strokeWidth: z.number().finite().min(0).max(100).default(2),

@@ -7,7 +7,7 @@ export const anchors: Anchor[] = ['top', 'right', 'bottom', 'left'];
 export const isConnector = (object: DeskObject) => object.type === 'line' || object.type === 'arrow';
 export const isShape = (object: DeskObject) => object.type === 'rect' || object.type === 'roundedRect'
   || object.type === 'ellipse' || (object.type === 'label' && object.labelShape !== 'text');
-export const isConnectable = (object: DeskObject) => isShape(object) || object.type === 'label';
+export const isConnectable = (object: DeskObject) => isShape(object) || object.type === 'label' || object.type === 'text';
 
 export function endpoints(object: DeskObject): { start: Point; end: Point } {
   if (object.x2 !== undefined && object.y2 !== undefined) {
