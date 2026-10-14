@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { resolveConnections } from './geometry';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -12,17 +13,27 @@ const source = z.string().max(8_000_000).refine(value =>
   'Expected an HTTP(S) URL or a base64 image data URL',
 );
 
+const bindingSchema = z.object({
+  objectId: z.string().min(1).max(100),
+  anchor: z.enum(['top', 'right', 'bottom', 'left']),
+}).strict();
+
 export const objectSchema = z.object({
   id: z.string().min(1).max(100),
   type: z.enum(['rect', 'ellipse', 'line', 'arrow', 'text', 'image', 'svg', 'web', 'link']),
   x: coordinate.default(0),
   y: coordinate.default(0),
+  x2: coordinate.optional(),
+  y2: coordinate.optional(),
+  startBinding: bindingSchema.nullable().optional(),
+  endBinding: bindingSchema.nullable().optional(),
   width: dimension.default(180),
   height: dimension.default(100),
   fill: color.default('#dbeafe'),
   stroke: color.default('#334155'),
   strokeWidth: z.number().finite().min(0).max(100).default(2),
   text: z.string().max(100_000).default(''),
+  textColor: color.default('#0f172a'),
   fontSize: z.number().finite().min(1).max(1000).default(24),
   src: source.optional(),
   url: z.string().max(4096).refine(safeUrl, 'Expected an HTTP(S) URL').optional(),
@@ -115,7 +126,7 @@ export class Desk {
     const batch = batchSchema.parse(input);
     if (batch.expectedRevision !== undefined && batch.expectedRevision !== this.revision) throw new Error('Revision conflict: refresh before editing');
     const before = this.snapshot();
-    const after = this.snapshot();
+    let after = this.snapshot();
     for (const operation of batch.operations) {
       if (operation.kind === 'add') {
         if (after.some(o => o.id === operation.object.id)) throw new Error(`Duplicate ID: ${operation.object.id}`);
@@ -132,6 +143,7 @@ export class Desk {
         after.splice(Math.min(operation.index, after.length), 0, object);
       }
     }
+    after = resolveConnections(after, before).map(validateObject);
     if (JSON.stringify(before) === JSON.stringify(after)) return this.summary();
     const targets = [...new Set(batch.operations.map(op => op.kind === 'add' ? op.object.id : op.id))];
     const entry = { before, after, actor: batch.actor, targets };

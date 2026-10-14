@@ -91,7 +91,7 @@ const tools = [
   ['desk_selection', 'Get current selection IDs and last known canvas pointer.', {}],
   ['desk_select', 'Set selection without changing revision or history.', { ids: z.array(z.string()).max(2000) }],
   ['desk_changes', 'Get changes after a revision from this session; page via nextRevision.', { sinceRevision: z.number().int().nonnegative(), limit: z.number().int().min(1).max(200).default(100) }],
-  ['desk_execute', 'Atomically add/update/delete/reorder objects. IDs must be unique. Array order is back-to-front. Optional expectedRevision guards concurrent edits.', batchSchema.shape],
+  ['desk_execute', 'Atomically add/update/delete/reorder objects. IDs must be unique; array order is back-to-front. expectedRevision guards concurrent edits. Rectangles/ellipses display text in textColor. Text objects use fill. Lines/arrows use stroke and endpoints (x,y) to (x2,y2); dimensions are derived. startBinding/endBinding attach to a rectangle/ellipse via {objectId,anchor:top|right|bottom|left}; null detaches. Bound endpoints follow their target; clear bindings to move them freely.', batchSchema.shape],
   ['desk_undo', 'Undo the latest shared action, whether human or agent. Advances revision.', { actor: z.string().min(1).max(100).default('agent-01') }],
   ['desk_redo', 'Redo the latest undone shared action. Advances revision.', { actor: z.string().min(1).max(100).default('agent-01') }],
 ] as const;

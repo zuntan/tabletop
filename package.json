@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@simonwep/pickr": "1.10.2",
     "ws": "^8.18.3",
     "zod": "^3.25.76"
   },

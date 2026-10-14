@@ -1,5 +1,11 @@
 import './style.css';
 import { Desk, dispatch, objectSchema, type DeskObject, type Operation } from './model';
+import { bounds, isConnector, isShape } from './geometry';
+import { createColorControls } from './color-controls';
+import { drawConnector, drawShapeText, drawEndpointHandles, drawSnapTargets, updateScenePreview } from './diagram-drawing';
+import { gestureOperations, gesturePreview, endpointDragPoint, type Gesture } from './diagram-gestures';
+import { syncProperties, propertyPatch } from './properties';
+import './diagram.css';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -29,14 +35,17 @@ app.innerHTML = `
     <aside>
       <section><h2>選択・プロパティ</h2><div id="selected-label">未選択</div>
         <form id="properties" hidden>
-          <label>X<input name="x" type="number" step="any"></label><label>Y<input name="y" type="number" step="any"></label>
+          <label>X / 始点X<input name="x" type="number" step="any"></label><label>Y / 始点Y<input name="y" type="number" step="any"></label>
+          <label hidden>終点X<input name="x2" type="number" step="any" disabled></label><label hidden>終点Y<input name="y2" type="number" step="any" disabled></label>
           <label>幅<input name="width" type="number" min="1" step="any"></label><label>高さ<input name="height" type="number" min="1" step="any"></label>
-          <label>塗り<input name="fill" type="text"></label><label>線<input name="stroke" type="text"></label>
+          <label hidden>塗り<input name="fill" type="text"></label><label hidden>線<input name="stroke" type="text"></label>
           <label>線幅<input name="strokeWidth" type="number" min="0" step="any"></label><label>文字サイズ<input name="fontSize" type="number" min="1"></label>
           <label class="wide">テキスト<textarea name="text" rows="3"></textarea></label>
           <label class="wide">URL<input name="url" type="url"></label>
           <button type="submit" class="wide">変更を適用</button>
         </form>
+        <div id="color-controls" hidden></div>
+        <small>図形のダブルクリックで文字編集。矢印の両端をドラッグして接続できます。</small>
         <div class="actions"><button id="front">最前面</button><button id="back">最背面</button><button id="delete">削除</button></div>
         <a id="open-url" hidden target="_blank" rel="noopener noreferrer">元のページをブラウザで開く ↗</a>
       </section>
@@ -64,8 +73,11 @@ let socket: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 let connectionGeneration = 0;
 let busy = false;
-type Gesture = { mode: 'move' | 'resize' | 'pan' | 'marquee'; start: { x: number; y: number }; screen: { x: number; y: number }; originals: DeskObject[]; revision: number; camera: { x: number; y: number }; additive: string[] };
 let gesture: Gesture | null = null;
+const colorControls = createColorControls($('#color-controls'), operations => {
+  if (busy || !operations.length) return;
+  attempt(() => execute(operations));
+});
 const labels: Record<DeskObject['type'], string> = { rect: '矩形', ellipse: '楕円', line: '線', arrow: '矢印', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
 
 function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}): SVGElementTagNameMap[K] {
@@ -101,18 +113,13 @@ function zoom(factor: number, center = { x: canvas.clientWidth / 2, y: canvas.cl
 function drawObject(object: DeskObject) {
   const { width: w, height: h } = object;
   const group = svg('g', { transform: `translate(${object.x} ${object.y})`, 'data-id': object.id });
+  if (isConnector(object)) {
+    drawConnector(group, object, camera.zoom); objectsLayer.append(group); return;
+  }
   const style = { fill: object.fill, stroke: object.stroke, 'stroke-width': object.strokeWidth };
   if (object.type === 'rect') group.append(svg('rect', { width: w, height: h, ...style }));
   if (object.type === 'ellipse') group.append(svg('ellipse', { cx: w / 2, cy: h / 2, rx: w / 2, ry: h / 2, ...style }));
-  if (object.type === 'line' || object.type === 'arrow') {
-    group.append(svg('rect', { width: w, height: h, fill: 'transparent', stroke: 'none' }));
-    group.append(svg('line', { x1: 0, y1: h, x2: w, y2: 0, ...style, fill: 'none' }));
-    if (object.type === 'arrow') {
-      const size = Math.min(18, Math.hypot(w, h) / 3);
-      const angle = Math.atan2(-h, w), a = angle + 2.6, b = angle - 2.6;
-      group.append(svg('polygon', { points: `${w},0 ${w + size * Math.cos(a)},${size * Math.sin(a)} ${w + size * Math.cos(b)},${size * Math.sin(b)}`, fill: object.stroke }));
-    }
-  }
+  drawShapeText(group, object);
   if (object.type === 'text') {
     group.append(svg('rect', { width: w, height: h, fill: 'transparent' }));
     const text = svg('text', { fill: object.fill, 'font-size': object.fontSize, 'font-family': 'sans-serif' });
@@ -145,6 +152,7 @@ function drawSelection(preview?: DeskObject[]) {
   overlays.replaceChildren();
   const selected = preview ?? desk.selected().map(id => desk.get(id));
   for (const object of selected) {
+    if (drawEndpointHandles(overlays, object, camera.zoom, selected.length === 1)) continue;
     overlays.append(svg('rect', { x: object.x - 3 / camera.zoom, y: object.y - 3 / camera.zoom,
       width: object.width + 6 / camera.zoom, height: object.height + 6 / camera.zoom,
       fill: 'none', stroke: '#2563eb', 'stroke-width': 1.5 / camera.zoom, 'stroke-dasharray': `${5 / camera.zoom} ${3 / camera.zoom}`, 'pointer-events': 'none' }));
@@ -155,9 +163,11 @@ function drawSelection(preview?: DeskObject[]) {
     }));
   }
 }
-function render() {
-  objectsLayer.replaceChildren();
-  desk.snapshot().forEach(drawObject);
+function render(rebuild = true) {
+  if (rebuild) {
+    objectsLayer.replaceChildren();
+    desk.snapshot().forEach(drawObject);
+  }
   cameraChanged(); drawSelection();
   $('#empty').hidden = desk.summary().count > 0;
   $('#revision').textContent = `revision ${desk.revision}`;
@@ -165,14 +175,13 @@ function render() {
   $<HTMLButtonElement>('#redo').disabled = !desk.summary().canRedo;
   $('#count').textContent = String(desk.summary().count);
   const ids = desk.selected();
+  colorControls.update(ids.map(id => desk.get(id)));
   $('#selected-label').textContent = ids.length ? `${ids.length} 個選択 · ${ids.join(', ')}` : '未選択';
   form.hidden = ids.length !== 1;
   const link = $<HTMLAnchorElement>('#open-url'); link.hidden = true;
   if (ids.length === 1) {
     const object = desk.get(ids[0]);
-    for (const name of ['x', 'y', 'width', 'height', 'fill', 'stroke', 'strokeWidth', 'fontSize', 'text', 'url'] as const) {
-      (form.elements.namedItem(name) as HTMLInputElement).value = String(object[name] ?? '');
-    }
+    syncProperties(form, object);
     if (object.url) { link.href = object.url; link.hidden = false; }
   }
   for (const id of ['#front', '#back', '#delete']) $<HTMLButtonElement>(id).disabled = !ids.length;
@@ -225,11 +234,7 @@ form.onsubmit = event => {
   event.preventDefault();
   attempt(() => {
     const object = desk.get(desk.selected()[0]);
-    const patch: Record<string, unknown> = {};
-    for (const [key, value] of new FormData(form)) {
-      if (key === 'url' && !['web', 'link'].includes(object.type)) continue;
-      patch[key] = ['x', 'y', 'width', 'height', 'strokeWidth', 'fontSize'].includes(key) ? Number(value) : String(value);
-    }
+    const patch = propertyPatch(form, object);
     execute([{ kind: 'update', id: object.id, patch }]);
   });
 };
@@ -238,50 +243,60 @@ $('#zoom-out').onclick = () => zoom(0.8);
 $('#zoom-reset').onclick = () => zoom(1 / camera.zoom);
 $('#fit').onclick = () => {
   const objects = desk.snapshot(); if (!objects.length) return;
-  const minX = Math.min(...objects.map(o => o.x)), minY = Math.min(...objects.map(o => o.y));
-  const maxX = Math.max(...objects.map(o => o.x + o.width)), maxY = Math.max(...objects.map(o => o.y + o.height));
+  const boxes = objects.map(bounds);
+  const minX = Math.min(...boxes.map(o => o.x)), minY = Math.min(...boxes.map(o => o.y));
+  const maxX = Math.max(...boxes.map(o => o.x + o.width)), maxY = Math.max(...boxes.map(o => o.y + o.height));
   camera.zoom = Math.max(0.05, Math.min(2, (canvas.clientWidth - 100) / (maxX - minX), (canvas.clientHeight - 100) / (maxY - minY)));
   camera.x = (canvas.clientWidth - (maxX - minX) * camera.zoom) / 2 - minX * camera.zoom;
   camera.y = (canvas.clientHeight - (maxY - minY) * camera.zoom) / 2 - minY * camera.zoom;
   cameraChanged(); drawSelection();
 };
+canvas.addEventListener('dblclick', event => {
+  const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
+  const id = target.closest('[data-id]')?.getAttribute('data-id');
+  if (!id || busy || !isShape(desk.get(id))) return;
+  const text = prompt('図形のテキスト', desk.get(id).text);
+  if (text !== null) attempt(() => execute([{ kind: 'update', id, patch: { text } }]));
+});
 canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture) zoom(Math.exp(-event.deltaY * 0.001), screen(event)); }, { passive: false });
 canvas.addEventListener('pointerdown', event => {
   if (gesture || (event.button !== 0 && event.button !== 1)) return;
   const target = event.target as Element;
   const resize = target.closest('[data-resize]')?.getAttribute('data-resize');
+  const endpoint = target.closest('[data-endpoint]')?.getAttribute('data-endpoint');
   const id = target.closest('[data-id]')?.getAttribute('data-id');
   const p = world(event);
   let mode: Gesture['mode'];
   const additive = event.shiftKey ? desk.selected() : [];
   if (space || event.button === 1) mode = 'pan';
   else if (resize) mode = 'resize';
+  else if (endpoint === 'start' || endpoint === 'end') mode = endpoint;
   else if (id) {
     const ids = desk.selected();
     if (event.shiftKey) {
       desk.select(ids.includes(id) ? ids.filter(v => v !== id) : [...ids, id]);
-      render(); if (!desk.selected().includes(id)) return;
-    } else if (!ids.includes(id)) { desk.select([id]); render(); }
+      render(false); if (!desk.selected().includes(id)) return;
+    } else if (!ids.includes(id)) { desk.select([id]); render(false); }
     mode = 'move';
   } else { if (!event.shiftKey) desk.select([]); render(); mode = 'marquee'; }
-  gesture = { mode, start: p, screen: screen(event), originals: desk.selected().map(id => desk.get(id)), revision: desk.revision, camera: { x: camera.x, y: camera.y }, additive };
+  const scene = desk.snapshot();
+  gesture = { mode, start: p, screen: screen(event), originals: desk.selected().map(id => desk.get(id)), scene, preview: scene, revision: desk.revision, camera: { x: camera.x, y: camera.y }, additive };
   busy = true; canvas.setPointerCapture(event.pointerId); event.preventDefault(); canvas.focus();
 });
+function previewGesture(current: Gesture, point: { x: number; y: number }) {
+  const scene = gesturePreview(current, point, camera.zoom);
+  updateScenePreview(objectsLayer, scene, current.preview, drawObject); current.preview = scene;
+  drawSelection(scene.filter(o => desk.selected().includes(o.id)));
+  if (current.mode === 'start' || current.mode === 'end') drawSnapTargets(overlays, scene, endpointDragPoint(current, point), camera.zoom);
+}
 canvas.addEventListener('pointermove', event => {
   desk.pointer = world(event);
   if (!gesture) return;
   const p = world(event), delta = { x: p.x - gesture.start.x, y: p.y - gesture.start.y };
+  if (gesture.mode !== 'pan' && gesture.mode !== 'marquee') { previewGesture(gesture, p); return; }
   if (gesture.mode === 'pan') {
     const s = screen(event); camera.x = gesture.camera.x + s.x - gesture.screen.x; camera.y = gesture.camera.y + s.y - gesture.screen.y; cameraChanged();
-  } else if (gesture.mode === 'move') {
-    const preview = gesture.originals.map(o => ({ ...o, x: o.x + delta.x, y: o.y + delta.y }));
-    for (const object of preview) {
-      const group = [...objectsLayer.children].find(el => el.getAttribute('data-id') === object.id);
-      group?.setAttribute('transform', `translate(${object.x} ${object.y})`);
-    }
-    drawSelection(preview);
-  } else if (gesture.mode === 'resize') {
-    drawSelection(gesture.originals.map(o => ({ ...o, width: Math.max(1, o.width + delta.x), height: Math.max(1, o.height + delta.y) })));
+
   } else {
     overlays.replaceChildren(svg('rect', { x: Math.min(p.x, gesture.start.x), y: Math.min(p.y, gesture.start.y), width: Math.abs(delta.x), height: Math.abs(delta.y), fill: '#2563eb22', stroke: '#2563eb', 'stroke-width': 1 / camera.zoom }));
   }
@@ -291,15 +306,21 @@ function endGesture(event: PointerEvent, cancel = false) {
   gesture = null; busy = false;
   if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
   if (cancel) { render(); return; }
-  const p = world(event), dx = p.x - current.start.x, dy = p.y - current.start.y;
+  const p = world(event);
+  if (current.mode !== 'pan' && current.mode !== 'marquee' && !gestureOperations(current, p, camera.zoom).length) {
+    drawSelection(); return;
+  }
   attempt(() => {
-    if (current.mode === 'move' || current.mode === 'resize') {
-      desk.execute({ actor: 'human', expectedRevision: current.revision,
-        operations: current.originals.map(o => ({ kind: 'update', id: o.id, patch: current.mode === 'move' ? { x: o.x + dx, y: o.y + dy } : { width: Math.max(1, o.width + dx), height: Math.max(1, o.height + dy) } })) });
+    if (current.mode !== 'pan' && current.mode !== 'marquee') {
+      const operations = gestureOperations(current, p, camera.zoom);
+      if (operations.length) desk.execute({ actor: 'human', expectedRevision: current.revision, operations });
     } else if (current.mode === 'marquee') {
       const x1 = Math.min(p.x, current.start.x), x2 = Math.max(p.x, current.start.x);
       const y1 = Math.min(p.y, current.start.y), y2 = Math.max(p.y, current.start.y);
-      const selected = desk.snapshot().filter(o => o.x >= x1 && o.y >= y1 && o.x + o.width <= x2 && o.y + o.height <= y2).map(o => o.id);
+      const selected = desk.snapshot().filter(object => {
+        const o = bounds(object);
+        return o.x >= x1 && o.y >= y1 && o.x + o.width <= x2 && o.y + o.height <= y2;
+      }).map(o => o.id);
       desk.select([...new Set([...current.additive, ...selected])]);
     }
   });
@@ -309,7 +330,7 @@ canvas.addEventListener('pointercancel', event => endGesture(event, true));
 canvas.addEventListener('lostpointercapture', event => { if (gesture) endGesture(event, true); });
 window.addEventListener('blur', () => { space = false; if (gesture) { gesture = null; busy = false; render(); } });
 window.addEventListener('keydown', event => {
-  if ((event.target as Element).closest('input,textarea,select')) return;
+  if ((event.target as Element).closest('input,textarea,select') || colorControls.isOpen()) return;
   if (event.code === 'Space') { space = true; event.preventDefault(); }
   if (gesture) return;
   if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); deleteSelection(); }

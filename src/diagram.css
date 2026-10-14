@@ -1,0 +1,18 @@
+#color-controls { margin-top: 14px; display: grid; gap: 8px; }
+.color-control { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; color: #64748b; }
+.color-trigger { display: inline-flex; align-items: center; gap: 8px; min-width: 130px; font-size: 11px; }
+.color-dot { width: 18px; height: 18px; border-radius: 50%; border: 1px solid #cbd5e1; flex-shrink: 0; }
+.color-dot.transparent { background-image: linear-gradient(135deg, transparent 43%, #ef4444 45%, #ef4444 55%, transparent 57%); }
+.color-dot.mixed { background-image: linear-gradient(135deg, #cbd5e1 50%, #fff 50%); }
+.pcr-app.tabletop-palette { width: 250px; padding: 12px; border-radius: 10px; font-size: 14px; }
+.pcr-app.tabletop-palette .pcr-swatches { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; margin: 10px 0 0; padding: 0; }
+.pcr-app.tabletop-palette .pcr-swatches > button { width: 23px; height: 23px; margin: 0; padding: 0; border-radius: 50%; }
+.pcr-app.tabletop-palette .pcr-swatches > button::before, .pcr-app.tabletop-palette .pcr-swatches > button::after { border-radius: 50%; }
+.pcr-app.tabletop-palette .pcr-swatches > button::after { border-color: #00000022; }
+.pcr-app.tabletop-palette .pcr-swatches > button[aria-pressed="true"] { outline: 2px solid #0f172a; outline-offset: 2px; }
+.pcr-app.tabletop-palette button:focus-visible { outline: 2px solid #2563eb; outline-offset: 3px; }
+.pcr-app.tabletop-palette .transparent-choice { display: block; width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 12px; background: #f8fafc; color: #334155; }
+.pcr-app.tabletop-palette .transparent-choice[aria-pressed="true"] { border-color: #2563eb; background: #eff6ff; }
+.pcr-app.tabletop-palette .pcr-interaction { display: none; }
+.endpoint-handle { cursor: crosshair; }
+#canvas .connector-hit { cursor: move; }
