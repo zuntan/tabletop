@@ -66,12 +66,17 @@ npm start
 
 ## MCPツール
 
+AI向けの使い方・接続線・ピン体系・画像／SVGの受け渡しは [AI_INTERFACE.md](./AI_INTERFACE.md) を参照してください。
+
 | ツール | 用途 |
 | --- | --- |
 | `desk_summary` | sessionId、revision、種類別件数、Undo / Redo可否 |
 | `desk_list` | 背面から前面順の一覧。画像の大容量データは省略 |
 | `desk_get` | ID指定の詳細。画像ソースを含む |
 | `desk_state` | 全状態。大きくなるため必要時だけ使用 |
+| `desk_context` | 状態・接続関係・ピン体系のメンバー・履歴を一回で取得（画像データなし） |
+| `desk_asset_read` | 画像をMCP imageブロック、SVGをソースで取得。任意で一時ファイル出力 |
+| `desk_asset_import` | ファイル・SVGコード・data URLから追加／画像だけ差し替え |
 | `desk_settings` | 新規作成の既定スタイルとピン体系、次番号 |
 | `desk_selection` | 現在の選択IDと最後に観測したキャンバスポインタ座標 |
 | `desk_select` | 選択IDの変更。履歴・revisionには記録しない |
@@ -98,7 +103,7 @@ npm start
         "y": 80,
         "width": 360,
         "height": 100,
-        "fill": "#0f172a",
+        "textColor": "#0f172a",
         "text": "ここを比較しましょう"
       }
     },

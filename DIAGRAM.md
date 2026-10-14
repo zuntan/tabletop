@@ -50,7 +50,7 @@ Pickrの機能開発は凍結されていますが、今回必要な既存の色
 ### 色と図形内テキスト
 
 - 矩形・楕円：`fill` が塗り、`stroke` が輪郭、`text` が中央テキスト、`textColor` が文字色。
-- 単独テキスト：従来どおり `fill` が文字色。
+- 単独テキスト：`textColor` が文字色、`fill` が背景、`stroke` が輪郭。左上からMarkdown表示します（[AUTHORING.md](./AUTHORING.md)）。
 - 線・矢印：`stroke` が線と矢じりの色。`fill` は線の表示には使用しません。
 - 透明は文字列 `"transparent"`。MCPではパレット以外のHEX色も指定できます。
 

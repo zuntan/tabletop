@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { resolveConnections } from './geometry';
 import { initialSettings, settingsOperations, applySettingsOperation, materializeLabels, creationAppearance, nextNumber, formatNumber } from './settings';
 import type { Settings } from './settings';
+import { deskContext } from './desk-context';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -224,6 +225,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('list') }),
   z.object({ method: z.literal('get'), id: z.string() }),
   z.object({ method: z.literal('state') }),
+  z.object({ method: z.literal('context'), sinceRevision: z.number().int().nonnegative().default(0), limit: z.number().int().min(1).max(200).default(100) }),
   z.object({ method: z.literal('settings') }),
   z.object({ method: z.literal('selection') }),
   z.object({ method: z.literal('select'), ids: z.array(z.string()).max(2000) }),
@@ -241,6 +243,7 @@ export function dispatch(desk: Desk, input: unknown): unknown {
     case 'get': return desk.get(request.id);
     case 'state': return { ...desk.summary(), objects: desk.snapshot(), selection: desk.selected(), settings: desk.settingsSnapshot() };
     case 'settings': return desk.listSettings();
+    case 'context': return deskContext(desk, request.sinceRevision, request.limit);
     case 'selection': return { ids: desk.selected(), pointer: desk.pointer };
     case 'select': return desk.select(request.ids);
     case 'changes': return desk.getChanges(request.sinceRevision, request.limit);

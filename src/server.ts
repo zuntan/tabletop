@@ -8,6 +8,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { batchSchema, type Request } from './model.js';
+import { registerAssetTools } from './asset-tools.js';
 
 const port = Number(process.env.TABLETOP_PORT ?? 4317);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid TABLETOP_PORT');
@@ -87,17 +88,18 @@ const tools = [
   ['desk_summary', 'Get session ID, revision, counts and undo/redo availability.', {}],
   ['desk_list', 'List objects in back-to-front order, excluding embedded image payloads.', {}],
   ['desk_get', 'Get one object including its image source, if any.', { id: z.string() }],
-  ['desk_state', 'Get complete state; potentially large. Prefer summary/list/get.', {}],
+  ['desk_state', 'Get complete state; potentially large. Prefer desk_context for semantic overview without embedded assets.', {}],
+  ['desk_context', 'Read one consistent snapshot: object metadata, selected IDs, connector endpoints/bindings, numbered pin series with members and next number, and paged shared history. No image payloads. Use sessionId and revision to interpret changes; use history.nextRevision when history.hasMore. Detached endpoints have binding null. Read actual image/SVG contents with desk_asset_read.', { sinceRevision: z.number().int().nonnegative().default(0), limit: z.number().int().min(1).max(200).default(100) }],
   ['desk_settings', 'Get creation defaults and all pin series with IDs, names, shared appearance, counts and next number. Pins retain type label and label_add for compatibility. They are independent objects referenced by ID or seriesId plus number; repeated capped numbers require an ID.', {}],
   ['desk_selection', 'Get current selection IDs and last known canvas pointer.', {}],
   ['desk_select', 'Set selection without changing revision or history.', { ids: z.array(z.string()).max(2000) }],
   ['desk_changes', 'Get changes after a revision from this session; page via nextRevision.', { sinceRevision: z.number().int().nonnegative(), limit: z.number().int().min(1).max(200).default(100) }],
-  ['desk_execute', 'Atomically edit objects and settings with shared Undo. add and series_add use current creation defaults for omitted appearance. defaults_update changes defaults; series_add/series_update define shared pin appearance and format (pin,text,rect,roundedRect,ellipse frames; default pin). New series use compact dimensions based on font size unless dimensions are explicit; updates never auto-resize. Pins keep type label and label_add for compatibility. label_add requires id,seriesId,x,y, accepts optional description, and assigns current maximum plus one, capped by format. Labels allow only x/y/description individual updates; delete/reorder are allowed. Description belongs to the pin and does not change its number frame or anchors. A pin frame has its tip at (x+width/2,y+height), with the number centered in its round head. IDs are unique; array order is back-to-front. expectedRevision guards concurrent edits. rect/roundedRect/ellipse display text in textColor; text uses fill. line/arrow use stroke and endpoints (x,y) to (x2,y2). startBinding/endBinding attach to a shape or any label, including text-only labels, via {objectId,anchor:top|right|bottom|left}; null detaches. Bound endpoints follow targets. UI grid snapping does not affect MCP coordinates.', batchSchema.shape],
+  ['desk_execute', 'Atomically edit objects and settings with shared Undo. add and series_add use current creation defaults for omitted appearance. defaults_update changes defaults; series_add/series_update define shared pin appearance and format (pin,text,rect,roundedRect,ellipse frames; default pin). New series use compact dimensions based on font size unless dimensions are explicit; updates never auto-resize. Pins keep type label and label_add for compatibility. label_add requires id,seriesId,x,y, accepts optional description, and assigns current maximum plus one, capped by format. Labels allow only x/y/description individual updates; delete/reorder are allowed. Description belongs to the pin and does not change its number frame or anchors. A pin frame has its tip at (x+width/2,y+height), with the number centered in its round head. IDs are unique; array order is back-to-front. expectedRevision guards concurrent edits. rect/roundedRect/ellipse display plain centered text in textColor. Standalone text is left-aligned safe Markdown, with textColor for text, fill for background and stroke for outline (initially transparent background/outline); tables/images/raw HTML are disabled. line/arrow use stroke and endpoints (x,y) to (x2,y2). startBinding/endBinding attach to a shape or any label, including text-only labels, via {objectId,anchor:top|right|bottom|left}; null detaches. Bound endpoints follow targets. UI grid snapping does not affect MCP coordinates.', batchSchema.shape],
   ['desk_undo', 'Undo the latest shared action, whether human or agent. Advances revision.', { actor: z.string().min(1).max(100).default('agent-01') }],
   ['desk_redo', 'Redo the latest undone shared action. Advances revision.', { actor: z.string().min(1).max(100).default('agent-01') }],
 ] as const;
 for (const [name, description, inputSchema] of tools) {
-  mcp.registerTool(name, { description, inputSchema }, async (args: Record<string, unknown>): Promise<import('@modelcontextprotocol/sdk/types.js').CallToolResult> => {
+  mcp.registerTool(name, { description, inputSchema, annotations: { readOnlyHint: !['desk_select', 'desk_execute', 'desk_undo', 'desk_redo'].includes(name), openWorldHint: false } }, async (args: Record<string, unknown>): Promise<import('@modelcontextprotocol/sdk/types.js').CallToolResult> => {
     try {
       const method = name.replace('desk_', '') as Request['method'];
       const result = await request({ ...args, method } as Request);
@@ -107,6 +109,7 @@ for (const [name, description, inputSchema] of tools) {
     }
   });
 }
+registerAssetTools(mcp, request);
 http.on('error', error => { console.error('[Tabletop] Cannot listen:', error.message); process.exitCode = 1; void mcp.close(); });
 await new Promise<void>((resolveReady, reject) => {
   http.once('error', reject);
