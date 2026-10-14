@@ -3,6 +3,7 @@ import { resolveConnections } from './geometry';
 import { initialSettings, settingsOperations, applySettingsOperation, materializeLabels, creationAppearance, nextNumber, formatNumber } from './settings';
 import type { Settings } from './settings';
 import { deskContext } from './desk-context';
+import { reactions } from './reaction-values';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -29,6 +30,7 @@ export const objectSchema = z.object({
   number: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).optional(),
   labelShape: z.enum(['text', 'rect', 'ellipse', 'roundedRect', 'pin']).optional(),
   description: z.string().max(20_000).optional(),
+  reactions: z.array(z.enum(reactions)).max(6).refine(values => new Set(values).size === values.length, 'Duplicate reactions are not allowed').optional(),
   x: coordinate.default(0),
   y: coordinate.default(0),
   x2: coordinate.optional(),
@@ -130,7 +132,7 @@ export class Desk {
   }
   list() {
     return this.objects.map(({ src, ...object }, zIndex) => ({
-      ...object, zIndex, ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}),
+      ...structuredClone(object), zIndex, ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}),
     }));
   }
   get(id: string) {
@@ -150,7 +152,7 @@ export class Desk {
   }
   private metadata(object: DeskObject) {
     const { src, ...rest } = object;
-    return { ...rest, ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}) };
+    return { ...structuredClone(rest), ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}) };
   }
   execute(input: Batch) {
     const batch = batchSchema.parse(input);
@@ -175,8 +177,8 @@ export class Desk {
       const index = after.findIndex(o => o.id === operation.id);
       if (index < 0) throw new Error(`Unknown object: ${operation.id}`);
       if (operation.kind === 'update') {
-        if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'description'].includes(key))) {
-          throw new Error('Labels allow only position and description updates; use series_update for shared appearance');
+        if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'description', 'reactions'].includes(key))) {
+          throw new Error('Labels allow only position, description and reaction updates; use series_update for shared appearance');
         }
         after[index] = validateObject({ ...after[index], ...operation.patch });
       }

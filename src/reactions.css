@@ -1,0 +1,6 @@
+#reaction-controls { margin: 10px 0; }
+#reaction-controls small { display: block; margin-bottom: 5px; }
+#reaction-controls button { width: 32px; height: 32px; padding: 2px; margin: 2px; font-size: 19px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; }
+#reaction-controls button[aria-pressed="true"] { background: #dcfce7; border-color: #15803d; }
+#reaction-controls button[aria-pressed="mixed"] { background: #fef9c3; border-style: dashed; }
+#reaction-controls button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }

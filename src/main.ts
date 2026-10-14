@@ -22,6 +22,8 @@ import { createSidebar } from './sidebar';
 import './sidebar.css';
 import { selectedConnection } from './connection-creation';
 import { drawAiPointing } from './ai-pointing';
+import { createReactionControls, drawReactions } from './reactions';
+import './reactions.css';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -65,6 +67,7 @@ app.innerHTML = `
           <button type="submit" class="wide">変更を適用</button>
         </form>
         <div id="color-controls" hidden></div>
+        <div id="reaction-controls" hidden></div>
         <small>図形のダブルクリックで文字編集。矢印の両端をドラッグして接続できます。</small>
         <div class="actions"><button id="front">最前面</button><button id="back">最背面</button><button id="delete">削除</button></div>
         <a id="open-url" hidden target="_blank" rel="noopener noreferrer">元のページをブラウザで開く ↗</a>
@@ -110,6 +113,9 @@ const editor = createInlineEditor($('#workspace'), viewport, (object, patch, fre
 const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'), $<HTMLButtonElement>('#numbering'), $<HTMLButtonElement>('#selection-mode'), operations => {
   if (!busy) attempt(() => execute(operations));
 });
+const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
+  if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
+});
 const labels: Record<DeskObject['type'], string> = { rect: '矩形', roundedRect: '角丸矩形', label: 'ピン', ellipse: '楕円', line: '線', arrow: '矢印', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
 
 function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}): SVGElementTagNameMap[K] {
@@ -148,7 +154,8 @@ function drawObject(object: DeskObject) {
   const { width: w, height: h } = object;
   const group = svg('g', { transform: `translate(${object.x} ${object.y})`, 'data-id': object.id });
   if (isConnector(object)) {
-    drawConnector(group, object, camera.zoom); objectsLayer.append(group); return;
+    drawConnector(group, object, camera.zoom); drawReactions(group, object, descriptionsVisible);
+    objectsLayer.append(group); return;
   }
   const style = { fill: object.fill, 'fill-opacity': object.fillOpacity, stroke: object.stroke, 'stroke-width': object.strokeWidth };
   const shape = object.type === 'label' ? object.labelShape : object.type;
@@ -186,6 +193,7 @@ function drawObject(object: DeskObject) {
     }
     drawOpenLink(group, object);
   }
+  drawReactions(group, object, descriptionsVisible);
   objectsLayer.append(group);
 }
 function drawSelection(preview?: DeskObject[], scene = preview) {
@@ -218,6 +226,7 @@ function render(rebuild = true) {
   $('#count').textContent = String(desk.summary().count);
   const ids = desk.selected();
   colorControls.update(ids.map(id => desk.get(id)));
+  reactionControls.update(ids.map(id => desk.get(id)));
   authoring.update();
   $('#selected-label').textContent = ids.length ? `${ids.length} 個選択 · ${ids.join(', ')}` : '未選択';
   form.hidden = ids.length !== 1;
