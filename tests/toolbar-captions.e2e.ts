@@ -13,6 +13,7 @@ test('toolbar captions stay visible and flexible groups keep editing actions tog
       assert.ok(await button.getAttribute('aria-label'));
     }
     assert.equal(await page.locator('[data-add="rect"] .tool-caption').innerText(), '矩形');
+    assert.equal(await page.locator('[data-add="web"] .tool-caption').innerText(), 'Web資料');
     assert.equal(await page.locator('#numbering-settings .tool-caption').innerText(), 'ピン設定');
     const rows = await page.locator('.toolbar-parts .tool-button').evaluateAll(elements => elements.map(element => element.getBoundingClientRect().top));
     assert.equal(new Set(rows).size, 1);
