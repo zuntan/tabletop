@@ -22,6 +22,13 @@ test('Markdown memo keeps source editing, independent colors and safe links with
     await call('desk_execute', { operations: [{ kind: 'update', id: 'memo', patch: { fill: '#fef9c3', stroke: '#334155', textColor: '#7f1d1d' } }] });
     assert.equal(await memo.locator(':scope > rect').getAttribute('fill'), '#fef9c3');
     assert.equal(await memo.locator('.markdown-text').evaluate(element => getComputedStyle(element).color), 'rgb(127, 29, 29)');
+    assert.equal(await memo.locator('.markdown-text').evaluate(element => getComputedStyle(element).padding), '6px');
+    // Measure the layout box; a stroked SVG rect's bounds also include its outline.
+    const frame = (await memo.locator('foreignObject').boundingBox())!;
+    const quote = (await memo.locator('blockquote').boundingBox())!;
+    assert.equal(quote.x - frame.x, 6);
+    assert.equal(frame.width - quote.width, 12);
+    assert.equal((await call('desk_get', { id: 'memo' })).text, source + '\n\n> Quote');
     await page.locator('#numbering').click();
     const state = await call('desk_state');
     const [popup] = await Promise.all([page.waitForEvent('popup'), memo.locator('a').click()]);

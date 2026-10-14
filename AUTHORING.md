@@ -16,7 +16,7 @@
 
 単独テキストは常時Markdownとして左上から表示します。見出し・段落・改行・太字・斜体・取り消し線・箇条書き・番号付きリスト・引用・インラインコード・コードブロック・HTTP(S)リンクに対応します。表・画像埋め込み・生HTMLは無効です。図形内の中央文字はプレーンテキストのままです。
 
-ダブルクリックでMarkdown原文を編集します。文字色・背景・輪郭を独立して変更でき、枠外の内容はクリップします。リンクは別タブで開き、選択・配置・移動を起こしません。根拠：[markdown-it Safety](https://github.com/markdown-it/markdown-it/blob/master/docs/safety.md)。旧版の単独テキストで文字色として使っていた `fill` は、今後は背景色です（机の状態はタブ内のみで、現在開いている旧版タブは変更しません）。
+ダブルクリックでMarkdown原文を編集します。文字色・背景・輪郭を独立して変更でき、枠外の内容はクリップします。文字領域には四辺6px（机上単位）の内側余白を設け、引用の縦線も外枠から離します。原文や外枠の寸法は変えません。根拠：[MDN box-sizing](https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing)。リンクは別タブで開き、選択・配置・移動を起こしません。根拠：[markdown-it Safety](https://github.com/markdown-it/markdown-it/blob/master/docs/safety.md)。旧版の単独テキストで文字色として使っていた `fill` は、今後は背景色です（机の状態はタブ内のみで、現在開いている旧版タブは変更しません）。
 
 ## その場編集
 
