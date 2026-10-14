@@ -55,21 +55,25 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
         url.setAttribute('aria-label', optional ? 'HTTP(S) URL（任意）' : 'HTTP(S) URL');
         url.placeholder = optional ? 'リンク先URL（任意）https://' : 'https://'; url.value = object.url ?? ''; panel.append(url);
       }
-      const hint = document.createElement('small'); panel.append(hint);
+      const hint = document.createElement('small'); hint.id = 'inline-editor-hint'; hint.setAttribute('aria-live', 'polite');
+      text.setAttribute('aria-describedby', hint.id);
       const actions = document.createElement('div'); actions.className = 'inline-editor-actions';
-      const mode = document.createElement('select'); mode.setAttribute('aria-label', '確定キー');
-      mode.add(new Option('Enterで確定', 'enter')); mode.add(new Option('Ctrl/⌘＋Enterで確定（Enterは改行）', 'mod-enter'));
-      mode.value = submitMode;
-      const updateHint = () => { hint.textContent = submitMode === 'enter'
-        ? 'Enter：確定 · Shift＋Enter：改行 · Esc：取消' : 'Enter：改行 · Ctrl/⌘＋Enter：確定 · Esc：取消'; };
-      mode.onchange = () => {
-        submitMode = mode.value === 'mod-enter' ? 'mod-enter' : 'enter'; updateHint();
+      const mode = document.createElement('button'); mode.type = 'button'; mode.textContent = '⇄';
+      mode.className = 'editor-mode-toggle'; mode.setAttribute('aria-label', 'Enter改行モード');
+      const updateHint = () => {
+        hint.textContent = submitMode === 'enter'
+          ? 'Enter：確定 · Shift＋Enter：改行 · Esc：取消' : 'Enter：改行 · Ctrl/⌘＋Enter：確定 · Esc：取消';
+        mode.setAttribute('aria-pressed', String(submitMode === 'mod-enter'));
+        mode.title = submitMode === 'enter' ? 'Enterで改行する方式へ切替' : 'Enterで確定する方式へ切替';
+      };
+      mode.onclick = () => {
+        if (composing) return;
+        submitMode = submitMode === 'enter' ? 'mod-enter' : 'enter'; updateHint();
         try { localStorage.setItem('tabletop.editor.submit-key', submitMode); } catch { /* Session-only fallback. */ }
         text.focus();
       };
-      const confirm = document.createElement('button'); confirm.type = 'button'; confirm.textContent = '確定';
-      confirm.onclick = () => { if (!composing) commit(); };
-      actions.append(mode, confirm); panel.append(actions); updateHint();
+      mode.setAttribute('aria-describedby', hint.id);
+      actions.append(hint, mode); panel.append(actions); updateHint();
       const error = document.createElement('div'); error.className = 'editor-error'; error.setAttribute('role', 'alert'); panel.append(error);
       active = { object, fresh, panel, text, url, error }; workspace.append(panel); reposition();
       panel.addEventListener('compositionstart', () => { composing = true; });
