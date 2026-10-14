@@ -1,0 +1,127 @@
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { resolve, extname, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { randomBytes, randomUUID } from 'node:crypto';
+import { WebSocketServer, WebSocket } from 'ws';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { z } from 'zod';
+import { batchSchema, type Request } from './model.js';
+
+const port = Number(process.env.TABLETOP_PORT ?? 4317);
+if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid TABLETOP_PORT');
+const token = process.env.TABLETOP_TOKEN ?? randomBytes(32).toString('hex');
+if (token.length < 24) throw new Error('TABLETOP_TOKEN must be at least 24 characters');
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
+const mime: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png' };
+const http = createServer(async (req, res) => {
+  const host = req.headers.host;
+  if (host !== `127.0.0.1:${port}` && host !== `localhost:${port}`) { res.writeHead(403).end(); return; }
+  if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405).end(); return; }
+  try {
+    const pathname = decodeURIComponent(new URL(req.url ?? '/', `http://${host}`).pathname);
+    const path = resolve(root, `.${pathname === '/' ? '/index.html' : pathname}`);
+    if (!path.startsWith(root + '/')) { res.writeHead(403).end(); return; }
+    const body = await readFile(path);
+    res.writeHead(200, {
+      'Content-Type': mime[extname(path)] ?? 'application/octet-stream',
+      'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
+      'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:; frame-src https: http:; connect-src 'self' ws://127.0.0.1:* ws://localhost:*; object-src 'none'; base-uri 'none'",
+    });
+    res.end(req.method === 'HEAD' ? undefined : body);
+  } catch { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Run npm run build first.'); }
+});
+const wss = new WebSocketServer({ noServer: true, maxPayload: 24_000_000 });
+let browser: WebSocket | null = null;
+const pending = new Map<string, { resolve: (value: unknown) => void; reject: (error: Error) => void; timer: NodeJS.Timeout }>();
+
+http.on('upgrade', (req, socket, head) => {
+  const url = new URL(req.url ?? '/', `http://127.0.0.1:${port}`);
+  const origins = [`http://127.0.0.1:${port}`, `http://localhost:${port}`, 'http://127.0.0.1:5173', 'http://localhost:5173'];
+  if (url.pathname !== '/bridge' || url.searchParams.get('token') !== token ||
+      !origins.includes(req.headers.origin ?? '') ||
+      ![`127.0.0.1:${port}`, `localhost:${port}`].includes(req.headers.host ?? '')) {
+    socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n'); socket.destroy(); return;
+  }
+  if (browser) { socket.write('HTTP/1.1 409 Conflict\r\nConnection: close\r\n\r\n'); socket.destroy(); return; }
+  wss.handleUpgrade(req, socket, head, ws => wss.emit('connection', ws));
+});
+wss.on('connection', (ws: WebSocket) => {
+  browser = ws;
+  console.error('[Tabletop] Browser connected');
+  ws.on('message', data => {
+    try {
+      const message = JSON.parse(data.toString());
+      const item = pending.get(message.id);
+      if (!item) return;
+      clearTimeout(item.timer); pending.delete(message.id);
+      if (typeof message.error === 'string') item.reject(new Error(message.error));
+      else item.resolve(message.result);
+    } catch { ws.close(1007, 'Invalid response'); }
+  });
+  ws.on('error', error => console.error('[Tabletop] WebSocket:', error.message));
+  ws.on('close', () => {
+    if (browser === ws) browser = null;
+    for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error('Browser disconnected; operation outcome may be unknown. Inspect revision before retrying.')); }
+    pending.clear();
+  });
+});
+function request(payload: Request): Promise<unknown> {
+  return new Promise((resolveResult, reject) => {
+    if (!browser || browser.readyState !== WebSocket.OPEN) { reject(new Error('No browser connected. Open the Tabletop URL shown on stderr.')); return; }
+    const id = randomUUID();
+    const timer = setTimeout(() => {
+      pending.delete(id);
+      reject(new Error('Browser response timed out; outcome may be unknown. Inspect revision before retrying; no automatic replay occurs.'));
+    }, 10_000);
+    pending.set(id, { resolve: resolveResult, reject, timer });
+    browser.send(JSON.stringify({ id, request: payload }), error => {
+      if (!error) return;
+      clearTimeout(timer); pending.delete(id); reject(error);
+    });
+  });
+}
+const mcp = new McpServer({ name: 'tabletop', version: '0.1.0' });
+const tools = [
+  ['desk_summary', 'Get session ID, revision, counts and undo/redo availability.', {}],
+  ['desk_list', 'List objects in back-to-front order, excluding embedded image payloads.', {}],
+  ['desk_get', 'Get one object including its image source, if any.', { id: z.string() }],
+  ['desk_state', 'Get complete state; potentially large. Prefer summary/list/get.', {}],
+  ['desk_selection', 'Get current selection IDs and last known canvas pointer.', {}],
+  ['desk_select', 'Set selection without changing revision or history.', { ids: z.array(z.string()).max(2000) }],
+  ['desk_changes', 'Get changes after a revision from this session; page via nextRevision.', { sinceRevision: z.number().int().nonnegative(), limit: z.number().int().min(1).max(200).default(100) }],
+  ['desk_execute', 'Atomically add/update/delete/reorder objects. IDs must be unique. Array order is back-to-front. Optional expectedRevision guards concurrent edits.', batchSchema.shape],
+  ['desk_undo', 'Undo the latest shared action, whether human or agent. Advances revision.', { actor: z.string().min(1).max(100).default('agent-01') }],
+  ['desk_redo', 'Redo the latest undone shared action. Advances revision.', { actor: z.string().min(1).max(100).default('agent-01') }],
+] as const;
+for (const [name, description, inputSchema] of tools) {
+  mcp.registerTool(name, { description, inputSchema }, async (args: Record<string, unknown>): Promise<import('@modelcontextprotocol/sdk/types.js').CallToolResult> => {
+    try {
+      const method = name.replace('desk_', '') as Request['method'];
+      const result = await request({ ...args, method } as Request);
+      return { content: [{ type: 'text', text: JSON.stringify(result) }] };
+    } catch (error) {
+      return { isError: true, content: [{ type: 'text', text: error instanceof Error ? error.message : String(error) }] };
+    }
+  });
+}
+http.on('error', error => { console.error('[Tabletop] Cannot listen:', error.message); process.exitCode = 1; void mcp.close(); });
+await new Promise<void>((resolveReady, reject) => {
+  http.once('error', reject);
+  http.listen(port, '127.0.0.1', () => { http.off('error', reject); resolveReady(); });
+});
+console.error(`[Tabletop] Open http://127.0.0.1:${port}/#token=${encodeURIComponent(token)}&port=${port}`);
+await mcp.connect(new StdioServerTransport());
+let closing = false;
+async function shutdown() {
+  if (closing) return;
+  closing = true;
+  browser?.close();
+  for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error('Server closing')); }
+  pending.clear();
+  wss.close(); http.close(); await mcp.close();
+}
+process.stdin.on('end', () => void shutdown());
+process.on('SIGINT', () => void shutdown());
+process.on('SIGTERM', () => void shutdown());

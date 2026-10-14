@@ -1,0 +1,65 @@
+:root { font-family: Inter, system-ui, sans-serif; color: #172554; background: #f8fafc; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input, textarea { font: inherit; }
+button { border: 1px solid #cbd5e1; border-radius: 6px; padding: 7px 11px; background: white; color: #334155; cursor: pointer; }
+button:hover:not(:disabled) { background: #eff6ff; border-color: #60a5fa; }
+button:disabled { opacity: .4; cursor: default; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+header { min-height: 64px; display: flex; align-items: center; gap: 14px; padding: 12px 22px; background: #0f172a; color: #e2e8f0; }
+.brand { margin-right: auto; font-weight: 750; font-size: 23px; letter-spacing: -.6px; }
+.brand small { display: inline-block; margin-left: 15px; font-size: 12px; color: #94a3b8; font-weight: 400; letter-spacing: 0; }
+header button { background: #1e293b; border-color: #475569; color: #e2e8f0; }
+header button:hover:not(:disabled) { background: #334155; }
+#revision { font-size: 12px; color: #94a3b8; }
+.badge { font-size: 12px; background: #334155; border-radius: 20px; padding: 5px 10px; white-space: nowrap; }
+.badge.connected { background: #064e3b; color: #6ee7b7; }
+nav { display: flex; align-items: center; gap: 7px; padding: 10px 18px; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; }
+.spacer { flex: 1; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 290px; height: calc(100dvh - 148px); min-height: 320px; }
+#workspace { position: relative; overflow: hidden; background: #f8fafc; }
+#canvas { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; outline: none; }
+#canvas [data-id] { cursor: move; }
+.resize-handle { cursor: nwse-resize; }
+#empty { position: absolute; top: 43%; width: 100%; text-align: center; color: #64748b; font-size: 19px; pointer-events: none; }
+#empty small { display: block; margin-top: 13px; font-size: 12px; color: #94a3b8; }
+.hint { position: absolute; bottom: 12px; left: 18px; color: #64748b; font-size: 11px; pointer-events: none; padding: 5px; background: #f8fafcd9; }
+aside { background: white; border-left: 1px solid #e2e8f0; overflow-y: auto; padding: 0 15px; }
+aside section { padding: 15px 0; border-bottom: 1px solid #e2e8f0; }
+h2 { font-size: 12px; margin: 0 0 12px; color: #475569; letter-spacing: .04em; }
+#count { float: right; }
+#selected-label { font-size: 11px; color: #64748b; overflow-wrap: anywhere; margin-bottom: 10px; }
+form { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+label { font-size: 11px; color: #64748b; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+input, textarea { width: 100%; min-width: 0; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px; color: #334155; background: #f8fafc; }
+.wide { grid-column: 1 / -1; }
+.actions { display: flex; gap: 6px; margin: 12px 0; }
+.actions button { font-size: 11px; flex: 1; }
+a { color: #2563eb; font-size: 12px; }
+#object-list { max-height: 210px; overflow: auto; }
+.object-row { display: block; width: 100%; text-align: left; margin-bottom: 4px; font-size: 11px; overflow-wrap: anywhere; }
+.object-row.active { background: #eff6ff; border-color: #60a5fa; }
+#history { max-height: 180px; overflow: auto; }
+.history-row { font-size: 11px; padding: 5px 0; color: #64748b; border-bottom: 1px dotted #e2e8f0; }
+aside p, aside small { font-size: 11px; line-height: 1.7; color: #64748b; }
+#connect-form { grid-template-columns: 1fr; margin-bottom: 8px; }
+footer { padding: 7px 18px; font-size: 11px; height: 30px; color: #64748b; background: white; border-top: 1px solid #e2e8f0; }
+footer.error { color: #b91c1c; }
+iframe { width: 100%; height: 100%; border: none; background: white; }
+[hidden] { display: none !important; }
+@media (max-width: 850px) {
+  .brand small { display: none; }
+  header { gap: 7px; padding: 10px; }
+  header button { font-size: 11px; padding: 7px; }
+  nav { padding: 8px; gap: 5px; }
+  nav button { font-size: 11px; }
+  main { grid-template-columns: minmax(0, 1fr) 240px; height: calc(100dvh - 190px); }
+  .hint { max-width: 90%; }
+}
+@media (max-width: 580px) {
+  #revision { display: none; }
+  main { grid-template-columns: minmax(0, 1fr); }
+  aside { max-height: 260px; border-top: 1px solid #e2e8f0; }
+  #workspace { min-height: 360px; }
+  main { height: auto; }
+}
