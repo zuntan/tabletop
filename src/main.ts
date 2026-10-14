@@ -113,6 +113,7 @@ const editor = createInlineEditor($('#workspace'), viewport, (object, patch, fre
 const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'), $<HTMLButtonElement>('#numbering'), $<HTMLButtonElement>('#selection-mode'), operations => {
   if (!busy) attempt(() => execute(operations));
 });
+$('#authoring-tools').append($('#reaction-controls'));
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });

@@ -1,6 +1,10 @@
-#reaction-controls { margin: 10px 0; }
-#reaction-controls small { display: block; margin-bottom: 5px; }
-#reaction-controls button { width: 32px; height: 32px; padding: 2px; margin: 2px; font-size: 19px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; }
+#authoring-tools { flex: 0 1 430px; }
+#reaction-controls { flex-basis: 100%; }
+.reaction-quick { display: flex; gap: 4px; }
+#reaction-controls button { min-width: 28px; width: 28px; height: 28px; padding: 1px; margin: 0; font-size: 18px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; }
+#reaction-controls button:disabled { opacity: 0.4; cursor: default; }
+#reaction-palette { position: fixed; inset: auto; margin: 0; padding: 8px; width: max-content; max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); overflow: auto; border: 1px solid #cbd5e1; border-radius: 8px; background: white; box-shadow: 0 4px 18px #0003; }
+#reaction-palette:popover-open { display: grid; grid-template-columns: repeat(7, 28px); gap: 4px; }
 #reaction-controls button[aria-pressed="true"] { background: #dcfce7; border-color: #15803d; }
 #reaction-controls button[aria-pressed="mixed"] { background: #fef9c3; border-style: dashed; }
 #reaction-controls button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }

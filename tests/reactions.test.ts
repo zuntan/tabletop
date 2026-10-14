@@ -1,15 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Desk, objectSchema, dispatch } from '../src/model';
-import { reactions } from '../src/reaction-values';
+import { reactionChoices as reactions } from '../src/reaction-values';
 import { reactionOperations } from '../src/reactions';
 
 const rect = (id: string) => objectSchema.parse({ id, type: 'rect' });
 
-test('six unique reactions are optional, validated and updated atomically with shared Undo', () => {
+test('eighteen unique reactions are optional, validated and updated atomically with shared Undo', () => {
   assert.equal(rect('legacy').reactions, undefined);
   assert.deepEqual(objectSchema.parse({ id: 'all', type: 'text', reactions: [...reactions] }).reactions, reactions);
-  for (const invalid of [['🔥'], ['👍', '👍'], [...reactions, '👍'], '👍', null]) {
+  for (const invalid of [['🔥'], ['👍', '👍'], ['✔', '✅'], [...reactions, '👍'], '👍', null]) {
     assert.equal(objectSchema.safeParse({ id: 'bad', type: 'rect', reactions: invalid }).success, false);
   }
   const desk = new Desk(); desk.execute({ operations: [{ kind: 'add', object: rect('a') }] });
@@ -67,4 +67,15 @@ test('multi-selection toggles add only missing reactions and remove from all in 
   assert.deepEqual(desk.get('a').reactions, []); assert.deepEqual(desk.get('b').reactions, []);
   desk.undo(); assert.ok(desk.snapshot().every(object => object.reactions?.includes('👍')));
   assert.deepEqual(reactionOperations([], '👍'), []);
+});
+
+test('legacy check marks remain stored until explicitly toggled and share the new check control', () => {
+  const desk = new Desk();
+  desk.execute({ operations: [{ kind: 'add', object: { ...rect('legacy'), reactions: ['✅', '💡'] } }] });
+  const before = desk.get('legacy');
+  desk.execute({ operations: reactionOperations([before], '✔') });
+  assert.deepEqual(desk.get('legacy').reactions, ['💡']);
+  desk.undo(); assert.deepEqual(desk.get('legacy').reactions, ['✅', '💡']);
+  desk.execute({ operations: reactionOperations(desk.snapshot(), '😊') });
+  assert.deepEqual(desk.get('legacy').reactions, ['✅', '💡', '😊']);
 });

@@ -3,7 +3,7 @@ import { resolveConnections } from './geometry';
 import { initialSettings, settingsOperations, applySettingsOperation, materializeLabels, creationAppearance, nextNumber, formatNumber } from './settings';
 import type { Settings } from './settings';
 import { deskContext } from './desk-context';
-import { reactions } from './reaction-values';
+import { reactions, reactionChoices, canonicalReaction } from './reaction-values';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -30,7 +30,7 @@ export const objectSchema = z.object({
   number: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).optional(),
   labelShape: z.enum(['text', 'rect', 'ellipse', 'roundedRect', 'pin']).optional(),
   description: z.string().max(20_000).optional(),
-  reactions: z.array(z.enum(reactions)).max(6).refine(values => new Set(values).size === values.length, 'Duplicate reactions are not allowed').optional(),
+  reactions: z.array(z.enum(reactions)).max(reactionChoices.length).refine(values => new Set(values.map(canonicalReaction)).size === values.length, 'Duplicate reactions are not allowed').optional(),
   x: coordinate.default(0),
   y: coordinate.default(0),
   x2: coordinate.optional(),
