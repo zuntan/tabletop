@@ -1,7 +1,8 @@
 import type { DeskObject } from './model';
+type EditorPatch = { text?: string; description?: string; url?: string };
 
 export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement,
-  save: (object: DeskObject, patch: { text: string; url?: string }, fresh: boolean) => void) {
+  save: (object: DeskObject, patch: EditorPatch, fresh: boolean) => void) {
   let active: { object: DeskObject; fresh: boolean; panel: HTMLDivElement; text: HTMLTextAreaElement; url?: HTMLInputElement; error: HTMLElement } | null = null;
   let composing = false;
   function close() { active?.panel.remove(); active = null; composing = false; }
@@ -17,8 +18,9 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
     if (!active) return true;
     const { object, text, url, fresh, error } = active;
     try {
-      const patch: { text: string; url?: string } = { text: text.value };
-      if (url) {
+      const patch: EditorPatch = object.type === 'label' ? { description: text.value } : { text: text.value };
+      if (url && ['image', 'svg'].includes(object.type) && !url.value.trim()) patch.url = '';
+      else if (url) {
         const value = new URL(url.value);
         if (!['http:', 'https:'].includes(value.protocol)) throw new Error('HTTP(S) URLを入力してください');
         patch.url = value.href;
@@ -39,12 +41,16 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       if (active && !commit()) return;
       const panel = document.createElement('div'); panel.className = 'inline-editor';
       const text = document.createElement('textarea'); text.dataset.inlineText = ''; text.rows = 3;
-      text.setAttribute('aria-label', ['link', 'web'].includes(object.type) ? '表示名' : 'テキスト'); text.value = object.text;
+      text.setAttribute('aria-label', object.type === 'label' ? 'ピンの説明文' : ['image', 'svg'].includes(object.type) ? 'タイトル' : ['link', 'web'].includes(object.type) ? '表示名' : 'テキスト');
+      if (['image', 'svg'].includes(object.type)) text.placeholder = 'タイトル';
+      text.value = object.type === 'label' ? object.description ?? '' : object.text;
       panel.append(text);
       let url: HTMLInputElement | undefined;
-      if (['link', 'web'].includes(object.type)) {
+      if (['link', 'web', 'image', 'svg'].includes(object.type)) {
         url = document.createElement('input'); url.type = 'url'; url.dataset.inlineUrl = '';
-        url.setAttribute('aria-label', 'HTTP(S) URL'); url.placeholder = 'https://'; url.value = object.url ?? ''; panel.append(url);
+        const optional = ['image', 'svg'].includes(object.type);
+        url.setAttribute('aria-label', optional ? 'HTTP(S) URL（任意）' : 'HTTP(S) URL');
+        url.placeholder = optional ? 'リンク先URL（任意）https://' : 'https://'; url.value = object.url ?? ''; panel.append(url);
       }
       const hint = document.createElement('small'); hint.textContent = 'Enter：確定 · Shift＋Enter：改行 · Esc：取消'; panel.append(hint);
       const error = document.createElement('div'); error.className = 'editor-error'; error.setAttribute('role', 'alert'); panel.append(error);

@@ -109,5 +109,7 @@ test('rounded rectangles and shaped labels support connections and shared dimens
   assert.equal(desk.get('c').y2, 140);
   desk.undo(); assert.equal(desk.get('c').y2, 124);
   execute(desk, [{ kind: 'series_update', id: 'series-1', patch: { shape: 'text' } }]);
-  assert.equal(desk.get('c').endBinding, null);
+  assert.deepEqual(desk.get('c').endBinding, { objectId: 'l', anchor: 'left' });
+  execute(desk, [{ kind: 'update', id: 'l', patch: { x: 430 } }]);
+  assert.equal(desk.get('c').x2, 430);
 });

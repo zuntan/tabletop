@@ -71,9 +71,9 @@ test('defaults, inline editing and independent numbering systems work through UI
     assert.equal(await url.count(), 1); assert.equal((await call('desk_summary')).count, 4);
     await url.fill('https://example.com/path'); await url.press('Enter');
     const link = (await call('desk_list')).objects.at(-1); assert.equal(link.text, '資料'); assert.equal(link.url, 'https://example.com/path');
-    await page.locator(`[data-id="${link.id}"] rect`).dblclick(); await input.fill('表示名変更');
+    await page.locator(`[data-id="${link.id}"] > rect`).dblclick(); await input.fill('表示名変更');
     await page.locator('#revision').click(); assert.equal((await call('desk_get', { id: link.id })).text, '表示名変更');
-    await page.locator('#numbering').click(); await page.locator('#series-place').click();
+    await page.locator('#numbering-settings').click(); await page.locator('#numbering').click();
     await place(350, 360); await place(450, 360); await page.keyboard.press('Escape');
     let labels = (await call('desk_list')).objects.filter((object: { type: string }) => object.type === 'label');
     assert.deepEqual(labels.map((object: { text: string }) => object.text), ['1', '2']);

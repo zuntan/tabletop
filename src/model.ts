@@ -26,7 +26,8 @@ export const objectSchema = z.object({
   cornerRadius: z.number().finite().min(0).max(100_000).default(16),
   seriesId: z.string().min(1).max(100).optional(),
   number: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).optional(),
-  labelShape: z.enum(['text', 'ellipse', 'roundedRect']).optional(),
+  labelShape: z.enum(['text', 'rect', 'ellipse', 'roundedRect', 'pin']).optional(),
+  description: z.string().max(20_000).optional(),
   x: coordinate.default(0),
   y: coordinate.default(0),
   x2: coordinate.optional(),
@@ -42,7 +43,7 @@ export const objectSchema = z.object({
   textColor: color.default('#0f172a'),
   fontSize: z.number().finite().min(1).max(1000).default(24),
   src: source.optional(),
-  url: z.string().max(4096).refine(safeUrl, 'Expected an HTTP(S) URL').optional(),
+  url: z.string().max(4096).refine(value => value === '' || safeUrl(value), 'Expected an HTTP(S) URL').optional(),
 }).strict();
 
 export const patchSchema = objectSchema.omit({ id: true, type: true }).partial();
@@ -164,8 +165,8 @@ export class Desk {
       const index = after.findIndex(o => o.id === operation.id);
       if (index < 0) throw new Error(`Unknown object: ${operation.id}`);
       if (operation.kind === 'update') {
-        if (after[index].type === 'label' && Object.keys(operation.patch).some(key => key !== 'x' && key !== 'y')) {
-          throw new Error('Labels allow only position updates; use series_update for shared appearance');
+        if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'description'].includes(key))) {
+          throw new Error('Labels allow only position and description updates; use series_update for shared appearance');
         }
         after[index] = validateObject({ ...after[index], ...operation.patch });
       }

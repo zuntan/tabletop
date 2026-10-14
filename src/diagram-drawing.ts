@@ -1,5 +1,6 @@
 import type { DeskObject } from './model';
-import { anchors, anchorPoint, endpoints, isConnector, isShape, snap, type Point } from './geometry';
+import { anchors, anchorPoint, endpoints, isConnector, isShape, isConnectable, snap, type Point } from './geometry';
+import { numberCenterY } from './pin-shape';
 
 export function element<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}): SVGElementTagNameMap[K] {
   const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -30,7 +31,7 @@ export function drawShapeText(group: SVGGElement, object: DeskObject) {
     'font-family': 'sans-serif', 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'pointer-events': 'none', class: 'shape-text' });
   lines.forEach((line, i) => {
     const span = element('tspan', { x: object.width / 2,
-      y: object.height / 2 + (i - (lines.length - 1) / 2) * object.fontSize * 1.25 });
+      y: numberCenterY(object.type === 'label' ? object.labelShape : undefined, object.height) + (i - (lines.length - 1) / 2) * object.fontSize * 1.25 });
     span.textContent = line; text.append(span);
   });
   group.append(text);
@@ -49,7 +50,7 @@ export function drawEndpointHandles(layer: SVGGElement, object: DeskObject, zoom
 export function drawSnapTargets(layer: SVGGElement, objects: DeskObject[], point: Point, zoom: number) {
   const candidate = snap(point, objects, 18 / zoom);
   for (const object of objects) {
-    if (!isShape(object)) continue;
+    if (!isConnectable(object)) continue;
     for (const anchor of anchors) {
       const p = anchorPoint(object, anchor);
       const active = candidate?.binding.objectId === object.id && candidate.binding.anchor === anchor;

@@ -7,11 +7,13 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   const connector = isConnector(object);
   for (const name of fields) {
     const input = form.elements.namedItem(name) as HTMLInputElement;
-    input.value = String(object[name] ?? '');
+    if (name === 'text') input.closest('label')!.firstChild!.textContent = object.type === 'label' ? '説明文' : ['image', 'svg'].includes(object.type) ? 'タイトル' : 'テキスト';
+    if (name === 'url') input.closest('label')!.firstChild!.textContent = ['image', 'svg'].includes(object.type) ? 'URL（任意）' : 'URL';
+    input.value = String(object.type === 'label' && name === 'text' ? object.description ?? '' : object[name] ?? '');
     const endpoint = name === 'x2' || name === 'y2';
     const size = name === 'width' || name === 'height';
-    input.disabled = (object.type === 'label' && name !== 'x' && name !== 'y') ||
-      (endpoint && !connector) || (size && connector) || (name === 'url' && !['web', 'link'].includes(object.type));
+    input.disabled = (object.type === 'label' && !['x', 'y', 'text'].includes(name)) ||
+      (endpoint && !connector) || (size && connector) || (name === 'url' && !['web', 'link', 'image', 'svg'].includes(object.type));
     if (endpoint || size) input.closest('label')!.hidden = endpoint ? !connector : connector;
   }
 }
@@ -19,7 +21,8 @@ export function propertyPatch(form: HTMLFormElement, object: DeskObject): Partia
   const patch: Record<string, unknown> = {};
   for (const [key, value] of new FormData(form)) {
     const parsed = numeric.has(key) ? Number(value) : String(value);
-    if (parsed !== object[key as keyof DeskObject]) patch[key] = parsed;
+    const field = object.type === 'label' && key === 'text' ? 'description' : key;
+    if (parsed !== (object[field as keyof DeskObject] ?? '')) patch[field] = parsed;
   }
   if (isConnector(object)) {
     if ('x' in patch || 'y' in patch) patch.startBinding = null;

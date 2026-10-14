@@ -1,12 +1,14 @@
 import { objectSchema, type Desk, type DeskObject, type Operation } from './model';
 import { colorOperations, createColorControls } from './color-controls';
 import { isConnector, isShape } from './geometry';
-import { formatSchema, seriesSchema, type Series } from './settings';
+import { formatSchema, type Series } from './settings';
+import { tightFrame } from './pin-shape';
 
 export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLElement, button: HTMLButtonElement,
-  apply: (operations: Operation[]) => void) {
+  selectButton: HTMLButtonElement, apply: (operations: Operation[]) => void) {
   let chosen = 'series-1', placing = false, selection = '';
-  toolbar.innerHTML = '<div id="default-colors"></div><label>線幅<input id="default-width" type="number" min="0" max="100" step="any"></label>';
+  toolbar.innerHTML = '<div id="default-colors"></div><label title="線幅">線幅<input id="default-width" type="number" min="0" max="100" step="any"></label><button id="numbering-settings" title="ピン体系" aria-label="ピン体系">⚑⚙</button>';
+  const settingsButton = toolbar.querySelector<HTMLButtonElement>('#numbering-settings')!;
   const width = toolbar.querySelector<HTMLInputElement>('#default-width')!;
   const defaults = createColorControls(toolbar.querySelector<HTMLElement>('#default-colors')!, operations => {
     const patch = operations[0]?.kind === 'update' ? operations[0].patch : {};
@@ -25,12 +27,13 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     }
     apply(operations);
   };
-  panel.innerHTML = `<h2>連番体系</h2><select id="series-choice" aria-label="連番体系"></select>
-    <button id="series-add">体系を追加</button><button id="series-place">連番を配置</button>
+  panel.innerHTML = `<h2>ピン体系</h2><select id="series-choice" aria-label="ピン体系"></select>
+    <button id="series-add">体系を追加</button><button id="series-place">ピンを配置</button>
     <form id="series-settings"><label>名前<input name="name" maxlength="100"></label>
-    <label>書式<select name="format"></select></label><label>形<select name="shape"><option value="text">文字のみ</option><option value="ellipse">丸</option><option value="roundedRect">角丸矩形</option></select></label>
+    <label>書式<select name="format"></select></label><label>形<select name="shape"><option value="pin">ピン</option><option value="text">文字のみ</option><option value="rect">四角</option><option value="ellipse">丸 / 楕円</option><option value="roundedRect">角丸矩形</option></select></label>
     <label>幅<input name="width" type="number" min="1"></label><label>高さ<input name="height" type="number" min="1"></label>
     <label>文字サイズ<input name="fontSize" type="number" min="1" max="1000"></label><label>線幅<input name="strokeWidth" type="number" min="0" max="100" step="any"></label>
+    <button id="series-fit" type="button" title="現在の番号と次の番号に合わせて、体系全体の枠をタイトにします">文字に枠を合わせる</button>
     </form><div id="series-colors"></div><small id="series-info"></small>`;
   const choice = panel.querySelector<HTMLSelectElement>('#series-choice')!;
   const form = panel.querySelector<HTMLFormElement>('#series-settings')!;
@@ -42,13 +45,24 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
   }, 'series-');
   function series() { return desk.settingsSnapshot().series.find(item => item.id === chosen)!; }
   function stopPlacement() { placing = false; update(); }
-  button.onclick = () => { panel.hidden = !panel.hidden; if (panel.hidden) stopPlacement(); };
+  selectButton.onclick = stopPlacement;
+  button.onclick = () => { placing = !placing; update(); };
+  settingsButton.onclick = () => { panel.hidden = !panel.hidden; update(); };
   choice.onchange = () => { chosen = choice.value; update(); };
   panel.querySelector<HTMLButtonElement>('#series-place')!.onclick = () => { placing = !placing; update(); };
   panel.querySelector<HTMLButtonElement>('#series-add')!.onclick = () => {
     const id = `series-${crypto.randomUUID().slice(0, 8)}`;
     chosen = id;
-    apply([{ kind: 'series_add', series: seriesSchema.parse({ ...desk.settingsSnapshot().defaults, id, name: `体系 ${desk.settingsSnapshot().series.length + 1}` }) }]);
+    apply([{ kind: 'series_add', series: { id, name: `体系 ${desk.settingsSnapshot().series.length + 1}` } }]);
+  };
+  form.querySelector<HTMLButtonElement>('#series-fit')!.onclick = () => {
+    const current = series();
+    const texts = desk.snapshot().filter(object => object.type === 'label' && object.seriesId === chosen).map(object => object.text);
+    texts.push(desk.listSettings().series.find(item => item.id === chosen)!.nextText);
+    const context = document.createElement('canvas').getContext('2d');
+    if (context) context.font = `${current.fontSize}px sans-serif`;
+    const frame = tightFrame(current.fontSize, current.shape, texts, context ? text => context.measureText(text).width : undefined);
+    apply([{ kind: 'series_update', id: chosen, patch: frame }]);
   };
   form.onsubmit = event => event.preventDefault();
   form.onchange = event => {
@@ -75,14 +89,19 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     colors.update([objectSchema.parse({ ...appearance, type: 'rect' })]);
     const info = desk.listSettings().series.find(item => item.id === chosen)!;
     panel.querySelector('#series-info')!.textContent = `次：${info.nextText} · ${info.count} 個 · Escで配置終了（色・形は体系全体に適用）`;
-    panel.querySelector('#series-place')!.textContent = placing ? '配置中 · クリックで連続配置' : '連番を配置';
-    button.setAttribute('aria-expanded', String(!panel.hidden));
+    panel.querySelector('#series-place')!.textContent = placing ? '配置中 · クリックで連続配置' : 'ピンを配置';
+    settingsButton.setAttribute('aria-expanded', String(!panel.hidden));
+    button.title = `ピンを配置：${current.name}`;
+    button.setAttribute('aria-label', button.title);
+    button.setAttribute('aria-pressed', String(placing));
+    selectButton.setAttribute('aria-pressed', String(!placing));
+    panel.querySelector('#series-place')!.setAttribute('aria-pressed', String(placing));
   }
   return { update, stopPlacement, isPlacing: () => placing,
     place(point: { x: number; y: number }) {
       if (!placing) return false;
       const current = series(), id = `label-${crypto.randomUUID().slice(0, 8)}`;
-      apply([{ kind: 'label_add', id, seriesId: chosen, x: point.x - current.width / 2, y: point.y - current.height / 2 }]);
+      apply([{ kind: 'label_add', id, seriesId: chosen, x: point.x - current.width / 2, y: point.y - current.height }]);
       return true;
     },
   };

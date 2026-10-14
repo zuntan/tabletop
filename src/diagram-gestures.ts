@@ -1,5 +1,6 @@
 import type { DeskObject, Operation } from './model';
 import { endpoints, isConnector, resolveConnections, snap, type Point } from './geometry';
+import { gridPoint, gridMoveDelta } from './grid';
 
 export type Gesture = {
   mode: 'move' | 'resize' | 'start' | 'end' | 'pan' | 'marquee';
@@ -11,21 +12,30 @@ export type Gesture = {
   revision: number;
   camera: Point;
   additive: string[];
+  grid?: boolean;
+  anchorId?: string;
 };
 export function gestureOperations(gesture: Gesture, point: Point, zoom: number): Operation[] {
-  const dx = point.x - gesture.start.x, dy = point.y - gesture.start.y;
+  let dx = point.x - gesture.start.x, dy = point.y - gesture.start.y;
   if (dx === 0 && dy === 0) return []; // Selecting a connected line must not detach it.
+  const anchor = gesture.originals.find(object => object.id === gesture.anchorId) ?? gesture.originals[0];
+  if (gesture.grid && gesture.mode === 'move' && anchor) {
+    const delta = gridMoveDelta(anchor, { x: dx, y: dy }); dx = delta.x; dy = delta.y;
+    if (dx === 0 && dy === 0) return [];
+  }
   return gesture.originals.map(object => {
     let patch: Partial<DeskObject>;
     if (gesture.mode === 'start' || gesture.mode === 'end') {
       const points = endpoints(object), side = gesture.mode;
       const next = { x: points[side].x + dx, y: points[side].y + dy };
       const candidate = snap(next, gesture.scene, 18 / zoom);
-      const p = candidate?.point ?? next;
+      const p = candidate?.point ?? (gesture.grid ? gridPoint(next) : next);
       patch = side === 'start' ? { x: p.x, y: p.y, startBinding: candidate?.binding ?? null }
         : { x2: p.x, y2: p.y, endBinding: candidate?.binding ?? null };
     } else if (gesture.mode === 'resize') {
-      patch = { width: Math.max(1, object.width + dx), height: Math.max(1, object.height + dy) };
+      const corner = { x: object.x + object.width + dx, y: object.y + object.height + dy };
+      const next = gesture.grid ? gridPoint(corner) : corner;
+      patch = { width: Math.max(1, next.x - object.x), height: Math.max(1, next.y - object.y) };
     } else if (isConnector(object)) {
       const { start, end } = endpoints(object);
       patch = { x: start.x + dx, y: start.y + dy, x2: end.x + dx, y2: end.y + dy, startBinding: null, endBinding: null };

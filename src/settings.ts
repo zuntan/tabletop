@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { DeskObject } from './model';
+import { tightFrame } from './pin-shape';
 
 export const colorSchema = z.string().regex(/^(#[0-9a-fA-F]{3,8}|transparent|[a-zA-Z]{1,20})$/);
 export const appearanceSchema = z.object({
@@ -14,18 +15,19 @@ export const seriesSchema = appearanceSchema.extend({
   id: z.string().min(1).max(100),
   name: z.string().trim().min(1).max(100),
   format: formatSchema.default('decimal'),
-  shape: z.enum(['text', 'ellipse', 'roundedRect']).default('text'),
-  width: z.number().finite().min(1).max(100_000).default(48),
+  shape: z.enum(['text', 'rect', 'ellipse', 'roundedRect', 'pin']).default('pin'),
+  width: z.number().finite().min(1).max(100_000).default(36),
   height: z.number().finite().min(1).max(100_000).default(48),
   cornerRadius: z.number().finite().min(0).max(100_000).default(12),
 }).strict();
 export const seriesPatchSchema = seriesSchema.omit({ id: true }).partial();
 export const settingsOperations = [
   z.object({ kind: z.literal('defaults_update'), patch: appearanceSchema.partial() }).strict(),
-  z.object({ kind: z.literal('series_add'), series: seriesSchema }).strict(),
+  z.object({ kind: z.literal('series_add'), series: seriesSchema.partial().required({ id: true, name: true }) }).strict(),
   z.object({ kind: z.literal('series_update'), id: z.string(), patch: seriesPatchSchema }).strict(),
   z.object({ kind: z.literal('label_add'), id: z.string().min(1).max(100), seriesId: z.string(),
-    x: z.number().finite().min(-1_000_000).max(1_000_000), y: z.number().finite().min(-1_000_000).max(1_000_000) }).strict(),
+    x: z.number().finite().min(-1_000_000).max(1_000_000), y: z.number().finite().min(-1_000_000).max(1_000_000),
+    description: z.string().max(20_000).optional() }).strict(),
 ] as const;
 export type Appearance = z.infer<typeof appearanceSchema>;
 export type Series = z.infer<typeof seriesSchema>;
@@ -74,7 +76,9 @@ export function applySettingsOperation(operation: SettingsOperation, objects: De
     settings.defaults = appearanceSchema.parse({ ...settings.defaults, ...operation.patch });
   } else if (operation.kind === 'series_add') {
     if (settings.series.some(series => series.id === operation.series.id)) throw new Error('Duplicate series ID');
-    settings.series.push(operation.series);
+    const fontSize = operation.series.fontSize ?? settings.defaults.fontSize;
+    const frame = tightFrame(fontSize, operation.series.shape ?? 'pin');
+    settings.series.push(seriesSchema.parse({ ...settings.defaults, ...frame, ...operation.series }));
   } else if (operation.kind === 'series_update') {
     const index = settings.series.findIndex(series => series.id === operation.id);
     if (index < 0) throw new Error(`Unknown series: ${operation.id}`);
@@ -86,6 +90,7 @@ export function applySettingsOperation(operation: SettingsOperation, objects: De
     if (objects.length >= 2000) throw new Error('Object limit reached');
     // The model validates and materializes this draft before committing it.
     objects.push({ id: operation.id, type: 'label', seriesId: series.id,
-      number: nextNumber(objects, series), x: operation.x, y: operation.y } as DeskObject);
+      number: nextNumber(objects, series), x: operation.x, y: operation.y,
+      description: operation.description ?? '' } as DeskObject);
   }
 }
