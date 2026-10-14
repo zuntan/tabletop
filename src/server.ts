@@ -12,7 +12,10 @@ import { registerAssetTools } from './asset-tools.js';
 
 const port = Number(process.env.TABLETOP_PORT ?? 4317);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid TABLETOP_PORT');
+const tokenFromEnv = process.env.TABLETOP_TOKEN !== undefined;
 const token = process.env.TABLETOP_TOKEN ?? randomBytes(32).toString('hex');
+const baseUrl = `http://127.0.0.1:${port}/`;
+const connectionUrl = tokenFromEnv ? baseUrl : `${baseUrl}#token=${encodeURIComponent(token)}&port=${port}`;
 if (token.length < 24) throw new Error('TABLETOP_TOKEN must be at least 24 characters');
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
 const mime: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png' };
@@ -110,12 +113,21 @@ for (const [name, description, inputSchema] of tools) {
   });
 }
 registerAssetTools(mcp, request);
+mcp.registerTool('desk_connection_info', {
+  description: 'Get the current browser connection URL without requiring a connected browser. Only server-generated random tokens are included. When TABLETOP_TOKEN is configured, return a plain URL and instructions to enter the configured token manually; never reveal the configured token. Generated URLs contain a secret that may remain in conversation history. Does not rotate tokens or change the desk. MCP-only: no HTTP token endpoint.',
+  inputSchema: {}, annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+}, async () => ({ content: [{ type: 'text', text: JSON.stringify({
+  url: connectionUrl, port, tokenSource: tokenFromEnv ? 'environment' : 'generated', tokenIncluded: !tokenFromEnv,
+  browserConnected: browser?.readyState === WebSocket.OPEN,
+  message: tokenFromEnv ? 'Open the URL and enter your configured TABLETOP_TOKEN in the Connection tab. The configured token is not returned.'
+    : 'Open this URL to connect. It contains a temporary secret valid for this server process; do not share it publicly.',
+}) }] }));
 http.on('error', error => { console.error('[Tabletop] Cannot listen:', error.message); process.exitCode = 1; void mcp.close(); });
 await new Promise<void>((resolveReady, reject) => {
   http.once('error', reject);
   http.listen(port, '127.0.0.1', () => { http.off('error', reject); resolveReady(); });
 });
-console.error(`[Tabletop] Open http://127.0.0.1:${port}/#token=${encodeURIComponent(token)}&port=${port}`);
+console.error(`[Tabletop] Open ${connectionUrl}${tokenFromEnv ? ' (enter configured TABLETOP_TOKEN in the Connection tab)' : ''}`);
 await mcp.connect(new StdioServerTransport());
 let closing = false;
 async function shutdown() {
