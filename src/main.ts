@@ -18,6 +18,8 @@ import { drawOpenLink } from './link-card';
 import { readClipboardFiles, svgClipboardFile } from './clipboard';
 import { drawMarkdown } from './markdown';
 import './markdown.css';
+import { createSidebar } from './sidebar';
+import './sidebar.css';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -77,6 +79,7 @@ app.innerHTML = `
   <input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" hidden>
 `;
 groupToolbar(app.querySelector<HTMLElement>('nav')!);
+createSidebar(app);
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => app.querySelector<T>(selector)!;
 const canvas = app.querySelector<SVGSVGElement>('#canvas')!;
 const viewport = app.querySelector<SVGGElement>('#viewport')!;
