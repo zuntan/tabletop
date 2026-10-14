@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { resolveConnections } from './geometry';
+import { initialSettings, settingsOperations, applySettingsOperation, materializeLabels, creationAppearance, nextNumber, formatNumber } from './settings';
+import type { Settings } from './settings';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -20,7 +22,11 @@ const bindingSchema = z.object({
 
 export const objectSchema = z.object({
   id: z.string().min(1).max(100),
-  type: z.enum(['rect', 'ellipse', 'line', 'arrow', 'text', 'image', 'svg', 'web', 'link']),
+  type: z.enum(['rect', 'roundedRect', 'ellipse', 'line', 'arrow', 'text', 'image', 'svg', 'web', 'link', 'label']),
+  cornerRadius: z.number().finite().min(0).max(100_000).default(16),
+  seriesId: z.string().min(1).max(100).optional(),
+  number: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).optional(),
+  labelShape: z.enum(['text', 'ellipse', 'roundedRect']).optional(),
   x: coordinate.default(0),
   y: coordinate.default(0),
   x2: coordinate.optional(),
@@ -41,7 +47,8 @@ export const objectSchema = z.object({
 
 export const patchSchema = objectSchema.omit({ id: true, type: true }).partial();
 export const operationSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('add'), object: objectSchema }).strict(),
+  ...settingsOperations,
+  z.object({ kind: z.literal('add'), object: objectSchema.partial().required({ id: true, type: true }) }).strict(),
   z.object({ kind: z.literal('update'), id: z.string(), patch: patchSchema }).strict(),
   z.object({ kind: z.literal('delete'), id: z.string() }).strict(),
   z.object({ kind: z.literal('reorder'), id: z.string(), index: z.number().int().min(0) }).strict(),
@@ -61,10 +68,11 @@ export type Change = {
   actor: string;
   timestamp: string;
   targets: string[];
+  settings?: { before: Settings; after: Settings };
   details: { id: string; before?: DeskObject; after?: DeskObject; beforeIndex?: number; afterIndex?: number }[];
 };
 type Snapshot = DeskObject[];
-type Entry = { before: Snapshot; after: Snapshot; actor: string; targets: string[] };
+type Entry = { before: Snapshot; after: Snapshot; beforeSettings: Settings; afterSettings: Settings; actor: string; targets: string[] };
 
 function validateObject(object: unknown): DeskObject {
   const parsed = objectSchema.parse(object);
@@ -78,6 +86,7 @@ export class Desk {
   readonly sessionId = crypto.randomUUID();
   revision = 0;
   private objects: Snapshot = [];
+  private settings: Settings = initialSettings();
   private undoStack: Entry[] = [];
   private redoStack: Entry[] = [];
   private changes: Change[] = [];
@@ -85,6 +94,16 @@ export class Desk {
   pointer: { x: number; y: number } | null = null;
 
   snapshot(): Snapshot { return structuredClone(this.objects); }
+  settingsSnapshot(): Settings { return structuredClone(this.settings); }
+  listSettings() {
+    const settings = this.settingsSnapshot();
+    return { ...settings, series: settings.series.map(series => {
+      const labels = this.objects.filter(object => object.type === 'label' && object.seriesId === series.id);
+      const next = nextNumber(labels, series);
+      return { ...series, count: labels.length, max: labels.reduce((max, label) => Math.max(max, label.number ?? 0), 0),
+        next, nextText: formatNumber(series.format, next) };
+    }) };
+  }
   selected(): string[] { return [...this.selection]; }
   select(ids: string[]) {
     const valid = new Set(this.objects.map(o => o.id));
@@ -126,47 +145,65 @@ export class Desk {
     const batch = batchSchema.parse(input);
     if (batch.expectedRevision !== undefined && batch.expectedRevision !== this.revision) throw new Error('Revision conflict: refresh before editing');
     const before = this.snapshot();
+    const beforeSettings = this.settingsSnapshot();
+    const afterSettings = this.settingsSnapshot();
     let after = this.snapshot();
     for (const operation of batch.operations) {
+      if (operation.kind === 'defaults_update' || operation.kind === 'series_add'
+        || operation.kind === 'series_update' || operation.kind === 'label_add') {
+        applySettingsOperation(operation, after, afterSettings);
+        continue;
+      }
       if (operation.kind === 'add') {
         if (after.some(o => o.id === operation.object.id)) throw new Error(`Duplicate ID: ${operation.object.id}`);
         if (after.length >= 2000) throw new Error('Object limit reached');
-        after.push(validateObject(operation.object));
+        if (operation.object.type === 'label') throw new Error('Use label_add to create a series label');
+        after.push(validateObject({ ...creationAppearance(operation.object.type, afterSettings.defaults), ...operation.object }));
         continue;
       }
       const index = after.findIndex(o => o.id === operation.id);
       if (index < 0) throw new Error(`Unknown object: ${operation.id}`);
-      if (operation.kind === 'update') after[index] = validateObject({ ...after[index], ...operation.patch });
+      if (operation.kind === 'update') {
+        if (after[index].type === 'label' && Object.keys(operation.patch).some(key => key !== 'x' && key !== 'y')) {
+          throw new Error('Labels allow only position updates; use series_update for shared appearance');
+        }
+        after[index] = validateObject({ ...after[index], ...operation.patch });
+      }
       if (operation.kind === 'delete') after.splice(index, 1);
       if (operation.kind === 'reorder') {
         const [object] = after.splice(index, 1);
         after.splice(Math.min(operation.index, after.length), 0, object);
       }
     }
-    after = resolveConnections(after, before).map(validateObject);
-    if (JSON.stringify(before) === JSON.stringify(after)) return this.summary();
-    const targets = [...new Set(batch.operations.map(op => op.kind === 'add' ? op.object.id : op.id))];
-    const entry = { before, after, actor: batch.actor, targets };
+    after = resolveConnections(materializeLabels(after, afterSettings).map(validateObject), before).map(validateObject);
+    if (JSON.stringify(before) === JSON.stringify(after)
+      && JSON.stringify(beforeSettings) === JSON.stringify(afterSettings)) return this.summary();
+    const targets = [...new Set(batch.operations.map(op => op.kind === 'add' ? op.object.id
+      : op.kind === 'defaults_update' ? 'defaults' : op.kind === 'series_add' ? op.series.id : op.id))];
+    const entry = { before, after, beforeSettings, afterSettings, actor: batch.actor, targets };
     this.undoStack.push(entry);
     this.redoStack = [];
-    this.commit(after, before, 'batch', batch.actor, targets);
+    this.commit(after, before, 'batch', batch.actor, targets, afterSettings);
     return this.summary();
   }
   undo(actor = 'human') {
     const entry = this.undoStack.pop();
     if (!entry) throw new Error('Nothing to undo');
     this.redoStack.push(entry);
-    this.commit(entry.before, this.objects, 'undo', actor, entry.targets);
+    this.commit(entry.before, this.objects, 'undo', actor, entry.targets, entry.beforeSettings);
     return this.summary();
   }
   redo(actor = 'human') {
     const entry = this.redoStack.pop();
     if (!entry) throw new Error('Nothing to redo');
     this.undoStack.push(entry);
-    this.commit(entry.after, this.objects, 'redo', actor, entry.targets);
+    this.commit(entry.after, this.objects, 'redo', actor, entry.targets, entry.afterSettings);
     return this.summary();
   }
-  private commit(after: Snapshot, before: Snapshot, operation: Change['operation'], actor: string, targets: string[]) {
+  private commit(after: Snapshot, before: Snapshot, operation: Change['operation'], actor: string, targets: string[], settings: Settings) {
+    const settingsChange = JSON.stringify(this.settings) === JSON.stringify(settings) ? undefined
+      : { before: this.settingsSnapshot(), after: structuredClone(settings) };
+    this.settings = structuredClone(settings);
     const oldMap = new Map(before.map((o, i) => [o.id, { object: o, index: i }]));
     const newMap = new Map(after.map((o, i) => [o.id, { object: o, index: i }]));
     const details = [...new Set([...oldMap.keys(), ...newMap.keys()])].flatMap(id => {
@@ -177,7 +214,7 @@ export class Desk {
     this.objects = structuredClone(after);
     this.selection = this.selection.filter(id => newMap.has(id));
     this.changes.push(structuredClone({ revision: ++this.revision, operation, actor,
-      timestamp: new Date().toISOString(), targets, details }));
+      timestamp: new Date().toISOString(), targets, details, ...(settingsChange ? { settings: settingsChange } : {}) }));
   }
 }
 
@@ -186,6 +223,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('list') }),
   z.object({ method: z.literal('get'), id: z.string() }),
   z.object({ method: z.literal('state') }),
+  z.object({ method: z.literal('settings') }),
   z.object({ method: z.literal('selection') }),
   z.object({ method: z.literal('select'), ids: z.array(z.string()).max(2000) }),
   z.object({ method: z.literal('changes'), sinceRevision: z.number().int().nonnegative(), limit: z.number().int().min(1).max(200).default(100) }),
@@ -200,7 +238,8 @@ export function dispatch(desk: Desk, input: unknown): unknown {
     case 'summary': return desk.summary();
     case 'list': return { ...desk.summary(), objects: desk.list() };
     case 'get': return desk.get(request.id);
-    case 'state': return { ...desk.summary(), objects: desk.snapshot(), selection: desk.selected() };
+    case 'state': return { ...desk.summary(), objects: desk.snapshot(), selection: desk.selected(), settings: desk.settingsSnapshot() };
+    case 'settings': return desk.listSettings();
     case 'selection': return { ids: desk.selected(), pointer: desk.pointer };
     case 'select': return desk.select(request.ids);
     case 'changes': return desk.getChanges(request.sinceRevision, request.limit);

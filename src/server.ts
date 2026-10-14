@@ -88,10 +88,11 @@ const tools = [
   ['desk_list', 'List objects in back-to-front order, excluding embedded image payloads.', {}],
   ['desk_get', 'Get one object including its image source, if any.', { id: z.string() }],
   ['desk_state', 'Get complete state; potentially large. Prefer summary/list/get.', {}],
+  ['desk_settings', 'Get creation defaults and all numbering series with IDs, names, shared appearance, counts and next number. Labels are independent objects referenced by ID or seriesId plus number; repeated capped numbers require an ID.', {}],
   ['desk_selection', 'Get current selection IDs and last known canvas pointer.', {}],
   ['desk_select', 'Set selection without changing revision or history.', { ids: z.array(z.string()).max(2000) }],
   ['desk_changes', 'Get changes after a revision from this session; page via nextRevision.', { sinceRevision: z.number().int().nonnegative(), limit: z.number().int().min(1).max(200).default(100) }],
-  ['desk_execute', 'Atomically add/update/delete/reorder objects. IDs must be unique; array order is back-to-front. expectedRevision guards concurrent edits. Rectangles/ellipses display text in textColor. Text objects use fill. Lines/arrows use stroke and endpoints (x,y) to (x2,y2); dimensions are derived. startBinding/endBinding attach to a rectangle/ellipse via {objectId,anchor:top|right|bottom|left}; null detaches. Bound endpoints follow their target; clear bindings to move them freely.', batchSchema.shape],
+  ['desk_execute', 'Atomically edit objects and settings with shared Undo. add uses creation defaults for omitted appearance. defaults_update changes defaults; series_add/series_update define shared label appearance and format. label_add requires id,seriesId,x,y and assigns current maximum plus one, capped by format. Labels allow only x/y individual updates; delete/reorder are allowed. IDs are unique; array order is back-to-front. expectedRevision guards concurrent edits. rect/roundedRect/ellipse display text in textColor; text uses fill. line/arrow use stroke and endpoints (x,y) to (x2,y2). startBinding/endBinding attach to a shape (including non-text labels) via {objectId,anchor:top|right|bottom|left}; null detaches. Bound endpoints follow targets.', batchSchema.shape],
   ['desk_undo', 'Undo the latest shared action, whether human or agent. Advances revision.', { actor: z.string().min(1).max(100).default('agent-01') }],
   ['desk_redo', 'Redo the latest undone shared action. Advances revision.', { actor: z.string().min(1).max(100).default('agent-01') }],
 ] as const;

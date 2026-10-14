@@ -62,8 +62,9 @@ test('round swatch palettes, shape labels, arrow endpoints and attached movement
       { kind: 'add', object: { id: 't', type: 'text', x: 100, y: 450, text: 'テキスト', fill: '#000000' } },
     ] });
     await call('desk_select', { ids: [] });
-    page.once('dialog', dialog => void dialog.accept('中央テキスト'));
     await page.locator('[data-id="a"] rect').dblclick();
+    await page.locator('[data-inline-text]').fill('中央テキスト');
+    await page.locator('[data-inline-text]').press('Enter');
     assert.equal((await call('desk_get', { id: 'a' })).text, '中央テキスト');
     assert.equal(await page.locator('[data-id="a"] .shape-text').textContent(), '中央テキスト');
     assert.equal(await page.locator('[data-id="a"] .shape-text tspan').getAttribute('x'), '90');

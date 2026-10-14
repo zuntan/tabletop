@@ -16,32 +16,39 @@ const families = [
 export const swatches = Array.from({ length: 6 }, (_, shade) => families.map(family => family[shade])).flat();
 const names = { fill: '塗り', stroke: '輪郭・矢印', text: '文字' };
 function field(object: DeskObject, role: Role): 'fill' | 'stroke' | 'textColor' | null {
+  if (object.type === 'label') return role === 'text' ? 'textColor' : role;
   if (role === 'fill') return isShape(object) ? 'fill' : null;
   if (role === 'stroke') return isShape(object) || isConnector(object) ? 'stroke' : null;
   return isShape(object) ? 'textColor' : object.type === 'text' ? 'fill' : null;
 }
 export function colorOperations(objects: DeskObject[], role: Role, color: string): Operation[] {
-  return objects.flatMap(object => {
+  const seen = new Set<string>();
+  return objects.flatMap<Operation>(object => {
     const key = field(object, role);
+    if (object.type === 'label' && object.seriesId && key) {
+      if (seen.has(object.seriesId)) return [];
+      seen.add(object.seriesId);
+      return [{ kind: 'series_update', id: object.seriesId, patch: { [key]: color } }];
+    }
     return key ? [{ kind: 'update' as const, id: object.id, patch: { [key]: color } }] : [];
   });
 }
 
 /** A thin adapter around Pickr's existing swatch picker, shared by all object types. */
-export function createColorControls(container: HTMLElement, apply: (operations: Operation[]) => void) {
+export function createColorControls(container: HTMLElement, apply: (operations: Operation[]) => void, prefix = '') {
   let objects: DeskObject[] = [];
   let selection = '';
   const controls = (['fill', 'stroke', 'text'] as const).map(role => {
     const row = document.createElement('div'); row.className = 'color-control';
     const label = document.createElement('span'); label.textContent = names[role];
     const button = document.createElement('button'); button.type = 'button';
-    button.className = 'color-trigger'; button.dataset.colorRole = role;
+    button.className = 'color-trigger'; button.dataset.colorRole = `${prefix}${role}`;
     button.setAttribute('aria-label', `${names[role]}の色`); button.setAttribute('aria-haspopup', 'dialog');
     const dot = document.createElement('span'); dot.className = 'color-dot';
     const value = document.createElement('span'); button.append(dot, value); row.append(label, button); container.append(row);
     let ready = false;
     const pickr = Pickr.create({
-      el: button, useAsButton: true, theme: 'nano', appClass: `tabletop-palette palette-${role}`,
+      el: button, useAsButton: true, theme: 'nano', appClass: `tabletop-palette palette-${prefix}${role}`,
       default: '#ffffff', defaultRepresentation: 'HEXA', swatches, comparison: false, closeOnScroll: true,
       components: { palette: false, preview: false, hue: false, opacity: false, interaction: {} },
       i18n: { 'ui:dialog': `${names[role]}の色パレット`, 'btn:swatch': '色見本' },
@@ -58,7 +65,7 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
       value.textContent = color === 'transparent' ? '透明' : color ?? '複数の色';
       if (ready) {
         pickr.setColor(color === 'transparent' || !color ? null : color, true);
-        const popup = document.querySelector<HTMLElement>(`.palette-${role}`)!;
+        const popup = document.querySelector<HTMLElement>(`.palette-${prefix}${role}`)!;
         popup.querySelector<HTMLButtonElement>('.transparent-choice')?.setAttribute('aria-pressed', String(color === 'transparent'));
         popup.querySelectorAll<HTMLButtonElement>('.pcr-swatches button').forEach((swatch, i) => {
           swatch.setAttribute('aria-pressed', String(color?.toLowerCase() === swatches[i]));
@@ -67,7 +74,7 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
     };
     pickr.on('init', () => {
       ready = true;
-      const popup = document.querySelector<HTMLElement>(`.palette-${role}`)!;
+      const popup = document.querySelector<HTMLElement>(`.palette-${prefix}${role}`)!;
       const transparent = document.createElement('button'); transparent.type = 'button';
       transparent.className = 'transparent-choice'; transparent.textContent = '透明（なし）';
       transparent.onclick = () => change('transparent'); popup.prepend(transparent);
@@ -85,7 +92,7 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
       const key = selected.map(o => o.id).join('|');
       if (key !== selection) controls.forEach(control => control.hide());
       objects = selected; selection = key;
-      container.hidden = !objects.some(o => isShape(o) || isConnector(o) || o.type === 'text');
+      container.hidden = !objects.some(o => isShape(o) || isConnector(o) || o.type === 'text' || o.type === 'label');
       controls.forEach(control => control.sync());
     },
     isOpen: () => !!document.querySelector('.tabletop-palette.visible'),

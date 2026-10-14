@@ -10,7 +10,8 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
     input.value = String(object[name] ?? '');
     const endpoint = name === 'x2' || name === 'y2';
     const size = name === 'width' || name === 'height';
-    input.disabled = (endpoint && !connector) || (size && connector) || (name === 'url' && !['web', 'link'].includes(object.type));
+    input.disabled = (object.type === 'label' && name !== 'x' && name !== 'y') ||
+      (endpoint && !connector) || (size && connector) || (name === 'url' && !['web', 'link'].includes(object.type));
     if (endpoint || size) input.closest('label')!.hidden = endpoint ? !connector : connector;
   }
 }

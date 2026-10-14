@@ -5,7 +5,8 @@ export type Anchor = 'top' | 'right' | 'bottom' | 'left';
 export type Binding = { objectId: string; anchor: Anchor };
 export const anchors: Anchor[] = ['top', 'right', 'bottom', 'left'];
 export const isConnector = (object: DeskObject) => object.type === 'line' || object.type === 'arrow';
-export const isShape = (object: DeskObject) => object.type === 'rect' || object.type === 'ellipse';
+export const isShape = (object: DeskObject) => object.type === 'rect' || object.type === 'roundedRect'
+  || object.type === 'ellipse' || (object.type === 'label' && object.labelShape !== 'text');
 
 export function endpoints(object: DeskObject): { start: Point; end: Point } {
   if (object.x2 !== undefined && object.y2 !== undefined) {
@@ -67,14 +68,14 @@ export function resolveConnections(objects: DeskObject[], before: DeskObject[] =
       const binding = object[field];
       if (!binding) continue;
       const target = map.get(binding.objectId);
-      if (!target) {
+      if (!target || (!isShape(target) && isShape(previous.get(binding.objectId) ?? target))) {
         const oldBinding = previous.get(object.id)?.[field];
         if (oldBinding?.objectId !== binding.objectId || oldBinding.anchor !== binding.anchor || !previous.has(binding.objectId)) {
           throw new Error(`Unknown connection target: ${binding.objectId}`);
         }
-        next[field] = null; // Target deleted: keep last world-space endpoint.
+        next[field] = null; // Target removed or no longer a shape: keep the cached endpoint.
       } else {
-        if (!isShape(target)) throw new Error('Connections require a rectangle or ellipse');
+        if (!isShape(target)) throw new Error('Connections require a connectable shape');
         points[side] = anchorPoint(target, binding.anchor);
       }
     }

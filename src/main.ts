@@ -6,6 +6,10 @@ import { drawConnector, drawShapeText, drawEndpointHandles, drawSnapTargets, upd
 import { gestureOperations, gesturePreview, endpointDragPoint, type Gesture } from './diagram-gestures';
 import { syncProperties, propertyPatch } from './properties';
 import './diagram.css';
+import './authoring.css';
+import { createInlineEditor } from './inline-editor';
+import { createAuthoring } from './authoring';
+import { creationAppearance } from './settings';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -15,10 +19,11 @@ app.innerHTML = `
     <button id="undo">元に戻す</button><button id="redo">やり直す</button>
   </header>
   <nav aria-label="追加ツール">
-    <button data-add="rect">▭ 矩形</button><button data-add="ellipse">◯ 楕円</button>
+    <button data-add="rect">▭ 矩形</button><button data-add="roundedRect">▢ 角丸矩形</button><button data-add="ellipse">◯ 楕円</button>
     <button data-add="line">╱ 線</button><button data-add="arrow">↗ 矢印</button>
     <button data-add="text">T テキスト</button><button id="image">画像 / SVG</button>
     <button data-add="web">Web資料</button><button data-add="link">リンク</button>
+    <button id="numbering">連番</button><div id="authoring-tools"></div>
     <span class="spacer"></span><button id="zoom-out" aria-label="縮小">−</button>
     <button id="zoom-reset">100%</button><button id="zoom-in" aria-label="拡大">＋</button><button id="fit">全体表示</button>
   </nav>
@@ -33,6 +38,7 @@ app.innerHTML = `
       <div class="hint">Shift＋クリック：複数選択 · Space＋ドラッグ / 中ボタン：パン · ホイール：ズーム · Delete：削除</div>
     </section>
     <aside>
+      <section id="series-panel" hidden></section>
       <section><h2>選択・プロパティ</h2><div id="selected-label">未選択</div>
         <form id="properties" hidden>
           <label>X / 始点X<input name="x" type="number" step="any"></label><label>Y / 始点Y<input name="y" type="number" step="any"></label>
@@ -78,7 +84,15 @@ const colorControls = createColorControls($('#color-controls'), operations => {
   if (busy || !operations.length) return;
   attempt(() => execute(operations));
 });
-const labels: Record<DeskObject['type'], string> = { rect: '矩形', ellipse: '楕円', line: '線', arrow: '矢印', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
+const editor = createInlineEditor($('#workspace'), viewport, (object, patch, fresh) => {
+  execute([fresh ? { kind: 'add', object: { ...object, ...patch } } : { kind: 'update', id: object.id, patch }]);
+  if (fresh) desk.select([object.id]);
+  render();
+});
+const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'), $<HTMLButtonElement>('#numbering'), operations => {
+  if (!busy) attempt(() => execute(operations));
+});
+const labels: Record<DeskObject['type'], string> = { rect: '矩形', roundedRect: '角丸矩形', label: '連番', ellipse: '楕円', line: '線', arrow: '矢印', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
 
 function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}): SVGElementTagNameMap[K] {
   const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -102,6 +116,7 @@ function world(event: PointerEvent | WheelEvent) {
 function cameraChanged() {
   viewport.setAttribute('transform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
   $('#zoom-reset').textContent = `${Math.round(camera.zoom * 100)}%`;
+  editor.reposition();
 }
 function zoom(factor: number, center = { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 }) {
   const old = camera.zoom;
@@ -117,8 +132,16 @@ function drawObject(object: DeskObject) {
     drawConnector(group, object, camera.zoom); objectsLayer.append(group); return;
   }
   const style = { fill: object.fill, stroke: object.stroke, 'stroke-width': object.strokeWidth };
-  if (object.type === 'rect') group.append(svg('rect', { width: w, height: h, ...style }));
-  if (object.type === 'ellipse') group.append(svg('ellipse', { cx: w / 2, cy: h / 2, rx: w / 2, ry: h / 2, ...style }));
+  const shape = object.type === 'label' ? object.labelShape : object.type;
+  if (shape === 'rect' || shape === 'roundedRect') group.append(svg('rect', { width: w, height: h,
+    rx: shape === 'roundedRect' ? Math.min(object.cornerRadius, w / 2, h / 2) : 0, ...style }));
+  if (shape === 'ellipse') group.append(svg('ellipse', { cx: w / 2, cy: h / 2, rx: w / 2, ry: h / 2, ...style }));
+  if (object.type === 'label' && shape === 'text') {
+    group.append(svg('rect', { width: w, height: h, fill: 'transparent' }));
+    const text = svg('text', { x: w / 2, y: h / 2, fill: object.textColor, 'font-size': object.fontSize,
+      'text-anchor': 'middle', 'dominant-baseline': 'middle', 'pointer-events': 'none' });
+    text.textContent = object.text; group.append(text);
+  }
   drawShapeText(group, object);
   if (object.type === 'text') {
     group.append(svg('rect', { width: w, height: h, fill: 'transparent' }));
@@ -156,7 +179,7 @@ function drawSelection(preview?: DeskObject[]) {
     overlays.append(svg('rect', { x: object.x - 3 / camera.zoom, y: object.y - 3 / camera.zoom,
       width: object.width + 6 / camera.zoom, height: object.height + 6 / camera.zoom,
       fill: 'none', stroke: '#2563eb', 'stroke-width': 1.5 / camera.zoom, 'stroke-dasharray': `${5 / camera.zoom} ${3 / camera.zoom}`, 'pointer-events': 'none' }));
-    if (selected.length === 1) overlays.append(svg('rect', {
+    if (selected.length === 1 && object.type !== 'label') overlays.append(svg('rect', {
       x: object.x + object.width - 5 / camera.zoom, y: object.y + object.height - 5 / camera.zoom,
       width: 10 / camera.zoom, height: 10 / camera.zoom, fill: '#2563eb', stroke: '#fff',
       'stroke-width': 1 / camera.zoom, 'data-resize': object.id, class: 'resize-handle',
@@ -176,6 +199,7 @@ function render(rebuild = true) {
   $('#count').textContent = String(desk.summary().count);
   const ids = desk.selected();
   colorControls.update(ids.map(id => desk.get(id)));
+  authoring.update();
   $('#selected-label').textContent = ids.length ? `${ids.length} 個選択 · ${ids.join(', ')}` : '未選択';
   form.hidden = ids.length !== 1;
   const link = $<HTMLAnchorElement>('#open-url'); link.hidden = true;
@@ -209,18 +233,15 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
   const offset = desk.summary().count % 8 * 22;
   const center = { x: (120 - camera.x) / camera.zoom + offset, y: (100 - camera.y) / camera.zoom + offset };
   const object = objectSchema.parse({ id: `${type}-${crypto.randomUUID().slice(0, 8)}`, type, ...center,
-    ...(type === 'text' ? { fill: '#0f172a', width: 280, height: 80 } : {}), ...extra });
+    ...creationAppearance(type, desk.settingsSnapshot().defaults),
+    ...(type === 'text' ? { width: 280, height: 80 } : {}),
+    ...(['web', 'link'].includes(type) ? { width: type === 'web' ? 480 : 320, height: type === 'web' ? 340 : 60 } : {}), ...extra });
+  if (['text', 'web', 'link'].includes(type)) { editor.open(object, true); return; }
   execute([{ kind: 'add', object }]); desk.select([object.id]);
 }
 app.querySelectorAll<HTMLButtonElement>('[data-add]').forEach(button => button.onclick = () => {
   const type = button.dataset.add as DeskObject['type'];
-  if (type === 'text') {
-    const text = prompt('配置するテキスト', 'いっしょに考える');
-    if (text !== null) attempt(() => newObject(type, { text }));
-  } else if (type === 'web' || type === 'link') {
-    const url = prompt('HTTP(S) URL');
-    if (url) attempt(() => newObject(type, { url, text: url, width: type === 'web' ? 480 : 320, height: type === 'web' ? 340 : 60 }));
-  } else attempt(() => newObject(type));
+  if (!busy && !editor.isActive()) attempt(() => newObject(type));
 });
 $('#undo').onclick = () => attempt(() => { desk.undo(); });
 $('#redo').onclick = () => attempt(() => { desk.redo(); });
@@ -254,13 +275,14 @@ $('#fit').onclick = () => {
 canvas.addEventListener('dblclick', event => {
   const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
   const id = target.closest('[data-id]')?.getAttribute('data-id');
-  if (!id || busy || !isShape(desk.get(id))) return;
-  const text = prompt('図形のテキスト', desk.get(id).text);
-  if (text !== null) attempt(() => execute([{ kind: 'update', id, patch: { text } }]));
+  if (!id || busy || editor.isActive()) return;
+  const object = desk.get(id);
+  if (['rect', 'roundedRect', 'ellipse', 'text', 'link', 'web'].includes(object.type)) editor.open(object);
 });
 canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture) zoom(Math.exp(-event.deltaY * 0.001), screen(event)); }, { passive: false });
 canvas.addEventListener('pointerdown', event => {
-  if (gesture || (event.button !== 0 && event.button !== 1)) return;
+  if (gesture || editor.isActive() || (event.button !== 0 && event.button !== 1)) return;
+  if (event.button === 0 && !space && authoring.place(world(event))) { event.preventDefault(); return; }
   const target = event.target as Element;
   const resize = target.closest('[data-resize]')?.getAttribute('data-resize');
   const endpoint = target.closest('[data-endpoint]')?.getAttribute('data-endpoint');
@@ -330,6 +352,8 @@ canvas.addEventListener('pointercancel', event => endGesture(event, true));
 canvas.addEventListener('lostpointercapture', event => { if (gesture) endGesture(event, true); });
 window.addEventListener('blur', () => { space = false; if (gesture) { gesture = null; busy = false; render(); } });
 window.addEventListener('keydown', event => {
+  if (editor.isActive()) return;
+  if (event.key === 'Escape' && authoring.isPlacing()) { authoring.stopPlacement(); return; }
   if ((event.target as Element).closest('input,textarea,select') || colorControls.isOpen()) return;
   if (event.code === 'Space') { space = true; event.preventDefault(); }
   if (gesture) return;
@@ -386,7 +410,7 @@ function connect(token: string, port: string) {
     try {
       const message = JSON.parse(String(event.data)); id = message.id;
       if (typeof id !== 'string') throw new Error('Invalid request ID');
-      if (busy) throw new Error('Human gesture or image import in progress. Retry after it completes.');
+      if (busy || (editor.isActive() && ['execute', 'undo', 'redo', 'select'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       const result = dispatch(desk, message.request);
       ws.send(JSON.stringify({ id, result }));
       // Read-only requests must not rebuild iframes or steal form edits.
