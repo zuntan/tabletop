@@ -76,8 +76,8 @@ test('round swatch palettes, shape labels, arrow endpoints and attached movement
     await color('text', '#7f1d1d'); assert.equal((await call('desk_get', { id: 'a' })).textColor, '#7f1d1d');
     assert.equal(await page.locator('[data-id="a"] .shape-text').getAttribute('fill'), '#7f1d1d');
     await call('desk_select', { ids: ['t'] });
-    assert.equal(await page.locator('[data-color-role="fill"]').isVisible(), false);
-    await color('text', '#7e22ce'); assert.equal((await call('desk_get', { id: 't' })).fill, '#7e22ce');
+    assert.equal(await page.locator('[data-color-role="fill"]').isVisible(), true);
+    await color('text', '#7e22ce'); assert.equal((await call('desk_get', { id: 't' })).textColor, '#7e22ce');
     await call('desk_select', { ids: ['a', 'b'] });
     const revision = (await call('desk_summary')).revision;
     await color('fill', '#93c5fd');

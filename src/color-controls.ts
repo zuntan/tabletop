@@ -17,9 +17,9 @@ export const swatches = Array.from({ length: 6 }, (_, shade) => families.map(fam
 const names = { fill: '塗り', stroke: '輪郭・矢印', text: '文字' };
 function field(object: DeskObject, role: Role): 'fill' | 'stroke' | 'textColor' | null {
   if (object.type === 'label') return role === 'text' ? 'textColor' : role;
-  if (role === 'fill') return isShape(object) ? 'fill' : null;
-  if (role === 'stroke') return isShape(object) || isConnector(object) ? 'stroke' : null;
-  return isShape(object) ? 'textColor' : object.type === 'text' ? 'fill' : null;
+  if (role === 'fill') return isShape(object) || object.type === 'text' ? 'fill' : null;
+  if (role === 'stroke') return isShape(object) || isConnector(object) || object.type === 'text' ? 'stroke' : null;
+  return isShape(object) || object.type === 'text' ? 'textColor' : null;
 }
 export function colorOperations(objects: DeskObject[], role: Role, color: string): Operation[] {
   const seen = new Set<string>();

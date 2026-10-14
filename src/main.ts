@@ -16,6 +16,8 @@ import { gridPoint, gridOrigin } from './grid';
 import { pinPath } from './pin-shape';
 import { drawOpenLink } from './link-card';
 import { readClipboardFiles, svgClipboardFile } from './clipboard';
+import { drawMarkdown } from './markdown';
+import './markdown.css';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -157,12 +159,8 @@ function drawObject(object: DeskObject) {
   drawShapeText(group, object);
   drawLabelDescription(group, object, descriptionsVisible);
   if (object.type === 'text') {
-    group.append(svg('rect', { width: w, height: h, fill: 'transparent' }));
-    const text = svg('text', { fill: object.fill, 'font-size': object.fontSize, 'font-family': 'sans-serif' });
-    object.text.split('\n').forEach((line, i) => {
-      const span = svg('tspan', { x: 0, y: object.fontSize * (i * 1.25 + 1) }); span.textContent = line; text.append(span);
-    });
-    group.append(text);
+    group.append(svg('rect', { width: w, height: h, ...style }));
+    drawMarkdown(group, object);
   }
   if (['link', 'web', 'image', 'svg'].includes(object.type)) {
     group.append(svg('rect', { width: w, height: h, rx: 6, fill: '#ffffff', stroke: '#94a3b8' }));
@@ -301,7 +299,7 @@ $('#fit').onclick = () => {
 };
 canvas.addEventListener('dblclick', event => {
   const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
-  if (target.closest('[data-open-url]')) return;
+  if (target.closest('[data-open-url], [data-markdown-link]')) return;
   const id = target.closest('[data-id]')?.getAttribute('data-id');
   if (!id || busy || editor.isActive()) return;
   const object = desk.get(id);
@@ -310,7 +308,7 @@ canvas.addEventListener('dblclick', event => {
 canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture) zoom(Math.exp(-event.deltaY * 0.001), screen(event)); }, { passive: false });
 canvas.addEventListener('pointerdown', event => {
   if (gesture || editor.isActive() || (event.button !== 0 && event.button !== 1)) return;
-  if (!space && (event.target as Element).closest('[data-open-url]')) return;
+  if (!space && (event.target as Element).closest('[data-open-url], [data-markdown-link]')) return;
   if (event.button === 0 && !space && authoring.place(gridEnabled ? gridPoint(world(event)) : world(event))) { event.preventDefault(); return; }
   const target = event.target as Element;
   const resize = target.closest('[data-resize]')?.getAttribute('data-resize');

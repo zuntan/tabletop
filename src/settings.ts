@@ -60,7 +60,7 @@ export function nextNumber(objects: DeskObject[], series: Series): number {
   return Math.min(max + 1, formatLimit(series.format));
 }
 export function creationAppearance(type: DeskObject['type'], defaults: Appearance): Appearance {
-  return { ...defaults, ...(type === 'text' ? { fill: defaults.textColor } : {}) };
+  return { ...defaults, ...(type === 'text' ? { fill: 'transparent', stroke: 'transparent' } : {}) };
 }
 export function materializeLabels(objects: DeskObject[], settings: Settings): DeskObject[] {
   return objects.map(object => {

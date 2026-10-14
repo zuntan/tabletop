@@ -19,7 +19,9 @@ test('creation defaults apply only to new objects and share atomic history', () 
     { kind: 'add', object: { id: 'text', type: 'text' } },
     { kind: 'add', object: { id: 'explicit', type: 'rect', fill: '#00f' } }]);
   assert.equal(desk.get('new').fill, '#f00');
-  assert.equal(desk.get('text').fill, '#0f0');
+  assert.equal(desk.get('text').textColor, '#0f0');
+  assert.equal(desk.get('text').fill, 'transparent');
+  assert.equal(desk.get('text').stroke, 'transparent');
   assert.equal(desk.get('explicit').fill, '#00f');
   desk.undo(); desk.undo();
   assert.equal(desk.get('old').strokeWidth, 2);
