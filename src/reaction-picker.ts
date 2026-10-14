@@ -1,12 +1,12 @@
 import { reactionChoices, reactionNames, type Reaction } from './reaction-values';
 
-/** Native auto popover provides outside-click/Escape dismissal and keyboard focus handling. */
+/** Stay open while selecting targets; close explicitly with the trigger or Escape. */
 export function createReactionButtons(container: HTMLElement, toggle: (reaction: Reaction) => void) {
   const quick = document.createElement('div'); quick.className = 'reaction-quick';
-  quick.setAttribute('role', 'group'); quick.setAttribute('aria-label', 'よく使うリアクション');
-  const palette = document.createElement('div'); palette.id = 'reaction-palette'; palette.popover = 'auto';
+  quick.setAttribute('role', 'group'); quick.setAttribute('aria-label', 'リアクションを開く');
+  const palette = document.createElement('div'); palette.id = 'reaction-palette'; palette.popover = 'manual';
   palette.setAttribute('role', 'group'); palette.setAttribute('aria-label', 'すべてのリアクション');
-  const more = document.createElement('button'); more.type = 'button'; more.id = 'reaction-more'; more.textContent = '＋';
+  const more = document.createElement('button'); more.type = 'button'; more.id = 'reaction-more'; more.textContent = 'リアクション ▾';
   more.setAttribute('aria-label', 'リアクション一覧'); more.title = 'リアクション一覧';
   more.setAttribute('aria-expanded', 'false'); more.setAttribute('aria-controls', palette.id);
   more.popoverTargetElement = palette; more.popoverTargetAction = 'toggle';
@@ -16,9 +16,9 @@ export function createReactionButtons(container: HTMLElement, toggle: (reaction:
     button.title = `${reactionNames[reaction]}を付け外し`; button.onclick = () => toggle(reaction);
     return button;
   };
-  const quickButtons = reactionChoices.slice(0, 7).map(makeButton);
+
   const paletteButtons = reactionChoices.map(makeButton);
-  quick.append(...quickButtons, more); palette.append(...paletteButtons); container.append(quick, palette);
+  quick.append(more); palette.append(...paletteButtons); container.append(quick, palette);
   const position = () => {
     const anchor = more.getBoundingClientRect();
     const width = palette.offsetWidth || 238, height = palette.offsetHeight || 110;
@@ -30,10 +30,14 @@ export function createReactionButtons(container: HTMLElement, toggle: (reaction:
     const open = palette.matches(':popover-open'); more.setAttribute('aria-expanded', String(open));
     if (open) position();
   });
-  container.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && palette.matches(':popover-open')) event.stopPropagation();
-  });
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || !palette.matches(':popover-open')) return;
+    // Composition and an active editor get the first Escape for their own cancellation.
+    if (event.isComposing || event.keyCode === 229) return;
+    if (event.target instanceof Element && event.target.closest('.inline-editor')) return;
+    event.preventDefault(); event.stopPropagation(); palette.hidePopover(); more.focus();
+  }, true);
   window.addEventListener('resize', () => { if (palette.matches(':popover-open')) position(); });
   window.addEventListener('scroll', () => { if (palette.matches(':popover-open')) position(); }, true);
-  return [...quickButtons, ...paletteButtons];
+  return paletteButtons;
 }

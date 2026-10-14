@@ -7,7 +7,7 @@ test('human and AI attach eighteen reactions to objects and pins with shared Und
   const { page, call, client, close, errors } = await openTestDesk('reactions');
   try {
     assert.equal(await page.locator('#reaction-controls').isVisible(), true);
-    assert.equal(await page.locator('#reaction-more').isDisabled(), true);
+    assert.equal(await page.locator('#reaction-more').isDisabled(), false);
     await call('desk_execute', { operations: [
       { kind: 'add', object: { id: 'memo', type: 'text', x: 200, y: 150, width: 260, height: 180, text: 'Memo' } },
       { kind: 'label_add', id: 'pin', seriesId: 'series-1', x: 600, y: 160 },
@@ -16,7 +16,8 @@ test('human and AI attach eighteen reactions to objects and pins with shared Und
       { kind: 'add', object: { id: 'card', type: 'link', x: 550, y: 270, width: 240, height: 100, url: 'https://example.com/' } },
     ] });
     await call('desk_select', { ids: ['memo'] });
-    const buttons = page.locator('.reaction-quick [data-reaction]'); assert.equal(await buttons.count(), 7);
+    await page.locator('#reaction-more').click();
+    const buttons = page.locator('#reaction-palette [data-reaction]'); assert.equal(await buttons.count(), 18);
     const thumb = page.getByRole('button', { name: '👍 Good', exact: true });
     await thumb.click();
     assert.deepEqual((await call('desk_get', { id: 'memo' })).reactions, ['👍']);

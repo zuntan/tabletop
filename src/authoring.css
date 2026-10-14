@@ -2,7 +2,11 @@
 main { height: auto; min-height: 0; }
 nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 .toolbar-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 8px; max-width: 100%; }
-.toolbar-parts { flex: 0 1 410px; }
+.toolbar-parts, #authoring-tools { flex: 1 1 auto; min-width: 0; }
+.toolbar-group .tool-button { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 34px; height: 46px; padding: 4px 6px; white-space: nowrap; }
+.tool-icon { font-size: 18px; line-height: 1; }
+.tool-caption { display: block; font-size: 10px; line-height: 1.1; font-weight: normal; }
+.toolbar-pin-actions { display: flex; flex: none; align-items: center; gap: 6px; }
 .toolbar-view { margin-left: auto; }
 .toolbar-group button { min-width: 34px; }
 .toolbar-group button[aria-pressed="true"] { background: #dbeafe; border-color: #2563eb; }

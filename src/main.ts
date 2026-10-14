@@ -113,7 +113,9 @@ const editor = createInlineEditor($('#workspace'), viewport, (object, patch, fre
 const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'), $<HTMLButtonElement>('#numbering'), $<HTMLButtonElement>('#selection-mode'), operations => {
   if (!busy) attempt(() => execute(operations));
 });
-$('#authoring-tools').append($('#reaction-controls'));
+const pinActions = document.createElement('div'); pinActions.className = 'toolbar-pin-actions';
+pinActions.append($('#numbering-settings'), $('#reaction-controls'));
+$('#authoring-tools').append(pinActions);
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });
@@ -141,7 +143,7 @@ function world(event: PointerEvent | WheelEvent) {
 function cameraChanged() {
   viewport.setAttribute('transform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
   app.querySelector('#dots')!.setAttribute('patternTransform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
-  $('#zoom-reset').textContent = `${Math.round(camera.zoom * 100)}%`;
+  $('#zoom-reset .tool-icon').textContent = `${Math.round(camera.zoom * 100)}%`;
   editor.reposition();
 }
 function zoom(factor: number, center = { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 }) {

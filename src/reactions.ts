@@ -26,9 +26,7 @@ export function createReactionControls(container: HTMLElement, selected: () => D
   return {
     update(objects: DeskObject[]) {
       container.hidden = false;
-      const more = container.querySelector<HTMLButtonElement>('#reaction-more')!;
-      more.disabled = !objects.length;
-      if (!objects.length) container.querySelector<HTMLElement>('#reaction-palette')!.hidePopover();
+      // Keep the list available while changing or clearing the editing selection.
       buttons.forEach(button => {
         button.disabled = !objects.length;
         const active = objects.filter(object => hasReaction(object.reactions, button.dataset.reaction as Reaction)).length;

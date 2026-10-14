@@ -4,12 +4,14 @@ import { isConnector, isShape } from './geometry';
 import { formatSchema, type Series } from './settings';
 import { tightFrame } from './pin-shape';
 import { opacityOperations, transparencyPercent, opacityFromPercent } from './fill-opacity';
+import { iconButton } from './toolbar';
 
 export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLElement, button: HTMLButtonElement,
   selectButton: HTMLButtonElement, apply: (operations: Operation[]) => void) {
   let chosen = 'series-1', placing = false, selection = '';
   toolbar.innerHTML = '<div id="default-colors"></div><label title="線幅">線幅<input id="default-width" type="number" min="0" max="100" step="any"></label><button id="numbering-settings" title="ピン体系" aria-label="ピン体系">⚑⚙</button>';
   const settingsButton = toolbar.querySelector<HTMLButtonElement>('#numbering-settings')!;
+  iconButton(settingsButton, '⚑⚙', 'ピン体系');
   const width = toolbar.querySelector<HTMLInputElement>('#default-width')!;
   const opacityLabel = document.createElement('label'); opacityLabel.textContent = '塗り透過%';
   const opacity = document.createElement('input'); opacity.id = 'default-opacity'; opacity.type = 'number';

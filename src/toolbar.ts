@@ -1,5 +1,7 @@
+import { toolButtonContent } from './tool-caption';
+
 export function iconButton(button: HTMLButtonElement, icon: string, label: string) {
-  button.textContent = icon;
+  toolButtonContent(button, icon, label);
   button.title = label;
   button.setAttribute('aria-label', label);
 }
@@ -35,8 +37,7 @@ export function groupToolbar(nav: HTMLElement) {
   view.setAttribute('aria-label', '表示');
   for (const [id, icon, label] of [['zoom-out', '−', '縮小'], ['zoom-reset', '', 'ズームを100%に戻す'], ['zoom-in', '＋', '拡大'], ['fit', '⛶', '全体表示']]) {
     const button = nav.querySelector<HTMLButtonElement>(`#${id}`)!;
-    if (icon) iconButton(button, icon, label);
-    else { button.title = label; button.setAttribute('aria-label', label); }
+    iconButton(button, icon || button.textContent || '100%', label);
     view.append(button);
   }
   for (const [id, icon, label] of [['grid-snap', '⊞', 'グリッドに吸着'], ['label-descriptions', '☷', 'ピンの説明文を隠す']]) {
