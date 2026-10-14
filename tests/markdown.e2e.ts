@@ -11,6 +11,7 @@ test('Markdown memo keeps source editing, independent colors and safe links with
     const memo = page.locator('[data-id="memo"]');
     assert.equal(await memo.locator('h1').innerText(), 'Memo');
     assert.equal(await memo.locator('strong').innerText(), 'strong');
+    assert.equal(await memo.locator('a').evaluate(element => getComputedStyle(element).fontSize), '24px');
     assert.equal(await memo.locator(':scope > rect').getAttribute('fill'), 'transparent');
     assert.equal(await memo.locator(':scope > rect').getAttribute('stroke'), 'transparent');
     await memo.locator('h1').dblclick();

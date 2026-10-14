@@ -13,5 +13,5 @@
 .markdown-text code { font-family: monospace; background: #94a3b826; border-radius: 3px; }
 .markdown-text pre { padding: .4em; background: #94a3b826; white-space: pre-wrap; }
 .markdown-text pre code { background: none; }
-.markdown-text a { color: #1d4ed8; text-decoration: underline; cursor: pointer; }
+.markdown-text a { color: #1d4ed8; font-size: inherit; text-decoration: underline; cursor: pointer; }
 .markdown-text a:focus-visible { outline: 2px solid #2563eb; }

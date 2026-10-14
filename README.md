@@ -1,6 +1,6 @@
 # Tabletop
 
-人間とAIが同じ2D作業机を操作するローカル試作です。仕様の原本は [concept.md](./concept.md) です。
+人間とAIが同じ2D作業机を操作するローカル試作です。仕様の原本は [concept.md](./concept.md) です。プレリリース候補の検証結果・次の共同作業テスト・既知の制限は [PRERELEASE.md](./PRERELEASE.md) を参照してください。
 
 ## 起動
 
