@@ -20,6 +20,8 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 .inline-editor textarea, .inline-editor input { width: 100%; box-sizing: border-box; margin-bottom: 6px; }
 .inline-editor small { display: block; font-size: 11px; }
 .inline-editor-actions { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
-.inline-editor-actions select { flex: 1; min-width: 0; font-size: 11px; }
-.inline-editor-actions button { flex: none; }
+.inline-editor-actions small { flex: 1; min-width: 0; }
+.inline-editor-actions .editor-mode-toggle { flex: none; width: 28px; height: 28px; padding: 2px; border: 1px solid transparent; background: transparent; color: #475569; border-radius: 4px; }
+.inline-editor-actions .editor-mode-toggle:hover, .inline-editor-actions .editor-mode-toggle[aria-pressed="true"] { background: #eff6ff; color: #1d4ed8; }
+.inline-editor-actions .editor-mode-toggle:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
 .editor-error { color: #b91c1c; }
