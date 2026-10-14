@@ -22,8 +22,10 @@ export function groupToolbar(nav: HTMLElement) {
     image: ['▧', '画像 / SVG'], web: ['◎', 'Web資料'], link: ['↗▤', 'リンク'], numbering: ['📍', 'ピンを配置'],
     clipboard: ['▣', 'クリップボードから追加'],
   };
-  nav.querySelectorAll<HTMLButtonElement>('[data-add], #image, #clipboard, #numbering').forEach(button => {
-    const [icon, label] = icons[button.dataset.add ?? button.id];
+  const partOrder = ['rect', 'roundedRect', 'ellipse', 'line', 'arrow', 'numbering', 'text', 'image', 'web', 'link', 'clipboard'];
+  partOrder.forEach(key => {
+    const button = nav.querySelector<HTMLButtonElement>(`[data-add="${key}"], #${key}`)!;
+    const [icon, label] = icons[key];
     iconButton(button, icon, label);
     parts.append(button);
   });
