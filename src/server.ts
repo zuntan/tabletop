@@ -9,6 +9,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { batchSchema, type Request } from './model.js';
 import { registerAssetTools } from './asset-tools.js';
+import { isStaticPathInside } from './static-path.js';
 
 const port = Number(process.env.TABLETOP_PORT ?? 4317);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid TABLETOP_PORT');
@@ -26,7 +27,7 @@ const http = createServer(async (req, res) => {
   try {
     const pathname = decodeURIComponent(new URL(req.url ?? '/', `http://${host}`).pathname);
     const path = resolve(root, `.${pathname === '/' ? '/index.html' : pathname}`);
-    if (!path.startsWith(root + '/')) { res.writeHead(403).end(); return; }
+    if (!isStaticPathInside(root, path)) { res.writeHead(403).end(); return; }
     const body = await readFile(path);
     res.writeHead(200, {
       'Content-Type': mime[extname(path)] ?? 'application/octet-stream',

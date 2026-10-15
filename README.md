@@ -20,6 +20,8 @@ npm start
 
 ## CLIエージェントのMCP設定
 
+Windows＋GitHub Copilot CLIの導入・MCP設定は [Windows向け手順](./docs/windows-copilot-cli.md) を参照してください。Windows実機での動作確認状況と既知の制限も記載しています。
+
 一般的な `mcpServers` 形式の例です。クライアントごとの設定ファイルの場所・書式に合わせてください。パスはこの環境の絶対パスです。
 
 ```json
