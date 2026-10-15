@@ -6,6 +6,13 @@ test('sidebar tabs use full height, preserve tab/scroll and hide without changin
   const { page, call, close, errors } = await openTestDesk('sidebar-test');
   try {
     assert.equal(await page.getByRole('tab').count(), 4);
+    assert.equal(await page.locator('header #sidebar-toggle').count(), 0);
+    assert.equal(await page.locator('.sidebar-heading > #sidebar-toggle').count(), 1);
+    assert.equal(await page.locator('[role="tablist"] #sidebar-toggle').count(), 0);
+    const toggleBounds = (await page.locator('#sidebar-toggle').boundingBox())!;
+    const tabsBounds = (await page.locator('.sidebar-tabs').boundingBox())!;
+    assert.ok(toggleBounds.x >= tabsBounds.x + tabsBounds.width);
+    assert.ok(Math.abs(toggleBounds.y + toggleBounds.height / 2 - (tabsBounds.y + tabsBounds.height / 2)) < 2);
     assert.equal(await page.locator('#tab-properties').getAttribute('aria-selected'), 'true');
     for (let i = 0; i < 55; i++) await call('desk_execute', { operations: [{ kind: 'add', object: { id: `object-${i}`, type: 'rect', x: i * 10, y: i * 5, text: `Object ${i}` } }] });
     await page.locator('#tab-history').click();
@@ -17,9 +24,17 @@ test('sidebar tabs use full height, preserve tab/scroll and hide without changin
     const state = await call('desk_state'); const width = (await page.locator('#canvas').boundingBox())!.width;
     await page.locator('#sidebar-toggle').click();
     assert.equal(await page.locator('#sidebar').isVisible(), false);
-    assert.ok((await page.locator('#canvas').boundingBox())!.width > width);
+    const canvasBounds = (await page.locator('#canvas').boundingBox())!;
+    const floatingBounds = (await page.locator('#sidebar-toggle').boundingBox())!;
+    assert.ok(canvasBounds.width > width);
+    assert.equal(await page.locator('#workspace > #sidebar-toggle').count(), 1);
+    assert.ok(Math.abs(floatingBounds.x + floatingBounds.width - (canvasBounds.x + canvasBounds.width - 8)) < 2);
+    assert.ok(Math.abs(floatingBounds.y - canvasBounds.y - 8) < 2);
+    assert.equal(await page.locator('#sidebar-toggle').getAttribute('aria-expanded'), 'false');
+    assert.equal(await page.locator('#sidebar-toggle').evaluate(element => document.activeElement === element), true);
     assert.deepEqual(await call('desk_state'), state);
-    await page.locator('#sidebar-toggle').click();
+    await page.keyboard.press('Enter');
+    assert.equal(await page.locator('.sidebar-heading > #sidebar-toggle').count(), 1);
     assert.equal(await page.locator('#tab-history').getAttribute('aria-selected'), 'true');
     assert.equal(await panel.evaluate(element => element.scrollTop), 200);
     await page.locator('#tab-objects').click();

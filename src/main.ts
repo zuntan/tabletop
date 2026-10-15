@@ -24,6 +24,7 @@ import { selectedConnection } from './connection-creation';
 import { drawAiPointing } from './ai-pointing';
 import { createReactionControls, drawReactions } from './reactions';
 import './reactions.css';
+import { createDeskFileControls } from './desk-file-controls';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -77,7 +78,7 @@ app.innerHTML = `
       <section><h2>MCP接続</h2><p>サーバーが表示したURLから開くか、接続トークンを入力してください。</p>
         <form id="connect-form"><label>ポート<input id="port" type="number" value="4317" min="1" max="65535"></label>
           <label>トークン<input id="token" type="password" autocomplete="off"></label><button type="submit">接続</button></form>
-        <small>作業状態はこのタブ内のみ。閉じると失われます。</small>
+        <small>閉じる前に上部の「保存」で机を保存してください。「読込」で再開できます。</small>
       </section>
     </aside>
   </main>
@@ -122,6 +123,8 @@ editActions.append($('#reaction-controls')); $('.toolbar-parts').append(editActi
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });
+createDeskFileControls($('header'), desk, () => { render(); $('#fit').click(); },
+  () => !busy && !gesture && !editor.isActive());
 const labels: Record<DeskObject['type'], string> = { rect: '矩形', roundedRect: '角丸矩形', label: 'ピン', ellipse: '楕円', line: '線', arrow: '矢印', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
 
 function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}): SVGElementTagNameMap[K] {

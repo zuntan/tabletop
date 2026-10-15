@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { resolveConnections } from './geometry';
-import { initialSettings, settingsOperations, applySettingsOperation, materializeLabels, creationAppearance, nextNumber, formatNumber } from './settings';
+import { initialSettings, settingsOperations, applySettingsOperation, materializeLabels, creationAppearance, nextNumber, formatNumber, appearanceSchema, seriesSchema } from './settings';
 import type { Settings } from './settings';
 import { deskContext } from './desk-context';
 import { reactions, reactionChoices, canonicalReaction } from './reaction-values';
@@ -153,6 +153,21 @@ export class Desk {
   private metadata(object: DeskObject) {
     const { src, ...rest } = object;
     return { ...structuredClone(rest), ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}) };
+  }
+  replaceDocument(input: unknown) {
+    const document = z.object({ objects: z.array(objectSchema).max(2000), settings: z.object({
+      defaults: appearanceSchema, series: z.array(seriesSchema).max(2000),
+    }).strict() }).strict().parse(input);
+    if (new Set(document.objects.map(object => object.id)).size !== document.objects.length) throw new Error('Duplicate object ID');
+    if (new Set(document.settings.series.map(series => series.id)).size !== document.settings.series.length) throw new Error('Duplicate series ID');
+    const after = resolveConnections(materializeLabels(document.objects.map(validateObject), document.settings)).map(validateObject);
+    const before = this.snapshot(), beforeSettings = this.settingsSnapshot();
+    const targets = [...new Set([...before, ...after].map(object => object.id))];
+    this.undoStack.push({ before, after, beforeSettings, afterSettings: document.settings, actor: 'human', targets });
+    this.redoStack = [];
+    this.commit(after, before, 'batch', 'human', targets, document.settings);
+    this.selection = []; this.aiPointing = []; this.pointer = null;
+    return this.summary();
   }
   execute(input: Batch) {
     const batch = batchSchema.parse(input);

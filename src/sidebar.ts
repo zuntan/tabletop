@@ -15,14 +15,19 @@ export function createSidebar(app: HTMLElement) {
     panel.append(...content); tabs.append(tab); panels.append(panel);
     return { id, tab, panel };
   });
-  aside.replaceChildren(tabs, panels);
+  const heading = document.createElement('div'); heading.className = 'sidebar-heading';
+  heading.append(tabs); aside.replaceChildren(heading, panels);
+  const workspace = app.querySelector<HTMLElement>('#workspace')!;
   const toggle = document.createElement('button'); toggle.id = 'sidebar-toggle'; toggle.type = 'button';
-  toggle.setAttribute('aria-controls', aside.id); app.querySelector('header')!.append(toggle);
+  toggle.setAttribute('aria-controls', aside.id); heading.append(toggle);
   function visibility(show: boolean) {
+    const focused = document.activeElement === toggle;
     aside.hidden = !show; app.classList.toggle('sidebar-hidden', !show);
+    (show ? heading : workspace).append(toggle);
     toggle.setAttribute('aria-expanded', String(show));
-    toggle.textContent = show ? '◧' : '◨';
+    toggle.textContent = show ? '›' : '‹';
     toggle.title = show ? '右ペインを隠す' : '右ペインを表示'; toggle.setAttribute('aria-label', toggle.title);
+    if (focused) toggle.focus({ preventScroll: true });
   }
   function select(id: string) {
     for (const item of controls) {
