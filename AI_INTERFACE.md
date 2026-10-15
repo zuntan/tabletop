@@ -8,6 +8,10 @@
 
 `tokenSource: "environment"` なら、env指定の固定トークンはツール結果にも起動ログにも出しません。`url` は通常のURLで、利用者が「接続」タブへ設定済みトークンを手動入力します。AIは非開示のトークンを推測・取得する必要はありません。HTTPにはトークン取得口を設けません。
 
+## 机の保存・読込
+
+`desk_save` は専用フォルダーへ画像込みの `.tabletop` を排他作成します。`desk_load` は利用者の置換許可、`confirm: true`、現在の `expectedSessionId`／`expectedRevision` が必要で、一回のUndoで戻せます。保存形式はUIと共通です。既定の保存先はサーバー側の `~/.tabletop/saves/`、変更は `TABLETOP_SAVE_ROOT`。名前だけを指定し、任意パスや上書きは禁止です。新版サーバー・ブラウザが必要なので、旧タブは先にUI保存して保護してください。引数・転送上限・失敗時の扱いは [MCP保存・読込](./docs/mcp-save-load.md) を参照してください。
+
 ## 最初に読むもの
 
 `desk_context` は、一回のブラウザ応答で次を返します。画像のbase64は含みません。

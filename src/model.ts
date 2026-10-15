@@ -4,6 +4,7 @@ import { initialSettings, settingsOperations, applySettingsOperation, materializ
 import type { Settings } from './settings';
 import { deskContext } from './desk-context';
 import { reactions, reactionChoices, canonicalReaction } from './reaction-values';
+import { checkDeskBridgeSize } from './desk-file-protocol';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -154,7 +155,7 @@ export class Desk {
     const { src, ...rest } = object;
     return { ...structuredClone(rest), ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}) };
   }
-  replaceDocument(input: unknown) {
+  replaceDocument(input: unknown, actor = 'human') {
     const document = z.object({ objects: z.array(objectSchema).max(2000), settings: z.object({
       defaults: appearanceSchema, series: z.array(seriesSchema).max(2000),
     }).strict() }).strict().parse(input);
@@ -163,9 +164,9 @@ export class Desk {
     const after = resolveConnections(materializeLabels(document.objects.map(validateObject), document.settings)).map(validateObject);
     const before = this.snapshot(), beforeSettings = this.settingsSnapshot();
     const targets = [...new Set([...before, ...after].map(object => object.id))];
-    this.undoStack.push({ before, after, beforeSettings, afterSettings: document.settings, actor: 'human', targets });
+    this.undoStack.push({ before, after, beforeSettings, afterSettings: document.settings, actor, targets });
     this.redoStack = [];
-    this.commit(after, before, 'batch', 'human', targets, document.settings);
+    this.commit(after, before, 'batch', actor, targets, document.settings);
     this.selection = []; this.aiPointing = []; this.pointer = null;
     return this.summary();
   }
@@ -252,6 +253,10 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('list') }),
   z.object({ method: z.literal('get'), id: z.string() }),
   z.object({ method: z.literal('state') }),
+  z.object({ method: z.literal('file_snapshot') }).strict(),
+  z.object({ method: z.literal('load_document'), document: z.unknown(), confirm: z.literal(true),
+    expectedSessionId: z.string().uuid(), expectedRevision: z.number().int().nonnegative(),
+    actor: z.string().min(1).max(100).default('agent-01') }).strict(),
   z.object({ method: z.literal('context'), sinceRevision: z.number().int().nonnegative().default(0), limit: z.number().int().min(1).max(200).default(100) }),
   z.object({ method: z.literal('settings') }),
   z.object({ method: z.literal('selection') }),
@@ -270,6 +275,16 @@ export function dispatch(desk: Desk, input: unknown): unknown {
     case 'list': return { ...desk.summary(), objects: desk.list() };
     case 'get': return desk.get(request.id);
     case 'state': return { ...desk.summary(), objects: desk.snapshot(), selection: desk.selected(), aiPointing: desk.pointed(), settings: desk.settingsSnapshot() };
+    case 'file_snapshot': {
+      const snapshot = { sessionId: desk.sessionId, revision: desk.revision, objects: desk.snapshot(), settings: desk.settingsSnapshot() };
+      checkDeskBridgeSize(snapshot);
+      return snapshot;
+    }
+    case 'load_document': {
+      if (request.expectedSessionId !== desk.sessionId || request.expectedRevision !== desk.revision) throw new Error('Session or revision conflict: refresh before loading');
+      checkDeskBridgeSize(request);
+      return desk.replaceDocument(request.document, request.actor);
+    }
     case 'settings': return desk.listSettings();
     case 'context': return deskContext(desk, request.sinceRevision, request.limit);
     case 'selection': return { ids: desk.selected(), aiPointing: desk.pointed(), pointer: desk.pointer };

@@ -9,6 +9,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { batchSchema, type Request } from './model.js';
 import { registerAssetTools } from './asset-tools.js';
+import { registerDeskFileTools } from './desk-file-tools.js';
 import { isStaticPathInside } from './static-path.js';
 
 const port = Number(process.env.TABLETOP_PORT ?? 4317);
@@ -115,6 +116,7 @@ for (const [name, description, inputSchema] of tools) {
   });
 }
 registerAssetTools(mcp, request);
+registerDeskFileTools(mcp, request);
 mcp.registerTool('desk_connection_info', {
   description: 'Get the current browser connection URL without requiring a connected browser. Only server-generated random tokens are included. When TABLETOP_TOKEN is configured, return a plain URL and instructions to enter the configured token manually; never reveal the configured token. Generated URLs contain a secret that may remain in conversation history. Does not rotate tokens or change the desk. MCP-only: no HTTP token endpoint.',
   inputSchema: {}, annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },

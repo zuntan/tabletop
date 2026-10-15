@@ -87,6 +87,8 @@ AI向けの使い方・接続線・ピン体系・画像／SVGの受け渡しは
 | `desk_get` | ID指定の詳細。画像ソースを含む |
 | `desk_state` | 全状態。大きくなるため必要時だけ使用 |
 | `desk_context` | 状態・接続関係・ピン体系のメンバー・履歴を一回で取得（画像データなし） |
+| `desk_save` | サーバーの専用フォルダーへ `.tabletop` を保存。上書き禁止 |
+| `desk_load` | 明示確認とsession／revisionガード付きで読込。共通Undo対応。[詳細](./docs/mcp-save-load.md) |
 | `desk_asset_read` | 画像をMCP imageブロック、SVGをソースで取得。任意で一時ファイル出力 |
 | `desk_asset_import` | ファイル・SVGコード・data URLから追加／画像だけ差し替え |
 | `desk_settings` | 新規作成の既定スタイルとピン体系、次番号 |

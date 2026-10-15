@@ -495,12 +495,13 @@ function connect(token: string, port: string) {
     try {
       const message = JSON.parse(String(event.data)); id = message.id;
       if (typeof id !== 'string') throw new Error('Invalid request ID');
-      if (busy || (editor.isActive() && ['execute', 'undo', 'redo', 'select'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
+      if (busy || (editor.isActive() && ['execute', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       const result = dispatch(desk, message.request);
       ws.send(JSON.stringify({ id, result }));
       // Read-only requests must not rebuild iframes or steal form edits.
       if (message.request.method === 'point') drawSelection();
-      if (['execute', 'undo', 'redo', 'select'].includes(message.request.method)) render();
+      if (['execute', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method)) render();
+      if (message.request.method === 'load_document') $('#fit').click();
     } catch (error) { ws.send(JSON.stringify({ id, error: error instanceof Error ? error.message : String(error) })); }
   };
   ws.onclose = () => {
