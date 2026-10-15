@@ -25,6 +25,7 @@ import { drawAiPointing } from './ai-pointing';
 import { createReactionControls, drawReactions } from './reactions';
 import './reactions.css';
 import { createDeskFileControls } from './desk-file-controls';
+import { IMAGE_TITLE_HEIGHT } from './image-geometry';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -188,9 +189,9 @@ function drawObject(object: DeskObject) {
     group.append(svg('rect', { width: w, height: h, rx: 6, fill: '#ffffff', stroke: '#94a3b8' }));
     const title = svg('text', { x: 12, y: 23, 'font-size': 14, fill: '#1d4ed8' });
     title.textContent = (object.text || object.url || '').slice(0, Math.max(0, Math.floor((w - 52) / 8))); group.append(title);
-    if (['image', 'svg'].includes(object.type) && h > 34) {
+    if (['image', 'svg'].includes(object.type) && h > IMAGE_TITLE_HEIGHT) {
       // SVG stays in an image context, never inserted as executable markup.
-      group.append(svg('image', { y: 34, width: w, height: h - 34, href: object.src!, preserveAspectRatio: 'xMidYMid meet' }));
+      group.append(svg('image', { y: IMAGE_TITLE_HEIGHT, width: w, height: h - IMAGE_TITLE_HEIGHT, href: object.src!, preserveAspectRatio: 'xMidYMid meet' }));
     }
     if (object.type === 'web' && h > 40) {
       const foreign = svg('foreignObject', { x: 0, y: 34, width: w, height: h - 34 });
@@ -225,7 +226,9 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
 function render(rebuild = true) {
   if (rebuild) {
     objectsLayer.replaceChildren();
-    desk.snapshot().forEach(drawObject);
+    const objects = desk.snapshot();
+    desk.imageGeometry.observe(objects);
+    objects.forEach(drawObject);
   }
   cameraChanged(); drawSelection();
   $('#empty').hidden = desk.summary().count > 0;

@@ -70,6 +70,8 @@
 
 ## 画像／SVGの読み取り
 
+`desk_context`・`desk_list`・`desk_get` の画像には、読取専用の `imageGeometry` が付きます。カード枠・タイトル下の領域・余白を除いた画像矩形・ブラウザの自然寸法を分離します。座標変換、非同期の状態、SVG／外部URLの制限は [画像座標メタデータ](./docs/image-geometry.md) を参照してください。旧ブラウザにはこのフィールドがありません。
+
 `desk_asset_read` に `id` を指定します。
 
 - PNG／JPEG／GIF／WebP：メタデータのtextブロック＋標準MCP imageブロック（base64とMIME）

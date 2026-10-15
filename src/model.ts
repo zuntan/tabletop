@@ -5,6 +5,7 @@ import type { Settings } from './settings';
 import { deskContext } from './desk-context';
 import { reactions, reactionChoices, canonicalReaction } from './reaction-values';
 import { checkDeskBridgeSize } from './desk-file-protocol';
+import { ImageGeometry } from './image-geometry';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -90,6 +91,7 @@ function validateObject(object: unknown): DeskObject {
 /** The sole committed state writer for both UI and MCP operations. */
 export class Desk {
   readonly sessionId = crypto.randomUUID();
+  readonly imageGeometry = new ImageGeometry();
   revision = 0;
   private objects: Snapshot = [];
   private settings: Settings = initialSettings();
@@ -133,7 +135,8 @@ export class Desk {
   }
   list() {
     return this.objects.map(({ src, ...object }, zIndex) => ({
-      ...structuredClone(object), zIndex, ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}),
+      ...structuredClone(object), zIndex, ...this.imageGeometry.describe({ ...object, src }),
+      ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}),
     }));
   }
   get(id: string) {
@@ -273,7 +276,10 @@ export function dispatch(desk: Desk, input: unknown): unknown {
   switch (request.method) {
     case 'summary': return desk.summary();
     case 'list': return { ...desk.summary(), objects: desk.list() };
-    case 'get': return desk.get(request.id);
+    case 'get': {
+      const object = desk.get(request.id);
+      return { ...object, ...desk.imageGeometry.describe(object) };
+    }
     case 'state': return { ...desk.summary(), objects: desk.snapshot(), selection: desk.selected(), aiPointing: desk.pointed(), settings: desk.settingsSnapshot() };
     case 'file_snapshot': {
       const snapshot = { sessionId: desk.sessionId, revision: desk.revision, objects: desk.snapshot(), settings: desk.settingsSnapshot() };
