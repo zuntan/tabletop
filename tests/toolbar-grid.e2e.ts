@@ -33,6 +33,8 @@ test('toolbar, remembered numbering, descriptions and world grid work together',
     await client.connect(transport); await call('desk_pairing_open', { confirm: true }); await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     assert.equal(await page.locator('nav > .toolbar-group').count(), 3);
+    assert.equal(await page.locator('#grid-snap').getAttribute('aria-pressed'), 'true');
+    await page.locator('#grid-snap').click();
     assert.equal(await page.locator('#grid-snap').getAttribute('aria-pressed'), 'false');
     await page.getByRole('button', { name: 'ピンを配置：数字', exact: true }).click();
     assert.equal(await page.locator('#series-panel').isVisible(), false);

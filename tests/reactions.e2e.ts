@@ -6,6 +6,7 @@ import { reactionChoices as reactions } from '../src/reaction-values';
 test('human and AI attach eighteen reactions to objects and pins with shared Undo and native keyboard toggles', { timeout: 45_000 }, async () => {
   const { page, call, client, close, errors } = await openTestDesk('reactions');
   try {
+    await page.locator('#grid-snap').click(); // This test checks reaction placement during an exact drag.
     assert.equal(await page.locator('#reaction-controls').isVisible(), true);
     assert.equal(await page.locator('#reaction-more').isDisabled(), false);
     await call('desk_execute', { operations: [

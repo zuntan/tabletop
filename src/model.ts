@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { resolveConnections } from './geometry';
-import { initialSettings, settingsOperations, applySettingsOperation, materializeLabels, creationAppearance, nextNumber, formatNumber, appearanceSchema, seriesSchema } from './settings';
+import { initialSettings, settingsOperations, applySettingsOperation, materializeLabels, creationAppearance, nextNumber, formatNumber, settingsSchema } from './settings';
 import type { Settings } from './settings';
 import { deskContext } from './desk-context';
 import { reactions, reactionChoices, canonicalReaction } from './reaction-values';
 import { checkDeskBridgeSize } from './desk-file-protocol';
 import { ImageGeometry } from './image-geometry';
+import { createGridPlacement, placementGeometry } from './grid-placement';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -64,7 +65,11 @@ export const batchSchema = z.object({
   operations: z.array(operationSchema).min(1).max(200),
   actor: z.string().min(1).max(100).default('agent-01'),
   expectedRevision: z.number().int().nonnegative().optional(),
+  snap: z.enum(['desk', 'exact']).default('exact'),
+  snapAnchorId: z.string().min(1).max(100).optional(),
 }).strict();
+// The UI commits resolved coordinates; public MCP calls follow the desk unless explicitly exact.
+export const mcpBatchSchema = batchSchema.extend({ snap: batchSchema.shape.snap.default('desk') });
 
 export type DeskObject = z.infer<typeof objectSchema>;
 export type Operation = z.infer<typeof operationSchema>;
@@ -159,9 +164,7 @@ export class Desk {
     return { ...structuredClone(rest), ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}) };
   }
   replaceDocument(input: unknown, actor = 'human') {
-    const document = z.object({ objects: z.array(objectSchema).max(2000), settings: z.object({
-      defaults: appearanceSchema, series: z.array(seriesSchema).max(2000),
-    }).strict() }).strict().parse(input);
+    const document = z.object({ objects: z.array(objectSchema).max(2000), settings: settingsSchema }).strict().parse(input);
     if (new Set(document.objects.map(object => object.id)).size !== document.objects.length) throw new Error('Duplicate object ID');
     if (new Set(document.settings.series.map(series => series.id)).size !== document.settings.series.length) throw new Error('Duplicate series ID');
     const after = resolveConnections(materializeLabels(document.objects.map(validateObject), document.settings)).map(validateObject);
@@ -180,8 +183,10 @@ export class Desk {
     const beforeSettings = this.settingsSnapshot();
     const afterSettings = this.settingsSnapshot();
     let after = this.snapshot();
-    for (const operation of batch.operations) {
-      if (operation.kind === 'defaults_update' || operation.kind === 'series_add'
+    const placement = createGridPlacement(batch, before, value => objectSchema.parse(value));
+    for (const inputOperation of batch.operations) {
+      const operation = placement.normalize(inputOperation, materializeLabels(after, afterSettings), afterSettings);
+      if (operation.kind === 'grid_update' || operation.kind === 'defaults_update' || operation.kind === 'series_add'
         || operation.kind === 'series_update' || operation.kind === 'label_add') {
         applySettingsOperation(operation, after, afterSettings);
         continue;
@@ -208,15 +213,19 @@ export class Desk {
       }
     }
     after = resolveConnections(materializeLabels(after, afterSettings).map(validateObject), before).map(validateObject);
+    const result = () => ({ ...this.summary(), placement: { mode: placement.mode, results: placement.results.map(item => {
+      const object = after.find(object => object.id === item.id);
+      return { ...item, applied: object ? placementGeometry(object) : null };
+    }) } });
     if (JSON.stringify(before) === JSON.stringify(after)
-      && JSON.stringify(beforeSettings) === JSON.stringify(afterSettings)) return this.summary();
+      && JSON.stringify(beforeSettings) === JSON.stringify(afterSettings)) return result();
     const targets = [...new Set(batch.operations.map(op => op.kind === 'add' ? op.object.id
-      : op.kind === 'defaults_update' ? 'defaults' : op.kind === 'series_add' ? op.series.id : op.id))];
+      : op.kind === 'grid_update' ? 'grid' : op.kind === 'defaults_update' ? 'defaults' : op.kind === 'series_add' ? op.series.id : op.id))];
     const entry = { before, after, beforeSettings, afterSettings, actor: batch.actor, targets };
     this.undoStack.push(entry);
     this.redoStack = [];
     this.commit(after, before, 'batch', batch.actor, targets, afterSettings);
-    return this.summary();
+    return result();
   }
   undo(actor = 'human') {
     const entry = this.undoStack.pop();
@@ -266,7 +275,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('select'), ids: z.array(z.string()).max(2000) }),
   z.object({ method: z.literal('point'), ids: z.array(z.string()).max(2000) }),
   z.object({ method: z.literal('changes'), sinceRevision: z.number().int().nonnegative(), limit: z.number().int().min(1).max(200).default(100) }),
-  z.object({ method: z.literal('execute'), ...batchSchema.shape }),
+  z.object({ method: z.literal('execute'), ...mcpBatchSchema.shape }),
   z.object({ method: z.literal('undo'), actor: z.string().min(1).max(100).default('agent-01') }),
   z.object({ method: z.literal('redo'), actor: z.string().min(1).max(100).default('agent-01') }),
 ]);

@@ -91,8 +91,10 @@
 
 AIはオブジェクトID、または体系IDと番号でピンを参照できます。同値が複数ある場合はIDまたは選択状態で区別してください。
 
-## 固定グリッド
+## 共通スナップ
 
-表示グループのグリッド吸着は初期OFF。机上の24単位間隔で、ズームしても吸着間隔は変わりません。追加・移動・リサイズに適用します。ピンの配置／移動原点は番号枠の下辺中央（地図ピン型では尖った先端）で、移動中の薄い▼の先端が原点を示します。説明文の長さや枠の有無は原点に影響しません。複数選択はドラッグした対象を基準に相対位置を維持します。矢印端点は枠への接続がグリッドより優先です。説明表示・吸着設定はタブ内の表示設定で、Undo対象ではなく、MCPの座標指定にも干渉しません。
+表示グループの「スナップ」は初期ON、机上の既定間隔24・原点0です。ON／OFF・間隔・原点は机と一緒に保存・復元し、変更は共通Undoの対象です。間隔切替UIはまだありません。ズームとは独立し、追加・移動・リサイズに適用します。通常パーツは左上、全種類のピンは番号枠の下中央（地図ピン型では尖った先端）を合わせます。説明文は原点に影響しません。複数選択はドラッグした対象を基準に相対位置を維持し、線の端点は枠への接続を優先します。数値プロパティ入力は厳密な座標として維持します。説明文表示だけは従来どおりタブ内の表示設定です。
+
+MCPは既定で机の設定に従い、`snap: "exact"` で一操作バッチだけ回避できます。全体設定を変更せず、応答の `placement.results` から実際の座標を確認してください。設定の取得・変更、保存互換性、複数移動の条件は [共通スナップ](./docs/shared-snap.md) を参照してください。
 
 技術的根拠：MDN [SVG path](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/path)（円弧と曲線によるピン型）、[patternUnits](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/patternUnits)（机の座標とグリッドを一致）、[aria-label](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-label)（アイコンの操作名）、[KeyboardEvent.isComposing](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/isComposing)（IME）。色パレットは既存の [Pickr](https://github.com/simonwep/pickr) を共用しています。

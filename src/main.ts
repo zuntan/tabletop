@@ -101,14 +101,18 @@ let space = false;
 
 let busy = false;
 let descriptionsVisible = true;
-let gridEnabled = false;
+let gridEnabled = true;
+function gridPosition(point: { x: number; y: number }) {
+  const grid = desk.settingsSnapshot().grid;
+  return grid.enabled ? gridPoint(point, grid) : point;
+}
 let gesture: Gesture | null = null;
 const colorControls = createColorControls($('#color-controls'), operations => {
   if (busy || !operations.length) return;
   attempt(() => execute(operations));
 });
 const editor = createInlineEditor($('#workspace'), viewport, (object, patch, fresh) => {
-  execute([fresh ? { kind: 'add', object: { ...object, ...patch } } : { kind: 'update', id: object.id, patch }]);
+  execute([fresh ? { kind: 'add', object: { ...object, ...patch } } : { kind: 'update', id: object.id, patch }], fresh ? 'desk' : 'exact');
   if (fresh) desk.select([object.id]);
   render();
 });
@@ -138,7 +142,7 @@ function attempt(action: () => void) {
   try { action(); render(); notify(`revision ${desk.revision} · ${desk.summary().count} オブジェクト`); }
   catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
 }
-function execute(operations: Operation[]) { desk.execute({ actor: 'human', operations }); }
+function execute(operations: Operation[], snap: 'desk' | 'exact' = 'exact') { desk.execute({ actor: 'human', operations, snap }); }
 function screen(event: PointerEvent | WheelEvent) {
   const rect = canvas.getBoundingClientRect();
   return { x: event.clientX - rect.left, y: event.clientY - rect.top };
@@ -149,7 +153,12 @@ function world(event: PointerEvent | WheelEvent) {
 }
 function cameraChanged() {
   viewport.setAttribute('transform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
-  app.querySelector('#dots')!.setAttribute('patternTransform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
+  const grid = desk.settingsSnapshot().grid, dots = app.querySelector('#dots')!;
+  dots.setAttribute('width', String(grid.interval)); dots.setAttribute('height', String(grid.interval));
+  dots.setAttribute('x', String(grid.origin.x - grid.interval / 2)); dots.setAttribute('y', String(grid.origin.y - grid.interval / 2));
+  dots.querySelector('circle')!.setAttribute('cx', String(grid.interval / 2));
+  dots.querySelector('circle')!.setAttribute('cy', String(grid.interval / 2));
+  dots.setAttribute('patternTransform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
   $('#zoom-reset .tool-icon').textContent = `${Math.round(camera.zoom * 100)}%`;
   editor.reposition();
 }
@@ -230,6 +239,8 @@ function render(rebuild = true) {
     desk.imageGeometry.observe(objects);
     objects.forEach(drawObject);
   }
+  gridEnabled = desk.settingsSnapshot().grid.enabled;
+  $('#grid-snap').setAttribute('aria-pressed', String(gridEnabled));
   cameraChanged(); drawSelection();
   $('#empty').hidden = desk.summary().count > 0;
   $('#revision').textContent = `revision ${desk.revision}`;
@@ -273,13 +284,13 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
   authoring.stopPlacement();
   const offset = desk.summary().count % 8 * 22;
   const center = { x: (120 - camera.x) / camera.zoom + offset, y: (100 - camera.y) / camera.zoom + offset };
-  const object = objectSchema.parse({ id: `${type}-${crypto.randomUUID().slice(0, 8)}`, type, ...(gridEnabled ? gridPoint(center) : center),
+  const object = objectSchema.parse({ id: `${type}-${crypto.randomUUID().slice(0, 8)}`, type, ...gridPosition(center),
     ...creationAppearance(type, desk.settingsSnapshot().defaults),
     ...(type === 'text' ? { width: 280, height: 80 } : {}),
     ...(['line', 'arrow'].includes(type) ? selectedConnection(desk.selected().map(id => desk.get(id))) : {}),
     ...(['web', 'link'].includes(type) ? { width: type === 'web' ? 480 : 320, height: type === 'web' ? 340 : 60 } : {}), ...extra });
   if (['text', 'web', 'link'].includes(type)) { editor.open(object, true); return; }
-  execute([{ kind: 'add', object }]); desk.select([object.id]);
+  execute([{ kind: 'add', object }], 'desk'); desk.select([object.id]);
 }
 app.querySelectorAll<HTMLButtonElement>('[data-add]').forEach(button => button.onclick = () => {
   const type = button.dataset.add as DeskObject['type'];
@@ -305,8 +316,7 @@ $('#zoom-in').onclick = () => zoom(1.25);
 $('#zoom-out').onclick = () => zoom(0.8);
 $('#zoom-reset').onclick = () => zoom(1 / camera.zoom);
 $('#grid-snap').onclick = () => {
-  gridEnabled = !gridEnabled;
-  $('#grid-snap').setAttribute('aria-pressed', String(gridEnabled));
+  if (!busy && !editor.isActive()) attempt(() => execute([{ kind: 'grid_update', patch: { enabled: !gridEnabled } }]));
 };
 $('#label-descriptions').onclick = () => {
   descriptionsVisible = !descriptionsVisible;
@@ -338,7 +348,7 @@ canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture
 canvas.addEventListener('pointerdown', event => {
   if (gesture || editor.isActive() || (event.button !== 0 && event.button !== 1)) return;
   if (!space && (event.target as Element).closest('[data-open-url], [data-markdown-link]')) return;
-  if (event.button === 0 && !space && authoring.place(gridEnabled ? gridPoint(world(event)) : world(event))) { event.preventDefault(); return; }
+  if (event.button === 0 && !space && authoring.place(gridPosition(world(event)))) { event.preventDefault(); return; }
   const target = event.target as Element;
   const resize = target.closest('[data-resize]')?.getAttribute('data-resize');
   const endpoint = target.closest('[data-endpoint]')?.getAttribute('data-endpoint');
@@ -358,7 +368,7 @@ canvas.addEventListener('pointerdown', event => {
     mode = 'move';
   } else { if (!event.shiftKey) desk.select([]); render(); mode = 'marquee'; }
   const scene = desk.snapshot();
-  gesture = { mode, start: p, screen: screen(event), originals: desk.selected().map(id => desk.get(id)), scene, preview: scene, revision: desk.revision, camera: { x: camera.x, y: camera.y }, additive, grid: gridEnabled, anchorId: id ?? resize ?? undefined };
+  gesture = { mode, start: p, screen: screen(event), originals: desk.selected().map(id => desk.get(id)), scene, preview: scene, revision: desk.revision, camera: { x: camera.x, y: camera.y }, additive, grid: gridEnabled, gridSettings: desk.settingsSnapshot().grid, anchorId: id ?? resize ?? undefined };
   busy = true; canvas.setPointerCapture(event.pointerId); event.preventDefault(); canvas.focus();
 });
 function previewGesture(current: Gesture, point: { x: number; y: number }) {
@@ -445,9 +455,8 @@ async function addFiles(files: File[]) {
       const ratio = Math.min(1, 480 / image.naturalWidth, 360 / image.naturalHeight);
       operations.push({ kind: 'add', object: objectSchema.parse({
         id: `image-${crypto.randomUUID().slice(0, 8)}`, type: file.type === 'image/svg+xml' ? 'svg' : 'image', src,
-        ...(gridEnabled ? gridPoint({ x: (120 - camera.x) / camera.zoom + operations.length * 24,
-          y: (100 - camera.y) / camera.zoom + operations.length * 24 }) : {
-          x: (120 - camera.x) / camera.zoom + operations.length * 24, y: (100 - camera.y) / camera.zoom + operations.length * 24 }),
+        ...gridPosition({ x: (120 - camera.x) / camera.zoom + operations.length * 24,
+          y: (100 - camera.y) / camera.zoom + operations.length * 24 }),
         width: Math.max(180, image.naturalWidth * ratio), height: Math.max(1, image.naturalHeight * ratio) + 34, text: file.name,
       }) });
     }

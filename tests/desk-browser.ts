@@ -18,7 +18,8 @@ export async function openTestDesk(name: string) {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   async function close() { await browser.close(); await client.close(); await transport.close(); }
   async function call(name: string, args: Record<string, unknown> = {}) {
-    const result = await client.callTool({ name, arguments: args });
+    // Non-grid tests use exact fixtures; grid tests explicitly exercise the public default via client.callTool.
+    const result = await client.callTool({ name, arguments: ['desk_execute', 'desk_asset_import'].includes(name) ? { snap: 'exact', ...args } : args });
     assert.notEqual(result.isError, true, JSON.stringify(result));
     return JSON.parse((result.content as { text: string }[])[0].text);
   }

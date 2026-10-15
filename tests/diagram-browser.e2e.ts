@@ -56,6 +56,7 @@ test('round swatch palettes, shape labels, arrow endpoints and attached movement
     await call('desk_pairing_open', { confirm: true });
     await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
+    await page.locator('#grid-snap').click(); // Anchor/endpoint behavior is tested independently of the world grid.
     await call('desk_execute', { operations: [
       { kind: 'add', object: { id: 'a', type: 'rect', x: 100, y: 100, width: 180, height: 100 } },
       { kind: 'add', object: { id: 'b', type: 'ellipse', x: 500, y: 100, width: 180, height: 100, text: '楕円ラベル' } },

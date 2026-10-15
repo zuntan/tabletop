@@ -26,6 +26,7 @@ test('card open controls launch a separate tab without selecting, moving or plac
   try {
     await client.connect(transport); await call('desk_pairing_open', { confirm: true }); await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
+    await page.locator('#grid-snap').click(); // Keep the card interaction fixture on exact coordinates.
     await call('desk_execute', { operations: [
       { kind: 'add', object: { id: 'card', type: 'link', x: 250, y: 160, width: 320, height: 60, text: '資料', url: destination } },
       { kind: 'add', object: { id: 'web-card', type: 'web', x: 250, y: 320, width: 320, height: 160, text: 'Web資料', url: destination } },

@@ -21,6 +21,7 @@
 - `sessionId`・`revision`・件数・Undo/Redo可否・選択ID
 - 背面から前面順のオブジェクト情報（Markdown原文や画像タイトルを含む）
 - `connections`：線／矢印のID、始点・終点、接続先IDと辺。未接続は `binding: null`
+- `settings.grid`：共有・保存するスナップのON／OFF、間隔、格子の原点。新規・旧ファイルの省略時はON・24・原点0
 - `settings.series`：ピン体系の書式・共通スタイル・次番号・`members`（ID、番号、表示文字、説明）
 - `history`：現在の机で起きた変更と前後情報。初期値は先頭から100件
 
@@ -33,6 +34,12 @@
 質問や注目してほしい対象には `desk_point` の `{ "ids": ["object-id"] }` を使います。緑枠で表示し、人間の青い選択・編集中の入力・文書revision・Undo/Redoは変えません。対象をチャットでも説明し、確認が済んだら `{ "ids": [] }` で解除してください。毎回AI側の指差し集合を置き換えます。
 
 `desk_context / desk_state / desk_selection` の `aiPointing` で現在の指差しIDを読めます。削除された対象と切断時の指差しは解除し、Undoでも復元しません。人間が操作中のジェスチャーでは再試行が必要な場合があります。緑枠に編集ハンドルはありません。編集はオブジェクトIDで行い、指差しは不要です。従来の `desk_select` は人間の編集対象を変えるため、単に「これのこと？」と示す用途には使わないでください。
+
+## 同じ格子へ置く
+
+`desk_execute` と追加時の `desk_asset_import` は `snap: "desk"` が既定で、現在の `settings.grid` に従います。`snap: "exact"` でバッチ／取り込み単位に回避でき、全体のON／OFFは変えません。通常は左上、全ピンは枠の下中央、線は自由端点を合わせ、明示したBindingを優先します。数値を推測せず、応答の `placement.results` の `requested`／`applied`／`snapped`／使用した `grid` を確認してください。
+
+複数パーツの共通移動は相対位置を維持し、先頭のパーツまたは `snapAnchorId` を基準にします。全体設定を変える `grid_update` は**人間に依頼されたときだけ**使い、細かい配置のたびに切り替えません。取得・保存・例外・複数移動の条件は [共通スナップ](./docs/shared-snap.md) を参照してください。
 
 ## 接続する
 

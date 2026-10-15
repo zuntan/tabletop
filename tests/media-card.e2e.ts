@@ -34,6 +34,7 @@ test('media cards edit optional links and add clipboard images or safe SVG sourc
     await page.addInitScript('window.__name = (fn) => fn');
     await client.connect(transport); await call('desk_pairing_open', { confirm: true }); await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
+    await page.locator('#grid-snap').click(); // Clipboard/link tests keep their precise drag expectations.
     await paste(svg);
     await page.waitForFunction(() => document.querySelectorAll('#objects > g').length === 1);
     const id = (await call('desk_selection')).ids[0];

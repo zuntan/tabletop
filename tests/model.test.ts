@@ -6,7 +6,7 @@ const rect = (id: string, x = 0) => objectSchema.parse({ id, type: 'rect', x });
 test('human and agent share undo history and revisions never roll back', () => {
   const desk = new Desk();
   desk.execute({ actor: 'human', operations: [{ kind: 'add', object: rect('a') }] });
-  dispatch(desk, { method: 'execute', actor: 'agent-01', operations: [{ kind: 'update', id: 'a', patch: { x: 50 } }] });
+  dispatch(desk, { method: 'execute', actor: 'agent-01', snap: 'exact', operations: [{ kind: 'update', id: 'a', patch: { x: 50 } }] });
   desk.undo('human');
   assert.equal(desk.get('a').x, 0);
   assert.equal(desk.revision, 3);

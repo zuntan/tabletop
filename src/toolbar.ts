@@ -42,7 +42,7 @@ export function groupToolbar(nav: HTMLElement) {
     iconButton(button, icon || button.textContent || '100%', label);
     view.append(button);
   }
-  for (const [id, icon, label] of [['grid-snap', '⊞', 'グリッドに吸着'], ['label-descriptions', '☷', 'ピンの説明文を隠す']]) {
+  for (const [id, icon, label] of [['grid-snap', '⊞', 'グリッドにスナップ'], ['label-descriptions', '☷', 'ピンの説明文を隠す']]) {
     const button = document.createElement('button');
     button.id = id;
     iconButton(button, icon, label);

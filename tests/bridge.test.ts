@@ -47,14 +47,20 @@ test('real stdio MCP server relays tools to a browser state and rejects unauthor
     await rejectConnection(`ws://127.0.0.1:${port}/bridge?token=${token}`, 'https://evil.example', 403);
     ws = (await pairPeer(`ws://127.0.0.1:${port}/bridge?token=${token}`, origin)).ws;
     const desk = new Desk();
+    let legacy = false, mutationRequests = 0;
     ws.on('message', data => {
       const message = JSON.parse(data.toString());
-      try { ws!.send(JSON.stringify({ id: message.id, result: dispatch(desk, message.request) })); }
+      try {
+        if (message.request.method === 'execute') mutationRequests++;
+        const result = dispatch(desk, message.request) as Record<string, unknown>;
+        if (legacy && message.request.method === 'settings') delete result.grid;
+        ws!.send(JSON.stringify({ id: message.id, result }));
+      }
       catch (error) { ws!.send(JSON.stringify({ id: message.id, error: String(error) })); }
     });
     await rejectConnection(`ws://127.0.0.1:${port}/bridge?token=${token}`, origin, 409);
     async function call(name: string, args: Record<string, unknown> = {}) {
-      const result = await client.callTool({ name, arguments: args });
+      const result = await client.callTool({ name, arguments: name === 'desk_execute' ? { snap: 'exact', ...args } : args });
       assert.notEqual(result.isError, true, JSON.stringify(result));
       const content = result.content as { type: string; text: string }[];
       return JSON.parse(content[0].text);
@@ -72,6 +78,15 @@ test('real stdio MCP server relays tools to a browser state and rejects unauthor
     assert.equal((await call('desk_get', { id: 'ai-rect' })).x, 10);
     await call('desk_redo'); assert.equal(desk.get('ai-rect').x, 80);
     assert.equal((await client.callTool({ name: 'desk_execute', arguments: { expectedRevision: 0, operations: [{ kind: 'delete', id: 'ai-rect' }] } })).isError, true);
+    legacy = true;
+    const sent = mutationRequests, revision = desk.revision;
+    const blocked = await client.callTool({ name: 'desk_execute', arguments: { operations: [{ kind: 'update', id: 'ai-rect', patch: { x: 35 } }] } });
+    assert.equal(blocked.isError, true); assert.match(JSON.stringify(blocked.content), /Save the current desk/);
+    const blockedAsset = await client.callTool({ name: 'desk_asset_import', arguments: { id: 'old-ui-image', source: { svg: '<svg xmlns="http://www.w3.org/2000/svg"/>' } } });
+    assert.equal(blockedAsset.isError, true);
+    assert.equal(mutationRequests, sent); assert.equal(desk.revision, revision);
+    assert.equal((await call('desk_settings')).grid, undefined); // Read-only access remains available before upgrade.
+    assert.equal((await call('desk_summary')).count, 1);
     ws.close(); await once(ws, 'close');
     assert.equal((await client.callTool({ name: 'desk_summary' })).isError, true);
   } finally { ws?.terminate(); await client.close(); await transport.close(); }

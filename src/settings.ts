@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { DeskObject } from './model';
 import { tightFrame } from './pin-shape';
+import { gridSettingsSchema } from './grid-settings';
 
 export const colorSchema = z.string().regex(/^(#[0-9a-fA-F]{3,8}|transparent|[a-zA-Z]{1,20})$/);
 export const appearanceSchema = z.object({
@@ -23,6 +24,7 @@ export const seriesSchema = appearanceSchema.extend({
 }).strict();
 export const seriesPatchSchema = seriesSchema.omit({ id: true }).partial();
 export const settingsOperations = [
+  z.object({ kind: z.literal('grid_update'), patch: gridSettingsSchema.partial() }).strict(),
   z.object({ kind: z.literal('defaults_update'), patch: appearanceSchema.partial() }).strict(),
   z.object({ kind: z.literal('series_add'), series: seriesSchema.partial().required({ id: true, name: true }) }).strict(),
   z.object({ kind: z.literal('series_update'), id: z.string(), patch: seriesPatchSchema }).strict(),
@@ -32,10 +34,13 @@ export const settingsOperations = [
 ] as const;
 export type Appearance = z.infer<typeof appearanceSchema>;
 export type Series = z.infer<typeof seriesSchema>;
-export type Settings = { defaults: Appearance; series: Series[] };
+export const settingsSchema = z.object({ defaults: appearanceSchema, series: z.array(seriesSchema).max(2000),
+  grid: gridSettingsSchema.default({}),
+}).strict();
+export type Settings = z.infer<typeof settingsSchema>;
 type SettingsOperation = z.infer<typeof settingsOperations[number]>;
-export const initialSettings = (): Settings => ({ defaults: appearanceSchema.parse({}),
-  series: [seriesSchema.parse({ id: 'series-1', name: '数字' })] });
+export const initialSettings = (): Settings => settingsSchema.parse({ defaults: {},
+  series: [{ id: 'series-1', name: '数字' }] });
 const katakana = [...'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン'];
 const romans = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi', 'xvii', 'xviii', 'xix', 'xx'];
 export function formatLimit(format: Series['format']) {
@@ -73,7 +78,9 @@ export function materializeLabels(objects: DeskObject[], settings: Settings): De
   });
 }
 export function applySettingsOperation(operation: SettingsOperation, objects: DeskObject[], settings: Settings): void {
-  if (operation.kind === 'defaults_update') {
+  if (operation.kind === 'grid_update') {
+    settings.grid = gridSettingsSchema.parse({ ...settings.grid, ...operation.patch });
+  } else if (operation.kind === 'defaults_update') {
     settings.defaults = appearanceSchema.parse({ ...settings.defaults, ...operation.patch });
   } else if (operation.kind === 'series_add') {
     if (settings.series.some(series => series.id === operation.series.id)) throw new Error('Duplicate series ID');

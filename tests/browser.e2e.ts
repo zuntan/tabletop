@@ -35,6 +35,7 @@ test('browser UI and real stdio agent share objects, gestures, selection and his
     await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     assert.equal(new URL(page.url()).hash, '');
+    await page.locator('#grid-snap').click(); // This gesture test intentionally uses unrestricted coordinates.
     await page.getByRole('button', { name: '矩形', exact: true }).click();
     const state = await call('desk_list'); assert.equal(state.count, 1);
     const id = state.objects[0].id;
@@ -48,7 +49,7 @@ test('browser UI and real stdio agent share objects, gestures, selection and his
     await page.mouse.up();
     const moved = await call('desk_get', { id });
     assert.equal(moved.x, state.objects[0].x + 80); assert.equal(moved.y, state.objects[0].y + 40);
-    assert.equal((await call('desk_summary')).revision, 2);
+    assert.equal((await call('desk_summary')).revision, state.revision + 1);
     const handle = page.locator('[data-resize]'); const hb = (await handle.boundingBox())!;
     await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2); await page.mouse.down();
     await page.mouse.move(hb.x + hb.width / 2 + 40, hb.y + hb.height / 2 + 30, { steps: 3 }); await page.mouse.up();
@@ -59,7 +60,7 @@ test('browser UI and real stdio agent share objects, gestures, selection and his
     assert.equal((await call('desk_get', { id })).fill, '#dbeafe');
     await page.getByRole('button', { name: 'やり直す', exact: true }).click();
     assert.equal((await call('desk_get', { id })).fill, '#ff0000');
-    const changes = await call('desk_changes', { sinceRevision: 3 });
+    const changes = await call('desk_changes', { sinceRevision: state.revision + 2 });
     assert.deepEqual(changes.changes.map((c: { operation: string }) => c.operation), ['batch', 'undo', 'redo']);
     assert.deepEqual(changes.changes.map((c: { actor: string }) => c.actor), ['agent-01', 'human', 'human']);
     const markup = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="60"><script>window.svgExecuted=true</script><rect width="100" height="60" fill="green"/></svg>';
