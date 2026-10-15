@@ -26,6 +26,7 @@ import { createReactionControls, drawReactions } from './reactions';
 import './reactions.css';
 import { createDeskFileControls } from './desk-file-controls';
 import { IMAGE_TITLE_HEIGHT } from './image-geometry';
+import { BrowserConnection } from './pairing-client';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -76,7 +77,8 @@ app.innerHTML = `
       </section>
       <section><h2>オブジェクト <span id="count">0</span></h2><div id="object-list"></div></section>
       <section><h2>共通履歴</h2><div id="history"></div></section>
-      <section><h2>MCP接続</h2><p>サーバーが表示したURLから開くか、接続トークンを入力してください。</p>
+      <section><h2>MCP接続</h2><p>初回・手動接続はAIに受付を開いてもらい、接続トークンを入力してください。通常の切断は自動復帰を待ちます。</p>
+        <p id="connection-detail" role="status"></p>
         <form id="connect-form"><label>ポート<input id="port" type="number" value="4317" min="1" max="65535"></label>
           <label>トークン<input id="token" type="password" autocomplete="off"></label><button type="submit">接続</button></form>
         <small>閉じる前に上部の「保存」で机を保存してください。「読込」で再開できます。</small>
@@ -96,9 +98,7 @@ const overlays = app.querySelector<SVGGElement>('#overlays')!;
 const form = $<HTMLFormElement>('#properties');
 const camera = { x: 60, y: 50, zoom: 1 };
 let space = false;
-let socket: WebSocket | null = null;
-let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
-let connectionGeneration = 0;
+
 let busy = false;
 let descriptionsVisible = true;
 let gridEnabled = false;
@@ -484,16 +484,24 @@ window.addEventListener('paste', event => {
   } catch (error) { event.preventDefault(); notify(error instanceof Error ? error.message : String(error), true); }
 });
 
-function connect(token: string, port: string) {
+const recovery = new BrowserConnection({
+  disconnected: () => { desk.point([]); drawSelection(); },
+  status: (state, detail) => {
+    const status = $('#connection');
+    status.textContent = state === 'connected' ? 'MCP接続済み' : state === 'blocked' ? '接続確認が必要' : 'AI再接続待ち';
+    status.classList.toggle('connected', state === 'connected');
+    status.classList.toggle('error', state === 'blocked');
+    $('#connection-detail').textContent = detail;
+    if (state === 'blocked') notify(detail, true);
+    else if ($('#message').dataset.connection === 'true') notify('');
+    $('#message').dataset.connection = state === 'blocked' ? 'true' : 'false';
+  },
+});
+function connect(token: string, port: string, manual = false) {
+  if (manual && (recovery.hasPairing() || desk.summary().count > 0) && !confirm('机の内容を保持したまま、接続先のペアリングを置き換えますか？')) return;
   if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535 || token.length < 24) { notify('有効なポートと接続トークンを入力してください', true); return; }
-  const generation = ++connectionGeneration;
-  clearTimeout(reconnectTimer); socket?.close();
-  desk.point([]); drawSelection();
-  const status = $('#connection'); status.textContent = '接続中'; status.classList.remove('connected');
-  socket = new WebSocket(`ws://127.0.0.1:${port}/bridge?token=${encodeURIComponent(token)}`);
-  const ws = socket;
-  ws.onopen = () => { if (generation !== connectionGeneration) return; status.textContent = 'MCP接続済み'; status.classList.add('connected'); notify('AIと共有できる状態です'); };
-  ws.onmessage = event => {
+
+  recovery.connect(token, port, (ws, event) => {
     let id: string | undefined;
     try {
       const message = JSON.parse(String(event.data)); id = message.id;
@@ -506,16 +514,9 @@ function connect(token: string, port: string) {
       if (['execute', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method)) render();
       if (message.request.method === 'load_document') $('#fit').click();
     } catch (error) { ws.send(JSON.stringify({ id, error: error instanceof Error ? error.message : String(error) })); }
-  };
-  ws.onclose = () => {
-    if (generation !== connectionGeneration) return;
-    desk.point([]); drawSelection();
-    status.textContent = '未接続 · 再接続待ち'; status.classList.remove('connected');
-    reconnectTimer = setTimeout(() => connect(token, port), 3000);
-  };
-  ws.onerror = () => { if (generation === connectionGeneration) notify('接続できません。サーバー・トークン・他タブの接続を確認してください', true); };
+  }, manual);
 }
-$<HTMLFormElement>('#connect-form').onsubmit = event => { event.preventDefault(); connect($<HTMLInputElement>('#token').value, $<HTMLInputElement>('#port').value); };
+$<HTMLFormElement>('#connect-form').onsubmit = event => { event.preventDefault(); connect($<HTMLInputElement>('#token').value, $<HTMLInputElement>('#port').value, true); };
 const params = new URLSearchParams(location.hash.slice(1));
 const initialToken = params.get('token'), initialPort = params.get('port') ?? '4317';
 if (initialToken) {

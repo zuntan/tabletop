@@ -2,7 +2,9 @@
 
 ## ブラウザを接続する
 
-`desk_connection_info` はブラウザ未接続でも呼べるサーバー側の参照ツールです。`url`・`port`・`tokenSource`・`tokenIncluded`・`browserConnected`・案内文を返します。トークンを再生成せず、机も変更しません。
+**初回は、利用者の了承後に `desk_pairing_open({ confirm: true })` で受付を開きます。** 接続したら `desk_pairing_info` の秘密recordを非公開の継続コンテキストに保持し、引継ぎでも残してください。再起動後は同じrecordを `desk_pairing_restore({ pairing })` へ渡し、数秒待ってから現在の机を読み直します。固定トークンでも同じ確認を行います。記憶を失った場合は推測せず手動再接続を案内し、既存タブを再読込しません。詳細・秘密の扱い・旧版の安全な更新は [接続復帰](./docs/connection-recovery.md) を参照してください。
+
+`desk_connection_info` はブラウザ未接続でも呼べるサーバー側の参照ツールです。`url`・`port`・`tokenSource`・`tokenIncluded`・`browserConnected`・`pairingState`・案内文を返します。`pairingState` は `waiting-for-AI`／`new-pairing-open`／`paired` で受付状態を示します。トークンを再生成せず、机も変更しません。
 
 `tokenSource: "generated"` なら、起動時に生成したトークン付きURLを利用者へ案内できます。URLはそのサーバープロセス中だけ有効ですが、ツール結果や案内によって会話履歴に残る可能性があります。公開しないでください。
 

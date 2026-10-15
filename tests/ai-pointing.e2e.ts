@@ -52,11 +52,11 @@ test('green AI frames coexist with blue selection without replacing media or int
     assert.equal(await page.locator('[data-resize]').count(), 0);
     await page.locator('[data-id="memo"] .markdown-text').click();
     assert.deepEqual((await call('desk_selection')).ids, ['memo']);
-    // Reconnecting clears session-local pointing without touching committed objects.
+    // Canceling manual pairing replacement must not disconnect or clear pointing.
+    page.once('dialog', dialog => void dialog.dismiss());
     await page.locator('#connect-form').evaluate(element => (element as HTMLFormElement).requestSubmit());
-    await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
-    assert.deepEqual((await call('desk_selection')).aiPointing, []);
-    assert.equal(await page.locator('[data-ai-point]').count(), 0);
+    assert.deepEqual((await call('desk_selection')).aiPointing, ['memo']);
+    assert.equal(await page.locator('[data-ai-point]').count(), 1);
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });

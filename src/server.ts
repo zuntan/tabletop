@@ -11,6 +11,8 @@ import { batchSchema, type Request } from './model.js';
 import { registerAssetTools } from './asset-tools.js';
 import { registerDeskFileTools } from './desk-file-tools.js';
 import { isStaticPathInside } from './static-path.js';
+import { PairingGate } from './pairing-server.js';
+import { registerPairingTools } from './pairing-tools.js';
 
 const port = Number(process.env.TABLETOP_PORT ?? 4317);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid TABLETOP_PORT');
@@ -40,22 +42,25 @@ const http = createServer(async (req, res) => {
 });
 const wss = new WebSocketServer({ noServer: true, maxPayload: 24_000_000 });
 let browser: WebSocket | null = null;
+const gate = new PairingGate(() => browser !== null);
 const pending = new Map<string, { resolve: (value: unknown) => void; reject: (error: Error) => void; timer: NodeJS.Timeout }>();
 
 http.on('upgrade', (req, socket, head) => {
   const url = new URL(req.url ?? '/', `http://127.0.0.1:${port}`);
   const origins = [`http://127.0.0.1:${port}`, `http://localhost:${port}`, 'http://127.0.0.1:5173', 'http://localhost:5173'];
-  if (url.pathname !== '/bridge' || url.searchParams.get('token') !== token ||
+  const resume = url.searchParams.get('resume') === '1';
+  if (url.pathname !== '/bridge' || (!resume && url.searchParams.get('token') !== token) ||
       !origins.includes(req.headers.origin ?? '') ||
       ![`127.0.0.1:${port}`, `localhost:${port}`].includes(req.headers.host ?? '')) {
     socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n'); socket.destroy(); return;
   }
-  if (browser) { socket.write('HTTP/1.1 409 Conflict\r\nConnection: close\r\n\r\n'); socket.destroy(); return; }
-  wss.handleUpgrade(req, socket, head, ws => wss.emit('connection', ws));
+  if (browser && !resume) { socket.write('HTTP/1.1 409 Conflict\r\nConnection: close\r\n\r\n'); socket.destroy(); return; }
+  if ((!resume && !gate.canBootstrap) || gate.pendingCount >= 8) { socket.write('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n'); socket.destroy(); return; }
+  wss.handleUpgrade(req, socket, head, ws => wss.emit('connection', ws, req));
 });
-wss.on('connection', (ws: WebSocket) => {
+function attachBrowser(ws: WebSocket) {
   browser = ws;
-  console.error('[Tabletop] Browser connected');
+
   ws.on('message', data => {
     try {
       const message = JSON.parse(data.toString());
@@ -67,11 +72,15 @@ wss.on('connection', (ws: WebSocket) => {
     } catch { ws.close(1007, 'Invalid response'); }
   });
   ws.on('error', error => console.error('[Tabletop] WebSocket:', error.message));
-  ws.on('close', () => {
+  ws.on('close', code => {
+    console.error(`[Tabletop] ${new Date().toISOString()} Browser closed code=${code} pending=${pending.size}`);
     if (browser === ws) browser = null;
     for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error('Browser disconnected; operation outcome may be unknown. Inspect revision before retrying.')); }
     pending.clear();
   });
+}
+wss.on('connection', (ws: WebSocket, req: import('node:http').IncomingMessage) => {
+  gate.accept(ws, new URL(req.url!, baseUrl).searchParams.get('resume') !== '1', () => attachBrowser(ws));
 });
 function request(payload: Request): Promise<unknown> {
   return new Promise((resolveResult, reject) => {
@@ -117,14 +126,16 @@ for (const [name, description, inputSchema] of tools) {
 }
 registerAssetTools(mcp, request);
 registerDeskFileTools(mcp, request);
+registerPairingTools(mcp, gate);
 mcp.registerTool('desk_connection_info', {
-  description: 'Get the current browser connection URL without requiring a connected browser. Only server-generated random tokens are included. When TABLETOP_TOKEN is configured, return a plain URL and instructions to enter the configured token manually; never reveal the configured token. Generated URLs contain a secret that may remain in conversation history. Does not rotate tokens or change the desk. MCP-only: no HTTP token endpoint.',
+  description: 'Get the current bootstrap URL without changing pairing state. For NEW/manual pairing first call desk_pairing_open with user approval. After pairing immediately retain desk_pairing_info privately for restart recovery. To recover an existing tab use desk_pairing_restore with that record, not a new URL or browser automation. If credentials are lost, ask the human to save or manually reconnect without reload. Only generated bootstrap tokens are included; configured TABLETOP_TOKEN is never disclosed. No HTTP token endpoint.',
   inputSchema: {}, annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 }, async () => ({ content: [{ type: 'text', text: JSON.stringify({
   url: connectionUrl, port, tokenSource: tokenFromEnv ? 'environment' : 'generated', tokenIncluded: !tokenFromEnv,
   browserConnected: browser?.readyState === WebSocket.OPEN,
-  message: tokenFromEnv ? 'Open the URL and enter your configured TABLETOP_TOKEN in the Connection tab. The configured token is not returned.'
-    : 'Open this URL to connect. It contains a temporary secret valid for this server process; do not share it publicly.',
+  pairingState: gate.info() ? 'paired' : gate.canBootstrap ? 'new-pairing-open' : 'waiting-for-AI',
+  message: tokenFromEnv ? 'For new/manual pairing first open desk_pairing_open with user approval, then enter your configured TABLETOP_TOKEN in the Connection tab. The configured token is not returned. For recovery restore the retained pairing record instead.'
+    : 'For new/manual pairing first open desk_pairing_open with user approval, then use this URL. It contains a temporary secret; do not share it publicly. For recovery use desk_pairing_restore with the retained record instead.',
 }) }] }));
 http.on('error', error => { console.error('[Tabletop] Cannot listen:', error.message); process.exitCode = 1; void mcp.close(); });
 await new Promise<void>((resolveReady, reject) => {
@@ -134,14 +145,15 @@ await new Promise<void>((resolveReady, reject) => {
 console.error(`[Tabletop] Open ${connectionUrl}${tokenFromEnv ? ' (enter configured TABLETOP_TOKEN in the Connection tab)' : ''}`);
 await mcp.connect(new StdioServerTransport());
 let closing = false;
-async function shutdown() {
+async function shutdown(reason: string) {
   if (closing) return;
   closing = true;
-  browser?.close();
+  console.error(`[Tabletop] ${new Date().toISOString()} Server stopping: ${reason}`);
+  for (const ws of wss.clients) ws.close(1001, 'Server stopping');
   for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error('Server closing')); }
   pending.clear();
   wss.close(); http.close(); await mcp.close();
 }
-process.stdin.on('end', () => void shutdown());
-process.on('SIGINT', () => void shutdown());
-process.on('SIGTERM', () => void shutdown());
+process.stdin.on('end', () => void shutdown('stdin ended'));
+process.on('SIGINT', () => void shutdown('SIGINT'));
+process.on('SIGTERM', () => void shutdown('SIGTERM'));

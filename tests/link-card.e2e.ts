@@ -24,7 +24,7 @@ test('card open controls launch a separate tab without selecting, moving or plac
   }
   const destination = `http://127.0.0.1:${port}/missing-page?opened=1`;
   try {
-    await client.connect(transport); await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
+    await client.connect(transport); await call('desk_pairing_open', { confirm: true }); await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     await call('desk_execute', { operations: [
       { kind: 'add', object: { id: 'card', type: 'link', x: 250, y: 160, width: 320, height: 60, text: '資料', url: destination } },

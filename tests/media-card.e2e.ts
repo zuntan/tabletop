@@ -32,7 +32,7 @@ test('media cards edit optional links and add clipboard images or safe SVG sourc
   try {
     // Preserve esbuild's function-name helper inside serialized browser callbacks.
     await page.addInitScript('window.__name = (fn) => fn');
-    await client.connect(transport); await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
+    await client.connect(transport); await call('desk_pairing_open', { confirm: true }); await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     await paste(svg);
     await page.waitForFunction(() => document.querySelectorAll('#objects > g').length === 1);

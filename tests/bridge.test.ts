@@ -6,6 +6,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { WebSocket } from 'ws';
 import { Desk, dispatch } from '../src/model.js';
+import { pairPeer } from './pairing-peer';
 
 async function freePort() {
   const server = createServer(); server.listen(0, '127.0.0.1'); await once(server, 'listening');
@@ -34,7 +35,8 @@ test('real stdio MCP server relays tools to a browser state and rejects unauthor
   let ws: WebSocket | undefined;
   try {
     await client.connect(transport);
-    const tools = await client.listTools(); assert.equal(tools.tools.length, 18);
+    const tools = await client.listTools(); assert.equal(tools.tools.length, 21);
+    assert.notEqual((await client.callTool({ name: 'desk_pairing_open', arguments: { confirm: true } })).isError, true);
     for (const name of ['desk_context', 'desk_asset_read', 'desk_asset_import', 'desk_connection_info', 'desk_point', 'desk_save', 'desk_load']) assert.ok(tools.tools.some(tool => tool.name === name));
     assert.equal(tools.tools.find(tool => tool.name === 'desk_point')?.annotations?.readOnlyHint, false);
     assert.equal((await client.callTool({ name: 'desk_summary' })).isError, true);
@@ -43,8 +45,7 @@ test('real stdio MCP server relays tools to a browser state and rejects unauthor
     assert.ok(response.headers.get('content-security-policy')?.includes("object-src 'none'"));
     await rejectConnection(`ws://127.0.0.1:${port}/bridge?token=bad`, origin, 403);
     await rejectConnection(`ws://127.0.0.1:${port}/bridge?token=${token}`, 'https://evil.example', 403);
-    ws = new WebSocket(`ws://127.0.0.1:${port}/bridge?token=${token}`, { origin });
-    await once(ws, 'open');
+    ws = (await pairPeer(`ws://127.0.0.1:${port}/bridge?token=${token}`, origin)).ws;
     const desk = new Desk();
     ws.on('message', data => {
       const message = JSON.parse(data.toString());

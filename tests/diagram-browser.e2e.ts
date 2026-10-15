@@ -53,6 +53,7 @@ test('round swatch palettes, shape labels, arrow endpoints and attached movement
   }
   try {
     await client.connect(transport);
+    await call('desk_pairing_open', { confirm: true });
     await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     await call('desk_execute', { operations: [

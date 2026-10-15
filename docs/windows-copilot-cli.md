@@ -64,7 +64,9 @@ Copilot CLIの `/mcp add` でローカル（stdio）サーバーを追加でき�
 
 Copilot CLIへ、例えば次のように依頼します。
 
-> Tabletopのdesk_connection_infoを呼び、ブラウザーで開く接続URLを教えてください。
+> Tabletopの新しい机を開きたいので、desk_pairing_openで初回受付を開き、desk_connection_infoで接続URLを教えてください。接続後はdesk_pairing_infoの復帰情報を非公開で保持してください。
+
+サーバー再起動後は保持したrecordを `desk_pairing_restore` に渡し、既存タブの自動復帰を待ちます。新規受付を勝手に開き直さず、情報を失った場合は保存・手動接続を案内します。[接続復帰](./connection-recovery.md) に手順と旧版更新時の注意をまとめています。
 
 返されたURLをブラウザーで開きます。通常は `http://127.0.0.1:4317/` に一時トークン付きフラグメントが付いたURLです。トークンを含むURLは秘密情報のため、公開チャットやスクリーンショットには載せないでください。
 

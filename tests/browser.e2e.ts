@@ -31,6 +31,7 @@ test('browser UI and real stdio agent share objects, gestures, selection and his
   }
   try {
     await client.connect(transport);
+    await call('desk_pairing_open', { confirm: true });
     await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     assert.equal(new URL(page.url()).hash, '');

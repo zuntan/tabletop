@@ -34,7 +34,7 @@ test('defaults, inline editing and independent numbering systems work through UI
   }
   async function place(x: number, y: number) { const p = await point(x, y); await page.mouse.click(p.x, p.y); }
   try {
-    await client.connect(transport); await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
+    await client.connect(transport); await call('desk_pairing_open', { confirm: true }); await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     await color('default-fill', '#22c55e');
     await page.locator('[data-add="roundedRect"]').click();
