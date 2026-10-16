@@ -7,6 +7,7 @@ import { reactions, reactionChoices, canonicalReaction } from './reaction-values
 import { checkDeskBridgeSize } from './desk-file-protocol';
 import { ImageGeometry } from './image-geometry';
 import { createGridPlacement, placementGeometry } from './grid-placement';
+import { createDeskId } from './desk-identity';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -96,6 +97,7 @@ function validateObject(object: unknown): DeskObject {
 /** The sole committed state writer for both UI and MCP operations. */
 export class Desk {
   readonly sessionId = crypto.randomUUID();
+  readonly deskId = createDeskId();
   readonly imageGeometry = new ImageGeometry();
   revision = 0;
   private objects: Snapshot = [];
@@ -135,7 +137,7 @@ export class Desk {
   summary() {
     const types: Record<string, number> = {};
     for (const object of this.objects) types[object.type] = (types[object.type] ?? 0) + 1;
-    return { sessionId: this.sessionId, revision: this.revision, count: this.objects.length,
+    return { sessionId: this.sessionId, deskId: this.deskId, name: this.settings.name, revision: this.revision, count: this.objects.length,
       types, canUndo: this.undoStack.length > 0, canRedo: this.redoStack.length > 0 };
   }
   list() {
@@ -186,7 +188,7 @@ export class Desk {
     const placement = createGridPlacement(batch, before, value => objectSchema.parse(value));
     for (const inputOperation of batch.operations) {
       const operation = placement.normalize(inputOperation, materializeLabels(after, afterSettings), afterSettings);
-      if (operation.kind === 'grid_update' || operation.kind === 'defaults_update' || operation.kind === 'series_add'
+      if (operation.kind === 'desk_rename' || operation.kind === 'grid_update' || operation.kind === 'defaults_update' || operation.kind === 'series_add'
         || operation.kind === 'series_update' || operation.kind === 'label_add') {
         applySettingsOperation(operation, after, afterSettings);
         continue;
@@ -220,7 +222,7 @@ export class Desk {
     if (JSON.stringify(before) === JSON.stringify(after)
       && JSON.stringify(beforeSettings) === JSON.stringify(afterSettings)) return result();
     const targets = [...new Set(batch.operations.map(op => op.kind === 'add' ? op.object.id
-      : op.kind === 'grid_update' ? 'grid' : op.kind === 'defaults_update' ? 'defaults' : op.kind === 'series_add' ? op.series.id : op.id))];
+      : op.kind === 'desk_rename' ? 'name' : op.kind === 'grid_update' ? 'grid' : op.kind === 'defaults_update' ? 'defaults' : op.kind === 'series_add' ? op.series.id : op.id))];
     const entry = { before, after, beforeSettings, afterSettings, actor: batch.actor, targets };
     this.undoStack.push(entry);
     this.redoStack = [];

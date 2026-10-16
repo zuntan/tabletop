@@ -12,6 +12,12 @@
 
 `tokenSource: "environment"` なら、env指定の固定トークンはツール結果にも起動ログにも出しません。`url` は通常のURLで、利用者が「接続」タブへ設定済みトークンを手動入力します。AIは非開示のトークンを推測・取得する必要はありません。HTTPにはトークン取得口を設けません。
 
+## 棚を名前で呼ぶ
+
+`desk_summary`／`desk_context`／`desk_state`／`desk_list` の `name` が棚の名前、`deskId` が今開いている棚の短い公開目印です。普段は名前を使い、同名の棚があるときだけIDを添えて照合します。名前の空文字は「無題」。名前はファイルに保存しますが、棚IDは保存せず、読込・切断・再接続でも現在の値を維持します。同じファイルを別タブで開けば別IDです。認証やrevisionガードには使わず、従来どおり `sessionId`／`revision` を使います。
+
+改名は人間の依頼時だけ、`desk_execute` の `{ kind: "desk_rename", name: "企画メモ" }` と現在の `expectedRevision` を使います。共通Undo対象です。人間側ダウンロード名は `棚の名前.tabletop`（時刻なし）、AIの保存名指定は従来どおり。予定ダウンロード名の専用取得機能はありません。詳細：[棚の名前・棚ID・保存名](./docs/desk-identity.md)。
+
 ## 机の保存・読込
 
 `desk_save` は専用フォルダーへ画像込みの `.tabletop` を排他作成します。`desk_load` は利用者の置換許可、`confirm: true`、現在の `expectedSessionId`／`expectedRevision` が必要で、一回のUndoで戻せます。保存形式はUIと共通です。既定の保存先はサーバー側の `~/.tabletop/saves/`、変更は `TABLETOP_SAVE_ROOT`。名前だけを指定し、任意パスや上書きは禁止です。新版サーバー・ブラウザが必要なので、旧タブは先にUI保存して保護してください。引数・転送上限・失敗時の扱いは [MCP保存・読込](./docs/mcp-save-load.md) を参照してください。

@@ -50,13 +50,14 @@ MCPの `desk_connection_info` を呼ぶとブラウザ未接続でも現在の�
 ランダム生成時は標準エラーログにも起動URLを表示します。env指定時はログにも固定トークンを表示しません。接続URL取得はMCP側だけで、HTTPにトークン取得口はありません。
 
 - `TABLETOP_PORT`：省略時4317。
-- `TABLETOP_TOKEN`：省略時は起動ごとにランダム生成。明示する場合は24文字以上で、十分にランダムな値にしてください。
-- トークン生成例：`node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`
+- `TABLETOP_TOKEN`：省略時は起動ごとに128ビット乱数・base64urlの22文字を自動生成。明示する場合は22文字以上で、十分にランダムな値にしてください。従来の長い値も使用できます。復帰recordの秘密は従来どおり別管理です。
+- トークン生成例：`node -e "console.log(require('node:crypto').randomBytes(16).toString('base64url'))"`
 - トークンは秘密情報です。公開リポジトリや公開チャットへ貼らないでください。ランダム生成時の接続URLをMCPで取得して案内すると、AIの会話履歴にトークンが残る可能性があります。非開示で使う場合はenv指定＋手動入力にしてください。
 - 一つのサーバーにつき接続できる作業机タブは一つです。複数エージェントの同時接続・共同編集は未対応です。
 
 ## 操作
 
+- ヘッダーの「✎」で棚の名前を編集。名前は保存・読込で引き継ぎ、ダウンロード名は `棚の名前.tabletop`（未設定は `無題.tabletop`、時刻なし）。隣の短い棚IDは同名の棚を指し分ける目印で、ファイルには保存しません。[仕様・旧ファイルとの互換性](./docs/desk-identity.md)。
 - 上部のツールで矩形・角丸矩形・楕円・線・矢印・テキスト・画像・SVG・Web資料・リンク・ピンを追加。
 - 上部の色・線幅は新規作成の既定値になり、選択中の対象にも即時適用します。選択だけでは既定値は変わりません。
 - 「ピンを配置」は最後に選んだ体系を即座に配置。「ピン体系」で書式・色・枠を設定できます。デフォルトはタイトな地図ピン型。「文字に枠を合わせる」で既存の枠も調整できます。説明文はダブルクリックで編集し、表示グループで一括非表示にできます。
@@ -90,7 +91,7 @@ AI向けの使い方・接続線・ピン体系・画像／SVGの受け渡しは
 | `desk_pairing_open` | 人間の了承後に初回・手動置換の受付を開く。復帰には使わない |
 | `desk_pairing_info` | 非公開で保持する復帰用recordを取得。秘密情報を含む |
 | `desk_pairing_restore` | 再起動後に以前のrecordを指定し、既知の机だけ復帰を許可 |
-| `desk_summary` | sessionId、revision、種類別件数、Undo / Redo可否 |
+| `desk_summary` | 棚の名前・短い棚ID、sessionId、revision、種類別件数、Undo / Redo可否 |
 | `desk_list` | 背面から前面順の一覧。画像の大容量データは省略 |
 | `desk_get` | ID指定の詳細。画像ソースを含む |
 | `desk_state` | 全状態。大きくなるため必要時だけ使用 |
@@ -99,7 +100,7 @@ AI向けの使い方・接続線・ピン体系・画像／SVGの受け渡しは
 | `desk_load` | 明示確認とsession／revisionガード付きで読込。共通Undo対応。[詳細](./docs/mcp-save-load.md) |
 | `desk_asset_read` | 画像をMCP imageブロック、SVGをソースで取得。任意で一時ファイル出力 |
 | `desk_asset_import` | ファイル・SVGコード・data URLから追加／画像だけ差し替え |
-| `desk_settings` | 新規作成の既定スタイルとピン体系、次番号 |
+| `desk_settings` | 棚の名前、共有スナップ設定、新規作成の既定スタイルとピン体系、次番号 |
 | `desk_selection` | 人間の選択ID、AI指差しID（`aiPointing`）、最後に観測したキャンバスポインタ座標 |
 | `desk_select` | 人間の編集用選択を変更。AIの指差しには `desk_point` を使用 |
 | `desk_point` | 人間の青い選択を変えず、緑枠でAIが指差す。`ids: []` で解除。履歴・revisionには記録しない |

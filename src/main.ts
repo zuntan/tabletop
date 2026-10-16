@@ -27,6 +27,8 @@ import './reactions.css';
 import { createDeskFileControls } from './desk-file-controls';
 import { IMAGE_TITLE_HEIGHT } from './image-geometry';
 import { BrowserConnection } from './pairing-client';
+import { createDeskIdentityControls } from './desk-identity-controls';
+import './desk-identity.css';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -128,8 +130,10 @@ editActions.append($('#reaction-controls')); $('.toolbar-parts').append(editActi
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });
+const identityControls = createDeskIdentityControls($('header'), desk,
+  () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
 createDeskFileControls($('header'), desk, () => { render(); $('#fit').click(); },
-  () => !busy && !gesture && !editor.isActive());
+  () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing());
 const labels: Record<DeskObject['type'], string> = { rect: '矩形', roundedRect: '角丸矩形', label: 'ピン', ellipse: '楕円', line: '線', arrow: '矢印', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
 
 function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}): SVGElementTagNameMap[K] {
@@ -233,6 +237,7 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
   }
 }
 function render(rebuild = true) {
+  identityControls.refresh();
   if (rebuild) {
     objectsLayer.replaceChildren();
     const objects = desk.snapshot();
@@ -508,14 +513,14 @@ const recovery = new BrowserConnection({
 });
 function connect(token: string, port: string, manual = false) {
   if (manual && (recovery.hasPairing() || desk.summary().count > 0) && !confirm('机の内容を保持したまま、接続先のペアリングを置き換えますか？')) return;
-  if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535 || token.length < 24) { notify('有効なポートと接続トークンを入力してください', true); return; }
+  if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535 || token.length < 22) { notify('有効なポートと接続トークンを入力してください', true); return; }
 
   recovery.connect(token, port, (ws, event) => {
     let id: string | undefined;
     try {
       const message = JSON.parse(String(event.data)); id = message.id;
       if (typeof id !== 'string') throw new Error('Invalid request ID');
-      if (busy || (editor.isActive() && ['execute', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
+      if (busy || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       const result = dispatch(desk, message.request);
       ws.send(JSON.stringify({ id, result }));
       // Read-only requests must not rebuild iframes or steal form edits.

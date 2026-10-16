@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { DeskObject } from './model';
 import { tightFrame } from './pin-shape';
 import { gridSettingsSchema } from './grid-settings';
+import { deskNameSchema } from './desk-identity';
 
 export const colorSchema = z.string().regex(/^(#[0-9a-fA-F]{3,8}|transparent|[a-zA-Z]{1,20})$/);
 export const appearanceSchema = z.object({
@@ -24,6 +25,7 @@ export const seriesSchema = appearanceSchema.extend({
 }).strict();
 export const seriesPatchSchema = seriesSchema.omit({ id: true }).partial();
 export const settingsOperations = [
+  z.object({ kind: z.literal('desk_rename'), name: deskNameSchema }).strict(),
   z.object({ kind: z.literal('grid_update'), patch: gridSettingsSchema.partial() }).strict(),
   z.object({ kind: z.literal('defaults_update'), patch: appearanceSchema.partial() }).strict(),
   z.object({ kind: z.literal('series_add'), series: seriesSchema.partial().required({ id: true, name: true }) }).strict(),
@@ -36,6 +38,7 @@ export type Appearance = z.infer<typeof appearanceSchema>;
 export type Series = z.infer<typeof seriesSchema>;
 export const settingsSchema = z.object({ defaults: appearanceSchema, series: z.array(seriesSchema).max(2000),
   grid: gridSettingsSchema.default({}),
+  name: deskNameSchema.default(''),
 }).strict();
 export type Settings = z.infer<typeof settingsSchema>;
 type SettingsOperation = z.infer<typeof settingsOperations[number]>;
@@ -78,7 +81,9 @@ export function materializeLabels(objects: DeskObject[], settings: Settings): De
   });
 }
 export function applySettingsOperation(operation: SettingsOperation, objects: DeskObject[], settings: Settings): void {
-  if (operation.kind === 'grid_update') {
+  if (operation.kind === 'desk_rename') {
+    settings.name = deskNameSchema.parse(operation.name);
+  } else if (operation.kind === 'grid_update') {
     settings.grid = gridSettingsSchema.parse({ ...settings.grid, ...operation.patch });
   } else if (operation.kind === 'defaults_update') {
     settings.defaults = appearanceSchema.parse({ ...settings.defaults, ...operation.patch });

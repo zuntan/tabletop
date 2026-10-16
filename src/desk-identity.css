@@ -1,0 +1,14 @@
+header { flex-wrap: wrap; }
+.brand { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.desk-identity { display: inline-grid; grid-template-columns: minmax(0, max-content) 30px max-content; align-items: center; gap: 7px; width: fit-content; max-width: calc(100% - 8px); min-width: 0; margin-left: 8px; font-size: 23px; font-weight: 750; letter-spacing: 0; }
+#desk-name { grid-area: 1 / 1; min-width: 0; line-height: 32px; padding: 3px 7px; border: 1px solid transparent; white-space: normal; overflow-wrap: anywhere; }
+#desk-id { grid-area: 1 / 3; font-size: 11px; font-weight: 400; color: #94a3b8; white-space: nowrap; }
+#edit-desk-name { grid-area: 1 / 2; padding: 3px 7px; font-size: 14px; }
+#desk-name-form { grid-area: 1 / 1; display: block; position: relative; min-width: 0; max-width: 100%; margin: 0; }
+#desk-name-input { display: block; width: 100%; min-width: 0; line-height: 32px; padding: 3px 7px; font-size: 23px; font-weight: 750; }
+.desk-name-actions { position: absolute; top: calc(100% + 4px); right: 0; z-index: 10; display: flex; gap: 5px; padding: 5px; background: #0f172a; border: 1px solid #475569; border-radius: 6px; }
+#desk-name-form button { flex: none; font-size: 12px; padding: 5px 7px; }
+@media (max-width: 850px) {
+  .brand { flex-basis: 100%; }
+  .desk-identity { max-width: calc(100% - 8px); }
+}

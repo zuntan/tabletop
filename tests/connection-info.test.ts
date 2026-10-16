@@ -40,7 +40,7 @@ for (const configured of [false, true]) {
         assert.equal(url.hash, ''); assert.ok(!JSON.stringify(first).includes(fixedToken));
         assert.ok(!log.includes(fixedToken)); assert.match(first.message, /configured TABLETOP_TOKEN/);
       } else {
-        assert.match(token, /^[0-9a-f]{64}$/); assert.equal(params.get('port'), String(port));
+        assert.match(token, /^[A-Za-z0-9_-]{22}$/); assert.equal(Buffer.from(token, 'base64url').length, 16); assert.equal(params.get('port'), String(port));
         assert.match(first.message, /temporary secret/);
       }
       assert.deepEqual(await info(), first);

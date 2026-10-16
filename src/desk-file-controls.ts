@@ -1,5 +1,6 @@
 import type { Desk } from './model';
 import { decodeDeskFile, encodeDeskFile, MAX_DESK_FILE_BYTES } from './desk-file';
+import { downloadDeskFilename } from './desk-identity';
 
 export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh: () => void, canLoad: () => boolean) {
   const save = document.createElement('button');
@@ -14,10 +15,11 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
     save.disabled = true;
     try {
       const revision = desk.revision;
+      const filename = downloadDeskFilename(desk.settingsSnapshot().name);
       const bytes = await encodeDeskFile(desk);
       const url = URL.createObjectURL(new Blob([new Uint8Array(bytes).buffer], { type: 'application/zip' }));
       const link = document.createElement('a');
-      link.href = url; link.download = `tabletop-${new Date().toISOString().replace(/[:.]/g, '-')}.tabletop`;
+      link.href = url; link.download = filename;
       link.click(); setTimeout(() => URL.revokeObjectURL(url), 60_000);
       report(`revision ${revision} を保存しました`);
     } catch (error) { report(`保存失敗: ${error instanceof Error ? error.message : String(error)}`); }
