@@ -4,6 +4,8 @@ type Callbacks = {
   status: (state: 'waiting' | 'connected' | 'blocked' | 'released', detail: string) => void;
   disconnected: () => void;
   beforeRelease?: () => void;
+  handoff?: (url: string) => void;
+  handoffError?: (error: string) => void;
 };
 /** Per-tab memory only: neither documents nor browser storage contain credentials. */
 export class BrowserConnection {
@@ -12,10 +14,18 @@ export class BrowserConnection {
   private timer: ReturnType<typeof setTimeout> | undefined;
   private generation = 0;
   private attempt = 0;
+  private handoffRequested = false;
   constructor(private callbacks: Callbacks) {}
   hasPairing() { return this.pair !== null; }
-  connect(token: string, port: string, request: (ws: WebSocket, event: MessageEvent) => void, replace = false) {
+  requestHandoff() {
+    if (this.handoffRequested) return;
+    if (!this.pair || this.socket?.readyState !== WebSocket.OPEN) throw new Error('AIとの接続が必要です。');
+    this.handoffRequested = true;
+    this.socket.send(JSON.stringify({ type: 'handoff_request' }));
+  }
+  connect(token: string, port: string, request: (ws: WebSocket, event: MessageEvent) => void, replace = false, host = '127.0.0.1') {
     if (replace) this.pair = null;
+    this.handoffRequested = false;
     const generation = ++this.generation;
     clearTimeout(this.timer); this.socket?.close();
     this.callbacks.disconnected();
@@ -23,7 +33,7 @@ export class BrowserConnection {
     const paired = this.pair;
     const clientNonce = randomHex();
     let serverNonce = '', candidate = paired, authenticated = false, blocked = false;
-    const ws = new WebSocket(`ws://127.0.0.1:${port}/bridge${paired ? '?resume=1' : `?token=${encodeURIComponent(token)}`}`);
+    const ws = new WebSocket(`ws://${host}:${port}/bridge${paired ? '?resume=1' : `?token=${encodeURIComponent(token)}`}`);
     this.socket = ws;
     const current = () => generation === this.generation;
     const block = () => {
@@ -39,8 +49,13 @@ export class BrowserConnection {
         if (!current() || ws.readyState !== WebSocket.OPEN) return;
         const value = JSON.parse(String(event.data));
         if (authenticated) {
+          if (value.type === 'handoff_error') {
+            this.handoffRequested = false;
+            this.callbacks.handoffError?.(String(value.error)); return;
+          }
           if (value.type === 'release' && typeof value.id === 'string') {
-            try { this.callbacks.beforeRelease?.(); }
+            const humanHandoff = this.handoffRequested && typeof value.handoffUrl === 'string';
+            try { if (!humanHandoff) this.callbacks.beforeRelease?.(); }
             catch (error) {
               ws.send(JSON.stringify({ type: 'release_rejected', id: value.id, error: error instanceof Error ? error.message : String(error) }));
               return;
@@ -52,6 +67,8 @@ export class BrowserConnection {
             this.callbacks.status('released', 'AIとの接続を解放しました。自動再接続は停止しています。机の編集・保存は続けられます。再接続する場合は接続欄から手動で接続してください。');
             ws.send(JSON.stringify({ type: 'release_ack', id: value.id }));
             ws.close(4003, 'Desk released');
+            this.handoffRequested = false;
+            if (humanHandoff) this.callbacks.handoff?.(value.handoffUrl);
           } else request(ws, event);
           return;
         }
@@ -81,7 +98,7 @@ export class BrowserConnection {
       if (event.code === 4003) { block(); return; }
       this.callbacks.status('waiting', 'サーバーの復帰と接続確認を待っています。机の編集・保存は続けられます。');
       const delay = [250, 1000, 2000, 5000][Math.min(this.attempt++, 3)];
-      this.timer = setTimeout(() => this.connect(token, port, request), delay);
+      this.timer = setTimeout(() => this.connect(token, port, request, false, host), delay);
     };
   }
 }

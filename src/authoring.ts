@@ -5,6 +5,7 @@ import { formatSchema, type Series } from './settings';
 import { tightFrame } from './pin-shape';
 import { opacityOperations, transparencyPercent, opacityFromPercent } from './fill-opacity';
 import { iconButton } from './toolbar';
+import { randomUuid } from './portable-crypto';
 
 export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLElement, button: HTMLButtonElement,
   selectButton: HTMLButtonElement, apply: (operations: Operation[]) => void) {
@@ -63,7 +64,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
   choice.onchange = () => { chosen = choice.value; update(); };
   panel.querySelector<HTMLButtonElement>('#series-place')!.onclick = () => { placing = !placing; update(); };
   panel.querySelector<HTMLButtonElement>('#series-add')!.onclick = () => {
-    const id = `series-${crypto.randomUUID().slice(0, 8)}`;
+    const id = `series-${randomUuid().slice(0, 8)}`;
     chosen = id;
     apply([{ kind: 'series_add', series: { id, name: `体系 ${desk.settingsSnapshot().series.length + 1}` } }]);
   };
@@ -115,7 +116,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
   return { update, stopPlacement, isPlacing: () => placing,
     place(point: { x: number; y: number }) {
       if (!placing) return false;
-      const current = series(), id = `label-${crypto.randomUUID().slice(0, 8)}`;
+      const current = series(), id = `label-${randomUuid().slice(0, 8)}`;
       apply([{ kind: 'label_add', id, seriesId: chosen, x: point.x - current.width / 2, y: point.y - current.height }]);
       return true;
     },

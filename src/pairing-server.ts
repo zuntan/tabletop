@@ -10,6 +10,7 @@ export class PairingGate {
   constructor(private connected: () => boolean) {}
   get canBootstrap() { return this.bootstrap && !this.pairing; }
   get pendingCount() { return this.waiting.size; }
+  get acceptanceEpoch() { return this.epoch; }
   info() { return this.pairing ? { ...this.pairing } : null; }
   private change() {
     this.epoch++;

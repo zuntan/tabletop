@@ -1,10 +1,10 @@
-const invalidUrl = '接続URLを確認してください。http://127.0.0.1:ポート/ または http://localhost:ポート/ の形式で貼り付けてください。';
+const invalidUrl = '接続URLを確認してください。ローカル、またはAIが許可したLANアドレスのHTTP接続URLを貼り付けてください。';
 
-/** Parse only local Tabletop URLs; never navigate to or fetch the pasted address. */
-export function parseConnectionUrl(value: string): { port: string; token: string | null } {
+/** Extra LAN hosts must come from the serving server, never the pasted address. */
+export function parseConnectionUrl(value: string, allowedHosts: string[] = ['127.0.0.1', 'localhost']): { host: string; port: string; token: string | null } {
   let url: URL;
   try { url = new URL(value.trim()); } catch { throw new Error(invalidUrl); }
-  if (url.protocol !== 'http:' || !['127.0.0.1', 'localhost'].includes(url.hostname) ||
+  if (url.protocol !== 'http:' || !allowedHosts.includes(url.hostname) ||
       url.username || url.password || url.pathname !== '/' || url.search) throw new Error(invalidUrl);
   const params = new URLSearchParams(url.hash.slice(1));
   if ([...params.keys()].some(key => !['token', 'port'].includes(key)) ||
@@ -19,5 +19,5 @@ export function parseConnectionUrl(value: string): { port: string; token: string
   if (token !== null && (token.length < 22 || token.length > 4096 || /\s/.test(token))) {
     throw new Error('接続URLのトークンが正しくありません。URLを確認してください。');
   }
-  return { port, token };
+  return { host: url.hostname, port, token };
 }

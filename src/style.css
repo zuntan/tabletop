@@ -53,6 +53,12 @@ a { color: #2563eb; font-size: 12px; }
 .history-row { font-size: 11px; padding: 5px 0; color: #64748b; border-bottom: 1px dotted #e2e8f0; }
 aside p, aside small { font-size: 11px; line-height: 1.7; color: #64748b; }
 #connect-form { grid-template-columns: 1fr; margin-bottom: 8px; }
+.connection-url-row { display: flex; gap: 4px; min-width: 0; }
+.connection-url-row input { flex: 1; min-width: 0; }
+.connection-url-row button { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 28px; width: 28px; padding: 3px; }
+.connection-url-row svg { width: 16px; height: 16px; }
+#handoff-panel { margin-top: 8px; }
+#handoff-qr { display: block; max-width: 100%; height: auto; background: white; }
 footer { padding: 7px 18px; font-size: 11px; height: 30px; color: #64748b; background: white; border-top: 1px solid #e2e8f0; }
 footer.error { color: #b91c1c; }
 iframe { width: 100%; height: 100%; border: none; background: white; }

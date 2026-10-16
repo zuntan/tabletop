@@ -5,12 +5,13 @@ import { chromium } from 'playwright';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
-export async function openTestDesk(name: string, initScript?: string) {
+export async function openTestDesk(name: string, initScript?: string, serverPrelude?: string) {
   const server = createServer(); server.listen(0, '127.0.0.1'); await once(server, 'listening');
   const port = (server.address() as { port: number }).port;
   await new Promise<void>(resolve => server.close(() => resolve()));
   const token = `${name}-012345678901234567890123456789`;
-  const transport = new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', 'src/server.ts'], cwd: process.cwd(),
+  const args = serverPrelude ? ['--import', 'tsx', '--input-type=module', '--eval', `${serverPrelude}; await import('./src/server.ts');`] : ['--import', 'tsx', 'src/server.ts'];
+  const transport = new StdioClientTransport({ command: process.execPath, args, cwd: process.cwd(),
     env: { ...Object.fromEntries(Object.entries(process.env).filter((pair): pair is [string, string] => pair[1] !== undefined)), TABLETOP_PORT: String(port), TABLETOP_TOKEN: token }, stderr: 'pipe' });
   const client = new Client({ name, version: '1.0.0' });
   const browser = await chromium.launch({ headless: true, executablePath: process.env.TABLETOP_CHROME ?? '/usr/bin/google-chrome' });

@@ -14,24 +14,23 @@ test('pasted URLs validate before connection, preserve confirmation and reconnec
     let sockets = 0; page.on('websocket', () => sockets++);
     await input.fill(`http://example.com:${port}/#token=never-send-this-secret-token`);
     await connect.click();
-    assert.ok((await page.locator('#message').textContent())!.includes('接続URLを確認'));
+    await page.waitForFunction(() => document.querySelector('#message')?.textContent?.includes('接続URLを確認'));
     assert.equal(sockets, 0);
     assert.equal((await call('desk_state')).sessionId, before.sessionId);
     const token = 'url-input-012345678901234567890123456789';
     const url = `http://localhost:${port}/#token=${token}&port=${port}`;
     const location = page.url();
     await input.fill(url);
-    page.once('dialog', dialog => dialog.dismiss());
+    const dismissed = new Promise<void>(resolve => page.once('dialog', async dialog => { await dialog.dismiss(); resolve(); }));
     await connect.click();
     assert.equal(sockets, 0);
-    assert.equal(await page.locator('#port').inputValue(), String(port));
-    assert.equal(await page.locator('#token').inputValue(), token);
-    assert.equal(await input.inputValue(), '');
+    await dismissed;
+    assert.equal(await page.locator('#port, #token').count(), 0);
+    assert.equal(await input.inputValue(), url);
     assert.equal(page.url(), location);
     await call('desk_release', { confirm: true });
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'AI接続解放済み');
-    // A pasted URL takes precedence over stale or invalid values in the manual fields.
-    await page.locator('#port').fill('0'); await page.locator('#token').fill('old');
+    // Only the URL is needed for a deliberate manual return.
     await input.fill(url);
     page.once('dialog', dialog => dialog.accept());
     await connect.click();
@@ -40,10 +39,14 @@ test('pasted URLs validate before connection, preserve confirmation and reconnec
     assert.deepEqual(after, before);
     assert.equal(sockets, 1);
     assert.equal(page.url(), location);
-    // Fixed-token URLs without a fragment retain the separately entered token.
+    // A tokenless fixed-token URL must not silently reuse previous credentials.
     await call('desk_release', { confirm: true });
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'AI接続解放済み');
     await input.fill(`http://127.0.0.1:${port}/`);
+    await connect.click();
+    await page.waitForFunction(() => document.querySelector('#message')?.textContent?.includes('#token='));
+    assert.equal(sockets, 1);
+    await input.fill(url);
     page.once('dialog', dialog => dialog.accept());
     await connect.click();
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');

@@ -15,6 +15,11 @@ import { isStaticPathInside } from './static-path.js';
 import { PairingGate } from './pairing-server.js';
 import { registerPairingTools } from './pairing-tools.js';
 import { acknowledgeRelease } from './desk-release.js';
+import { NetworkAccess } from './network-access.js';
+import { registerNetworkTools } from './network-tools.js';
+import { HandoffTicket } from './handoff-ticket.js';
+
+const handoffTicket = new HandoffTicket();
 
 const port = Number(process.env.TABLETOP_PORT ?? 4317);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid TABLETOP_PORT');
@@ -27,22 +32,28 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
 const mime: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png' };
 const http = createServer(async (req, res) => {
   const host = req.headers.host;
-  if (host !== `127.0.0.1:${port}` && host !== `localhost:${port}`) { res.writeHead(403).end(); return; }
+  if (!network.allowsHost(host) || !network.allowsPeer(req.socket.remoteAddress)) { res.writeHead(403).end(); return; }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405).end(); return; }
   try {
     const pathname = decodeURIComponent(new URL(req.url ?? '/', `http://${host}`).pathname);
+    if (pathname === '/connection-policy') {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+      res.end(req.method === 'HEAD' ? undefined : JSON.stringify({ allowedHosts: network.hosts() })); return;
+    }
     const path = resolve(root, `.${pathname === '/' ? '/index.html' : pathname}`);
     if (!isStaticPathInside(root, path)) { res.writeHead(403).end(); return; }
     const body = await readFile(path);
     res.writeHead(200, {
       'Content-Type': mime[extname(path)] ?? 'application/octet-stream',
       'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:; frame-src https: http:; connect-src 'self' ws://127.0.0.1:* ws://localhost:*; object-src 'none'; base-uri 'none'",
+      'Content-Security-Policy': `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:; frame-src https: http:; connect-src 'self' ws://127.0.0.1:* ws://localhost:* ${network.hosts(true).slice(2).map(host => `ws://${network.authority(host)}`).join(' ')}; object-src 'none'; base-uri 'none'`,
     });
     res.end(req.method === 'HEAD' ? undefined : body);
   } catch { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Run npm run build first.'); }
 });
+const network = new NetworkAccess(http, port);
 const wss = new WebSocketServer({ noServer: true, maxPayload: 24_000_000 });
+const remotePeers = new WeakSet<WebSocket>();
 let browser: WebSocket | null = null;
 let releasing = false;
 const releaseCapable = new WeakSet<WebSocket>();
@@ -51,24 +62,31 @@ const pending = new Map<string, { resolve: (value: unknown) => void; reject: (er
 
 http.on('upgrade', (req, socket, head) => {
   const url = new URL(req.url ?? '/', `http://127.0.0.1:${port}`);
-  const origins = [`http://127.0.0.1:${port}`, `http://localhost:${port}`, 'http://127.0.0.1:5173', 'http://localhost:5173'];
+
   const resume = url.searchParams.get('resume') === '1';
-  if (url.pathname !== '/bridge' || (!resume && url.searchParams.get('token') !== token) ||
-      !origins.includes(req.headers.origin ?? '') ||
-      ![`127.0.0.1:${port}`, `localhost:${port}`].includes(req.headers.host ?? '')) {
+  if (url.pathname !== '/bridge' || (!resume && url.searchParams.get('token') !== token && !handoffTicket.allows(url.searchParams.get('token'), gate.acceptanceEpoch)) ||
+      !network.allowsOrigin(req.headers.origin) || !network.allowsHost(req.headers.host) ||
+      !network.allowsPeer(req.socket.remoteAddress)) {
     socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n'); socket.destroy(); return;
   }
   if (browser && !resume) { socket.write('HTTP/1.1 409 Conflict\r\nConnection: close\r\n\r\n'); socket.destroy(); return; }
-  if (releasing || (!resume && !gate.canBootstrap) || gate.pendingCount >= 8) { socket.write('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n'); socket.destroy(); return; }
+  if (releasing || network.isChanging || (!resume && !gate.canBootstrap) || gate.pendingCount >= 8) { socket.write('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n'); socket.destroy(); return; }
   wss.handleUpgrade(req, socket, head, ws => wss.emit('connection', ws, req));
 });
 function attachBrowser(ws: WebSocket) {
   browser = ws;
+  handoffTicket.clear();
 
   ws.on('message', data => {
     try {
       const message = JSON.parse(data.toString());
       if (browser !== ws) return;
+      if (message.type === 'handoff_request') {
+        void releaseDesk(true).catch(() => {
+          if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'handoff_error', error: '引き渡しできませんでした。LANの許可・接続状態・処理中の操作を確認してください。' }));
+        });
+        return;
+      }
       if (message.type === 'capabilities' && message.release === true) { releaseCapable.add(ws); return; }
       const item = pending.get(message.id);
       if (!item) return;
@@ -87,11 +105,13 @@ function attachBrowser(ws: WebSocket) {
   });
 }
 wss.on('connection', (ws: WebSocket, req: import('node:http').IncomingMessage) => {
+  if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress ?? '')) remotePeers.add(ws);
   gate.accept(ws, new URL(req.url!, baseUrl).searchParams.get('resume') !== '1', () => attachBrowser(ws));
 });
 function request(payload: Request): Promise<unknown> {
   return new Promise((resolveResult, reject) => {
     if (releasing) { reject(new Error('Desk release in progress; no request was sent.')); return; }
+    if (network.isChanging) { reject(new Error('Network listener change in progress; no request was sent.')); return; }
     if (!browser || browser.readyState !== WebSocket.OPEN) { reject(new Error('No browser connected. Open the Tabletop URL shown on stderr.')); return; }
     const id = randomUUID();
     const timer = setTimeout(() => {
@@ -105,8 +125,11 @@ function request(payload: Request): Promise<unknown> {
     });
   });
 }
-async function releaseDesk() {
+async function releaseDesk(handoff = false) {
+  const lanHost = network.info().lanAddresses[0];
+  if (handoff && (!network.info().lanEnabled || !lanHost)) throw new Error('LAN authorization required');
   if (releasing) throw new Error('Desk release already in progress');
+  if (network.isChanging) throw new Error('Network listener change in progress; no release was sent.');
   const peer = browser;
   if (!peer || peer.readyState !== WebSocket.OPEN) throw new Error('No browser connected; use desk_pairing_open for new acceptance');
   if (!releaseCapable.has(peer)) throw new Error('Browser does not support intentional release. Save the desk before upgrading; no disconnect was sent.');
@@ -114,7 +137,8 @@ async function releaseDesk() {
   releasing = true;
   gate.suspend();
   try {
-    await acknowledgeRelease(peer);
+    const handoffUrl = handoff ? `http://${network.authority(lanHost!)}/#token=${handoffTicket.issue(gate.acceptanceEpoch + 1)}` : undefined;
+    await acknowledgeRelease(peer, 3000, handoffUrl);
     browser = null;
     peer.close(4003, 'Desk released');
     releasing = false;
@@ -161,22 +185,35 @@ for (const [name, description, inputSchema] of tools) {
 registerAssetTools(mcp, compatibleRequest);
 registerDeskFileTools(mcp, request);
 registerPairingTools(mcp, gate, releaseDesk);
+registerNetworkTools(mcp, async enabled => {
+  if (releasing) throw new Error('Desk release in progress; network listener was not changed.');
+  if (!enabled && browser && remotePeers.has(browser) && pending.size) throw new Error('Remote browser requests are pending; inspect outcomes before closing LAN.');
+  const result = await network.setLan(enabled);
+  if (!enabled) handoffTicket.clear();
+  if (!enabled) for (const peer of wss.clients) if (remotePeers.has(peer)) peer.terminate();
+  return result;
+});
 mcp.registerTool('desk_connection_info', {
-  description: 'Get the current bootstrap URL without changing pairing state. For NEW/manual pairing first call desk_pairing_open with user approval. After pairing immediately retain desk_pairing_info privately for restart recovery. To recover an existing tab use desk_pairing_restore with that record, not a new URL or browser automation. If credentials are lost, ask the human to save or manually reconnect without reload. Only generated bootstrap tokens are included; configured TABLETOP_TOKEN is never disclosed. No HTTP token endpoint.',
+  description: 'Get bootstrap URL, network status (including listening), and enabled LAN URLs without changing pairing or network access. Only explicit human authorization allows desk_network_set to open LAN. For a device handoff explicitly desk_release the old desk first; content is never automatically saved, copied or loaded. If a nonempty original desk has unspecified content disposition, consider asking once whether to transfer it; this is advisory, not mandatory. For NEW/manual pairing first call desk_pairing_open with user approval unless release already opened acceptance. After pairing immediately retain desk_pairing_info privately for recovery. After process restart restore authorized LAN intent if needed, then desk_pairing_restore with the exact record, never a new URL or browser automation. If credentials are lost, ask the human to save or manually reconnect without reload. Only generated tokens are included; configured TABLETOP_TOKEN is never disclosed and must be manually URL-encoded in #token= by the user. No HTTP token endpoint.',
   inputSchema: {}, annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 }, async () => ({ content: [{ type: 'text', text: JSON.stringify({
   url: connectionUrl, port, tokenSource: tokenFromEnv ? 'environment' : 'generated', tokenIncluded: !tokenFromEnv,
+  network: network.info(),
+  lanUrls: network.info().lanAddresses.map(host => {
+    const url = `http://${network.authority(host)}/`;
+    return tokenFromEnv ? url : `${url}#token=${encodeURIComponent(token)}&port=${port}`;
+  }),
   browserConnected: browser?.readyState === WebSocket.OPEN,
   pairingState: gate.info() ? 'paired' : gate.canBootstrap ? 'new-pairing-open' : 'waiting-for-AI',
-  message: tokenFromEnv ? 'For new/manual pairing first open desk_pairing_open with user approval, then enter your configured TABLETOP_TOKEN in the Connection tab. The configured token is not returned. For recovery restore the retained pairing record instead.'
+  message: tokenFromEnv ? 'For new/manual pairing first open desk_pairing_open with user approval, then manually append #token=<URL-encoded configured TABLETOP_TOKEN> to the URL and paste it in the Connection tab. The configured token is not returned. For recovery restore authorized LAN intent if needed, then the retained pairing record instead.'
     : 'For new/manual pairing first open desk_pairing_open with user approval, then use this URL. It contains a temporary secret; do not share it publicly. For recovery use desk_pairing_restore with the retained record instead.',
 }) }] }));
-http.on('error', error => { console.error('[Tabletop] Cannot listen:', error.message); process.exitCode = 1; void mcp.close(); });
-await new Promise<void>((resolveReady, reject) => {
-  http.once('error', reject);
-  http.listen(port, '127.0.0.1', () => { http.off('error', reject); resolveReady(); });
+http.on('error', error => {
+  console.error('[Tabletop] Cannot listen:', error.message);
+  if (!network.isChanging) { process.exitCode = 1; void mcp.close(); }
 });
-console.error(`[Tabletop] Open ${connectionUrl}${tokenFromEnv ? ' (enter configured TABLETOP_TOKEN in the Connection tab)' : ''}`);
+await network.listen();
+console.error(`[Tabletop] Open ${connectionUrl}${tokenFromEnv ? ' (manually append #token=<URL-encoded configured TABLETOP_TOKEN> in the Connection tab)' : ''}`);
 await mcp.connect(new StdioServerTransport());
 let closing = false;
 async function shutdown(reason: string) {

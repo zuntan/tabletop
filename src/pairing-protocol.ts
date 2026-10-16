@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import { hmac } from '@noble/hashes/hmac.js';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
 
 const hex = z.string().regex(/^[0-9a-f]{64}$/);
 export const pairingSchema = z.object({ pairId: z.string().uuid(), token: hex, secret: hex }).strict();
@@ -18,10 +21,15 @@ function transcript(pair: Pairing, role: string, client: string, server: string)
   return new TextEncoder().encode(JSON.stringify(['tabletop-pair-v1', role, pair.pairId, pair.token, client, server]));
 }
 export async function signPair(pair: Pairing, role: string, client: string, server: string) {
-  const signature = await crypto.subtle.sign('HMAC', await key(pair), transcript(pair, role, client, server));
-  return Array.from(new Uint8Array(signature), value => value.toString(16).padStart(2, '0')).join('');
+  return bytesToHex(hmac(sha256, bytes(pair.secret), transcript(pair, role, client, server)));
 }
 export async function verifyPair(pair: Pairing, role: string, client: string, server: string, proof: string) {
   if (!/^[0-9a-f]{64}$/.test(proof)) return false;
-  return crypto.subtle.verify('HMAC', await key(pair), bytes(proof), transcript(pair, role, client, server));
+  if (crypto.subtle) return crypto.subtle.verify('HMAC', await key(pair), bytes(proof), transcript(pair, role, client, server));
+  const expected = hmac(sha256, bytes(pair.secret), transcript(pair, role, client, server));
+  const actual = bytes(proof);
+  // Fixed-length, no early exit; JS engines cannot guarantee constant-time execution.
+  let difference = 0;
+  for (let i = 0; i < expected.length; i++) difference |= expected[i]! ^ actual[i]!;
+  return difference === 0;
 }

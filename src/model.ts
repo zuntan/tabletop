@@ -8,6 +8,7 @@ import { checkDeskBridgeSize } from './desk-file-protocol';
 import { ImageGeometry } from './image-geometry';
 import { createGridPlacement, placementGeometry } from './grid-placement';
 import { createDeskId } from './desk-identity';
+import { randomUuid } from './portable-crypto';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -96,7 +97,7 @@ function validateObject(object: unknown): DeskObject {
 
 /** The sole committed state writer for both UI and MCP operations. */
 export class Desk {
-  readonly sessionId = crypto.randomUUID();
+  readonly sessionId = randomUuid();
   readonly deskId = createDeskId();
   readonly imageGeometry = new ImageGeometry();
   revision = 0;

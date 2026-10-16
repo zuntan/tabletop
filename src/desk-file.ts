@@ -2,6 +2,7 @@ import { zipSync, unzipSync, strToU8, strFromU8 } from 'fflate';
 import { z } from 'zod';
 import { Desk } from './model';
 import { zipChecksums, verifyZipEntries } from './zip-integrity';
+import { sha256Hex } from './portable-crypto';
 
 export const MAX_DESK_FILE_BYTES = 50 * 1024 * 1024;
 const MAX_ASSET_BYTES = 5 * 1024 * 1024;
@@ -22,8 +23,7 @@ function base64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 async function digest(bytes: Uint8Array): Promise<string> {
-  const hash = await crypto.subtle.digest('SHA-256', new Uint8Array(bytes).buffer);
-  return Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('');
+  return sha256Hex(bytes);
 }
 function validateDocument(input: unknown) {
   const validator = new Desk();

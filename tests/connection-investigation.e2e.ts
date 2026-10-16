@@ -87,9 +87,9 @@ for (const fixed of [false, true]) {
       assert.equal(sockets, blockedSockets);
       await call('desk_pairing_open', { confirm: true });
       await page.getByRole('tab', { name: '接続', exact: true }).click();
-      await page.locator('#token').fill(await credentials());
+      await page.locator('#connection-url').fill(`http://127.0.0.1:${port}/#token=${encodeURIComponent(await credentials())}&port=${port}`);
       page.once('dialog', dialog => void dialog.accept());
-      await page.locator('#connect-form button').click();
+      await page.locator('#connect-form button[type="submit"]').click();
       await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み', undefined, { timeout: 10_000 });
       assert.equal((await call('desk_summary')).sessionId, before.sessionId);
       assert.equal((await call('desk_summary')).count, 2);

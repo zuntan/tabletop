@@ -32,6 +32,8 @@ import './desk-identity.css';
 import { createThinkingMode } from './thinking-mode';
 import { headerIcon } from './header-icon';
 import { parseConnectionUrl } from './connection-url';
+import { randomUuid } from './portable-crypto';
+import { connectionControls } from './connection-controls';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -84,10 +86,11 @@ app.innerHTML = `
       <section><h2>共通履歴</h2><div id="history"></div></section>
       <section><h2>MCP接続</h2><p>初回・手動接続はAIに受付を開いてもらい、接続URLを貼り付けて「接続」を押してください。通常の切断は自動復帰を待ちます。</p>
         <p id="connection-detail" role="status"></p>
-        <form id="connect-form" novalidate><label>接続URL（貼り付け）<input id="connection-url" type="password" autocomplete="off" spellcheck="false" placeholder="http://127.0.0.1:4317/#token=…&amp;port=4317"></label>
-          <small>URLなしならポートとトークンを直接入力できます。トークンを含まないURLでは、トークンを下に入力してください。</small>
-          <label>ポート<input id="port" type="number" value="4317" min="1" max="65535"></label>
-          <label>トークン<input id="token" type="password" autocomplete="off"></label><button type="submit">接続</button></form>
+        <form id="connect-form" novalidate><label for="connection-url">接続URL（貼り付け）</label><div class="connection-url-row"><input id="connection-url" type="password" autocomplete="off" spellcheck="false" placeholder="http://127.0.0.1:4317/#token=…&amp;port=4317"><button id="connection-show" type="button"></button><button id="connection-clear" type="button"></button></div>
+          <small>#token=… を含むURLを貼り付けてください。LAN接続はAIの許可が必要です。HTTP通信は暗号化されません。接続を切り替えても机の内容は移動しません。</small>
+          <button type="submit">接続</button></form>
+        <button id="handoff-start" type="button">別端末へ渡す</button>
+        <div id="handoff-panel" hidden><canvas id="handoff-qr" role="img" aria-label="別端末用の接続QR"></canvas><p>同じLANの端末で読み取ってください。有効期限5分・1回限り。机の内容は移動しません。HTTP通信は暗号化されません。QRは他人に見せないでください。</p><button id="handoff-hide" type="button">QRを隠す</button></div>
         <small>閉じる前に上部の「保存」で机を保存してください。「読込」で再開できます。</small>
       </section>
     </aside>
@@ -298,7 +301,7 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
   authoring.stopPlacement();
   const offset = desk.summary().count % 8 * 22;
   const center = { x: (120 - camera.x) / camera.zoom + offset, y: (100 - camera.y) / camera.zoom + offset };
-  const object = objectSchema.parse({ id: `${type}-${crypto.randomUUID().slice(0, 8)}`, type, ...gridPosition(center),
+  const object = objectSchema.parse({ id: `${type}-${randomUuid().slice(0, 8)}`, type, ...gridPosition(center),
     ...creationAppearance(type, desk.settingsSnapshot().defaults),
     ...(type === 'text' ? { width: 280, height: 80 } : {}),
     ...(['line', 'arrow'].includes(type) ? selectedConnection(desk.selected().map(id => desk.get(id))) : {}),
@@ -468,7 +471,7 @@ async function addFiles(files: File[]) {
       await image.decode();
       const ratio = Math.min(1, 480 / image.naturalWidth, 360 / image.naturalHeight);
       operations.push({ kind: 'add', object: objectSchema.parse({
-        id: `image-${crypto.randomUUID().slice(0, 8)}`, type: file.type === 'image/svg+xml' ? 'svg' : 'image', src,
+        id: `image-${randomUuid().slice(0, 8)}`, type: file.type === 'image/svg+xml' ? 'svg' : 'image', src,
         ...gridPosition({ x: (120 - camera.x) / camera.zoom + operations.length * 24,
           y: (100 - camera.y) / camera.zoom + operations.length * 24 }),
         width: Math.max(180, image.naturalWidth * ratio), height: Math.max(1, image.naturalHeight * ratio) + 34, text: file.name,
@@ -509,8 +512,11 @@ window.addEventListener('paste', event => {
 
 const recovery = new BrowserConnection({
   beforeRelease: () => thinkingMode.assertAllowed('release'),
+  handoff: url => { void connectionPanel.display(url); },
+  handoffError: message => notify(message, true),
   disconnected: () => { desk.point([]); drawSelection(); },
   status: (state, detail) => {
+    if (state === 'connected') connectionPanel.hide();
     const status = $('#connection');
     status.textContent = state === 'connected' ? 'MCP接続済み' : state === 'released' ? 'AI接続解放済み' : state === 'blocked' ? '接続確認が必要' : 'AI再接続待ち';
     status.classList.toggle('connected', state === 'connected');
@@ -521,7 +527,8 @@ const recovery = new BrowserConnection({
     $('#message').dataset.connection = state === 'blocked' ? 'true' : 'false';
   },
 });
-function connect(token: string, port: string, manual = false) {
+const connectionPanel = connectionControls(app, () => recovery.requestHandoff(), message => notify(message, true));
+function connect(token: string, port: string, manual = false, host = '127.0.0.1') {
   if (manual && (recovery.hasPairing() || desk.summary().count > 0) && !confirm('机の内容を保持したまま、接続先のペアリングを置き換えますか？')) return;
   if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535 || token.length < 22) { notify('有効なポートと接続トークンを入力してください', true); return; }
 
@@ -539,26 +546,35 @@ function connect(token: string, port: string, manual = false) {
       if (['execute', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method)) render();
       if (message.request.method === 'load_document') $('#fit').click();
     } catch (error) { ws.send(JSON.stringify({ id, error: error instanceof Error ? error.message : String(error) })); }
-  }, manual);
+  }, manual, host);
+}
+let connectionAttempt = 0;
+async function connectUrl(value: string, manual: boolean) {
+  const attempt = ++connectionAttempt;
+  let allowedHosts = ['127.0.0.1', 'localhost'];
+  try {
+    const response = await fetch('/connection-policy', { cache: 'no-store' });
+    if (response.ok) {
+      const policy = await response.json();
+      if (Array.isArray(policy.allowedHosts) && policy.allowedHosts.every((host: unknown) => typeof host === 'string')) allowedHosts = policy.allowedHosts;
+    }
+  } catch { /* Fail closed for LAN; local URLs remain usable during downtime. */ }
+  if (attempt !== connectionAttempt) return;
+  const parsed = parseConnectionUrl(value, allowedHosts);
+  if (!parsed.token) throw new Error('接続URLに #token=… を含めてください。環境変数のトークンはAIから表示されません。');
+  connect(parsed.token, parsed.port, manual, parsed.host);
 }
 $<HTMLFormElement>('#connect-form').onsubmit = event => {
   event.preventDefault();
   try {
     const url = $<HTMLInputElement>('#connection-url');
-    if (url.value.trim()) {
-      const parsed = parseConnectionUrl(url.value);
-      $<HTMLInputElement>('#port').value = parsed.port;
-      if (parsed.token !== null) $<HTMLInputElement>('#token').value = parsed.token;
-      url.value = '';
-    }
-    connect($<HTMLInputElement>('#token').value, $<HTMLInputElement>('#port').value, true);
+    void connectUrl(url.value, true).catch(error => notify(error instanceof Error ? error.message : String(error), true));
   } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
 };
-const params = new URLSearchParams(location.hash.slice(1));
-const initialToken = params.get('token'), initialPort = params.get('port') ?? '4317';
-if (initialToken) {
-  $<HTMLInputElement>('#token').value = initialToken; $<HTMLInputElement>('#port').value = initialPort;
+if (location.hash) {
+  const initialUrl = location.href;
   history.replaceState(null, '', location.pathname + location.search);
-  connect(initialToken, initialPort);
+  $<HTMLInputElement>('#connection-url').value = initialUrl;
+  void connectUrl(initialUrl, false).catch(error => notify(error instanceof Error ? error.message : String(error), true));
 }
 render();

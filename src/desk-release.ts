@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { WebSocket, type RawData } from 'ws';
 
 /** Delivery alone is insufficient: require the peer to stop retries before releasing its slot. */
-export function acknowledgeRelease(ws: WebSocket, timeout = 3000): Promise<void> {
+export function acknowledgeRelease(ws: WebSocket, timeout = 3000, handoffUrl?: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const id = randomUUID();
     const finish = (error?: Error) => {
@@ -19,6 +19,6 @@ export function acknowledgeRelease(ws: WebSocket, timeout = 3000): Promise<void>
     };
     const timer = setTimeout(() => finish(new Error('Release acknowledgement timed out; new pairing was not opened. Inspect connection state before retrying.')), timeout);
     ws.on('message', message); ws.once('close', closed);
-    ws.send(JSON.stringify({ type: 'release', id }), error => { if (error) finish(error); });
+    ws.send(JSON.stringify({ type: 'release', id, ...(handoffUrl ? { handoffUrl } : {}) }), error => { if (error) finish(error); });
   });
 }
