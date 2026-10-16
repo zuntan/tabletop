@@ -14,6 +14,7 @@ import { registerDeskFileTools } from './desk-file-tools.js';
 import { isStaticPathInside } from './static-path.js';
 import { PairingGate } from './pairing-server.js';
 import { registerPairingTools } from './pairing-tools.js';
+import { acknowledgeRelease } from './desk-release.js';
 
 const port = Number(process.env.TABLETOP_PORT ?? 4317);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid TABLETOP_PORT');
@@ -43,7 +44,9 @@ const http = createServer(async (req, res) => {
 });
 const wss = new WebSocketServer({ noServer: true, maxPayload: 24_000_000 });
 let browser: WebSocket | null = null;
-const gate = new PairingGate(() => browser !== null);
+let releasing = false;
+const releaseCapable = new WeakSet<WebSocket>();
+const gate = new PairingGate(() => browser !== null || releasing);
 const pending = new Map<string, { resolve: (value: unknown) => void; reject: (error: Error) => void; timer: NodeJS.Timeout }>();
 
 http.on('upgrade', (req, socket, head) => {
@@ -56,7 +59,7 @@ http.on('upgrade', (req, socket, head) => {
     socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n'); socket.destroy(); return;
   }
   if (browser && !resume) { socket.write('HTTP/1.1 409 Conflict\r\nConnection: close\r\n\r\n'); socket.destroy(); return; }
-  if ((!resume && !gate.canBootstrap) || gate.pendingCount >= 8) { socket.write('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n'); socket.destroy(); return; }
+  if (releasing || (!resume && !gate.canBootstrap) || gate.pendingCount >= 8) { socket.write('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n'); socket.destroy(); return; }
   wss.handleUpgrade(req, socket, head, ws => wss.emit('connection', ws, req));
 });
 function attachBrowser(ws: WebSocket) {
@@ -65,6 +68,8 @@ function attachBrowser(ws: WebSocket) {
   ws.on('message', data => {
     try {
       const message = JSON.parse(data.toString());
+      if (browser !== ws) return;
+      if (message.type === 'capabilities' && message.release === true) { releaseCapable.add(ws); return; }
       const item = pending.get(message.id);
       if (!item) return;
       clearTimeout(item.timer); pending.delete(message.id);
@@ -75,7 +80,8 @@ function attachBrowser(ws: WebSocket) {
   ws.on('error', error => console.error('[Tabletop] WebSocket:', error.message));
   ws.on('close', code => {
     console.error(`[Tabletop] ${new Date().toISOString()} Browser closed code=${code} pending=${pending.size}`);
-    if (browser === ws) browser = null;
+    if (browser !== ws) return;
+    browser = null;
     for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error('Browser disconnected; operation outcome may be unknown. Inspect revision before retrying.')); }
     pending.clear();
   });
@@ -85,6 +91,7 @@ wss.on('connection', (ws: WebSocket, req: import('node:http').IncomingMessage) =
 });
 function request(payload: Request): Promise<unknown> {
   return new Promise((resolveResult, reject) => {
+    if (releasing) { reject(new Error('Desk release in progress; no request was sent.')); return; }
     if (!browser || browser.readyState !== WebSocket.OPEN) { reject(new Error('No browser connected. Open the Tabletop URL shown on stderr.')); return; }
     const id = randomUUID();
     const timer = setTimeout(() => {
@@ -97,6 +104,22 @@ function request(payload: Request): Promise<unknown> {
       clearTimeout(timer); pending.delete(id); reject(error);
     });
   });
+}
+async function releaseDesk() {
+  if (releasing) throw new Error('Desk release already in progress');
+  const peer = browser;
+  if (!peer || peer.readyState !== WebSocket.OPEN) throw new Error('No browser connected; use desk_pairing_open for new acceptance');
+  if (!releaseCapable.has(peer)) throw new Error('Browser does not support intentional release. Save the desk before upgrading; no disconnect was sent.');
+  if (pending.size) throw new Error('Browser requests are pending; wait for completion and inspect their outcomes before releasing.');
+  releasing = true;
+  gate.suspend();
+  try {
+    await acknowledgeRelease(peer);
+    browser = null;
+    peer.close(4003, 'Desk released');
+    releasing = false;
+    return { ...gate.open(), released: true };
+  } finally { releasing = false; }
 }
 async function compatibleRequest(payload: Request): Promise<unknown> {
   if (payload.method === 'execute') {
@@ -136,7 +159,7 @@ for (const [name, description, inputSchema] of tools) {
 }
 registerAssetTools(mcp, compatibleRequest);
 registerDeskFileTools(mcp, request);
-registerPairingTools(mcp, gate);
+registerPairingTools(mcp, gate, releaseDesk);
 mcp.registerTool('desk_connection_info', {
   description: 'Get the current bootstrap URL without changing pairing state. For NEW/manual pairing first call desk_pairing_open with user approval. After pairing immediately retain desk_pairing_info privately for restart recovery. To recover an existing tab use desk_pairing_restore with that record, not a new URL or browser automation. If credentials are lost, ask the human to save or manually reconnect without reload. Only generated bootstrap tokens are included; configured TABLETOP_TOKEN is never disclosed. No HTTP token endpoint.',
   inputSchema: {}, annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },

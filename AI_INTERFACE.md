@@ -4,6 +4,8 @@
 
 **初回は、利用者の了承後に `desk_pairing_open({ confirm: true })` で受付を開きます。** 接続したら `desk_pairing_info` の秘密recordを非公開の継続コンテキストに保持し、引継ぎでも残してください。再起動後は同じrecordを `desk_pairing_restore({ pairing })` へ渡し、数秒待ってから現在の机を読み直します。固定トークンでも同じ確認を行います。記憶を失った場合は推測せず手動再接続を案内し、既存タブを再読込しません。詳細・秘密の扱い・旧版の安全な更新は [接続復帰](./docs/connection-recovery.md) を参照してください。
 
+棚を残して現在の接続を解放する場合は、利用者の了承後に `desk_release({ confirm: true })` を使います。元のタブはローカル編集・保存を続けられ、自動再接続は停止します。成功時に以前のペアを無効にして新規・手動接続の受付を開きます。保存・読込・同期・トークン再生成は行いません。旧UIや保留要求は拒否し、応答未確認でも受付は開きません。エラー時は状態を確認し、推測で再送しません。成功後は以下の接続情報を案内し、次の接続の秘密recordを保持します。サーバー再起動からの復帰には使いません。
+
 `desk_connection_info` はブラウザ未接続でも呼べるサーバー側の参照ツールです。`url`・`port`・`tokenSource`・`tokenIncluded`・`browserConnected`・`pairingState`・案内文を返します。`pairingState` は `waiting-for-AI`／`new-pairing-open`／`paired` で受付状態を示します。トークンを再生成せず、机も変更しません。
 
 `tokenSource: "generated"` なら、起動時に生成したトークン付きURLを利用者へ案内できます。URLはそのサーバープロセス中だけ有効ですが、ツール結果や案内によって会話履歴に残る可能性があります。公開しないでください。

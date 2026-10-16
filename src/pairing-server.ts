@@ -15,6 +15,7 @@ export class PairingGate {
     this.epoch++;
     for (const ws of this.waiting) ws.close(4000, 'Pairing configuration changed');
   }
+  suspend() { this.change(); this.bootstrap = false; }
   open() {
     if (this.connected()) throw new Error('Disconnect the current desk before replacing its pairing');
     this.change(); this.pairing = null; this.bootstrap = true;

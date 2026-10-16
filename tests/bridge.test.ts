@@ -35,7 +35,7 @@ test('real stdio MCP server relays tools to a browser state and rejects unauthor
   let ws: WebSocket | undefined;
   try {
     await client.connect(transport);
-    const tools = await client.listTools(); assert.equal(tools.tools.length, 21);
+    const tools = await client.listTools(); assert.equal(tools.tools.length, 22);
     assert.notEqual((await client.callTool({ name: 'desk_pairing_open', arguments: { confirm: true } })).isError, true);
     for (const name of ['desk_context', 'desk_asset_read', 'desk_asset_import', 'desk_connection_info', 'desk_point', 'desk_save', 'desk_load']) assert.ok(tools.tools.some(tool => tool.name === name));
     assert.equal(tools.tools.find(tool => tool.name === 'desk_point')?.annotations?.readOnlyHint, false);

@@ -497,7 +497,7 @@ const recovery = new BrowserConnection({
   disconnected: () => { desk.point([]); drawSelection(); },
   status: (state, detail) => {
     const status = $('#connection');
-    status.textContent = state === 'connected' ? 'MCP接続済み' : state === 'blocked' ? '接続確認が必要' : 'AI再接続待ち';
+    status.textContent = state === 'connected' ? 'MCP接続済み' : state === 'released' ? 'AI接続解放済み' : state === 'blocked' ? '接続確認が必要' : 'AI再接続待ち';
     status.classList.toggle('connected', state === 'connected');
     status.classList.toggle('error', state === 'blocked');
     $('#connection-detail').textContent = detail;

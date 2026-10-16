@@ -86,6 +86,7 @@ AI向けの使い方・接続線・ピン体系・画像／SVGの受け渡しは
 | ツール | 用途 |
 | --- | --- |
 | `desk_connection_info` | ブラウザ未接続でも起動URLを取得。env指定の固定トークンは非開示 |
+| `desk_release` | 人間の了承後、棚を保持して接続と自動再接続を止め、新規・手動接続の受付を開く |
 | `desk_pairing_open` | 人間の了承後に初回・手動置換の受付を開く。復帰には使わない |
 | `desk_pairing_info` | 非公開で保持する復帰用recordを取得。秘密情報を含む |
 | `desk_pairing_restore` | 再起動後に以前のrecordを指定し、既知の机だけ復帰を許可 |

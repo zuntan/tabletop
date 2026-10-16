@@ -1,7 +1,7 @@
 import { challengeSchema, readySchema, randomHex, signPair, verifyPair, type Pairing } from './pairing-protocol';
 
 type Callbacks = {
-  status: (state: 'waiting' | 'connected' | 'blocked', detail: string) => void;
+  status: (state: 'waiting' | 'connected' | 'blocked' | 'released', detail: string) => void;
   disconnected: () => void;
 };
 /** Per-tab memory only: neither documents nor browser storage contain credentials. */
@@ -36,8 +36,19 @@ export class BrowserConnection {
     ws.onmessage = event => {
       chain = chain.then(async () => {
         if (!current() || ws.readyState !== WebSocket.OPEN) return;
-        if (authenticated) { request(ws, event); return; }
         const value = JSON.parse(String(event.data));
+        if (authenticated) {
+          if (value.type === 'release' && typeof value.id === 'string') {
+            // Stop retries before acknowledging; the server opens acceptance only after this ACK.
+            ++this.generation; clearTimeout(this.timer); clearTimeout(deadline);
+            this.pair = null; this.socket = null;
+            this.callbacks.disconnected();
+            this.callbacks.status('released', 'AIとの接続を解放しました。自動再接続は停止しています。机の編集・保存は続けられます。再接続する場合は接続欄から手動で接続してください。');
+            ws.send(JSON.stringify({ type: 'release_ack', id: value.id }));
+            ws.close(4003, 'Desk released');
+          } else request(ws, event);
+          return;
+        }
         if (value.type === 'challenge') {
           const challenge = challengeSchema.parse(value);
           if (serverNonce || (paired && challenge.pairing)) { block(); return; }
@@ -51,6 +62,7 @@ export class BrowserConnection {
           if (!candidate || !serverNonce || !await verifyPair(candidate, 'ready', clientNonce, serverNonce, ready.proof)) { block(); return; }
           if (!current() || ws.readyState !== WebSocket.OPEN) return;
           this.pair = candidate; authenticated = true; this.attempt = 0;
+          ws.send(JSON.stringify({ type: 'capabilities', release: true }));
           clearTimeout(deadline); this.callbacks.status('connected', '');
         }
       }).catch(block);
