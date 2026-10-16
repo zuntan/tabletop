@@ -10,6 +10,7 @@ import { createGridPlacement, placementGeometry } from './grid-placement';
 import { createDeskId } from './desk-identity';
 import { randomUuid } from './portable-crypto';
 import { cameraAnimationFields, cameraMoveFields, cameraMoveSchema, type CameraBridge } from './camera-control';
+import { lockFields, lockOperations } from './object-lock';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -32,6 +33,7 @@ export const objectSchema = z.object({
   id: z.string().min(1).max(100),
   type: z.enum(['rect', 'roundedRect', 'ellipse', 'line', 'arrow', 'text', 'image', 'svg', 'web', 'link', 'label']),
   cornerRadius: z.number().finite().min(0).max(100_000).default(16),
+  locked: z.boolean().optional(), // Mouse geometry protection only; not an authorization boundary.
   seriesId: z.string().min(1).max(100).optional(),
   number: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).optional(),
   labelShape: z.enum(['text', 'rect', 'ellipse', 'roundedRect', 'pin']).optional(),
@@ -205,8 +207,8 @@ export class Desk {
       const index = after.findIndex(o => o.id === operation.id);
       if (index < 0) throw new Error(`Unknown object: ${operation.id}`);
       if (operation.kind === 'update') {
-        if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'description', 'reactions'].includes(key))) {
-          throw new Error('Labels allow only position, description and reaction updates; use series_update for shared appearance');
+        if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'description', 'reactions', 'locked'].includes(key))) {
+          throw new Error('Labels allow only position, description, reaction and mouse lock updates; use series_update for shared appearance');
         }
         after[index] = validateObject({ ...after[index], ...operation.patch });
       }
@@ -278,6 +280,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('selection') }),
   z.object({ method: z.literal('select'), ids: z.array(z.string()).max(2000) }),
   z.object({ method: z.literal('point'), ids: z.array(z.string()).max(2000) }),
+  z.object({ method: z.literal('lock'), ...lockFields }).strict(),
   z.object({ method: z.literal('fit'), ...cameraAnimationFields }).strict(),
   z.object({ method: z.literal('camera_get') }).strict(),
   z.object({ method: z.literal('camera_move'), ...cameraMoveFields }).strict(),
@@ -312,6 +315,12 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge): unk
     case 'selection': return { ids: desk.selected(), aiPointing: desk.pointed(), pointer: desk.pointer };
     case 'select': return desk.select(request.ids);
     case 'point': return desk.point(request.ids);
+    case 'lock': {
+      if (request.expectedRevision !== undefined && request.expectedRevision !== desk.revision) throw new Error('Revision conflict: refresh before editing');
+      const ids = desk.pointed(), operations = lockOperations(ids.map(id => desk.get(id)), request.locked);
+      const result = operations.length ? desk.execute({ operations, actor: request.actor, expectedRevision: request.expectedRevision }) : desk.summary();
+      return { ...result, ids, locked: request.locked };
+    }
     case 'fit': return { ids: desk.pointed() };
     case 'camera_get': {
       if (!camera) throw new Error('Camera controls unavailable');

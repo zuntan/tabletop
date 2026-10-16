@@ -20,12 +20,13 @@ export type Gesture = {
 export function gestureOperations(gesture: Gesture, point: Point, zoom: number): Operation[] {
   let dx = point.x - gesture.start.x, dy = point.y - gesture.start.y;
   if (dx === 0 && dy === 0) return []; // Selecting a connected line must not detach it.
-  const anchor = gesture.originals.find(object => object.id === gesture.anchorId) ?? gesture.originals[0];
+  const movable = gesture.originals.filter(object => !object.locked);
+  const anchor = movable.find(object => object.id === gesture.anchorId) ?? movable[0];
   if (gesture.grid && gesture.mode === 'move' && anchor) {
     const delta = gridMoveDelta(anchor, { x: dx, y: dy }, gesture.gridSettings); dx = delta.x; dy = delta.y;
     if (dx === 0 && dy === 0) return [];
   }
-  return gesture.originals.map(object => {
+  return movable.map(object => {
     let patch: Partial<DeskObject>;
     if (gesture.mode === 'start' || gesture.mode === 'end') {
       const points = endpoints(object), side = gesture.mode;

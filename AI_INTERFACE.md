@@ -55,6 +55,19 @@ LANは毎回の起動で禁止です。人間の明示承認後だけ `desk_netw
 
 `desk_context / desk_state / desk_selection` の `aiPointing` で現在の指差しIDを読めます。削除された対象と切断時の指差しは解除し、Undoでも復元しません。人間が操作中のジェスチャーでは再試行が必要な場合があります。緑枠に編集ハンドルはありません。編集はオブジェクトIDで行い、指差しは不要です。従来の `desk_select` は人間の編集対象を変えるため、単に「これのこと？」と示す用途には使わないでください。
 
+## マウス操作のロック
+
+ロックはオブジェクト単位の `locked`（省略はfalse）。人間の意図しないマウス／タッチでの移動・サイズ変更・線の端点変更だけを防ぎます。権限や編集禁止ではなく、選択・フォーカス・ダブルクリック編集・プロパティ変更・明示的な削除・キーボード操作・AIによる移動や編集は可能です。接続線はロック中も接続先へ追従します。ダブルクリック編集を禁止する設定は将来候補で、現時点では追加しません。
+
+- AIは `desk_point({ ids: [...] })` → `desk_lock({ locked: true })`／`desk_lock({ locked: false })` で、緑枠の対象へ明示的に設定。人間の青い選択は参照・変更しません。**緑枠が空ならエラーで、机全体とは解釈しません。**
+- 既存の一括操作と同じ上限200個。1命令を原子的に適用してUndoも1回。`expectedRevision` に対応し、不正要求・競合・件数超過で一部だけ変更しません。同じ状態への設定はrevision・Undoを増やしません。戻り値は対象 `ids`、`locked` とsummary（変更時はplacementも含む）。
+- `desk_execute` の `update.patch.locked` でIDを直接指定しても変更できます。ピンも個別に変更でき、体系の共通設定ではありません。読み取り・履歴・保存ファイルに状態を含みます。従来ファイルで属性がなければ未ロックとして扱います。
+- UIはスナップ隣とプロパティの切り替え。非選択は無効。全件ロックなら解除、それ以外（混在を含む）は全件ロック。混在は `aria-pressed="mixed"` で示します。複数選択をドラッグすると未ロックだけ動き、ロック済みを直接つかんでも動きません。
+- ロック中の青枠は細かい破線と右下の鍵。サイズ変更・端点ハンドルは非表示、カーソルは通常の矢印。鍵は非インタラクティブで、AIの緑枠は従来どおりです。
+- 「ひとりで考える」中・人間の編集中はAIのロック切り替えを拒否。自動再送はしません。
+
+根拠：[MDN aria-pressed](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-pressed)、[SVG pointer-events](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/pointer-events)、[stroke-dasharray](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/stroke-dasharray)。鍵は `pointer-events="none"` で選択を妨げず、ネイティブbuttonの無効状態・キーボード操作を維持します。
+
 ## カメラを合わせる
 
 `desk_point({ ids: [...] })` でAIの対象を決めてから `desk_fit({})` を呼ぶと、その範囲を余白付きで表示します。緑枠が空なら机全体。人間の青い選択は参照も変更もしません。全体へ戻す場合は `desk_point({ ids: [] })` → `desk_fit({})`。指差すだけではカメラは動きません。

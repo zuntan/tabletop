@@ -38,6 +38,9 @@ import { fittedCamera } from './focus-camera';
 import { cameraView, movedCamera, type CameraMove } from './camera-control';
 import { HumanScrollGuard } from './camera-activity';
 import { CameraAnimator, type AnimationOptions } from './camera-animation';
+import { lockOperations, lockSelectionState } from './object-lock';
+import { createLockControls } from './lock-controls';
+import { drawLockedSelection } from './lock-drawing';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -172,6 +175,14 @@ for (const [id, icon, label] of [['front', '▣↑', '最前面'], ['back', '▣
   const button = $<HTMLButtonElement>(`#${id}`); iconButton(button, icon, label); editActions.append(button);
 }
 editActions.append($('#reaction-controls'), $('#grid-snap')); $('.toolbar-parts').append(editActions);
+const lockControls = createLockControls($('#grid-snap'), form, () => {
+  if (busy || editor.isActive() || !desk.selected().length) return;
+  attempt(() => {
+    const objects = desk.selected().map(id => desk.get(id));
+    const operations = lockOperations(objects, lockSelectionState(objects).nextLocked);
+    if (operations.length) execute(operations);
+  });
+});
 $('#numbering-settings').after($('#label-descriptions'));
 $('main').append($('.toolbar-view'));
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
@@ -223,7 +234,7 @@ function zoom(factor: number, center = { x: canvas.clientWidth / 2, y: canvas.cl
 }
 function drawObject(object: DeskObject) {
   const { width: w, height: h } = object;
-  const group = svg('g', { transform: `translate(${object.x} ${object.y})`, 'data-id': object.id });
+  const group = svg('g', { transform: `translate(${object.x} ${object.y})`, 'data-id': object.id, 'data-locked': String(!!object.locked) });
   if (isConnector(object)) {
     drawConnector(group, object, camera.zoom); drawReactions(group, object, descriptionsVisible);
     objectsLayer.append(group); return;
@@ -276,6 +287,7 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
   const selected = preview ?? desk.selected().map(id => desk.get(id));
   drawAiPointing(overlays, desk.pointed().map(id => scene?.find(object => object.id === id) ?? desk.get(id)), camera.zoom, descriptionsVisible);
   for (const object of selected) {
+    if (object.locked) { drawLockedSelection(overlays, object, camera.zoom, descriptionsVisible); continue; }
     if (drawEndpointHandles(overlays, object, camera.zoom, selected.length === 1)) continue;
     const visual = labelVisualBounds(object, descriptionsVisible);
     overlays.append(svg('rect', { x: visual.x - 3 / camera.zoom, y: visual.y - 3 / camera.zoom,
@@ -316,6 +328,7 @@ function render(rebuild = true) {
     syncProperties(form, object);
     if (object.url) { link.href = object.url; link.hidden = false; }
   }
+  lockControls.update(ids.map(id => desk.get(id)));
   for (const id of ['#front', '#back', '#delete']) $<HTMLButtonElement>(id).disabled = !ids.length;
   $('#object-list').replaceChildren();
   desk.snapshot().reverse().forEach(object => {
@@ -422,6 +435,7 @@ canvas.addEventListener('pointerdown', event => {
       desk.select(ids.includes(id) ? ids.filter(v => v !== id) : [...ids, id]);
       render(false); if (!desk.selected().includes(id)) return;
     } else if (!ids.includes(id)) { desk.select([id]); render(false); }
+    if (desk.get(id).locked) { event.preventDefault(); canvas.focus(); return; }
     mode = 'move';
   } else { if (!event.shiftKey) desk.select([]); render(); mode = 'marquee'; }
   const scene = desk.snapshot();
@@ -580,7 +594,7 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
       if (typeof id !== 'string') throw new Error('Invalid request ID');
       thinkingMode.assertAllowed(message.request?.method);
       if (['fit', 'camera_move'].includes(message.request.method)) humanScroll.assertIdle();
-      if ((busy && message.request.method !== 'camera_get') || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
+      if ((busy && message.request.method !== 'camera_get') || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       if (['fit', 'camera_move'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing())) throw new Error('Human editing in progress. No camera change was made.');
       if (message.request.method === 'load_document') cameraAnimator.cancel('Desk contents replaced');
       let result = dispatch(desk, message.request, cameraControls);
@@ -593,7 +607,7 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
       ws.send(JSON.stringify({ id, result }));
       // Read-only requests must not rebuild iframes or steal form edits.
       if (message.request.method === 'point') drawSelection();
-      if (['execute', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method)) render();
+      if (['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method)) render();
       if (message.request.method === 'load_document') $('#fit').click();
     } catch (error) { ws.send(JSON.stringify({ id, error: error instanceof Error ? error.message : String(error) })); }
   }, manual, host);
