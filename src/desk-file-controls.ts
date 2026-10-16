@@ -1,12 +1,13 @@
 import type { Desk } from './model';
 import { decodeDeskFile, encodeDeskFile, MAX_DESK_FILE_BYTES } from './desk-file';
 import { downloadDeskFilename } from './desk-identity';
+import { headerIcon } from './header-icon';
 
 export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh: () => void, canLoad: () => boolean) {
   const save = document.createElement('button');
-  save.id = 'save-desk'; save.textContent = '保存';
+  save.id = 'save-desk'; headerIcon(save, 'save', '保存');
   const load = document.createElement('button');
-  load.id = 'load-desk'; load.textContent = '読込';
+  load.id = 'load-desk'; headerIcon(load, 'load', '読込');
   const input = document.createElement('input');
   input.type = 'file'; input.accept = '.tabletop,.zip'; input.hidden = true; input.id = 'desk-file';
   header.append(save, load, input);

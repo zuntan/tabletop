@@ -29,6 +29,8 @@ import { IMAGE_TITLE_HEIGHT } from './image-geometry';
 import { BrowserConnection } from './pairing-client';
 import { createDeskIdentityControls } from './desk-identity-controls';
 import './desk-identity.css';
+import { createThinkingMode } from './thinking-mode';
+import { headerIcon } from './header-icon';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -93,6 +95,8 @@ app.innerHTML = `
 groupToolbar(app.querySelector<HTMLElement>('nav')!);
 createSidebar(app);
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => app.querySelector<T>(selector)!;
+headerIcon($<HTMLButtonElement>('#undo'), 'undo', '元に戻す');
+headerIcon($<HTMLButtonElement>('#redo'), 'redo', 'やり直す');
 const canvas = app.querySelector<SVGSVGElement>('#canvas')!;
 const viewport = app.querySelector<SVGGElement>('#viewport')!;
 const objectsLayer = app.querySelector<SVGGElement>('#objects')!;
@@ -126,10 +130,12 @@ editActions.setAttribute('role', 'group'); editActions.setAttribute('aria-label'
 for (const [id, icon, label] of [['front', '▣↑', '最前面'], ['back', '▣↓', '最背面']]) {
   const button = $<HTMLButtonElement>(`#${id}`); iconButton(button, icon, label); editActions.append(button);
 }
-editActions.append($('#reaction-controls')); $('.toolbar-parts').append(editActions);
+editActions.append($('#reaction-controls'), $('#grid-snap')); $('.toolbar-parts').append(editActions);
+$('#numbering-settings').after($('#label-descriptions'));
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });
+const thinkingMode = createThinkingMode($('header'), () => { desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
 createDeskFileControls($('header'), desk, () => { render(); $('#fit').click(); },
@@ -499,6 +505,7 @@ window.addEventListener('paste', event => {
 });
 
 const recovery = new BrowserConnection({
+  beforeRelease: () => thinkingMode.assertAllowed('release'),
   disconnected: () => { desk.point([]); drawSelection(); },
   status: (state, detail) => {
     const status = $('#connection');
@@ -520,6 +527,7 @@ function connect(token: string, port: string, manual = false) {
     try {
       const message = JSON.parse(String(event.data)); id = message.id;
       if (typeof id !== 'string') throw new Error('Invalid request ID');
+      thinkingMode.assertAllowed(message.request?.method);
       if (busy || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       const result = dispatch(desk, message.request);
       ws.send(JSON.stringify({ id, result }));

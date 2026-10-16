@@ -11,6 +11,15 @@ header { min-height: 64px; display: flex; align-items: center; gap: 14px; paddin
 .brand small { display: inline-block; margin-left: 15px; font-size: 12px; color: #94a3b8; font-weight: 400; letter-spacing: 0; }
 header button { background: #1e293b; border-color: #475569; color: #e2e8f0; }
 header button:hover:not(:disabled) { background: #334155; }
+header .header-icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 36px; width: 36px; height: 36px; padding: 7px; }
+.header-icon svg { display: block; flex-shrink: 0; }
+#thinking-mode { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+#thinking-mode > span:first-child { font-size: 12px; }
+.thinking-switch-track { position: relative; flex: 0 0 36px; width: 36px; height: 20px; border: 1px solid #94a3b8; border-radius: 12px; background: #475569; }
+.thinking-switch-track::before { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #f8fafc; }
+#thinking-mode[aria-checked="true"] .thinking-switch-track { background: #047857; border-color: #6ee7b7; }
+#thinking-mode[aria-checked="true"] .thinking-switch-track::before { left: 18px; }
+.thinking-switch-state { width: 3ch; font-size: 11px; text-align: center; }
 #revision { font-size: 12px; color: #94a3b8; }
 .badge { font-size: 12px; background: #334155; border-radius: 20px; padding: 5px 10px; white-space: nowrap; }
 .badge.connected { background: #064e3b; color: #6ee7b7; }

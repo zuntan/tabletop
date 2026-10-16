@@ -3,6 +3,7 @@ import { challengeSchema, readySchema, randomHex, signPair, verifyPair, type Pai
 type Callbacks = {
   status: (state: 'waiting' | 'connected' | 'blocked' | 'released', detail: string) => void;
   disconnected: () => void;
+  beforeRelease?: () => void;
 };
 /** Per-tab memory only: neither documents nor browser storage contain credentials. */
 export class BrowserConnection {
@@ -39,6 +40,11 @@ export class BrowserConnection {
         const value = JSON.parse(String(event.data));
         if (authenticated) {
           if (value.type === 'release' && typeof value.id === 'string') {
+            try { this.callbacks.beforeRelease?.(); }
+            catch (error) {
+              ws.send(JSON.stringify({ type: 'release_rejected', id: value.id, error: error instanceof Error ? error.message : String(error) }));
+              return;
+            }
             // Stop retries before acknowledging; the server opens acceptance only after this ACK.
             ++this.generation; clearTimeout(this.timer); clearTimeout(deadline);
             this.pair = null; this.socket = null;

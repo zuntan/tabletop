@@ -14,6 +14,7 @@ export function acknowledgeRelease(ws: WebSocket, timeout = 3000): Promise<void>
       try {
         const value = JSON.parse(data.toString());
         if (value.type === 'release_ack' && value.id === id) finish();
+        if (value.type === 'release_rejected' && value.id === id && typeof value.error === 'string') finish(new Error(value.error));
       } catch { /* Other transport handlers validate application messages. */ }
     };
     const timer = setTimeout(() => finish(new Error('Release acknowledgement timed out; new pairing was not opened. Inspect connection state before retrying.')), timeout);
