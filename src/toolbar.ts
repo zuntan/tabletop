@@ -16,6 +16,11 @@ export function groupToolbar(nav: HTMLElement) {
   iconButton(select, '↖', '選択モード（Esc）');
   select.setAttribute('aria-pressed', 'true');
   parts.append(select);
+  const clearAi = document.createElement('button');
+  clearAi.id = 'clear-ai-pointing';
+  iconButton(clearAi, '↖×', 'AIの選択（指差し）を解除');
+  clearAi.disabled = true;
+  parts.append(clearAi);
   const icons: Record<string, [string, string]> = {
     rect: ['▭', '矩形'], roundedRect: ['▢', '角丸矩形'], ellipse: ['◯', '楕円'],
     line: ['╱', '線'], arrow: ['↗', '矢印'], text: ['T', 'テキスト'],

@@ -279,6 +279,7 @@ function drawObject(object: DeskObject) {
   objectsLayer.append(group);
 }
 function drawSelection(preview?: DeskObject[], scene = preview) {
+  $<HTMLButtonElement>('#clear-ai-pointing').disabled = desk.pointed().length === 0;
   const fit = $('#fit'), hasSelection = desk.selected().length > 0;
   fit.title = hasSelection ? '選択範囲を表示' : '全体表示';
   fit.setAttribute('aria-label', fit.title);
@@ -367,6 +368,7 @@ app.querySelectorAll<HTMLButtonElement>('[data-add]').forEach(button => button.o
   if (!busy && !editor.isActive()) attempt(() => newObject(type));
 });
 $('#undo').onclick = () => attempt(() => { desk.undo(); });
+$('#clear-ai-pointing').onclick = () => { desk.point([]); drawSelection(); };
 $('#redo').onclick = () => attempt(() => { desk.redo(); });
 function deleteSelection() {
   const ids = desk.selected(); if (ids.length) attempt(() => execute(ids.map(id => ({ kind: 'delete', id }))));

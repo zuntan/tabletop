@@ -60,3 +60,44 @@ test('green AI frames coexist with blue selection without replacing media or int
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });
+
+test('toolbar clears only AI pointing and preserves selection, revision, history and camera', { timeout: 45_000 }, async () => {
+  const { page, call, close, errors } = await openTestDesk('ai-pointing-clear');
+  try {
+    const selectionButton = page.locator('#selection-mode');
+    const clearButton = page.locator('#clear-ai-pointing');
+    assert.equal(await selectionButton.evaluate(element => element.nextElementSibling?.id), 'clear-ai-pointing');
+    assert.equal(await clearButton.isDisabled(), true);
+
+    await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'memo', type: 'text', x: 200, y: 160, width: 280, height: 120, text: 'Original' } }] });
+    await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'other', type: 'rect', x: 600, y: 180, width: 120, height: 100 } }] });
+    await call('desk_undo');
+    await call('desk_select', { ids: ['memo'] });
+    await call('desk_camera_move', { center: { x: 420, y: 300 }, zoom: 1.25, durationMs: 0 });
+    await call('desk_point', { ids: ['memo'] });
+    assert.equal(await clearButton.isEnabled(), true);
+    assert.equal(await page.locator('[data-ai-point="memo"]').count(), 1);
+
+    const beforeSummary = await call('desk_summary');
+    const beforeHistory = { canUndo: beforeSummary.canUndo, canRedo: beforeSummary.canRedo };
+    assert.deepEqual(beforeHistory, { canUndo: true, canRedo: true });
+    const revision = beforeSummary.revision;
+    const camera = await call('desk_camera_get');
+    const humanSelection = (await call('desk_selection')).ids;
+    assert.deepEqual(humanSelection, ['memo']);
+
+    await clearButton.click();
+    assert.equal(await clearButton.isDisabled(), true);
+    assert.equal(await page.locator('[data-ai-point]').count(), 0);
+    assert.deepEqual((await call('desk_selection')).ids, humanSelection);
+    const afterSummary = await call('desk_summary');
+    assert.equal(afterSummary.revision, revision);
+    assert.deepEqual({ canUndo: afterSummary.canUndo, canRedo: afterSummary.canRedo }, beforeHistory);
+    assert.deepEqual(await call('desk_camera_get'), camera);
+
+    await call('desk_point', { ids: ['memo'] });
+    assert.equal(await clearButton.isEnabled(), true);
+    assert.equal(await page.locator('[data-ai-point="memo"]').count(), 1);
+    assert.deepEqual(errors, []);
+  } finally { await close(); }
+});
