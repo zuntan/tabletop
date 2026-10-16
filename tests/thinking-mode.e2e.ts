@@ -35,6 +35,7 @@ test('human thinking mode gates AI actions at receipt, preserves reads/editing a
     await deny('desk_execute', { actor: 'human', operations: [{ kind: 'delete', id: 'kept' }] });
     await deny('desk_select', { ids: [] });
     await deny('desk_point', { ids: [] });
+    await deny('desk_fit');
     await deny('desk_undo'); await deny('desk_redo');
     await deny('desk_release', { confirm: true });
     assert.equal((await call('desk_pairing_info')).pairing !== null, true);

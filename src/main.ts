@@ -34,6 +34,10 @@ import { headerIcon } from './header-icon';
 import { parseConnectionUrl } from './connection-url';
 import { randomUuid } from './portable-crypto';
 import { connectionControls } from './connection-controls';
+import { fittedCamera } from './focus-camera';
+import { cameraView, movedCamera, type CameraMove } from './camera-control';
+import { HumanScrollGuard } from './camera-activity';
+import { CameraAnimator, type AnimationOptions } from './camera-animation';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -109,6 +113,37 @@ const objectsLayer = app.querySelector<SVGGElement>('#objects')!;
 const overlays = app.querySelector<SVGGElement>('#overlays')!;
 const form = $<HTMLFormElement>('#properties');
 const camera = { x: 60, y: 50, zoom: 1 };
+const humanScroll = new HumanScrollGuard();
+const cameraAnimator = new CameraAnimator();
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const stopCamera = () => cameraAnimator.cancel('Human interaction or viewport change');
+for (const event of ['pointerdown', 'touchstart', 'keydown', 'click', 'input']) {
+  document.addEventListener(event, stopCamera, { capture: true, passive: true });
+}
+window.addEventListener('resize', stopCamera);
+new ResizeObserver(stopCamera).observe(canvas);
+document.addEventListener('visibilitychange', stopCamera);
+window.addEventListener('pagehide', stopCamera);
+reducedMotion.addEventListener('change', stopCamera);
+// Capture before canvas zoom handlers; never cancel or delay the human input itself.
+app.addEventListener('wheel', () => { stopCamera(); humanScroll.record(); }, { capture: true, passive: true });
+document.addEventListener('scroll', () => { stopCamera(); humanScroll.record(); }, { capture: true, passive: true });
+const cameraSize = () => ({ width: canvas.clientWidth, height: canvas.clientHeight });
+function animateCamera(target: typeof camera, options: AnimationOptions) {
+  if (document.hidden) throw new Error('Camera action cancelled: desk is hidden; do not retry automatically.');
+  return cameraAnimator.run({ ...camera }, target, cameraSize(), next => {
+    Object.assign(camera, next);
+    cameraChanged(); drawSelection();
+  }, reducedMotion.matches ? { durationMs: 0 } : options);
+}
+const cameraControls = {
+  get: () => cameraView(camera, cameraSize()),
+  async move(input: CameraMove) {
+    const next = movedCamera(camera, cameraSize(), input);
+    await animateCamera(next.camera, input);
+    return { ...cameraView(camera, cameraSize()), zoomClamped: next.zoomClamped };
+  },
+};
 let space = false;
 
 let busy = false;
@@ -138,10 +173,11 @@ for (const [id, icon, label] of [['front', '▣↑', '最前面'], ['back', '▣
 }
 editActions.append($('#reaction-controls'), $('#grid-snap')); $('.toolbar-parts').append(editActions);
 $('#numbering-settings').after($('#label-descriptions'));
+$('main').append($('.toolbar-view'));
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });
-const thinkingMode = createThinkingMode($('header'), () => { desk.point([]); drawSelection(); }, notify);
+const thinkingMode = createThinkingMode($('header'), () => { cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
 createDeskFileControls($('header'), desk, () => { render(); $('#fit').click(); },
@@ -232,6 +268,10 @@ function drawObject(object: DeskObject) {
   objectsLayer.append(group);
 }
 function drawSelection(preview?: DeskObject[], scene = preview) {
+  const fit = $('#fit'), hasSelection = desk.selected().length > 0;
+  fit.title = hasSelection ? '選択範囲を表示' : '全体表示';
+  fit.setAttribute('aria-label', fit.title);
+  fit.querySelector('.tool-caption')!.textContent = hasSelection ? '選択範囲' : '全体';
   overlays.replaceChildren();
   const selected = preview ?? desk.selected().map(id => desk.get(id));
   drawAiPointing(overlays, desk.pointed().map(id => scene?.find(object => object.id === id) ?? desk.get(id)), camera.zoom, descriptionsVisible);
@@ -343,16 +383,16 @@ $('#label-descriptions').onclick = () => {
   button.setAttribute('aria-label', button.title);
   render();
 };
-$('#fit').onclick = () => {
-  const objects = desk.snapshot(); if (!objects.length) return;
-  const boxes = objects.map(object => object.type === 'label' ? labelVisualBounds(object, descriptionsVisible) : bounds(object));
-  const minX = Math.min(...boxes.map(o => o.x)), minY = Math.min(...boxes.map(o => o.y));
-  const maxX = Math.max(...boxes.map(o => o.x + o.width)), maxY = Math.max(...boxes.map(o => o.y + o.height));
-  camera.zoom = Math.max(0.05, Math.min(2, (canvas.clientWidth - 100) / (maxX - minX), (canvas.clientHeight - 100) / (maxY - minY)));
-  camera.x = (canvas.clientWidth - (maxX - minX) * camera.zoom) / 2 - minX * camera.zoom;
-  camera.y = (canvas.clientHeight - (maxY - minY) * camera.zoom) / 2 - minY * camera.zoom;
+function fitView(ids: string[], animation?: AnimationOptions) {
+  const objects = ids.length ? ids.map(id => desk.get(id)) : desk.snapshot();
+  const next = fittedCamera(objects, canvas.clientWidth, canvas.clientHeight, descriptionsVisible);
+  if (!next) return;
+  if (animation) return animateCamera(next, animation);
+  cameraAnimator.cancel('Instant camera change');
+  Object.assign(camera, next);
   cameraChanged(); drawSelection();
-};
+}
+$('#fit').onclick = () => { fitView(desk.selected()); };
 canvas.addEventListener('dblclick', event => {
   const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
   if (target.closest('[data-open-url], [data-markdown-link]')) return;
@@ -514,7 +554,7 @@ const recovery = new BrowserConnection({
   beforeRelease: () => thinkingMode.assertAllowed('release'),
   handoff: url => { void connectionPanel.display(url); },
   handoffError: message => notify(message, true),
-  disconnected: () => { desk.point([]); drawSelection(); },
+  disconnected: () => { cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
   status: (state, detail) => {
     if (state === 'connected') connectionPanel.hide();
     const status = $('#connection');
@@ -532,14 +572,24 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
   if (manual && (recovery.hasPairing() || desk.summary().count > 0) && !confirm('机の内容を保持したまま、接続先のペアリングを置き換えますか？')) return;
   if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535 || token.length < 22) { notify('有効なポートと接続トークンを入力してください', true); return; }
 
-  recovery.connect(token, port, (ws, event) => {
+  // Do not serialize flights in the protocol chain: reads/release must remain responsive.
+  recovery.connect(token, port, async (ws, event) => {
     let id: string | undefined;
     try {
       const message = JSON.parse(String(event.data)); id = message.id;
       if (typeof id !== 'string') throw new Error('Invalid request ID');
       thinkingMode.assertAllowed(message.request?.method);
-      if (busy || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
-      const result = dispatch(desk, message.request);
+      if (['fit', 'camera_move'].includes(message.request.method)) humanScroll.assertIdle();
+      if ((busy && message.request.method !== 'camera_get') || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
+      if (['fit', 'camera_move'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing())) throw new Error('Human editing in progress. No camera change was made.');
+      if (message.request.method === 'load_document') cameraAnimator.cancel('Desk contents replaced');
+      let result = dispatch(desk, message.request, cameraControls);
+      if (message.request.method === 'camera_move') result = await result;
+      if (message.request.method === 'fit') {
+        const ids = desk.pointed();
+        await fitView(ids, { durationMs: message.request.durationMs });
+        result = { ids, scope: ids.length ? 'selection' : 'all', camera: { ...camera } };
+      }
       ws.send(JSON.stringify({ id, result }));
       // Read-only requests must not rebuild iframes or steal form edits.
       if (message.request.method === 'point') drawSelection();

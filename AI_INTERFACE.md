@@ -55,6 +55,41 @@ LANは毎回の起動で禁止です。人間の明示承認後だけ `desk_netw
 
 `desk_context / desk_state / desk_selection` の `aiPointing` で現在の指差しIDを読めます。削除された対象と切断時の指差しは解除し、Undoでも復元しません。人間が操作中のジェスチャーでは再試行が必要な場合があります。緑枠に編集ハンドルはありません。編集はオブジェクトIDで行い、指差しは不要です。従来の `desk_select` は人間の編集対象を変えるため、単に「これのこと？」と示す用途には使わないでください。
 
+## カメラを合わせる
+
+`desk_point({ ids: [...] })` でAIの対象を決めてから `desk_fit({})` を呼ぶと、その範囲を余白付きで表示します。緑枠が空なら机全体。人間の青い選択は参照も変更もしません。全体へ戻す場合は `desk_point({ ids: [] })` → `desk_fit({})`。指差すだけではカメラは動きません。
+
+戻り値は `ids`、`scope`（`selection`／`all`）、`camera`（`x`・`y`・`zoom`）。空の机はカメラを変えません。パーツの座標・サイズ、文書revision・Undo/Redo・保存内容には影響しません。表示倍率の既存範囲内で、説明文が表示中のピンはその説明も収めます。
+
+これは人間が見ている画面を動かす操作なので、単なる読み取りのついでに呼ばないでください。「ひとりで考える」中、編集中・ジェスチャー中は拒否し、自動再試行しません。人間の右下の表示ボタンも同じ計算を使いますが、人間自身の選択だけを対象にします。
+
+人間のスクロールを優先します。アプリ上のホイール（タッチパッドを含む）とページ／右ペイン／入力欄等のネイティブscrollイベントから、最後の入力後400ms静まるまでは `desk_fit`・`desk_camera_move` を受信時にキャンセルします。保留・予約・自動再試行はしません。読み取りと人間自身の操作は止めません。ネイティブscrollの原因は区別せず、プログラムによるスクロールも安全側で同じ扱いにします。実行中のカメラアニメーションも、その時点の表示で即座に止めます。元の位置へ戻したり、目的地へ飛ばしたり、静まった後に再開したりしません。
+
+検出の根拠：[MDN wheel event](https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event)。ホイールはスクロールせずズームする場合もあるため、wheelとscrollの両方を監視し、人間のイベント自体はキャンセルしません。
+
+### AIカメラの滑らかな移動
+
+- `desk_fit`・`desk_camera_move` は1回の命令でブラウザ側がパンとズームを連動させ、緩やかに加減速する。既定の所要時間は画面何枚分の移動かと倍率差で250〜900msに自動調整し、遠距離では途中で引いてから寄る。毎フレームのMCP呼び出しは不要。
+- 両ツールとも任意の `durationMs`（0〜2000）を指定できる。省略は自動、0は瞬時。例：`desk_fit({ durationMs: 700 })`、`desk_camera_move({ pan: { x: 120, y: 0 }, durationMs: 400 })`。時間だけの `desk_camera_move` は不可。同じ表示への移動は瞬時。
+- 成功結果は完了後の表示。`desk_camera_get` は移動中も現在フレームの表示を返す。相対移動の起点・フォーカス対象は命令受信時に確定する。
+- wheel／scrollのほか、pointer／touch入力、キー、クリック、入力変更で即時中断。サイズ変更、非表示化、接続切断／解放、読込、後続のカメラ命令でも停止する。中断はエラー結果となり、現在位置を保ち、自動再送・再開しない。バックグラウンド等でフレームが来なくても、指定時間＋1秒の期限で中断し、サーバーの10秒タイムアウトを待ち続けない。
+- OSの「視差効果を減らす」設定時は瞬時に適用。人間のパン／ズーム／表示合わせは従来どおり瞬時で、UIを追加しない。パーツ移動のアニメーション・カメラ追従は別の将来案で未実装。
+
+実装根拠：[D3 Zoom interpolation](https://d3js.org/d3-interpolate/zoom)、[MDN requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame)、[cancelAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/Window/cancelAnimationFrame)、[prefers-reduced-motion](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion)。
+
+配置の実装根拠：[MDN position](https://developer.mozilla.org/en-US/docs/Web/CSS/position)。表示パネルはプロパティ欄も含む作業エリア全体を包含ブロックとする絶対配置で、下に専用の行は確保しません。
+
+### 任意のパン・ズーム
+
+- `desk_camera_get({})` は現在の表示を読むだけ。`center` は画面中央の机上座標、`zoom` は倍率（1が100%）、`viewport` はキャンバスのCSSピクセル幅・高さ、`visibleBounds` はキャンバス矩形に対応する机上範囲。UIの重なりによる遮蔽は差し引かない。編集中・ドラッグ中・「ひとりで考える」中も読み取り可能。
+- `desk_camera_move({ pan: { x: 120, y: 0 } })` は見る位置を右へ120机上単位動かす。パーツは画面上では左に流れる。座標はパーツと同じ単位で、画面ピクセルではない。「画面の4分の1だけ右」なら `visibleBounds.width / 4` を使う。
+- `desk_camera_move({ zoomBy: 1.25 })` は受信時の倍率を1.25倍にする。`{ zoom: 1 }` は100%へ戻す。倍率だけなら画面中央の机上位置を保つ。
+- `desk_camera_move({ center: { x: 1200, y: 800 }, zoom: 1.5 })` は指定座標を中心に150%表示。`pan` と倍率指定も併用でき、パンの机上単位は倍率に依存しない。
+- `center` と `pan`、`zoom` と `zoomBy` はそれぞれ同時指定不可。少なくとも一つ必要。座標指定は各軸±2,000,000以内の有限数、倍率は0.05〜8、相対倍率は0.01〜100。相対倍率で表示上限・下限を超えた場合だけ0.05〜8へ制限し、`zoomClamped: true` を返す。矛盾・非数・範囲外ならカメラを変更しない。
+- 移動結果は `desk_camera_get` と同じ表示情報＋`zoomClamped`。人間・AIどちらの選択も参照・変更せず、パーツ・revision・Undo/Redo・保存内容も変えない。編集中・ドラッグ中・「ひとりで考える」中は移動を拒否する。表示は人間と共有なので、必要な案内・調整としてのみ使い、自動再試行・再送しない。
+
+座標変換の根拠：[MDN SVG transformations](https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorials/SVG_from_scratch/Basic_transformations)。机上座標とCSSピクセルを区別し、既存の平行移動・拡大縮小へ変換する。OS座標や画面解像度の指定は不要。
+
 ## 同じ格子へ置く
 
 `desk_execute` と追加時の `desk_asset_import` は `snap: "desk"` が既定で、現在の `settings.grid` に従います。`snap: "exact"` でバッチ／取り込み単位に回避でき、全体のON／OFFは変えません。通常は左上、全ピンは枠の下中央、線は自由端点を合わせ、明示したBindingを優先します。数値を推測せず、応答の `placement.results` の `requested`／`applied`／`snapped`／使用した `grid` を確認してください。

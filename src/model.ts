@@ -9,6 +9,7 @@ import { ImageGeometry } from './image-geometry';
 import { createGridPlacement, placementGeometry } from './grid-placement';
 import { createDeskId } from './desk-identity';
 import { randomUuid } from './portable-crypto';
+import { cameraAnimationFields, cameraMoveFields, cameraMoveSchema, type CameraBridge } from './camera-control';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -277,13 +278,16 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('selection') }),
   z.object({ method: z.literal('select'), ids: z.array(z.string()).max(2000) }),
   z.object({ method: z.literal('point'), ids: z.array(z.string()).max(2000) }),
+  z.object({ method: z.literal('fit'), ...cameraAnimationFields }).strict(),
+  z.object({ method: z.literal('camera_get') }).strict(),
+  z.object({ method: z.literal('camera_move'), ...cameraMoveFields }).strict(),
   z.object({ method: z.literal('changes'), sinceRevision: z.number().int().nonnegative(), limit: z.number().int().min(1).max(200).default(100) }),
   z.object({ method: z.literal('execute'), ...mcpBatchSchema.shape }),
   z.object({ method: z.literal('undo'), actor: z.string().min(1).max(100).default('agent-01') }),
   z.object({ method: z.literal('redo'), actor: z.string().min(1).max(100).default('agent-01') }),
 ]);
 export type Request = z.input<typeof requestSchema>;
-export function dispatch(desk: Desk, input: unknown): unknown {
+export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge): unknown {
   const request = requestSchema.parse(input);
   switch (request.method) {
     case 'summary': return desk.summary();
@@ -308,6 +312,16 @@ export function dispatch(desk: Desk, input: unknown): unknown {
     case 'selection': return { ids: desk.selected(), aiPointing: desk.pointed(), pointer: desk.pointer };
     case 'select': return desk.select(request.ids);
     case 'point': return desk.point(request.ids);
+    case 'fit': return { ids: desk.pointed() };
+    case 'camera_get': {
+      if (!camera) throw new Error('Camera controls unavailable');
+      return camera.get();
+    }
+    case 'camera_move': {
+      if (!camera) throw new Error('Camera controls unavailable');
+      const { method: _method, ...move } = request;
+      return camera.move(cameraMoveSchema.parse(move));
+    }
     case 'changes': return desk.getChanges(request.sinceRevision, request.limit);
     case 'execute': {
       const { method: _method, ...batch } = request;
