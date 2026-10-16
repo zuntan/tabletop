@@ -31,6 +31,7 @@ import { createDeskIdentityControls } from './desk-identity-controls';
 import './desk-identity.css';
 import { createThinkingMode } from './thinking-mode';
 import { headerIcon } from './header-icon';
+import { parseConnectionUrl } from './connection-url';
 
 const desk = new Desk();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -81,9 +82,11 @@ app.innerHTML = `
       </section>
       <section><h2>オブジェクト <span id="count">0</span></h2><div id="object-list"></div></section>
       <section><h2>共通履歴</h2><div id="history"></div></section>
-      <section><h2>MCP接続</h2><p>初回・手動接続はAIに受付を開いてもらい、接続トークンを入力してください。通常の切断は自動復帰を待ちます。</p>
+      <section><h2>MCP接続</h2><p>初回・手動接続はAIに受付を開いてもらい、接続URLを貼り付けて「接続」を押してください。通常の切断は自動復帰を待ちます。</p>
         <p id="connection-detail" role="status"></p>
-        <form id="connect-form"><label>ポート<input id="port" type="number" value="4317" min="1" max="65535"></label>
+        <form id="connect-form" novalidate><label>接続URL（貼り付け）<input id="connection-url" type="password" autocomplete="off" spellcheck="false" placeholder="http://127.0.0.1:4317/#token=…&amp;port=4317"></label>
+          <small>URLなしならポートとトークンを直接入力できます。トークンを含まないURLでは、トークンを下に入力してください。</small>
+          <label>ポート<input id="port" type="number" value="4317" min="1" max="65535"></label>
           <label>トークン<input id="token" type="password" autocomplete="off"></label><button type="submit">接続</button></form>
         <small>閉じる前に上部の「保存」で机を保存してください。「読込」で再開できます。</small>
       </section>
@@ -538,7 +541,19 @@ function connect(token: string, port: string, manual = false) {
     } catch (error) { ws.send(JSON.stringify({ id, error: error instanceof Error ? error.message : String(error) })); }
   }, manual);
 }
-$<HTMLFormElement>('#connect-form').onsubmit = event => { event.preventDefault(); connect($<HTMLInputElement>('#token').value, $<HTMLInputElement>('#port').value, true); };
+$<HTMLFormElement>('#connect-form').onsubmit = event => {
+  event.preventDefault();
+  try {
+    const url = $<HTMLInputElement>('#connection-url');
+    if (url.value.trim()) {
+      const parsed = parseConnectionUrl(url.value);
+      $<HTMLInputElement>('#port').value = parsed.port;
+      if (parsed.token !== null) $<HTMLInputElement>('#token').value = parsed.token;
+      url.value = '';
+    }
+    connect($<HTMLInputElement>('#token').value, $<HTMLInputElement>('#port').value, true);
+  } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
+};
 const params = new URLSearchParams(location.hash.slice(1));
 const initialToken = params.get('token'), initialPort = params.get('port') ?? '4317';
 if (initialToken) {
