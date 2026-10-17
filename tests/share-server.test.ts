@@ -19,11 +19,16 @@ async function requestWithHost(port: number, path: string, host: string) {
     req.on('error', reject); req.end();
   });
 }
+function assertNoCache(response: Response) {
+  assert.equal(response.headers.get('cache-control'), 'no-store, no-cache, max-age=0, must-revalidate');
+  assert.equal(response.headers.get('pragma'), 'no-cache');
+  assert.equal(response.headers.get('expires'), 'Thu, 01 Jan 1970 00:00:00 GMT');
+}
 
 test('external read share serves only the selected session and rejects unsafe HTTP requests', { timeout: 15_000 }, async () => {
   let desk = new Desk();
   desk.execute({ operations: [
-    { kind: 'add', object: { id: 'note', type: 'rect', text: 'Human text', x: 12 } },
+    { kind: 'add', object: { id: 'note', type: 'rect', text: '<script>window.__sharePwned=1</script>', x: 12 } },
     { kind: 'add', object: { id: 'png', type: 'image', src: 'data:image/png;base64,iVBORw0KGgo=' } },
     { kind: 'add', object: { id: 'svg', type: 'svg', src: `data:image/svg+xml;base64,${Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>').toString('base64')}` } },
     { kind: 'add', object: { id: 'remote', type: 'image', src: 'https://example.invalid/image.png' } },
@@ -39,6 +44,7 @@ test('external read share serves only the selected session and rejects unsafe HT
     assert.equal(opened.url, `https://share.example.test/share/${opened.shareId}`);
     const entry = await fetch(`${origin}/share/${opened.shareId}`);
     assert.equal(entry.status, 200); assert.match(entry.headers.get('content-type') ?? '', /^text\/plain(?:;|$)/);
+    assertNoCache(entry);
     const entryBody = await entry.text();
     assert.match(entryBody, /https:\/\/share\.example\.test\/share\//);
     const entryJson = entryBody.match(/```json\s*([\s\S]*?)```/);
@@ -49,8 +55,41 @@ test('external read share serves only the selected session and rejects unsafe HT
     assert.equal('history' in entryContext, false);
     assert.ok(Array.isArray(entryContext.objects)); assert.equal((entryContext.objects as Record<string, unknown>[]).length, 4);
     assert.ok((entryContext.objects as Record<string, unknown>[]).every(object => !('src' in object)));
+    const htmlEntry = await fetch(`${origin}/share/${opened.shareId}?format=html`);
+    assert.equal(htmlEntry.status, 200); assert.match(htmlEntry.headers.get('content-type') ?? '', /^text\/html(?:;|$)/);
+    assertNoCache(htmlEntry);
+    const htmlBody = await htmlEntry.text();
+    const links = [...htmlBody.matchAll(/<a\s+href="([^"]+)"/g)].map(match => match[1]);
+    assert.ok(links.includes(`https://share.example.test/share/${opened.shareId}/desk_context`));
+    assert.ok(links.includes(`https://share.example.test/share/${opened.shareId}/desk_get?id=OBJECT_ID`));
+    assert.ok(links.includes(`https://share.example.test/share/${opened.shareId}/desk_asset_read?id=OBJECT_ID`));
+    const realGetLink = links.map(href => new URL(href.replaceAll('&amp;', '&'))).find(url => url.pathname.endsWith('/desk_get') && url.searchParams.get('id') === 'note');
+    const realAssetLink = links.map(href => new URL(href.replaceAll('&amp;', '&'))).find(url => url.pathname.endsWith('/desk_asset_read') && url.searchParams.get('id') === 'png');
+    assert.ok(realGetLink); assert.match(realGetLink.searchParams.get('read') ?? '', /^[A-Za-z0-9_-]{1,64}$/);
+    assert.ok(realAssetLink); assert.match(realAssetLink.searchParams.get('read') ?? '', /^[A-Za-z0-9_-]{1,64}$/);
+    assert.ok(htmlBody.includes('&lt;script&gt;window.__sharePwned=1&lt;/script&gt;'));
+    assert.equal(htmlBody.includes('<script>window.__sharePwned=1</script>'), false);
+    const refreshUrl = new URL((entryContext.share as { refresh: string }).refresh);
+    assert.match(refreshUrl.searchParams.get('read') ?? '', /^[A-Za-z0-9_-]{1,64}$/);
+    const refreshOneResponse = await fetch(`${origin}${refreshUrl.pathname}${refreshUrl.search}`);
+    const refreshOneBody = await refreshOneResponse.text();
+    const refreshOneJson = refreshOneBody.match(/```json\s*([\s\S]*?)```/);
+    assert.ok(refreshOneJson);
+    const refreshOne = JSON.parse(refreshOneJson[1]) as Record<string, unknown>;
+    assert.equal(refreshOne.revision, desk.revision);
+    desk.execute({ operations: [{ kind: 'update', id: 'note', patch: { text: 'Changed after refresh' } }] });
+    const refreshTwoUrl = new URL((refreshOne.share as { refresh: string }).refresh);
+    assert.notEqual(refreshTwoUrl.searchParams.get('read'), refreshUrl.searchParams.get('read'));
+    const refreshTwoResponse = await fetch(`${origin}${refreshTwoUrl.pathname}${refreshTwoUrl.search}`);
+    const refreshTwoBody = await refreshTwoResponse.text();
+    const refreshTwoJson = refreshTwoBody.match(/```json\s*([\s\S]*?)```/);
+    assert.ok(refreshTwoJson);
+    const refreshTwo = JSON.parse(refreshTwoJson[1]) as Record<string, unknown>;
+    assert.equal(refreshTwo.revision, desk.revision);
+    assert.equal((refreshTwo.objects as Record<string, unknown>[]).find(object => object.id === 'note')?.text, 'Changed after refresh');
     const contextResponse = await fetch(`${origin}/share/${opened.shareId}/desk_context`);
     assert.equal(contextResponse.status, 200);
+    assertNoCache(contextResponse);
     const context = await contextResponse.json() as Record<string, unknown>;
     assert.equal(context.sessionId, sessionId); assert.equal(context.revision, desk.revision);
     assert.ok(context.capturedAt); assert.equal('history' in context, false);
@@ -66,10 +105,15 @@ test('external read share serves only the selected session and rejects unsafe HT
     assert.equal(svgResponse.headers.get('content-type')?.split(';')[0], 'text/plain');
     assert.match(await svgResponse.text(), /^<svg/);
     assert.equal((await fetch(`${origin}/share/${opened.shareId}/desk_asset_read?id=remote`)).status, 422);
+    const unknownShare = await fetch(`${origin}/share/unknown-token/desk_context`);
+    assert.equal(unknownShare.status, 404); assertNoCache(unknownShare);
     for (const url of [
-      `${origin}/unknown`, `${origin}/share/unknown-token/desk_context`, `${origin}/share/${opened.shareId}/desk_execute`,
+      `${origin}/unknown`, `${origin}/share/${opened.shareId}/desk_execute`,
       `${origin}/share/${opened.shareId}/desk_get?id=note&exportFile=true`,
       `${origin}/share/${opened.shareId}/desk_get`, `${origin}/share/${opened.shareId}/desk_context?x=1`,
+      `${origin}/share/${opened.shareId}?format=unknown`, `${origin}/share/${opened.shareId}?format=html&format=html`,
+      `${origin}/share/${opened.shareId}/desk_context?format=html`,
+      `${origin}/share/${opened.shareId}/desk_context?read=a&read=b`,
     ]) assert.ok([400, 404].includes((await fetch(url)).status), url);
     assert.ok([400, 404, 405].includes((await fetch(`${origin}/share/${opened.shareId}/desk_context`, { method: 'POST' })).status));
     assert.equal(await requestWithHost(opened.port, `/share/${opened.shareId}/desk_context`, 'evil.example'), 403);

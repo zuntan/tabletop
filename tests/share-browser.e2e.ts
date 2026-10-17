@@ -18,7 +18,7 @@ test('MCP external share lets a human follow the URL and read current context, m
     const { client, call, page } = desk;
     const dataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/kZkAAAAASUVORK5CYII=';
     await call('desk_execute', { operations: [
-      { kind: 'add', object: { id: 'share-note', type: 'rect', text: 'First version' } },
+      { kind: 'add', object: { id: 'share-note', type: 'rect', text: '<script>window.__sharePwned=1</script>' } },
       { kind: 'add', object: { id: 'share-image', type: 'image', src: dataUrl } },
     ] });
     const before = await call('desk_state');
@@ -38,12 +38,39 @@ test('MCP external share lets a human follow the URL and read current context, m
     assert.equal('history' in entryContext, false);
     assert.ok(Array.isArray(entryContext.objects)); assert.equal((entryContext.objects as Record<string, unknown>[]).length, 2);
     assert.ok((entryContext.objects as Record<string, unknown>[]).every(object => !('src' in object)));
+    const entryRefreshUrl = new URL((entryContext.share as { refresh: string }).refresh);
+    assert.match(entryRefreshUrl.searchParams.get('read') ?? '', /^[A-Za-z0-9_-]{1,64}$/);
+    const localEntryRefresh = `${shareOrigin}${entryRefreshUrl.pathname}${entryRefreshUrl.search}`;
+    const refreshedEntryResponse = await fetch(localEntryRefresh);
+    const refreshedEntryText = await refreshedEntryResponse.text();
+    const refreshedEntryJson = refreshedEntryText.match(/```json\s*([\s\S]*?)```/);
+    assert.ok(refreshedEntryJson);
+    const refreshedEntry = JSON.parse(refreshedEntryJson[1]) as Record<string, unknown>;
+    assert.equal(refreshedEntry.revision, before.revision);
+    const htmlEntry = await fetch(`${shareOrigin}/share/${opened.shareId}?format=html`);
+    assert.equal(htmlEntry.status, 200); assert.match(htmlEntry.headers.get('content-type') ?? '', /^text\/html(?:;|$)/);
+    const htmlBody = await htmlEntry.text();
+    assert.ok(htmlBody.includes('&lt;script&gt;window.__sharePwned=1&lt;/script&gt;'));
+    assert.equal(htmlBody.includes('<script>window.__sharePwned=1</script>'), false);
 
     // Follow the invitation in a human tab while the owner tab remains connected to MCP.
     humanBrowser = await chromium.launch({ headless: true, executablePath: process.env.TABLETOP_CHROME ?? '/usr/bin/google-chrome' });
     const human = await humanBrowser.newPage();
-    await human.goto(`${shareOrigin}/share/${opened.shareId}`);
+    await human.goto(`${shareOrigin}/share/${opened.shareId}?format=html`);
     assert.match(await human.locator('body').innerText(), /https:\/\/public\.example\.test/);
+    assert.equal(await human.locator('script').count(), 0);
+    assert.equal(await human.evaluate(() => (window as unknown as { __sharePwned?: number }).__sharePwned), undefined);
+    for (const href of [
+      `https://public.example.test/share/${opened.shareId}/desk_context`,
+      `https://public.example.test/share/${opened.shareId}/desk_get?id=OBJECT_ID`,
+      `https://public.example.test/share/${opened.shareId}/desk_asset_read?id=OBJECT_ID`,
+    ]) assert.equal(await human.locator(`a[href="${href}"]`).count(), 1, href);
+    const hrefs = await human.locator('a[href]').evaluateAll(anchors => anchors.map(anchor => (anchor as HTMLAnchorElement).href));
+    const noteHref = new URL(hrefs.find(href => new URL(href).pathname.endsWith('/desk_get') && new URL(href).searchParams.get('id') === 'share-note')!);
+    const imageHref = new URL(hrefs.find(href => new URL(href).pathname.endsWith('/desk_asset_read') && new URL(href).searchParams.get('id') === 'share-image')!);
+    assert.match(noteHref.searchParams.get('read') ?? '', /^[A-Za-z0-9_-]{1,64}$/);
+    assert.match(imageHref.searchParams.get('read') ?? '', /^[A-Za-z0-9_-]{1,64}$/);
+    assert.equal(await human.getByRole('link', { name: '最新状態を再取得' }).count(), 1);
     const contextResponse = await human.request.get(`${shareOrigin}/share/${opened.shareId}/desk_context`);
     assert.equal(contextResponse.status(), 200, await contextResponse.text());
     const context = await contextResponse.json();
@@ -66,7 +93,14 @@ test('MCP external share lets a human follow the URL and read current context, m
     await thinkingMode.click();
 
     await call('desk_execute', { operations: [{ kind: 'update', id: 'share-note', patch: { text: 'Edited version' } }] });
-    const updated = await (await human.request.get(`${shareOrigin}/share/${opened.shareId}/desk_context`)).json();
+    const nextRefreshUrl = new URL((refreshedEntry.share as { refresh: string }).refresh);
+    assert.notEqual(nextRefreshUrl.searchParams.get('read'), entryRefreshUrl.searchParams.get('read'));
+    const updatedResponse = await human.request.get(`${shareOrigin}${nextRefreshUrl.pathname}${nextRefreshUrl.search}`);
+    const updatedText = await updatedResponse.text();
+    assert.equal(updatedResponse.status(), 200, updatedText);
+    const updatedJson = updatedText.match(/```json\s*([\s\S]*?)```/);
+    assert.ok(updatedJson);
+    const updated = JSON.parse(updatedJson[1]) as Record<string, unknown>;
     assert.equal(updated.revision, before.revision + 1);
     assert.ok(JSON.stringify(updated).includes('Edited version'));
     const after = await call('desk_state');
