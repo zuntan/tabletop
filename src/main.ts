@@ -301,6 +301,8 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
     }));
   }
 }
+let previousObjectListSelection = '';
+let pendingObjectListSelection = false;
 function render(rebuild = true) {
   identityControls.refresh();
   if (rebuild) {
@@ -342,6 +344,26 @@ function render(rebuild = true) {
     });
     $('#object-list').append(button);
   });
+  const selectionKey = JSON.stringify(ids.slice().sort());
+  const panel = $('#panel-objects');
+  if (selectionKey !== previousObjectListSelection) {
+    previousObjectListSelection = selectionKey;
+    pendingObjectListSelection = ids.length > 0;
+  }
+  if (!ids.length) pendingObjectListSelection = false;
+  if (pendingObjectListSelection && !$('#sidebar').hidden && !panel.hidden) {
+    pendingObjectListSelection = false;
+    if (ids.length && !$('#sidebar').hidden && !panel.hidden) {
+      const row = $('#object-list').querySelector<HTMLButtonElement>('.object-row.active');
+      if (row) {
+        const bounds = row.getBoundingClientRect();
+        const visibleTop = panel.getBoundingClientRect().top + panel.clientTop;
+        const visibleBottom = visibleTop + panel.clientHeight;
+        if (bounds.top < visibleTop) panel.scrollTop -= visibleTop - bounds.top;
+        else if (bounds.bottom > visibleBottom) panel.scrollTop += bounds.bottom - visibleBottom;
+      }
+    }
+  }
   $('#history').replaceChildren();
   const changes = desk.getChanges(Math.max(0, desk.revision - 50), 50).changes.reverse();
   for (const change of changes) {
@@ -350,6 +372,12 @@ function render(rebuild = true) {
     row.textContent = `r${change.revision} · ${change.actor} · ${change.operation === 'batch' ? [...new Set(kinds)].join(' / ') : change.operation} (${change.targets.length})`;
     row.title = change.targets.join(', '); $('#history').append(row);
   }
+}
+const objectListVisibility = new MutationObserver(() => {
+  if (!$('#sidebar').hidden && !$('#panel-objects').hidden) render(false);
+});
+for (const element of [$('#sidebar'), $('#panel-objects')]) {
+  objectListVisibility.observe(element, { attributes: true, attributeFilter: ['hidden'] });
 }
 function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
   authoring.stopPlacement();
