@@ -88,9 +88,11 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     const settings = desk.settingsSnapshot();
     const selected = desk.selected().map(id => desk.get(id));
     const key = selected.map(object => object.id).join('|');
-    if (key !== selection && selected.length === 1 && selected[0].type === 'label') {
-      chosen = selected[0].seriesId!; panel.hidden = false;
-    }
+    const onlyPins = selected.length > 0 && selected.every(object => object.type === 'label');
+    if (key !== selection && onlyPins) {
+      if (selected.length === 1) chosen = selected[0].seriesId!;
+      panel.hidden = false;
+    } else if (!onlyPins) panel.hidden = true;
     selection = key;
     if (!settings.series.some(item => item.id === chosen)) chosen = settings.series[0].id;
     defaults.update([objectSchema.parse({ id: 'defaults', type: 'rect', ...settings.defaults })]);

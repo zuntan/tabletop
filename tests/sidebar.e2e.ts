@@ -7,8 +7,11 @@ test('sidebar tabs use full height, preserve tab/scroll and hide without changin
   try {
     assert.equal(await page.getByRole('tab').count(), 4);
     assert.deepEqual(await page.locator('.sidebar-panel').evaluateAll(elements => elements.map(element => getComputedStyle(element).paddingBottom)), ['72px', '72px', '72px', '72px']);
-    const actionButtons = '#property-lock, #properties button[type="submit"], #series-add, #series-place, #series-fit, #connect-form > button[type="submit"], #handoff-start, #handoff-hide';
-    assert.deepEqual(await page.locator(actionButtons).evaluateAll(buttons => buttons.map(button => getComputedStyle(button).fontSize)), Array(8).fill('10px'));
+    const actionButtons = '#property-lock, #property-lock-mixed, #properties button[type="submit"], #series-add, #series-place, #series-fit, #connect-form > button[type="submit"], #handoff-start, #handoff-hide';
+    assert.deepEqual(await page.locator(actionButtons).evaluateAll(buttons => buttons.map(button => getComputedStyle(button).fontSize)), Array(9).fill('10px'));
+    assert.equal(await page.locator('.property-lock-control').evaluate(element => getComputedStyle(element).marginTop), '8px');
+    assert.equal(await page.locator('.property-lock-control').evaluate(element => getComputedStyle(element).marginBottom), '4px');
+    assert.deepEqual(await page.locator('#property-lock, #property-lock-mixed').evaluateAll(buttons => buttons.map(button => getComputedStyle(button).height)), ['32px', '32px']);
     assert.equal(await page.locator('#tab-properties').evaluate(button => getComputedStyle(button).fontSize), '10px');
     assert.equal(await page.locator('header #sidebar-toggle').count(), 0);
     assert.equal(await page.locator('.sidebar-heading > #sidebar-toggle').count(), 1);
@@ -49,10 +52,17 @@ test('sidebar tabs use full height, preserve tab/scroll and hide without changin
     await page.keyboard.press('End'); assert.equal(await page.locator('#tab-connection').getAttribute('aria-selected'), 'true');
     assert.equal(await page.locator('#connect-form').isVisible(), true);
     await page.keyboard.press('Home'); assert.equal(await page.locator('#tab-properties').getAttribute('aria-selected'), 'true');
+    await call('desk_execute', { operations: [{ kind: 'label_add', id: 'sidebar-pin', seriesId: 'series-1', x: 120, y: 120 }] });
+    await call('desk_select', { ids: ['sidebar-pin'] });
+    assert.equal(await page.locator('#series-panel').isVisible(), true);
+    await page.locator('#numbering-settings').click();
+    assert.equal(await page.locator('#series-panel').isVisible(), false);
     await page.locator('#tab-history').click(); await page.locator('#sidebar-toggle').click();
     await page.locator('#numbering-settings').click();
     assert.equal(await page.locator('#sidebar').isVisible(), true);
     assert.equal(await page.locator('#series-panel').isVisible(), true);
+    assert.equal(await page.locator('#series-panel h2').textContent(), 'ピン体系');
+    assert.equal(await page.locator('#panel-properties').evaluate(panel => panel.firstElementChild?.classList.contains('property-lock-control')), true);
     await page.setViewportSize({ width: 390, height: 900 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
     await page.locator('#sidebar-toggle').click(); assert.equal(await page.locator('#sidebar').isVisible(), false);

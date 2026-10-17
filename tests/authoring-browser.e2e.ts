@@ -77,6 +77,7 @@ test('defaults, inline editing and independent numbering systems work through UI
     await place(350, 360); await place(450, 360); await page.keyboard.press('Escape');
     let labels = (await call('desk_list')).objects.filter((object: { type: string }) => object.type === 'label');
     assert.deepEqual(labels.map((object: { text: string }) => object.text), ['1', '2']);
+    await call('desk_select', { ids: [labels[0].id] });
     await page.locator('#series-settings [name="format"]').selectOption('upper-alpha');
     await page.locator('#series-settings [name="shape"]').selectOption('roundedRect');
     await color('series-text', '#b91c1c');

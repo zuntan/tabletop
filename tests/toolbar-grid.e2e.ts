@@ -47,7 +47,9 @@ test('toolbar, remembered numbering, descriptions and world grid work together',
     assert.equal(await page.locator(`[data-id="${objects[0].id}"] .shape-text tspan`).getAttribute('y'), '18');
     assert.equal(objects[0].x + objects[0].width / 2, 300);
     assert.equal(objects[0].y + objects[0].height, 300);
-    await page.locator('#numbering-settings').click(); await page.locator('#series-add').click();
+    await call('desk_select', { ids: [objects[0].id] });
+    assert.equal(await page.locator('#series-panel').isVisible(), true);
+    await page.locator('#series-add').click();
     await page.locator('#series-settings [name="name"]').fill('手順');
     await page.locator('#series-settings [name="name"]').dispatchEvent('change');
     await page.locator('#series-settings [name="shape"]').selectOption('rect');
@@ -110,6 +112,7 @@ test('toolbar, remembered numbering, descriptions and world grid work together',
     await place(750, 550);
     assert.equal((await call('desk_summary')).count, countBeforeSelection + 1);
     await call('desk_execute', { operations: [{ kind: 'series_update', id: label.seriesId, patch: { width: 80, height: 72, shape: 'pin' } }] });
+    await call('desk_select', { ids: [label.id] });
     await page.locator('#series-choice').selectOption(label.seriesId);
     assert.equal((await call('desk_get', { id: label.id })).width, 80);
     const beforeFit = await call('desk_get', { id: label.id });
