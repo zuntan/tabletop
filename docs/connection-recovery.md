@@ -2,6 +2,8 @@
 
 実装仕様。議論の経緯は [合意事項](./connection-recovery-design.md)、原因の調査は [調査報告](./connection-investigation-2026-10-15.md)。サーバーとブラウザの両方が新版であることが必要。
 
+内容保持の保証範囲・既知の限界・未実装の改善候補は [接続・復旧時の内容保護レビュー](./connection-data-safety-review.md) を参照。通常の再接続とページ再読込は異なり、未保存タブの再読込・終了は内容を失う。復旧では既存タブの接続欄を優先し、別の空の机への接続を元の机の復元と扱わない。
+
 ## AIの基本手順
 
 ### 新しく机を開く
@@ -9,10 +11,24 @@
 1. 利用者の新規起動または手動再ペアリングの了承を確認する。
 2. `desk_pairing_open({ confirm: true })` で初回受付を開く。
 3. `desk_connection_info` で接続URLを取得して案内する。
-4. ブラウザが接続したら `desk_pairing_info` を呼び、返された `pairing` の全フィールドを**非公開の継続コンテキストに保持**する。コンパクションや引継ぎでも失わないようにする。
-5. `desk_summary`／`desk_context` で机を確認して作業を始める。
+4. ブラウザから接続操作を行い、`desk_connection_info.browserConnected: true` を確認する。受付開始やURL取得の成功だけでは接続成立ではない。
+5. `desk_pairing_info` を呼び、返された `pairing` の全フィールドを**非公開の継続コンテキストに保持**する。コンパクションや引継ぎでも失わないようにする。
+6. `desk_summary`／`desk_context` で机を確認して作業を始める。
 
 サーバー起動直後には初回受付も復帰先も未設定。接続数0だけでは新しい机を許可しない。`desk_connection_info` 自体は参照専用で、受付を開いたりトークンを更新したりしない。
+
+### 状態に応じた次操作
+
+| 状態 | `bootstrapReady` | `nextAction.kind` | 必要な行動 |
+| --- | --- | --- | --- |
+| `waiting-for-AI` | false | `ask-user` | 新規・手動接続か復旧かを確認。新規なら了承後にopen、復旧なら保持済みrecordでrestore。URLを接続可能として先に案内しない |
+| `new-pairing-open` | true | `browser-connect` | URLを案内してブラウザから接続。`verifyWith: desk_connection_info` で成立を確認 |
+| `paired`・未接続 | false | `wait-for-browser` | 既知の机の再接続を短時間待ち、`verifyWith: desk_connection_info` で再確認。自動でopenしない |
+| ブラウザ接続済み | false | `call-tool` | `tool: desk_pairing_info` で秘密recordを非公開保持後、机を読み直す |
+
+`paired` はペア情報の登録を意味し、接続成立ではない。成立は `browserConnected: true` で判断する。`bootstrapReady` は新規受付の状態であり、ネットワーク到達性・トークン入力の正しさを保証しない。応答は取得時点の状態。既存の `url` と `pairingState` は互換性のため維持する。
+
+`desk_pairing_open` 成功応答も `waitingFor: new-pairing` を維持しつつ、`bootstrapReady: true`、`browserConnected: false`、`nextAction: { kind: call-tool, tool: desk_connection_info }` と案内文を追加する。接続処理や承認条件は変えない。未接続時の机操作エラーはURLを直接案内せず、`desk_connection_info` の状態別案内へ誘導する。
 
 `TABLETOP_TOKEN` 未指定なら、初回認証用トークン付きURLを取得できる。指定時は設定済みトークンを返さず、通常URLと手動入力の案内を返す。ペアリング後の復帰情報はこのenvトークンとは別で、envの秘密をAIへ開示しなくても復帰できる。
 

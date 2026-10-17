@@ -43,7 +43,7 @@ Windows＋GitHub Copilot CLIの導入・MCP設定は [Windows向け手順](./doc
 }
 ```
 
-MCPの `desk_connection_info` を呼ぶとブラウザ未接続でも現在の接続先を取得できます。トークン未指定なら、起動時に生成したトークン付きURLを返します。`env.TABLETOP_TOKEN` を指定した場合は固定トークンを返しません。利用者がURL末尾に `#token=URLエンコードした設定済みトークン` を手動で付けて使用します。
+MCPの `desk_connection_info` を呼ぶとブラウザ未接続でも現在の接続先を取得できます。ただしURL取得だけでは受付は開きません。状態別の `nextAction` に従い、`waiting-for-AI` なら新規・手動接続か復旧かを確認します。新規・手動接続は了承 → `desk_pairing_open` → URL案内の順です。`bootstrapReady` は受付準備、`paired` はペア情報の登録を示し、接続成立は `browserConnected: true` で確認します。トークン未指定なら、起動時に生成したトークン付きURLを返します。`env.TABLETOP_TOKEN` を指定した場合は固定トークンを返しません。利用者がURL末尾に `#token=URLエンコードした設定済みトークン` を手動で付けて使用します。
 
 「接続」タブはURL入力だけです。トークンを含むURLを丸ごと貼り「接続」を押します。ページ移動・再読込はしません。URLは伏せ字表示でタブ内に保持し、解放後の手動再接続にも使えます。トークンなしURLやポート不一致は拒否します。LAN接続はAIが明示許可した場合のみ可能です。[HTTP LAN試用](./docs/http-lan.md) を参照してください。
 

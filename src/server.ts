@@ -13,6 +13,7 @@ import { registerAssetTools } from './asset-tools.js';
 import { registerDeskFileTools } from './desk-file-tools.js';
 import { isStaticPathInside } from './static-path.js';
 import { PairingGate } from './pairing-server.js';
+import { connectionGuidance } from './connection-guidance.js';
 import { registerPairingTools } from './pairing-tools.js';
 import { acknowledgeRelease } from './desk-release.js';
 import { NetworkAccess } from './network-access.js';
@@ -119,7 +120,7 @@ function request(payload: Request): Promise<unknown> {
   return new Promise((resolveResult, reject) => {
     if (releasing) { reject(new Error('Desk release in progress; no request was sent.')); return; }
     if (network.isChanging) { reject(new Error('Network listener change in progress; no request was sent.')); return; }
-    if (!browser || browser.readyState !== WebSocket.OPEN) { reject(new Error('No browser connected. Open the Tabletop URL shown on stderr.')); return; }
+    if (!browser || browser.readyState !== WebSocket.OPEN) { reject(new Error('No browser connected. Call desk_connection_info and follow its state-specific nextAction. A URL alone does not open pairing acceptance; do not automatically call desk_pairing_open for recovery.')); return; }
     const id = randomUUID();
     const timer = setTimeout(() => {
       pending.delete(id);
@@ -138,7 +139,7 @@ async function releaseDesk(handoff = false) {
   if (releasing) throw new Error('Desk release already in progress');
   if (network.isChanging) throw new Error('Network listener change in progress; no release was sent.');
   const peer = browser;
-  if (!peer || peer.readyState !== WebSocket.OPEN) throw new Error('No browser connected; use desk_pairing_open for new acceptance');
+  if (!peer || peer.readyState !== WebSocket.OPEN) throw new Error('No browser connected. Call desk_connection_info and follow its state-specific nextAction; do not automatically open new acceptance for recovery.');
   if (!releaseCapable.has(peer)) throw new Error('Browser does not support intentional release. Save the desk before upgrading; no disconnect was sent.');
   if (pending.size) throw new Error('Browser requests are pending; wait for completion and inspect their outcomes before releasing.');
   releasing = true;
@@ -210,8 +211,17 @@ registerNetworkTools(mcp, async enabled => {
   if (!enabled) for (const peer of wss.clients) if (remotePeers.has(peer)) peer.terminate();
   return result;
 });
+function connectionStatus() {
+  const browserConnected = browser?.readyState === WebSocket.OPEN;
+  const pairingState = gate.info() ? 'paired' : gate.canBootstrap ? 'new-pairing-open' : 'waiting-for-AI';
+  const guidance = connectionGuidance(browserConnected, pairingState);
+  const tokenMessage = tokenFromEnv
+    ? 'The configured TABLETOP_TOKEN is not returned; when instructed to connect, manually append #token=<URL-encoded configured TABLETOP_TOKEN> in the Connection tab.'
+    : 'The URL contains a temporary secret; do not share it publicly.';
+  return { browserConnected, pairingState, ...guidance, message: `${guidance.message} ${tokenMessage}` };
+}
 mcp.registerTool('desk_connection_info', {
-  description: 'Get bootstrap URL, network status (including listening), and enabled LAN URLs without changing pairing or network access. Only explicit human authorization allows desk_network_set to open LAN. For a device handoff explicitly desk_release the old desk first; content is never automatically saved, copied or loaded. If a nonempty original desk has unspecified content disposition, consider asking once whether to transfer it; this is advisory, not mandatory. For NEW/manual pairing first call desk_pairing_open with user approval unless release already opened acceptance. After pairing immediately retain desk_pairing_info privately for recovery. After process restart restore authorized LAN intent if needed, then desk_pairing_restore with the exact record, never a new URL or browser automation. If credentials are lost, ask the human to save or manually reconnect without reload. Only generated tokens are included; configured TABLETOP_TOKEN is never disclosed and must be manually URL-encoded in #token= by the user. No HTTP token endpoint.',
+  description: 'Get bootstrap URL, network status (including listening), and enabled LAN URLs without changing pairing or network access. Follow state-specific nextAction (ask-user, browser-connect, wait-for-browser, call-tool). waiting-for-AI requires choosing new/manual pairing versus recovery before presenting a URL; a URL alone cannot open acceptance. bootstrapReady means acceptance is open, not connected. paired means credentials are registered, not necessarily connected; only browserConnected:true confirms a connected browser. Only explicit human authorization allows desk_network_set to open LAN. For a device handoff explicitly desk_release the old desk first; content is never automatically saved, copied or loaded. If a nonempty original desk has unspecified content disposition, consider asking once whether to transfer it; this is advisory, not mandatory. For NEW/manual pairing first call desk_pairing_open with user approval unless release already opened acceptance. After pairing immediately retain desk_pairing_info privately for recovery. After process restart restore authorized LAN intent if needed, then desk_pairing_restore with the exact record, never a new URL or browser automation. If credentials are lost, ask the human to save or manually reconnect without reload. Only generated tokens are included; configured TABLETOP_TOKEN is never disclosed and must be manually URL-encoded in #token= by the user. No HTTP token endpoint.',
   inputSchema: {}, annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 }, async () => ({ content: [{ type: 'text', text: JSON.stringify({
   url: connectionUrl, port, tokenSource: tokenFromEnv ? 'environment' : 'generated', tokenIncluded: !tokenFromEnv,
@@ -220,10 +230,7 @@ mcp.registerTool('desk_connection_info', {
     const url = `http://${network.authority(host)}/`;
     return tokenFromEnv ? url : `${url}#token=${encodeURIComponent(token)}&port=${port}`;
   }),
-  browserConnected: browser?.readyState === WebSocket.OPEN,
-  pairingState: gate.info() ? 'paired' : gate.canBootstrap ? 'new-pairing-open' : 'waiting-for-AI',
-  message: tokenFromEnv ? 'For new/manual pairing first open desk_pairing_open with user approval, then manually append #token=<URL-encoded configured TABLETOP_TOKEN> to the URL and paste it in the Connection tab. The configured token is not returned. For recovery restore authorized LAN intent if needed, then the retained pairing record instead.'
-    : 'For new/manual pairing first open desk_pairing_open with user approval, then use this URL. It contains a temporary secret; do not share it publicly. For recovery use desk_pairing_restore with the retained record instead.',
+  ...connectionStatus(),
 }) }] }));
 http.on('error', error => {
   console.error('[Tabletop] Cannot listen:', error.message);

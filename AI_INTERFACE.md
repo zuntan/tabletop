@@ -8,7 +8,14 @@
 
 棚を残して現在の接続を解放する場合は、利用者の了承後に `desk_release({ confirm: true })` を使います。元のタブはローカル編集・保存を続けられ、自動再接続は停止します。成功時に以前のペアを無効にして新規・手動接続の受付を開きます。保存・読込・同期・トークン再生成は行いません。旧UIや保留要求は拒否し、応答未確認でも受付は開きません。エラー時は状態を確認し、推測で再送しません。成功後は以下の接続情報を案内し、次の接続の秘密recordを保持します。サーバー再起動からの復帰には使いません。
 
-`desk_connection_info` はブラウザ未接続でも呼べるサーバー側の参照ツールです。`url`・`port`・`tokenSource`・`tokenIncluded`・`browserConnected`・`pairingState`・案内文を返します。`pairingState` は `waiting-for-AI`／`new-pairing-open`／`paired` で受付状態を示します。トークンを再生成せず、机も変更しません。
+`desk_connection_info` はブラウザ未接続でも呼べるサーバー側の参照ツールです。既存の `url`・`port`・`tokenSource`・`tokenIncluded`・`browserConnected`・`pairingState` に加え、`bootstrapReady`・`nextAction`・状態別の `message` を返します。トークンを再生成せず、机も変更しません。
+
+- `waiting-for-AI`：受付も復旧先も未設定。`nextAction.kind: ask-user` で新規・手動接続か復旧かを確認します。新規・手動接続は了承 → `desk_pairing_open` → `desk_connection_info` → URL案内の順。復旧は保持済みrecordで `desk_pairing_restore` を使い、openで代用しません。
+- `new-pairing-open`：`bootstrapReady: true` は新規受付が開いた意味で、接続済みではありません。`nextAction.kind: browser-connect` に従ってURLを案内します。
+- `paired` かつ未接続：ペア情報が登録されているだけです。`nextAction.kind: wait-for-browser` に従って既知の机の再接続を待ち、状態を再確認します。無断で受付を開き直しません。
+- `browserConnected: true`：ブラウザ接続成立。`nextAction: { kind: call-tool, tool: desk_pairing_info }` に従い秘密recordを非公開で保持し、机を読み直します。
+
+`nextAction` はツール名だけではなく行動の種類を示します。`ask-user` は `topic`、`call-tool` は `tool`、ブラウザ操作・待機は確認先の `verifyWith` を持ちます。各応答は取得時点の状態であり、受付開始・URL取得・URLを開く操作の成功を接続成立と扱わず、最後に `browserConnected: true` を確認します。受付前にも互換性のためURLを返しますが、そのURLだけでは接続できません。
 
 接続タブは伏せ字のURL入力だけです。利用者はトークン付きURLを貼り、ページ移動・再読込せず接続できます。未許可ホスト・認証情報付き・クエリ付き・ポート不一致・重複パラメーターは拒否します。URLはタブ内に保持します。初回受付・手動置換の承認や復帰recordの原則は変わりません。
 
