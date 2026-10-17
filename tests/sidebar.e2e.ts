@@ -6,6 +6,7 @@ test('sidebar tabs use full height, preserve tab/scroll and hide without changin
   const { page, call, close, errors } = await openTestDesk('sidebar-test');
   try {
     assert.equal(await page.getByRole('tab').count(), 4);
+    assert.deepEqual(await page.locator('.sidebar-panel').evaluateAll(elements => elements.map(element => getComputedStyle(element).paddingBottom)), ['72px', '72px', '72px', '72px']);
     assert.equal(await page.locator('header #sidebar-toggle').count(), 0);
     assert.equal(await page.locator('.sidebar-heading > #sidebar-toggle').count(), 1);
     assert.equal(await page.locator('[role="tablist"] #sidebar-toggle').count(), 0);
