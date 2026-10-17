@@ -21,12 +21,18 @@ test('human and AI fit their own targets while camera actions preserve the docum
     const before = await call('desk_state');
     const size = await page.locator('#canvas').evaluate(el => ({ width: el.clientWidth, height: el.clientHeight }));
     async function check(ids: string[]) {
-      const actual = await camera();
       const expected = fittedCamera(ids.length ? before.objects.filter((object: { id: string }) => ids.includes(object.id)) : before.objects, size.width, size.height)!;
+      await page.waitForFunction(expected => {
+        const m = (document.querySelector('#viewport') as unknown as SVGGElement).transform.baseVal.consolidate()!.matrix;
+        return Math.abs(m.e - expected.x) < 0.001 && Math.abs(m.f - expected.y) < 0.001 && Math.abs(m.a - expected.zoom) < 0.001;
+      }, expected);
+      const actual = await camera();
       for (const key of ['x', 'y', 'zoom'] as const) assert.ok(Math.abs(actual[key] - expected[key]) < 0.001, `${key}: ${actual[key]} vs ${expected[key]}`);
     }
     assert.equal(await page.locator('#fit').getAttribute('aria-label'), '選択範囲を表示');
-    await page.locator('#fit').click(); await check(['human']);
+    await page.locator('#fit').click();
+    assert.notDeepEqual(await camera(), fittedCamera(before.objects.filter((o: { id: string }) => o.id === 'human'), size.width, size.height), 'selection focus exposes intermediate frames');
+    await check(['human']);
     assert.deepEqual(await call('desk_state'), before);
     const aiFit = await call('desk_fit'); await check(['ai']);
     assert.deepEqual(aiFit.ids, ['ai']); assert.equal(aiFit.scope, 'selection');
@@ -38,13 +44,15 @@ test('human and AI fit their own targets while camera actions preserve the docum
     await call('desk_select', { ids: [] });
     await call('desk_point', { ids: ['ai'] });
     assert.equal(await page.locator('#fit .tool-caption').textContent(), '全体');
-    await page.locator('#fit').click(); await check([]); // Ignore the AI target for human actions.
+    await page.locator('#fit').click();
+    assert.notDeepEqual(await camera(), fittedCamera(before.objects, size.width, size.height), 'whole-desk focus exposes intermediate frames');
+    await check([]); // Ignore the AI target for human actions.
     const after = await call('desk_state');
     assert.deepEqual(after.objects, before.objects);
     assert.deepEqual(after.settings, before.settings);
     assert.equal(after.revision, before.revision);
     // AI camera changes refuse active human editing and must not steal input.
-    await call('desk_select', { ids: ['memo'] }); await page.locator('#fit').click();
+    await call('desk_select', { ids: ['memo'] }); await page.locator('#fit').click(); await check(['memo']);
     await page.locator('[data-id="memo"] .markdown-text').dblclick();
     const input = page.locator('[data-inline-text]'); await input.fill('Unsaved human edit');
     const editingCamera = await camera();

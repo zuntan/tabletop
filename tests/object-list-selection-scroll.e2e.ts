@@ -33,7 +33,7 @@ test('object-list selection scrolls only once per selection change and targets t
     await panel.evaluate(element => { element.scrollTop = 300; });
     const cameraBeforeListClick = await page.locator('#viewport').getAttribute('transform');
     await page.locator('#object-list .object-row.active').first().evaluate(element => element.dispatchEvent(new MouseEvent('click', { bubbles: true })));
-    assert.notEqual(await page.locator('#viewport').getAttribute('transform'), cameraBeforeListClick);
+    await page.waitForFunction(before => document.querySelector('#viewport')?.getAttribute('transform') !== before, cameraBeforeListClick);
     assert.equal(await panel.evaluate(element => element.scrollTop), 300);
     await page.locator('#tab-properties').click();
     await call('desk_select', { ids: ['object-0'] });

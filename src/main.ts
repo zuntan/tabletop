@@ -191,7 +191,7 @@ const reactionControls = createReactionControls($('#reaction-controls'), () => d
 const thinkingMode = createThinkingMode($('header'), () => { cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
-createDeskFileControls($('header'), desk, () => { render(); $('#fit').click(); },
+createDeskFileControls($('header'), desk, () => { render(); fitView(desk.selected()); },
   () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing());
 const labels: Record<DeskObject['type'], string> = { rect: '矩形', roundedRect: '角丸矩形', label: 'ピン', ellipse: '楕円', line: '線', arrow: '矢印', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
@@ -350,7 +350,8 @@ function render(rebuild = true) {
     button.onclick = event => attempt(() => {
       const current = desk.selected();
       desk.select(event.shiftKey ? current.includes(object.id) ? current.filter(id => id !== object.id) : [...current, object.id] : [object.id]);
-      $('#fit').click();
+      // Let the list's selection scroll settle before starting the camera flight.
+      requestAnimationFrame(focusHumanSelection);
     });
     $('#object-list').append(button);
   });
@@ -451,7 +452,13 @@ function fitView(ids: string[], animation?: AnimationOptions) {
   Object.assign(camera, next);
   cameraChanged(); drawSelection();
 }
-$('#fit').onclick = () => { fitView(desk.selected()); };
+function focusHumanSelection() {
+  void fitView(desk.selected(), {})?.catch(error => {
+    if (!(error instanceof Error && error.message.startsWith('Camera animation cancelled:')))
+      notify(error instanceof Error ? error.message : String(error), true);
+  });
+}
+$('#fit').onclick = focusHumanSelection;
 canvas.addEventListener('dblclick', event => {
   const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
   if (target.closest('[data-open-url], [data-markdown-link]')) return;
@@ -654,7 +661,7 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
       // Read-only requests must not rebuild iframes or steal form edits.
       if (message.request.method === 'point') drawSelection();
       if (['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method)) render();
-      if (message.request.method === 'load_document') $('#fit').click();
+      if (message.request.method === 'load_document') fitView(desk.selected());
     } catch (error) { ws.send(JSON.stringify({ id, error: error instanceof Error ? error.message : String(error) })); }
   }, manual, host);
 }

@@ -97,7 +97,7 @@ LANは毎回の起動で禁止です。人間の明示承認後だけ `desk_netw
 - 両ツールとも任意の `durationMs`（0〜2000）を指定できる。省略は自動、0は瞬時。例：`desk_fit({ durationMs: 700 })`、`desk_camera_move({ pan: { x: 120, y: 0 }, durationMs: 400 })`。時間だけの `desk_camera_move` は不可。同じ表示への移動は瞬時。
 - 成功結果は完了後の表示。`desk_camera_get` は移動中も現在フレームの表示を返す。相対移動の起点・フォーカス対象は命令受信時に確定する。
 - wheel／scrollのほか、pointer／touch入力、キー、クリック、入力変更で即時中断。サイズ変更、非表示化、接続切断／解放、読込、後続のカメラ命令でも停止する。中断はエラー結果となり、現在位置を保ち、自動再送・再開しない。バックグラウンド等でフレームが来なくても、指定時間＋1秒の期限で中断し、サーバーの10秒タイムアウトを待ち続けない。
-- OSの「視差効果を減らす」設定時は瞬時に適用。人間のパン／ズーム／表示合わせは従来どおり瞬時で、UIを追加しない。パーツ移動のアニメーション・カメラ追従は別の将来案で未実装。
+- OSの「視差効果を減らす」設定時は瞬時に適用。人間のオブジェクトリストからのフォーカスと、右下の「全体／選択範囲」ボタンも同じカメラアニメーションを利用する（2026-10-18）。ホイール・ドラッグと保存ファイル読込時の自動表示合わせは従来どおり瞬時。UIは追加しない。パーツ移動のアニメーション・カメラ追従は別の将来案で未実装。
 
 実装根拠：[D3 Zoom interpolation](https://d3js.org/d3-interpolate/zoom)、[MDN requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame)、[cancelAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/Window/cancelAnimationFrame)、[prefers-reduced-motion](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion)。
 
