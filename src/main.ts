@@ -89,7 +89,7 @@ app.innerHTML = `
         <div class="actions"><button id="front">最前面</button><button id="back">最背面</button><button id="delete">削除</button></div>
         <a id="open-url" hidden target="_blank" rel="noopener noreferrer">元のページをブラウザで開く ↗</a>
       </section>
-      <section><h2>オブジェクト <span id="count">0</span></h2><div id="object-list"></div></section>
+      <section><h2>オブジェクトリスト <span id="count">0</span></h2><div id="object-list"></div></section>
       <section><h2>共通履歴</h2><div id="history"></div></section>
       <section><h2>MCP接続</h2><p>初回・手動接続はAIに受付を開いてもらい、接続URLを貼り付けて「接続」を押してください。通常の切断は自動復帰を待ちます。</p>
         <p id="connection-detail" role="status"></p>
@@ -194,6 +194,14 @@ const identityControls = createDeskIdentityControls($('header'), desk,
 createDeskFileControls($('header'), desk, () => { render(); $('#fit').click(); },
   () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing());
 const labels: Record<DeskObject['type'], string> = { rect: '矩形', roundedRect: '角丸矩形', label: 'ピン', ellipse: '楕円', line: '線', arrow: '矢印', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
+function objectListIncludes(object: DeskObject) {
+  if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
+  const category = object.type === 'label' ? 'pins' : object.type === 'text' ? 'text'
+    : ['rect', 'roundedRect', 'ellipse'].includes(object.type) ? 'shapes'
+      : ['line', 'arrow'].includes(object.type) ? 'lines'
+        : ['image', 'svg'].includes(object.type) ? 'images' : 'other';
+  return $(`#object-filter-${category}`).getAttribute('aria-pressed') === 'true';
+}
 
 function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}): SVGElementTagNameMap[K] {
   const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -301,6 +309,8 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
     }));
   }
 }
+let previousObjectListSelection = '';
+let pendingObjectListSelection = false;
 function render(rebuild = true) {
   identityControls.refresh();
   if (rebuild) {
@@ -316,7 +326,6 @@ function render(rebuild = true) {
   $('#revision').textContent = `revision ${desk.revision}`;
   $<HTMLButtonElement>('#undo').disabled = !desk.summary().canUndo;
   $<HTMLButtonElement>('#redo').disabled = !desk.summary().canRedo;
-  $('#count').textContent = String(desk.summary().count);
   const ids = desk.selected();
   colorControls.update(ids.map(id => desk.get(id)));
   reactionControls.update(ids.map(id => desk.get(id)));
@@ -332,16 +341,39 @@ function render(rebuild = true) {
   lockControls.update(ids.map(id => desk.get(id)));
   for (const id of ['#front', '#back', '#delete']) $<HTMLButtonElement>(id).disabled = !ids.length;
   $('#object-list').replaceChildren();
-  desk.snapshot().reverse().forEach(object => {
+  const listObjects = desk.snapshot().reverse().filter(objectListIncludes);
+  $('#count').textContent = String(listObjects.length);
+  listObjects.forEach(object => {
     const button = document.createElement('button'); button.className = 'object-row';
     button.classList.toggle('active', ids.includes(object.id));
     button.textContent = `${labels[object.type]} · ${object.text.slice(0, 22) || object.id}`;
     button.onclick = event => attempt(() => {
       const current = desk.selected();
       desk.select(event.shiftKey ? current.includes(object.id) ? current.filter(id => id !== object.id) : [...current, object.id] : [object.id]);
+      $('#fit').click();
     });
     $('#object-list').append(button);
   });
+  const selectionKey = JSON.stringify(ids.slice().sort());
+  const panel = $('#panel-objects');
+  if (selectionKey !== previousObjectListSelection) {
+    previousObjectListSelection = selectionKey;
+    pendingObjectListSelection = ids.length > 0;
+  }
+  if (!ids.length) pendingObjectListSelection = false;
+  if (pendingObjectListSelection && !$('#sidebar').hidden && !panel.hidden) {
+    pendingObjectListSelection = false;
+    if (ids.length && !$('#sidebar').hidden && !panel.hidden) {
+      const row = $('#object-list').querySelector<HTMLButtonElement>('.object-row.active');
+      if (row) {
+        const bounds = row.getBoundingClientRect();
+        const visibleTop = panel.getBoundingClientRect().top + panel.clientTop;
+        const visibleBottom = visibleTop + panel.clientHeight;
+        if (bounds.top < visibleTop) panel.scrollTop -= visibleTop - bounds.top;
+        else if (bounds.bottom > visibleBottom) panel.scrollTop += bounds.bottom - visibleBottom;
+      }
+    }
+  }
   $('#history').replaceChildren();
   const changes = desk.getChanges(Math.max(0, desk.revision - 50), 50).changes.reverse();
   for (const change of changes) {
@@ -351,6 +383,18 @@ function render(rebuild = true) {
     row.title = change.targets.join(', '); $('#history').append(row);
   }
 }
+const objectListVisibility = new MutationObserver(() => {
+  if (!$('#sidebar').hidden && !$('#panel-objects').hidden) render(false);
+});
+for (const element of [$('#sidebar'), $('#panel-objects')]) {
+  objectListVisibility.observe(element, { attributes: true, attributeFilter: ['hidden'] });
+}
+app.addEventListener('object-filter-change', event => {
+  const kind = (event as CustomEvent<{ kind: 'apply' | 'category' }>).detail.kind;
+  if (kind === 'category' && $('#object-filter-apply').getAttribute('aria-checked') !== 'true') return;
+  pendingObjectListSelection = desk.selected().some(id => objectListIncludes(desk.get(id)));
+  render(false);
+});
 function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
   authoring.stopPlacement();
   const offset = desk.summary().count % 8 * 22;

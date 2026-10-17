@@ -3,19 +3,20 @@ type EditorPatch = { text?: string; description?: string; url?: string };
 
 export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement,
   save: (object: DeskObject, patch: EditorPatch, fresh: boolean) => void) {
-  let active: { object: DeskObject; fresh: boolean; panel: HTMLDivElement; text: HTMLTextAreaElement; url?: HTMLInputElement; error: HTMLElement } | null = null;
+  let active: { object: DeskObject; fresh: boolean; panel: HTMLDivElement; text: HTMLTextAreaElement; url?: HTMLInputElement; error: HTMLElement; resizeObserver?: ResizeObserver } | null = null;
   let composing = false;
+  const textFrameTypes = new Set(['text', 'rect', 'roundedRect', 'ellipse']);
   let submitMode: 'enter' | 'mod-enter' = 'enter';
   try { if (localStorage.getItem('tabletop.editor.submit-key') === 'mod-enter') submitMode = 'mod-enter'; }
   catch { /* Keep the in-memory preference when browser storage is unavailable. */ }
-  function close() { active?.panel.remove(); active = null; composing = false; }
+  function close() { active?.resizeObserver?.disconnect(); active?.panel.remove(); active = null; composing = false; }
   function reposition() {
     if (!active) return;
     const matrix = viewport.getScreenCTM(); if (!matrix) return;
     const point = new DOMPoint(active.object.x, active.object.y).matrixTransform(matrix);
     const rect = workspace.getBoundingClientRect();
-    Object.assign(active.panel.style, { left: `${point.x - rect.left}px`, top: `${point.y - rect.top}px`,
-      width: `${Math.max(220, active.object.width * matrix.a)}px` });
+    const inset = textFrameTypes.has(active.object.type) ? 10 : 0;
+    Object.assign(active.panel.style, { left: `${point.x - rect.left - inset}px`, top: `${point.y - rect.top - inset}px` });
   }
   function commit() {
     if (!active) return true;
@@ -75,7 +76,16 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       mode.setAttribute('aria-describedby', hint.id);
       actions.append(hint, mode); panel.append(actions); updateHint();
       const error = document.createElement('div'); error.className = 'editor-error'; error.setAttribute('role', 'alert'); panel.append(error);
-      active = { object, fresh, panel, text, url, error }; workspace.append(panel); reposition();
+      const matrix = viewport.getScreenCTM();
+      const width = object.width * (matrix?.a ?? 1);
+      const matchesTextPart = textFrameTypes.has(object.type);
+      panel.style.width = `${matchesTextPart ? width + 20 : Math.max(220, width)}px`;
+      if (matchesTextPart && matrix) text.style.height = `${object.height * matrix.d}px`;
+      const resizeObserver = matchesTextPart ? new ResizeObserver(() => {
+        if (active?.text === text) panel.style.width = `${text.offsetWidth + 20}px`;
+      }) : undefined;
+      active = { object, fresh, panel, text, url, error, resizeObserver }; workspace.append(panel);
+      resizeObserver?.observe(text); reposition();
       panel.addEventListener('compositionstart', () => { composing = true; });
       panel.addEventListener('compositionend', () => { composing = false; });
       panel.addEventListener('keydown', event => {

@@ -18,16 +18,20 @@ test('mouse lock controls, bottom-right badge and mixed selection protect geomet
   const { page, call, close, errors } = await openTestDesk('object-mouse-lock');
   try {
     assert.equal(await page.locator('#mouse-lock').isDisabled(), true);
+    assert.equal(await page.locator('#property-lock').isVisible(), true);
+    assert.equal(await page.locator('#property-lock').isDisabled(), true);
     assert.equal(await page.locator('#grid-snap').evaluate(el => el.nextElementSibling!.id), 'mouse-lock');
     await call('desk_execute', { operations: [
       { kind: 'add', object: { id: 'a', type: 'rect', x: 100, y: 100, width: 180, height: 100, text: 'Locked' } },
       { kind: 'add', object: { id: 'b', type: 'rect', x: 400, y: 100, width: 120, height: 100 } },
     ] });
     await call('desk_select', { ids: ['a'] });
+    assert.equal(await page.locator('#property-lock').isVisible(), true);
     assert.equal(await page.locator('#mouse-lock').isEnabled(), true);
     await page.locator('#mouse-lock').focus(); await page.locator('#mouse-lock').press('Space');
     assert.equal((await call('desk_get', { id: 'a' })).locked, true);
-    assert.equal(await page.locator('#property-lock').getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('#property-lock').getAttribute('role'), 'switch');
+    assert.equal(await page.locator('#property-lock').getAttribute('aria-checked'), 'true');
     assert.equal(await page.locator('[data-resize="a"]').count(), 0);
     const badge = page.locator('[data-lock-badge="a"]');
     assert.equal(await badge.getAttribute('pointer-events'), 'none');
@@ -44,12 +48,19 @@ test('mouse lock controls, bottom-right badge and mixed selection protect geomet
 
     await call('desk_select', { ids: ['a', 'b'] });
     assert.equal(await page.locator('#mouse-lock').getAttribute('aria-pressed'), 'mixed');
+    assert.equal(await page.locator('#property-lock').isVisible(), false);
+    assert.equal(await page.locator('#property-lock-mixed').isVisible(), true);
+    assert.equal(await page.locator('#property-lock-mixed').textContent(), '→ ON');
     await drag(page, 450, 150, 48, 24);
     assert.deepEqual(await call('desk_get', { id: 'a' }), before);
     assert.equal((await call('desk_get', { id: 'b' })).x, 456); // Destination follows the shared 24-unit grid.
-    await page.locator('#mouse-lock').click();
+    await page.locator('#property-lock-mixed').click();
+    assert.equal((await call('desk_get', { id: 'a' })).locked, true);
     assert.equal((await call('desk_get', { id: 'b' })).locked, true);
     assert.equal(await page.locator('#mouse-lock').getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('#property-lock').isVisible(), true);
+    assert.equal(await page.locator('#property-lock').getAttribute('aria-checked'), 'true');
+    assert.equal(await page.locator('#property-lock-mixed').isVisible(), false);
     await page.locator('#undo').click();
     assert.equal((await call('desk_get', { id: 'a' })).locked, true);
     assert.equal(!!(await call('desk_get', { id: 'b' })).locked, false);

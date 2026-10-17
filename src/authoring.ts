@@ -40,13 +40,13 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     apply(operations);
   };
   panel.innerHTML = `<h2>ピン体系</h2><select id="series-choice" aria-label="ピン体系"></select>
-    <button id="series-add">体系を追加</button><button id="series-place">ピンを配置</button>
+    <button id="series-add">体系を追加</button>
     <form id="series-settings"><label>名前<input name="name" maxlength="100"></label>
     <label>書式<select name="format"></select></label><label>形<select name="shape"><option value="pin">ピン</option><option value="text">文字のみ</option><option value="rect">四角</option><option value="ellipse">丸 / 楕円</option><option value="roundedRect">角丸矩形</option></select></label>
     <label>幅<input name="width" type="number" min="1"></label><label>高さ<input name="height" type="number" min="1"></label>
     <label>文字サイズ<input name="fontSize" type="number" min="1" max="1000"></label><label>線幅<input name="strokeWidth" type="number" min="0" max="100" step="any"></label>
     <label>塗りの透過（%）<input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
-    <button id="series-fit" type="button" title="現在の番号と次の番号に合わせて、体系全体の枠をタイトにします">文字に枠を合わせる</button>
+    <button id="series-fit" type="button" title="現在の番号と次の番号に合わせて、体系全体の枠をタイトにします">枠を文字にあわせる</button>
     </form><div id="series-colors"></div><small id="series-info"></small>`;
   const choice = panel.querySelector<HTMLSelectElement>('#series-choice')!;
   const form = panel.querySelector<HTMLFormElement>('#series-settings')!;
@@ -62,7 +62,6 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
   button.onclick = () => { placing = !placing; update(); };
   settingsButton.onclick = () => { panel.hidden = !panel.hidden; update(); };
   choice.onchange = () => { chosen = choice.value; update(); };
-  panel.querySelector<HTMLButtonElement>('#series-place')!.onclick = () => { placing = !placing; update(); };
   panel.querySelector<HTMLButtonElement>('#series-add')!.onclick = () => {
     const id = `series-${randomUuid().slice(0, 8)}`;
     chosen = id;
@@ -88,9 +87,11 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     const settings = desk.settingsSnapshot();
     const selected = desk.selected().map(id => desk.get(id));
     const key = selected.map(object => object.id).join('|');
-    if (key !== selection && selected.length === 1 && selected[0].type === 'label') {
-      chosen = selected[0].seriesId!; panel.hidden = false;
-    }
+    const onlyPins = selected.length > 0 && selected.every(object => object.type === 'label');
+    if (key !== selection && onlyPins) {
+      if (selected.length === 1) chosen = selected[0].seriesId!;
+      panel.hidden = false;
+    } else if (!onlyPins) panel.hidden = true;
     selection = key;
     if (!settings.series.some(item => item.id === chosen)) chosen = settings.series[0].id;
     defaults.update([objectSchema.parse({ id: 'defaults', type: 'rect', ...settings.defaults })]);
@@ -105,13 +106,11 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     colors.update([objectSchema.parse({ ...appearance, type: 'rect' })]);
     const info = desk.listSettings().series.find(item => item.id === chosen)!;
     panel.querySelector('#series-info')!.textContent = `次：${info.nextText} · ${info.count} 個 · Escで配置終了（色・形は体系全体に適用）`;
-    panel.querySelector('#series-place')!.textContent = placing ? '配置中 · クリックで連続配置' : 'ピンを配置';
     settingsButton.setAttribute('aria-expanded', String(!panel.hidden));
     button.title = `ピンを配置：${current.name}`;
     button.setAttribute('aria-label', button.title);
     button.setAttribute('aria-pressed', String(placing));
     selectButton.setAttribute('aria-pressed', String(!placing));
-    panel.querySelector('#series-place')!.setAttribute('aria-pressed', String(placing));
   }
   return { update, stopPlacement, isPlacing: () => placing,
     place(point: { x: number; y: number }) {

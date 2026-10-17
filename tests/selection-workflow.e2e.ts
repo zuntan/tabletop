@@ -59,6 +59,15 @@ test('fill transparency controls affect only fills and editor key preference sup
     assert.equal((await call('desk_get', { id: 'memo' })).fillOpacity, 0.333);
     await memo.locator('h2').dblclick();
     const input = page.locator('[data-inline-text]'); const mode = page.getByRole('button', { name: 'Enter改行モード' });
+    const initialWidth = await input.evaluate(element => element.getBoundingClientRect().width);
+    await input.evaluate(element => { (element as HTMLTextAreaElement).style.width = `${element.getBoundingClientRect().width + 80}px`; });
+    await page.waitForFunction(() => {
+      const field = document.querySelector('[data-inline-text]')!.getBoundingClientRect();
+      const frame = document.querySelector('.inline-editor')!.getBoundingClientRect();
+      return field.right <= frame.right + 1;
+    });
+    await input.press('Escape'); await memo.locator('h2').dblclick();
+    assert.ok(Math.abs(await input.evaluate(element => element.getBoundingClientRect().width) - initialWidth) < 1);
     assert.equal(await mode.getAttribute('aria-pressed'), 'false');
     await mode.click(); assert.equal(await mode.getAttribute('aria-pressed'), 'true');
     assert.match(await page.locator('#inline-editor-hint').innerText(), /Enter：改行/);
@@ -80,6 +89,29 @@ test('fill transparency controls affect only fills and editor key preference sup
     assert.match(await page.locator('#inline-editor-hint').innerText(), /Enter：確定/);
     await input.fill('Legacy'); await input.press('Enter'); assert.equal((await call('desk_get', { id: 'memo' })).text, 'Legacy');
     assert.equal(await page.evaluate(() => localStorage.getItem('tabletop.editor.submit-key')), 'enter');
+    assert.deepEqual(errors, []);
+  } finally { await close(); }
+});
+
+test('rectangular shapes use text-frame sizing and keep their editor border around manual resizing', { timeout: 45_000 }, async () => {
+  const { page, call, close, errors } = await openTestDesk('shape-editor-sizing');
+  try {
+    for (const type of ['rect', 'roundedRect', 'ellipse'] as const) {
+      await call('desk_execute', { operations: [{ kind: 'add', object: { id: type, type, x: 220, y: 180, width: 240, height: 140, text: 'Shape text' } }] });
+      const shape = page.locator(`[data-id="${type}"]`); await shape.dblclick();
+      const input = page.locator('[data-inline-text]');
+      const initialWidth = await input.evaluate(element => element.getBoundingClientRect().width);
+      assert.ok(initialWidth > 200);
+      await input.evaluate(element => { const field = element as HTMLTextAreaElement; field.style.width = `${field.offsetWidth + 60}px`; });
+      await page.waitForFunction(() => {
+        const field = document.querySelector('[data-inline-text]')!.getBoundingClientRect();
+        const frame = document.querySelector('.inline-editor')!.getBoundingClientRect();
+        return field.right <= frame.right + 1;
+      });
+      await input.press('Escape'); await shape.dblclick();
+      assert.ok(Math.abs(await input.evaluate(element => element.getBoundingClientRect().width) - initialWidth) < 1);
+      await input.press('Escape');
+    }
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });

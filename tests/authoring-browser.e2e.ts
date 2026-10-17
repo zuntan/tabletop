@@ -77,6 +77,7 @@ test('defaults, inline editing and independent numbering systems work through UI
     await place(350, 360); await place(450, 360); await page.keyboard.press('Escape');
     let labels = (await call('desk_list')).objects.filter((object: { type: string }) => object.type === 'label');
     assert.deepEqual(labels.map((object: { text: string }) => object.text), ['1', '2']);
+    await call('desk_select', { ids: [labels[0].id] });
     await page.locator('#series-settings [name="format"]').selectOption('upper-alpha');
     await page.locator('#series-settings [name="shape"]').selectOption('roundedRect');
     await color('series-text', '#b91c1c');
@@ -91,7 +92,7 @@ test('defaults, inline editing and independent numbering systems work through UI
     assert.equal(await page.locator('#properties [name="x"]').isDisabled(), false);
     await page.locator('#series-add').click();
     await page.locator('#series-settings [name="format"]').selectOption('upper-alpha');
-    await color('series-text', '#1d4ed8'); await page.locator('#series-place').click(); await place(550, 360); await page.keyboard.press('Escape');
+    await color('series-text', '#1d4ed8'); await page.locator('#numbering').click(); await place(550, 360); await page.keyboard.press('Escape');
     const all = (await call('desk_list')).objects.filter((object: { type: string }) => object.type === 'label');
     assert.equal(all[2].text, 'A'); assert.notEqual(all[0].seriesId, all[2].seriesId);
     assert.equal(all[0].textColor, '#b91c1c'); assert.equal(all[2].textColor, '#1d4ed8');
