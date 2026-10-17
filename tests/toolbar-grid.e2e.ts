@@ -105,7 +105,7 @@ test('toolbar, remembered numbering, descriptions and world grid work together',
     await page.mouse.move(endMove.x, endMove.y, { steps: 3 }); await page.mouse.up();
     assert.equal((await call('desk_summary')).count, countBeforeSelection);
     assert.equal((await call('desk_get', { id: label.id })).x, moved.x + 24);
-    await page.locator('#series-place').click(); await page.keyboard.press('Escape');
+    await page.locator('#numbering').click(); await page.keyboard.press('Escape');
     assert.equal(await selection.getAttribute('aria-pressed'), 'true');
     await page.locator('#numbering').click(); await page.locator('[data-add="rect"]').click();
     assert.equal(await selection.getAttribute('aria-pressed'), 'true');
@@ -117,7 +117,7 @@ test('toolbar, remembered numbering, descriptions and world grid work together',
     assert.equal((await call('desk_get', { id: label.id })).width, 80);
     const beforeFit = await call('desk_get', { id: label.id });
     const fitRevision = (await call('desk_summary')).revision;
-    await page.getByRole('button', { name: '文字に枠を合わせる', exact: true }).click();
+    await page.getByRole('button', { name: '枠を文字にあわせる', exact: true }).click();
     const fitted = await call('desk_get', { id: label.id });
     assert.equal(fitted.width, 36); assert.equal(fitted.height, 48);
     assert.equal(fitted.x, beforeFit.x); assert.equal(fitted.number, beforeFit.number); assert.equal(fitted.description, beforeFit.description);
@@ -125,7 +125,7 @@ test('toolbar, remembered numbering, descriptions and world grid work together',
     await call('desk_undo'); assert.deepEqual(await call('desk_get', { id: label.id }), beforeFit);
     await page.locator('#series-settings [name="shape"]').selectOption('ellipse');
     assert.equal((await call('desk_get', { id: label.id })).width, 80);
-    await page.getByRole('button', { name: '文字に枠を合わせる', exact: true }).click();
+    await page.getByRole('button', { name: '枠を文字にあわせる', exact: true }).click();
     assert.equal((await call('desk_get', { id: label.id })).height, 36);
     await page.setViewportSize({ width: 720, height: 1000 });
     assert.equal(await page.locator('nav').evaluate(node => node.scrollWidth <= node.clientWidth), true);

@@ -7,8 +7,8 @@ test('sidebar tabs use full height, preserve tab/scroll and hide without changin
   try {
     assert.equal(await page.getByRole('tab').count(), 4);
     assert.deepEqual(await page.locator('.sidebar-panel').evaluateAll(elements => elements.map(element => getComputedStyle(element).paddingBottom)), ['72px', '72px', '72px', '72px']);
-    const actionButtons = '#property-lock, #property-lock-mixed, #properties button[type="submit"], #series-add, #series-place, #series-fit, #connect-form > button[type="submit"], #handoff-start, #handoff-hide';
-    assert.deepEqual(await page.locator(actionButtons).evaluateAll(buttons => buttons.map(button => getComputedStyle(button).fontSize)), Array(9).fill('10px'));
+    const actionButtons = '#property-lock, #property-lock-mixed, #properties button[type="submit"], #series-add, #series-fit, #connect-form > button[type="submit"], #handoff-start, #handoff-hide';
+    assert.deepEqual(await page.locator(actionButtons).evaluateAll(buttons => buttons.map(button => getComputedStyle(button).fontSize)), Array(8).fill('10px'));
     assert.equal(await page.locator('.property-lock-control').evaluate(element => getComputedStyle(element).marginTop), '8px');
     assert.equal(await page.locator('.property-lock-control').evaluate(element => getComputedStyle(element).marginBottom), '4px');
     assert.deepEqual(await page.locator('#property-lock, #property-lock-mixed').evaluateAll(buttons => buttons.map(button => getComputedStyle(button).height)), ['32px', '32px']);
