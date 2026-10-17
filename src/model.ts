@@ -11,6 +11,7 @@ import { createDeskId } from './desk-identity';
 import { randomUuid } from './portable-crypto';
 import { cameraAnimationFields, cameraMoveFields, cameraMoveSchema, type CameraBridge } from './camera-control';
 import { lockFields, lockOperations } from './object-lock';
+import { shareRead } from './share-read';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -268,6 +269,8 @@ export class Desk {
 
 export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('summary') }),
+  z.object({ method: z.literal('share_read'), tool: z.enum(['desk_context', 'desk_get', 'desk_asset_read']),
+    expectedSessionId: z.string().uuid(), id: z.string().min(1).max(100).optional() }).strict(),
   z.object({ method: z.literal('list') }),
   z.object({ method: z.literal('get'), id: z.string() }),
   z.object({ method: z.literal('state') }),
@@ -293,6 +296,7 @@ export type Request = z.input<typeof requestSchema>;
 export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge): unknown {
   const request = requestSchema.parse(input);
   switch (request.method) {
+    case 'share_read': return shareRead(desk, request.tool, request.expectedSessionId, request.id);
     case 'summary': return desk.summary();
     case 'list': return { ...desk.summary(), objects: desk.list() };
     case 'get': {

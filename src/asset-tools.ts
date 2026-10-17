@@ -1,3 +1,4 @@
+import { sharedReadDescriptions } from './read-tool-descriptions';
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
@@ -8,7 +9,7 @@ const json = (value: unknown): CallToolResult => ({ content: [{ type: 'text', te
 const failure = (error: unknown): CallToolResult => ({ isError: true, content: [{ type: 'text', text: error instanceof Error ? error.message : String(error) }] });
 export function registerAssetTools(mcp: McpServer, request: (payload: Request) => Promise<unknown>) {
   mcp.registerTool('desk_asset_read', {
-    description: 'Read an embedded image/SVG by object ID. Raster images return native MCP image content; SVG returns its source as text. exportFile optionally creates a private file under /tmp for clients that cannot consume image content. Never fetches remote URLs. Does not change the desk.',
+    description: sharedReadDescriptions.desk_asset_read,
     inputSchema: { id: z.string(), exportFile: z.boolean().default(false) },
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   }, async ({ id, exportFile }): Promise<CallToolResult> => {

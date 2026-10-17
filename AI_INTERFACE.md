@@ -1,5 +1,7 @@
 # AIとの共同作業インタフェース
 
+外部AI向けには、`/share/{shareId}` の文章案内から `desk_context`・`desk_get`・`desk_asset_read` を同名で取得できる読み取り共有があります。ローカルMCPの `desk_share_open`／`desk_share_close` で管理します。公開範囲・HTTPとMCPの応答の違い・実験手順は [読み取り共有](./docs/read-only-sharing.md) を参照してください。共有の開始は外部公開を伴うため、人間の了承と専用トンネルの準備が必要です。
+
 ## ブラウザを接続する
 
 **初回は、利用者の了承後に `desk_pairing_open({ confirm: true })` で受付を開きます。** 接続したら `desk_pairing_info` の秘密recordを非公開の継続コンテキストに保持し、引継ぎでも残してください。再起動後は同じrecordを `desk_pairing_restore({ pairing })` へ渡し、数秒待ってから現在の机を読み直します。固定トークンでも同じ確認を行います。記憶を失った場合は推測せず手動再接続を案内し、既存タブを再読込しません。詳細・秘密の扱い・旧版の安全な更新は [接続復帰](./docs/connection-recovery.md) を参照してください。

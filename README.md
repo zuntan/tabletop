@@ -87,10 +87,14 @@ MCPの `desk_connection_info` を呼ぶとブラウザ未接続でも現在の�
 
 ## MCPツール
 
+外部AIが普通のURL取得で机を読むための、読み取り専用共有を実装しています。`/share/{shareId}` の案内から、MCPと同じ `desk_context`・`desk_get`・`desk_asset_read` を利用します。開始・終了はローカルMCPの `desk_share_open`／`desk_share_close`、待受は本体と別のloopbackポートです。[手順と範囲](./docs/read-only-sharing.md)。
+
 AI向けの使い方・接続線・ピン体系・画像／SVGの受け渡しは [AI_INTERFACE.md](./AI_INTERFACE.md) を参照してください。
 
 | ツール | 用途 |
 | --- | --- |
+| `desk_share_open` | 了承後、現在の机の読み取り専用共有を別ポートで開始。公開HTTPS originを指定し、案内URLを取得。トンネルは別途準備 |
+| `desk_share_close` | 共有URLを失効させ、専用待受を停止。机の内容・接続は維持 |
 | `desk_connection_info` | 起動URL・待受状態・許可中のLAN URLを取得。env指定の固定トークンは非開示 |
 | `desk_network_set` | 人間の明示了承後、同じポートのLAN待受を開閉。毎回の起動はローカル限定 |
 | `desk_release` | 人間の了承後、棚を保持して接続と自動再接続を止め、新規・手動接続の受付を開く |

@@ -20,6 +20,9 @@ import { registerNetworkTools } from './network-tools.js';
 import { HandoffTicket } from './handoff-ticket.js';
 import { cameraAnimationFields, cameraMoveFields, cameraMoveSchema } from './camera-control.js';
 import { lockFields } from './object-lock.js';
+import { sharedReadDescriptions } from './read-tool-descriptions.js';
+import { DeskShareServer } from './share-server.js';
+import { registerShareTools } from './share-tools.js';
 
 const handoffTicket = new HandoffTicket();
 
@@ -61,6 +64,7 @@ let releasing = false;
 const releaseCapable = new WeakSet<WebSocket>();
 const gate = new PairingGate(() => browser !== null || releasing);
 const pending = new Map<string, { resolve: (value: unknown) => void; reject: (error: Error) => void; timer: NodeJS.Timeout }>();
+const sharing = new DeskShareServer(request, () => browser?.readyState === WebSocket.OPEN ? browser : null);
 
 http.on('upgrade', (req, socket, head) => {
   const url = new URL(req.url ?? '/', `http://127.0.0.1:${port}`);
@@ -101,6 +105,7 @@ function attachBrowser(ws: WebSocket) {
   ws.on('close', code => {
     console.error(`[Tabletop] ${new Date().toISOString()} Browser closed code=${code} pending=${pending.size}`);
     if (browser !== ws) return;
+    sharing.revoke();
     browser = null;
     for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error('Browser disconnected; operation outcome may be unknown. Inspect revision before retrying.')); }
     pending.clear();
@@ -141,6 +146,7 @@ async function releaseDesk(handoff = false) {
   try {
     const handoffUrl = handoff ? `http://${network.authority(lanHost!)}/#token=${handoffTicket.issue(gate.acceptanceEpoch + 1)}` : undefined;
     await acknowledgeRelease(peer, 3000, handoffUrl);
+    sharing.revoke();
     browser = null;
     peer.close(4003, 'Desk released');
     releasing = false;
@@ -165,9 +171,9 @@ const mcp = new McpServer({ name: 'tabletop', version: '0.1.0' });
 const tools = [
   ['desk_summary', 'Get name (empty means untitled), public per-tab deskId, sessionId, revision, counts and undo/redo availability. Use the name normally and deskId only to distinguish same-named open desks. deskId is not a credential, is not saved, and is stable across load/reconnection; sessionId remains the revision/load guard.', {}],
   ['desk_list', 'List objects in back-to-front order, excluding embedded image payloads.', {}],
-  ['desk_get', 'Get one object including its image source, if any.', { id: z.string() }],
+  ['desk_get', sharedReadDescriptions.desk_get, { id: z.string() }],
   ['desk_state', 'Get complete state; potentially large. Prefer desk_context for semantic overview without embedded assets.', {}],
-  ['desk_context', 'Read one consistent snapshot: name, public per-tab deskId, object metadata, selected IDs, connector endpoints/bindings, numbered pin series with members and next number, and paged shared history. No image payloads. New browsers include imageGeometry: world card/viewport/rendered rectangles and intrinsic CSS dimensions. Only use renderedRect when status is ready; loading can complete without revision changes. SVG/remote rectangles may be null. Also available via desk_list/desk_get. Use sessionId and revision to interpret changes; use history.nextRevision when history.hasMore. Detached endpoints have binding null. Read actual image/SVG contents with desk_asset_read.', { sinceRevision: z.number().int().nonnegative().default(0), limit: z.number().int().min(1).max(200).default(100) }],
+  ['desk_context', sharedReadDescriptions.desk_context, { sinceRevision: z.number().int().nonnegative().default(0), limit: z.number().int().min(1).max(200).default(100) }],
   ['desk_settings', 'Get the persisted desk name (name, empty means untitled), shared grid settings (enabled, interval, origin), creation defaults and all pin series with IDs, names, shared appearance, counts and next number. Grid defaults to enabled, interval 24, origin (0,0). Shapes use top-left, labels bottom-center, free line endpoints their coordinates; explicit bindings take priority. Pins retain type label and label_add for compatibility. They are independent objects referenced by ID or seriesId plus number; repeated capped numbers require an ID.', {}],
   ['desk_selection', 'Get human selection IDs, independent aiPointing IDs and last known canvas pointer.', {}],
   ['desk_select', 'Set the human editing selection without changing revision or history. For AI questions or attention, use desk_point instead; edits target object IDs and do not require selection.', { ids: z.array(z.string()).max(2000) }],
@@ -194,6 +200,7 @@ for (const [name, description, inputSchema] of tools) {
 }
 registerAssetTools(mcp, compatibleRequest);
 registerDeskFileTools(mcp, request);
+registerShareTools(mcp, sharing);
 registerPairingTools(mcp, gate, releaseDesk);
 registerNetworkTools(mcp, async enabled => {
   if (releasing) throw new Error('Desk release in progress; network listener was not changed.');
@@ -229,11 +236,14 @@ let closing = false;
 async function shutdown(reason: string) {
   if (closing) return;
   closing = true;
+  sharing.revoke();
   console.error(`[Tabletop] ${new Date().toISOString()} Server stopping: ${reason}`);
   for (const ws of wss.clients) ws.close(1001, 'Server stopping');
   for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error('Server closing')); }
   pending.clear();
-  wss.close(); http.close(); await mcp.close();
+  wss.close(); http.close();
+  await sharing.close().catch(() => {}); // An opening share also aborts when its browser closes.
+  await mcp.close();
 }
 process.stdin.on('end', () => void shutdown('stdin ended'));
 process.on('SIGINT', () => void shutdown('SIGINT'));
