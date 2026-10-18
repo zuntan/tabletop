@@ -408,11 +408,13 @@ function render(rebuild = true) {
   for (const id of ['#front', '#back', '#delete']) $<HTMLButtonElement>(id).disabled = !ids.length;
   $('#object-list').replaceChildren();
   const listObjects = desk.snapshot().reverse().filter(objectListIncludes);
+  const seriesNames = new Map(desk.settingsSnapshot().series.map(series => [series.id, series.name]));
   $('#count').textContent = String(listObjects.length);
   listObjects.forEach(object => {
     const button = document.createElement('button'); button.className = 'object-row';
     button.classList.toggle('active', ids.includes(object.id));
-    button.textContent = `${labels[object.type]} · ${object.text.slice(0, 22) || object.id}`;
+    const typeLabel = object.type === 'label' ? `ピン［${seriesNames.get(object.seriesId!) ?? object.seriesId}］` : labels[object.type];
+    button.textContent = `${typeLabel} · ${object.text.slice(0, 22) || object.id}`;
     button.onclick = event => attempt(() => {
       const current = desk.selected();
       desk.select(event.shiftKey ? current.includes(object.id) ? current.filter(id => id !== object.id) : [...current, object.id] : [object.id]);
@@ -540,6 +542,8 @@ canvas.addEventListener('dblclick', event => {
   if (['rect', 'roundedRect', 'ellipse', 'text', 'link', 'web', 'label', 'image', 'svg'].includes(object.type)) editor.open(object);
 });
 canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture) zoom(Math.exp(-event.deltaY * 0.001), screen(event)); }, { passive: false });
+// Middle-button release can paste the Linux primary selection after the pan ends.
+canvas.addEventListener('auxclick', event => { if (event.button === 1) event.preventDefault(); });
 canvas.addEventListener('pointerdown', event => {
   if (gesture || editor.isActive() || (event.button !== 0 && event.button !== 1)) return;
   if (!space && (event.target as Element).closest('[data-open-url], [data-markdown-link]')) return;
@@ -721,7 +725,16 @@ $('#image').onclick = () => { authoring.stopPlacement(); $<HTMLInputElement>('#f
 $<HTMLInputElement>('#file').onchange = event => { const input = event.target as HTMLInputElement; void addFiles([...input.files ?? []]); input.value = ''; };
 $('#workspace').addEventListener('dragover', event => { event.preventDefault(); });
 $('#workspace').addEventListener('drop', event => { event.preventDefault(); if (!busy) void addFiles([...event.dataTransfer?.files ?? []]); });
+// Some Linux browsers emit paste before auxclick, after pointerup has ended the pan.
+// Keep its origin until the next independent mouse or keyboard action.
+let middleCanvasPaste = false;
+window.addEventListener('pointerdown', event => {
+  middleCanvasPaste = event.button === 1 && event.target instanceof Node && canvas.contains(event.target)
+    && !clipboardTextTarget(event.target);
+}, true);
+window.addEventListener('keydown', () => { middleCanvasPaste = false; }, true);
 window.addEventListener('paste', event => {
+  if (middleCanvasPaste) { event.preventDefault(); return; }
   if (clipboardTextTarget(event.target) || busy || gesture || !event.clipboardData) return;
   const data = event.clipboardData;
   const content: ClipboardContent = { text: data.getData('text/plain'), html: data.getData('text/html'),
