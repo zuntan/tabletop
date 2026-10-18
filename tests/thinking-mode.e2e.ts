@@ -91,7 +91,7 @@ test('human thinking mode gates AI actions at receipt, preserves reads/editing a
     assert.deepEqual((await call('desk_selection')).aiPointing, ['kept']);
     assert.equal(await page.locator('#reaction-controls').evaluate(el => el.nextElementSibling?.id), 'grid-snap');
     assert.equal(await page.locator('#numbering-settings').evaluate(el => el.nextElementSibling?.id), 'label-descriptions');
-    assert.equal(await page.locator('#label-descriptions .tool-caption').textContent(), 'ピンテキスト');
+    assert.equal(await page.locator('#label-descriptions .tool-caption').textContent(), 'ピンとテキスト');
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });

@@ -88,7 +88,7 @@ test('sidebar tabs use full height, preserve tab/scroll and hide without changin
     await page.locator('#numbering-settings').click();
     assert.equal(await page.locator('#sidebar').isVisible(), true);
     assert.equal(await page.locator('#series-panel').isVisible(), true);
-    assert.equal(await page.locator('#series-panel h2').textContent(), 'ピン体系');
+    assert.equal(await page.locator('#series-panel h2').textContent(), 'ピンシリーズ');
     assert.equal(await page.locator('#panel-properties').evaluate(panel => panel.firstElementChild?.classList.contains('property-lock-control')), true);
     await page.setViewportSize({ width: 390, height: 900 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));

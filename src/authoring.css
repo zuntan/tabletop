@@ -35,3 +35,10 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 .inline-editor-actions .editor-mode-toggle:hover, .inline-editor-actions .editor-mode-toggle[aria-pressed="true"] { background: #eff6ff; color: #1d4ed8; }
 .inline-editor-actions .editor-mode-toggle:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
 .editor-error { color: #b91c1c; }
+
+#thread-visible { display: inline-flex; align-items: center; justify-content: space-between; gap: 7px; grid-column: 1 / -1; }
+#thread-visible > span:first-child { font-size: 11px; color: #64748b; }
+#thread-visible[aria-checked="true"] .thinking-switch-track { background: #047857; border-color: #6ee7b7; }
+#thread-visible[aria-checked="true"] .thinking-switch-track::before { left: 18px; }
+#thread-colors { grid-column: 1 / -1; }
+#series-settings legend { font-size: 12px; }

@@ -50,11 +50,10 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     <button id="series-fit" type="button" title="現在の番号と次の番号に合わせて、シリーズ全体の枠をタイトにします">枠を文字にあわせる</button>
     <label>表示<select name="visibility" id="series-visibility"></select></label>
     <fieldset><legend>糸</legend>
-      <label><input name="thread.enabled" type="checkbox">番号順に結ぶ</label>
-      <label><input name="thread.visible" type="checkbox">糸を表示</label>
-      <label>色<input name="thread.color" type="text" maxlength="20"></label>
-      <label>太さ<input name="thread.width" type="number" min="0" max="100" step="any"></label>
-      <label>不透明度（%）<input name="thread.opacity" type="number" min="0" max="100"></label>
+      <button id="thread-visible" type="button" role="switch" aria-label="糸を表示"><span>糸を表示</span><span class="thinking-switch-track" aria-hidden="true"></span><span class="thinking-switch-state" aria-hidden="true"></span></button>
+      <div id="thread-colors"></div>
+      <label>線幅<input name="thread.width" type="number" min="0" max="100" step="any"></label>
+      <label>透過（%）<input name="thread.opacity" type="number" min="0" max="100"></label>
       <label>線種<select name="thread.dash"><option value="solid">実線</option><option value="dashed">破線</option><option value="dotted">点線</option></select></label>
     </fieldset></form><div id="series-colors"></div><small id="series-info"></small>`;
   const choice = panel.querySelector<HTMLSelectElement>('#series-choice')!;
@@ -67,6 +66,16 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     const patch = operations[0]?.kind === 'update' ? operations[0].patch : {};
     apply([{ kind: 'series_update', id: chosen, patch }]);
   }, 'series-');
+  const threadColors = createColorControls(panel.querySelector<HTMLElement>('#thread-colors')!, operations => {
+    const patch = operations[0]?.kind === 'update' ? operations[0].patch : {};
+    if (patch.stroke !== undefined) apply([{ kind: 'series_update', id: chosen, patch: { thread: { color: patch.stroke } } }]);
+  }, 'thread-', { roles: ['stroke'], names: { stroke: '色' } });
+  const threadVisible = panel.querySelector<HTMLButtonElement>('#thread-visible')!;
+  threadVisible.onkeydown = event => event.stopPropagation();
+  threadVisible.onclick = () => {
+    const thread = series().thread;
+    apply([{ kind: 'series_update', id: chosen, patch: { thread: { enabled: true, visible: !(thread.enabled && thread.visible) } } }]);
+  };
   function series() { return desk.settingsSnapshot().series.find(item => item.id === chosen)!; }
   function stopPlacement() { placing = false; update(); }
   selectButton.onclick = stopPlacement;
@@ -93,7 +102,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     if (input.name.startsWith('thread.')) {
       const key = input.name.slice(7) as keyof Series['thread'];
       const value = input.type === 'checkbox' ? input.checked : key === 'width' ? Number(input.value)
-        : key === 'opacity' ? Number(input.value) / 100 : input.value;
+        : key === 'opacity' ? opacityFromPercent(input.value) : input.value;
       apply([{ kind: 'series_update', id: chosen, patch: { thread: { [key]: value } } }]);
       return;
     }
@@ -118,11 +127,15 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     choice.replaceChildren(...settings.series.map(item => new Option(`${item.name} (${item.id})`, item.id)));
     choice.value = chosen;
     const current = series();
+    const showThread = current.thread.enabled && current.thread.visible;
+    threadVisible.setAttribute('aria-checked', String(showThread));
+    threadVisible.querySelector('.thinking-switch-state')!.textContent = showThread ? 'ON' : 'OFF';
+    threadColors.update([objectSchema.parse({ id: current.id, type: 'line', stroke: current.thread.color })]);
     for (const input of Array.from(form.elements) as HTMLInputElement[]) if (input.name) {
       if (input.name.startsWith('thread.')) {
         const key = input.name.slice(7) as keyof Series['thread'];
         if (input.type === 'checkbox') input.checked = Boolean(current.thread[key]);
-        else input.value = String(key === 'opacity' ? current.thread.opacity * 100 : current.thread[key]);
+        else input.value = String(key === 'opacity' ? transparencyPercent(current.thread.opacity) : current.thread[key]);
       } else input.value = input.name === 'fillOpacity'
         ? String(transparencyPercent(current.fillOpacity)) : String(current[input.name as keyof Series]);
     }

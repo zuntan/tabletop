@@ -35,20 +35,21 @@ export function colorOperations(objects: DeskObject[], role: Role, color: string
 }
 
 /** A thin adapter around Pickr's existing swatch picker, shared by all object types. */
-export function createColorControls(container: HTMLElement, apply: (operations: Operation[]) => void, prefix = '') {
+export function createColorControls(container: HTMLElement, apply: (operations: Operation[]) => void, prefix = '', options: { roles?: Role[]; names?: Partial<Record<Role, string>> } = {}) {
   let objects: DeskObject[] = [];
   let selection = '';
   const compact = !!container.closest('nav');
-  const controls = (['fill', 'stroke', 'text'] as const).map(role => {
+  const captions = { ...names, ...options.names };
+  const controls = (options.roles ?? ['fill', 'stroke', 'text'] as Role[]).map(role => {
     const row = document.createElement('div'); row.className = 'color-control';
-    const label = document.createElement('span'); label.textContent = names[role];
+    const label = document.createElement('span'); label.textContent = captions[role];
     const button = document.createElement('button'); button.type = 'button';
     button.className = 'color-trigger'; button.dataset.colorRole = `${prefix}${role}`;
-    button.setAttribute('aria-label', `${names[role]}の色`); button.setAttribute('aria-haspopup', 'dialog');
+    button.setAttribute('aria-label', `${captions[role]}の色`); button.setAttribute('aria-haspopup', 'dialog');
     const dot = document.createElement('span'); dot.className = 'color-dot';
     const value = document.createElement('span'); value.className = 'color-value'; button.append(dot, value);
     if (compact) {
-      label.className = 'tool-caption'; label.textContent = role === 'stroke' ? '輪郭' : names[role];
+      label.className = 'tool-caption'; label.textContent = role === 'stroke' ? '輪郭' : captions[role];
       button.classList.add('tool-button'); button.append(label); row.append(button);
     } else row.append(label, button);
     container.append(row);
@@ -57,7 +58,7 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
       el: button, useAsButton: true, theme: 'nano', appClass: `tabletop-palette palette-${prefix}${role}`,
       default: '#ffffff', defaultRepresentation: 'HEXA', swatches, comparison: false, closeOnScroll: true,
       components: { palette: false, preview: false, hue: false, opacity: false, interaction: {} },
-      i18n: { 'ui:dialog': `${names[role]}の色パレット`, 'btn:swatch': '色見本' },
+      i18n: { 'ui:dialog': `${captions[role]}の色パレット`, 'btn:swatch': '色見本' },
     });
     const change = (color: string) => { apply(colorOperations(objects, role, color)); pickr.hide(); button.focus(); };
     const sync = () => {
@@ -69,7 +70,7 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
       dot.style.backgroundColor = color ?? 'transparent';
       dot.classList.toggle('transparent', color === 'transparent'); dot.classList.toggle('mixed', color === null);
       value.textContent = color === 'transparent' ? '透明' : color ?? '複数の色';
-      button.title = `${names[role]}の色：${value.textContent}`;
+      button.title = `${captions[role]}の色：${value.textContent}`;
       if (ready) {
         pickr.setColor(color === 'transparent' || !color ? null : color, true);
         const popup = document.querySelector<HTMLElement>(`.palette-${prefix}${role}`)!;
@@ -86,7 +87,7 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
       transparent.className = 'transparent-choice'; transparent.textContent = '透明（なし）';
       transparent.onclick = () => change('transparent'); popup.prepend(transparent);
       popup.querySelectorAll<HTMLButtonElement>('.pcr-swatches button').forEach((swatch, i) => {
-        swatch.title = swatches[i]; swatch.setAttribute('aria-label', `${names[role]} ${swatches[i]}`);
+        swatch.title = swatches[i]; swatch.setAttribute('aria-label', `${captions[role]} ${swatches[i]}`);
       });
       sync();
     }).on('swatchselect', (color: Pickr.HSVaColor) => change(color.toHEXA().toString().slice(0, 7).toLowerCase()))

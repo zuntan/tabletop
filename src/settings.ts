@@ -16,7 +16,7 @@ export const appearanceSchema = z.object({
 export const formatSchema = z.enum(['decimal', 'lower-alpha', 'upper-alpha', 'lower-roman', 'upper-roman', 'circled', 'katakana']);
 export const pinVisibilitySchema = z.enum(['all', 'pins', 'hidden']);
 export const pinThreadSchema = z.object({
-  enabled: z.boolean().default(false), visible: z.boolean().default(true),
+  enabled: z.boolean().default(true), visible: z.boolean().default(true),
   color: colorSchema.default('#64748b'), width: z.number().finite().min(0).max(100).default(2),
   opacity: z.number().finite().min(0).max(1).default(1),
   dash: z.enum(['solid', 'dashed', 'dotted']).default('solid'),

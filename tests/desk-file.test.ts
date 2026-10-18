@@ -39,6 +39,20 @@ test('ZIP round-trip retains ordered objects, embedded assets, settings, binding
   assert.deepEqual(result.settings, desk.settingsSnapshot());
   assert.deepEqual(result.warnings, []);
 });
+test('older files without pin visibility and thread settings decode with compatible defaults', async () => {
+  const bytes = await rewrite(manifest => {
+    for (const series of manifest.settings.series) {
+      delete series.visibility;
+      delete series.thread;
+    }
+  });
+  const result = await decodeDeskFile(bytes);
+  assert.equal(result.settings.series[0].visibility, 'all');
+  assert.deepEqual(result.settings.series[0].thread, {
+    enabled: true, visible: true, color: '#64748b', width: 2, opacity: 1, dash: 'solid',
+  });
+  assert.equal(result.objects.find(object => object.id === 'pin')?.text, 'A');
+});
 test('missing images preserve geometry and title, display placeholder and can be re-saved', async () => {
   const bytes = await rewrite((_manifest, files) => {
     for (const name of Object.keys(files)) if (name.startsWith('assets/')) delete files[name];

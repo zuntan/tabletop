@@ -76,7 +76,8 @@ test('toolbar, remembered numbering, descriptions and world grid work together',
     assert.equal(await page.locator('[data-label-description]').count(), 0);
     assert.equal((await call('desk_summary')).revision, viewRevision);
     assert.deepEqual(await call('desk_get', { id: 'connection' }), connector);
-    await page.locator('#label-descriptions').click();
+    await page.locator('#label-descriptions').click(); // pins -> hidden
+    await page.locator('#label-descriptions').click(); // hidden -> all
     await call('desk_select', { ids: [label.id] });
     await page.mouse.move(center.x, center.y); await page.mouse.down();
     const destination = await point(label.x + 24 + 31, label.y + 24 + 27);
