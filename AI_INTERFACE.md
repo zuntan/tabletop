@@ -152,7 +152,7 @@ LANは毎回の起動で禁止です。人間の明示承認後だけ `desk_netw
 
 ## Markdownメモ
 
-`type: "text"` の `text` がMarkdown原文。文字色は `textColor`、背景は `fill`、輪郭は `stroke` です。既定の背景・輪郭は透明。図形の `text` はプレーンテキスト・中央配置です。Markdown対応範囲は [AUTHORING.md](./AUTHORING.md) を参照してください。
+`type: "text"` の `text` がMarkdown原文。文字色は `textColor`、背景は `fill`、輪郭は `stroke` です。新規作成時は矩形と同じ外観の既定値を使い、明示した値は優先します。図形の `text` はプレーンテキスト・中央配置です。Markdown対応範囲は [AUTHORING.md](./AUTHORING.md) を参照してください。
 
 `fillOpacity` は塗りの不透明度0〜1で、文字・輪郭の不透明度とは独立です。新規作成の既定値と新規ピン体系は0.3（70%透過）。既存オブジェクトにこの属性がない場合のスキーマ既定値は1です。`defaults_update`・個別 `update`・`series_update` で変更でき、既存のオブジェクトは既定値の変更だけでは変わりません。画像やカードの本体はこの属性で薄くしません。
 

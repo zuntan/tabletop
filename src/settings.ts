@@ -68,8 +68,8 @@ export function nextNumber(objects: DeskObject[], series: Series): number {
     ? Math.max(value, object.number ?? 0) : value, 0);
   return Math.min(max + 1, formatLimit(series.format));
 }
-export function creationAppearance(type: DeskObject['type'], defaults: Appearance): Appearance {
-  return { ...defaults, ...(type === 'text' ? { fill: 'transparent', stroke: 'transparent' } : {}) };
+export function creationAppearance(_type: DeskObject['type'], defaults: Appearance): Appearance {
+  return { ...defaults };
 }
 export function materializeLabels(objects: DeskObject[], settings: Settings): DeskObject[] {
   return objects.map(object => {
