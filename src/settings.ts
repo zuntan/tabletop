@@ -14,7 +14,16 @@ export const appearanceSchema = z.object({
   fontSize: z.number().finite().min(1).max(1000).default(24),
 }).strict();
 export const formatSchema = z.enum(['decimal', 'lower-alpha', 'upper-alpha', 'lower-roman', 'upper-roman', 'circled', 'katakana']);
+export const pinVisibilitySchema = z.enum(['all', 'pins', 'hidden']);
+export const pinThreadSchema = z.object({
+  enabled: z.boolean().default(false), visible: z.boolean().default(true),
+  color: colorSchema.default('#64748b'), width: z.number().finite().min(0).max(100).default(2),
+  opacity: z.number().finite().min(0).max(1).default(1),
+  dash: z.enum(['solid', 'dashed', 'dotted']).default('solid'),
+}).strict();
 export const seriesSchema = appearanceSchema.extend({
+  visibility: pinVisibilitySchema.default('all'),
+  thread: pinThreadSchema.default({}),
   id: z.string().min(1).max(100),
   name: z.string().trim().min(1).max(100),
   format: formatSchema.default('decimal'),
@@ -23,7 +32,7 @@ export const seriesSchema = appearanceSchema.extend({
   height: z.number().finite().min(1).max(100_000).default(48),
   cornerRadius: z.number().finite().min(0).max(100_000).default(12),
 }).strict();
-export const seriesPatchSchema = seriesSchema.omit({ id: true }).partial();
+export const seriesPatchSchema = seriesSchema.omit({ id: true }).partial().extend({ thread: pinThreadSchema.partial().optional() }).strict();
 export const settingsOperations = [
   z.object({ kind: z.literal('desk_rename'), name: deskNameSchema }).strict(),
   z.object({ kind: z.literal('grid_update'), patch: gridSettingsSchema.partial() }).strict(),
@@ -76,7 +85,7 @@ export function materializeLabels(objects: DeskObject[], settings: Settings): De
     if (object.type !== 'label') return object;
     const series = settings.series.find(item => item.id === object.seriesId);
     if (!series || !object.number) throw new Error('Invalid label series or number');
-    const { id: _id, name: _name, format, shape, ...style } = series;
+    const { id: _id, name: _name, format, shape, visibility: _visibility, thread: _thread, ...style } = series;
     return { ...object, ...style, labelShape: shape, text: formatNumber(format, object.number) };
   });
 }
@@ -95,7 +104,8 @@ export function applySettingsOperation(operation: SettingsOperation, objects: De
   } else if (operation.kind === 'series_update') {
     const index = settings.series.findIndex(series => series.id === operation.id);
     if (index < 0) throw new Error(`Unknown series: ${operation.id}`);
-    settings.series[index] = seriesSchema.parse({ ...settings.series[index], ...operation.patch });
+    settings.series[index] = seriesSchema.parse({ ...settings.series[index], ...operation.patch,
+      thread: { ...settings.series[index].thread, ...operation.patch.thread } });
   } else {
     const series = settings.series.find(item => item.id === operation.seriesId);
     if (!series) throw new Error(`Unknown series: ${operation.seriesId}`);

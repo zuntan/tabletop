@@ -10,7 +10,14 @@ export function descriptionLayout(object: DeskObject) {
   const height = lines.length * object.fontSize * 1.25;
   return { lines, width, height, x: object.width + 12, y: numberCenterY(object.labelShape, object.height) - height / 2 };
 }
-export function labelVisualBounds(object: DeskObject, visible: boolean) {
+export function labelVisualBounds(object: DeskObject, visible: boolean, zoom = 1) {
+  const box = localVisualBounds(object, visible);
+  if (object.type !== 'label') return box;
+  const tip = { x: object.x + object.width / 2, y: object.y + object.height };
+  return { x: tip.x + (box.x - tip.x) / zoom, y: tip.y + (box.y - tip.y) / zoom,
+    width: box.width / zoom, height: box.height / zoom };
+}
+function localVisualBounds(object: DeskObject, visible: boolean) {
   if (object.type !== 'label' || !visible || !object.description) return { x: object.x, y: object.y, width: object.width, height: object.height };
   const layout = descriptionLayout(object);
   const top = Math.min(0, layout.y), bottom = Math.max(object.height, layout.y + layout.height);

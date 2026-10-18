@@ -5,7 +5,7 @@ import { labelVisualBounds } from './label-description';
 /** Presentation only: never creates editing handles or intercepts input. */
 export function drawAiPointing(layer: SVGGElement, objects: DeskObject[], zoom: number, descriptionsVisible: boolean) {
   for (const object of objects) {
-    const visual = isConnector(object) ? bounds(object) : labelVisualBounds(object, descriptionsVisible);
+    const visual = isConnector(object) ? bounds(object) : labelVisualBounds(object, descriptionsVisible, zoom);
     // Keep the green frame outside the human blue frame, even on shared targets.
     const gap = 7 / zoom;
     const frame = document.createElementNS('http://www.w3.org/2000/svg', 'rect');

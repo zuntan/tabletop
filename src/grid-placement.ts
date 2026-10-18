@@ -10,7 +10,7 @@ export function placementGeometry(object: DeskObject) {
   return { x: points?.start.x ?? object.x, y: points?.start.y ?? object.y,
     ...(points ? { x2: points.end.x, y2: points.end.y } : {}), width: object.width, height: object.height };
 }
-function moveInfo(operation: Operation, scene: DeskObject[]) {
+function moveInfo(operation: Batch['operations'][number], scene: DeskObject[]) {
   if (operation.kind !== 'update' || operation.patch.x === undefined || operation.patch.y === undefined
     || Object.keys(operation.patch).some(key => !['x', 'y', 'x2', 'y2', 'startBinding', 'endBinding'].includes(key))) return null;
   const object = scene.find(item => item.id === operation.id);
@@ -41,7 +41,7 @@ export function createGridPlacement(batch: Batch, before: DeskObject[], parseObj
     else if (operation.kind === 'label_add') {
       const series = settings.series.find(item => item.id === operation.seriesId);
       if (!series) throw new Error(`Unknown series: ${operation.seriesId}`);
-      const { name: _name, format: _format, shape: _shape, id: _id, ...appearance } = series;
+      const { name: _name, format: _format, shape: _shape, id: _id, visibility: _visibility, thread: _thread, ...appearance } = series;
       requested = parseObject({ ...appearance, id: operation.id, type: 'label', x: operation.x, y: operation.y });
     } else if (operation.kind === 'update' && fields.some(field => operation.patch[field] !== undefined)) {
       const object = scene.find(item => item.id === operation.id);

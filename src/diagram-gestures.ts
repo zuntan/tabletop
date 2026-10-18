@@ -1,3 +1,4 @@
+import { pinScreenObject } from './pin-series';
 import type { DeskObject, Operation } from './model';
 import { endpoints, isConnector, resolveConnections, snap, type Point } from './geometry';
 import { gridPoint, gridMoveDelta } from './grid';
@@ -9,6 +10,7 @@ export type Gesture = {
   screen: Point;
   originals: DeskObject[];
   scene: DeskObject[];
+  snapScene?: DeskObject[];
   preview: DeskObject[];
   revision: number;
   camera: Point;
@@ -31,7 +33,7 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
     if (gesture.mode === 'start' || gesture.mode === 'end') {
       const points = endpoints(object), side = gesture.mode;
       const next = { x: points[side].x + dx, y: points[side].y + dy };
-      const candidate = snap(next, gesture.scene, 18 / zoom);
+      const candidate = snap(next, (gesture.snapScene ?? gesture.scene).map(object => pinScreenObject(object, zoom)), 18 / zoom);
       const p = candidate?.point ?? (gesture.grid ? gridPoint(next, gesture.gridSettings) : next);
       patch = side === 'start' ? { x: p.x, y: p.y, startBinding: candidate?.binding ?? null }
         : { x2: p.x, y2: p.y, endBinding: candidate?.binding ?? null };

@@ -6,13 +6,14 @@ import { tightFrame } from './pin-shape';
 import { opacityOperations, transparencyPercent, opacityFromPercent } from './fill-opacity';
 import { iconButton } from './toolbar';
 import { randomUuid } from './portable-crypto';
+import { pinVisibilityNames } from './pin-series';
 
 export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLElement, button: HTMLButtonElement,
   selectButton: HTMLButtonElement, apply: (operations: Operation[]) => void) {
   let chosen = 'series-1', placing = false, selection = '';
-  toolbar.innerHTML = '<div id="default-colors"></div><label title="線幅">線幅<input id="default-width" type="number" min="0" max="100" step="any"></label><button id="numbering-settings" title="ピン体系" aria-label="ピン体系">⚑⚙</button>';
+  toolbar.innerHTML = '<div id="default-colors"></div><label title="線幅">線幅<input id="default-width" type="number" min="0" max="100" step="any"></label><button id="numbering-settings" title="ピンシリーズ" aria-label="ピンシリーズ">⚑⚙</button>';
   const settingsButton = toolbar.querySelector<HTMLButtonElement>('#numbering-settings')!;
-  iconButton(settingsButton, '⚑⚙', 'ピン体系');
+  iconButton(settingsButton, '⚑⚙', 'ピンシリーズ');
   const width = toolbar.querySelector<HTMLInputElement>('#default-width')!;
   const opacityLabel = document.createElement('label'); opacityLabel.textContent = '塗り透過%';
   const opacity = document.createElement('input'); opacity.id = 'default-opacity'; opacity.type = 'number';
@@ -39,17 +40,27 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     }
     apply(operations);
   };
-  panel.innerHTML = `<h2>ピン体系</h2><select id="series-choice" aria-label="ピン体系"></select>
-    <button id="series-add">体系を追加</button>
+  panel.innerHTML = `<h2>ピンシリーズ</h2><select id="series-choice" aria-label="ピンシリーズ"></select>
+    <button id="series-add">シリーズを追加</button>
     <form id="series-settings"><label>名前<input name="name" maxlength="100"></label>
     <label>書式<select name="format"></select></label><label>形<select name="shape"><option value="pin">ピン</option><option value="text">文字のみ</option><option value="rect">四角</option><option value="ellipse">丸 / 楕円</option><option value="roundedRect">角丸矩形</option></select></label>
     <label>幅<input name="width" type="number" min="1"></label><label>高さ<input name="height" type="number" min="1"></label>
     <label>文字サイズ<input name="fontSize" type="number" min="1" max="1000"></label><label>線幅<input name="strokeWidth" type="number" min="0" max="100" step="any"></label>
     <label>塗りの透過（%）<input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
-    <button id="series-fit" type="button" title="現在の番号と次の番号に合わせて、体系全体の枠をタイトにします">枠を文字にあわせる</button>
-    </form><div id="series-colors"></div><small id="series-info"></small>`;
+    <button id="series-fit" type="button" title="現在の番号と次の番号に合わせて、シリーズ全体の枠をタイトにします">枠を文字にあわせる</button>
+    <label>表示<select name="visibility" id="series-visibility"></select></label>
+    <fieldset><legend>糸</legend>
+      <label><input name="thread.enabled" type="checkbox">番号順に結ぶ</label>
+      <label><input name="thread.visible" type="checkbox">糸を表示</label>
+      <label>色<input name="thread.color" type="text" maxlength="20"></label>
+      <label>太さ<input name="thread.width" type="number" min="0" max="100" step="any"></label>
+      <label>不透明度（%）<input name="thread.opacity" type="number" min="0" max="100"></label>
+      <label>線種<select name="thread.dash"><option value="solid">実線</option><option value="dashed">破線</option><option value="dotted">点線</option></select></label>
+    </fieldset></form><div id="series-colors"></div><small id="series-info"></small>`;
   const choice = panel.querySelector<HTMLSelectElement>('#series-choice')!;
   const form = panel.querySelector<HTMLFormElement>('#series-settings')!;
+  for (const [value, name] of Object.entries(pinVisibilityNames))
+    panel.querySelector<HTMLSelectElement>('#series-visibility')!.add(new Option(name, value));
   const formatNames = ['1, 2…', 'a〜z', 'A〜Z', 'i〜xx', 'I〜XX', '①〜⑳', 'ア〜ン'];
   formatSchema.options.forEach((value, index) => (form.elements.namedItem('format') as HTMLSelectElement).add(new Option(formatNames[index], value)));
   const colors = createColorControls(panel.querySelector<HTMLElement>('#series-colors')!, operations => {
@@ -65,7 +76,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
   panel.querySelector<HTMLButtonElement>('#series-add')!.onclick = () => {
     const id = `series-${randomUuid().slice(0, 8)}`;
     chosen = id;
-    apply([{ kind: 'series_add', series: { id, name: `体系 ${desk.settingsSnapshot().series.length + 1}` } }]);
+    apply([{ kind: 'series_add', series: { id, name: `シリーズ ${desk.settingsSnapshot().series.length + 1}` } }]);
   };
   form.querySelector<HTMLButtonElement>('#series-fit')!.onclick = () => {
     const current = series();
@@ -79,9 +90,16 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
   form.onsubmit = event => event.preventDefault();
   form.onchange = event => {
     const input = event.target as HTMLInputElement;
+    if (input.name.startsWith('thread.')) {
+      const key = input.name.slice(7) as keyof Series['thread'];
+      const value = input.type === 'checkbox' ? input.checked : key === 'width' ? Number(input.value)
+        : key === 'opacity' ? Number(input.value) / 100 : input.value;
+      apply([{ kind: 'series_update', id: chosen, patch: { thread: { [key]: value } } }]);
+      return;
+    }
     const key = input.name as keyof Series;
     apply([{ kind: 'series_update', id: chosen, patch: { [key]: key === 'fillOpacity' ? opacityFromPercent(input.value)
-      : ['name', 'format', 'shape'].includes(key) ? input.value : Number(input.value) } }]);
+      : ['name', 'format', 'shape', 'visibility'].includes(key) ? input.value : Number(input.value) } }]);
   };
   function update() {
     const settings = desk.settingsSnapshot();
@@ -100,12 +118,18 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     choice.replaceChildren(...settings.series.map(item => new Option(`${item.name} (${item.id})`, item.id)));
     choice.value = chosen;
     const current = series();
-    for (const input of Array.from(form.elements) as HTMLInputElement[]) if (input.name) input.value = input.name === 'fillOpacity'
-      ? String(transparencyPercent(current.fillOpacity)) : String(current[input.name as keyof Series]);
-    const { name: _name, format: _format, shape: _shape, ...appearance } = current;
+    for (const input of Array.from(form.elements) as HTMLInputElement[]) if (input.name) {
+      if (input.name.startsWith('thread.')) {
+        const key = input.name.slice(7) as keyof Series['thread'];
+        if (input.type === 'checkbox') input.checked = Boolean(current.thread[key]);
+        else input.value = String(key === 'opacity' ? current.thread.opacity * 100 : current.thread[key]);
+      } else input.value = input.name === 'fillOpacity'
+        ? String(transparencyPercent(current.fillOpacity)) : String(current[input.name as keyof Series]);
+    }
+    const { name: _name, format: _format, shape: _shape, visibility: _visibility, thread: _thread, ...appearance } = current;
     colors.update([objectSchema.parse({ ...appearance, type: 'rect' })]);
     const info = desk.listSettings().series.find(item => item.id === chosen)!;
-    panel.querySelector('#series-info')!.textContent = `次：${info.nextText} · ${info.count} 個 · Escで配置終了（色・形は体系全体に適用）`;
+    panel.querySelector('#series-info')!.textContent = `次：${info.nextText} · ${info.count} 個 · Escで配置終了（色・形はシリーズ全体に適用）`;
     settingsButton.setAttribute('aria-expanded', String(!panel.hidden));
     button.title = `ピンを配置：${current.name}`;
     button.setAttribute('aria-label', button.title);

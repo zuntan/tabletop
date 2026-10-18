@@ -1,3 +1,4 @@
+import { pinScreenObject } from './pin-series';
 import type { DeskObject } from './model';
 type EditorPatch = { text?: string; description?: string; url?: string };
 
@@ -13,7 +14,8 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
   function reposition() {
     if (!active) return;
     const matrix = viewport.getScreenCTM(); if (!matrix) return;
-    const point = new DOMPoint(active.object.x, active.object.y).matrixTransform(matrix);
+    const object = pinScreenObject(active.object, matrix.a);
+    const point = new DOMPoint(object.x, object.y).matrixTransform(matrix);
     const rect = workspace.getBoundingClientRect();
     const inset = textFrameTypes.has(active.object.type) ? 10 : 0;
     Object.assign(active.panel.style, { left: `${point.x - rect.left - inset}px`, top: `${point.y - rect.top - inset}px` });
@@ -77,7 +79,7 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       actions.append(hint, mode); panel.append(actions); updateHint();
       const error = document.createElement('div'); error.className = 'editor-error'; error.setAttribute('role', 'alert'); panel.append(error);
       const matrix = viewport.getScreenCTM();
-      const width = object.width * (matrix?.a ?? 1);
+      const width = object.type === 'label' ? object.width : object.width * (matrix?.a ?? 1);
       const matchesTextPart = textFrameTypes.has(object.type);
       panel.style.width = `${matchesTextPart ? width + 20 : Math.max(220, width)}px`;
       if (matchesTextPart && matrix) text.style.height = `${object.height * matrix.d}px`;

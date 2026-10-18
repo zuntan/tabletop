@@ -6,7 +6,7 @@ import { lockBodyPath } from './lock-controls';
 
 /** Screen-sized, non-interactive lock glyph replaces the bottom-right resize handle. */
 export function drawLockedSelection(layer: SVGGElement, object: DeskObject, zoom: number, descriptionsVisible: boolean) {
-  const box = isConnector(object) ? bounds(object) : labelVisualBounds(object, descriptionsVisible);
+  const box = isConnector(object) ? bounds(object) : labelVisualBounds(object, descriptionsVisible, zoom);
   layer.append(element('rect', { x: box.x - 3 / zoom, y: box.y - 3 / zoom,
     width: box.width + 6 / zoom, height: box.height + 6 / zoom, fill: 'none', stroke: '#2563eb',
     'stroke-width': 1.5 / zoom, 'stroke-dasharray': `${2 / zoom} ${2 / zoom}`,

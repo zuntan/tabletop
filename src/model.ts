@@ -1,3 +1,4 @@
+import { groupPinLayers } from './pin-series';
 import { z } from 'zod';
 import { resolveConnections } from './geometry';
 import { initialSettings, settingsOperations, applySettingsOperation, materializeLabels, creationAppearance, nextNumber, formatNumber, settingsSchema } from './settings';
@@ -174,7 +175,7 @@ export class Desk {
     const document = z.object({ objects: z.array(objectSchema).max(2000), settings: settingsSchema }).strict().parse(input);
     if (new Set(document.objects.map(object => object.id)).size !== document.objects.length) throw new Error('Duplicate object ID');
     if (new Set(document.settings.series.map(series => series.id)).size !== document.settings.series.length) throw new Error('Duplicate series ID');
-    const after = resolveConnections(materializeLabels(document.objects.map(validateObject), document.settings)).map(validateObject);
+    const after = groupPinLayers(resolveConnections(materializeLabels(document.objects.map(validateObject), document.settings)).map(validateObject));
     const before = this.snapshot(), beforeSettings = this.settingsSnapshot();
     const targets = [...new Set([...before, ...after].map(object => object.id))];
     this.undoStack.push({ before, after, beforeSettings, afterSettings: document.settings, actor, targets });
@@ -215,11 +216,14 @@ export class Desk {
       }
       if (operation.kind === 'delete') after.splice(index, 1);
       if (operation.kind === 'reorder') {
-        const [object] = after.splice(index, 1);
-        after.splice(Math.min(operation.index, after.length), 0, object);
+        const object = after[index];
+        const group = object.type === 'label' ? after.filter(item => item.type === 'label' && item.seriesId === object.seriesId) : [object];
+        const members = new Set(group.map(item => item.id));
+        after = after.filter(item => !members.has(item.id));
+        after.splice(Math.min(operation.index, after.length), 0, ...group);
       }
     }
-    after = resolveConnections(materializeLabels(after, afterSettings).map(validateObject), before).map(validateObject);
+    after = groupPinLayers(resolveConnections(materializeLabels(after, afterSettings).map(validateObject), before).map(validateObject));
     const result = () => ({ ...this.summary(), placement: { mode: placement.mode, results: placement.results.map(item => {
       const object = after.find(object => object.id === item.id);
       return { ...item, applied: object ? placementGeometry(object) : null };

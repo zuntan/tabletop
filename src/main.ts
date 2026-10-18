@@ -1,6 +1,6 @@
 import './style.css';
 import { Desk, dispatch, objectSchema, type DeskObject, type Operation } from './model';
-import { bounds, isConnector, isShape } from './geometry';
+import { anchorPoint, bounds, endpoints, isConnector, isShape } from './geometry';
 import { createColorControls } from './color-controls';
 import { drawConnector, drawShapeText, drawEndpointHandles, drawSnapTargets, updateScenePreview } from './diagram-drawing';
 import { gestureOperations, gesturePreview, endpointDragPoint, type Gesture } from './diagram-gestures';
@@ -9,7 +9,7 @@ import './diagram.css';
 import './authoring.css';
 import { createInlineEditor } from './inline-editor';
 import { createAuthoring } from './authoring';
-import { creationAppearance } from './settings';
+import { creationAppearance, type Series } from './settings';
 import { groupToolbar, iconButton } from './toolbar';
 import { drawLabelDescription, labelVisualBounds } from './label-description';
 import { gridPoint, gridOrigin } from './grid';
@@ -17,6 +17,7 @@ import { pinPath } from './pin-shape';
 import { drawOpenLink } from './link-card';
 import { readClipboardContent, svgClipboardFile, type ClipboardContent } from './clipboard';
 import { PartClipboard, partClipboardType, singleClipboardUrl } from './part-clipboard';
+import { effectivePinVisibility, pinTransform, pinScreenObject, pinThreadMembers, pinVisibilityNames, type PinVisibility } from './pin-series';
 import { drawMarkdown } from './markdown';
 import './markdown.css';
 import { createSidebar } from './sidebar';
@@ -116,6 +117,10 @@ const canvas = app.querySelector<SVGSVGElement>('#canvas')!;
 const viewport = app.querySelector<SVGGElement>('#viewport')!;
 const objectsLayer = app.querySelector<SVGGElement>('#objects')!;
 const overlays = app.querySelector<SVGGElement>('#overlays')!;
+const drawnNodes = new Map<string, SVGGElement>();
+let renderedScene: DeskObject[] = [];
+const pinSeriesMap = new Map<string, Series>();
+const renderedById = new Map<string, DeskObject>();
 const form = $<HTMLFormElement>('#properties');
 const camera = { x: 60, y: 50, zoom: 1 };
 const humanScroll = new HumanScrollGuard();
@@ -152,7 +157,7 @@ const cameraControls = {
 let space = false;
 
 let busy = false;
-let descriptionsVisible = true;
+let pinVisibility: PinVisibility = 'all';
 let gridEnabled = true;
 function gridPosition(point: { x: number; y: number }) {
   const grid = desk.settingsSnapshot().grid;
@@ -233,6 +238,7 @@ function cameraChanged() {
   dots.querySelector('circle')!.setAttribute('cy', String(grid.interval / 2));
   dots.setAttribute('patternTransform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
   $('#zoom-reset .tool-icon').textContent = `${Math.round(camera.zoom * 100)}%`;
+  refreshPinPresentation();
   editor.reposition();
 }
 function zoom(factor: number, center = { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 }) {
@@ -242,11 +248,63 @@ function zoom(factor: number, center = { x: canvas.clientWidth / 2, y: canvas.cl
   camera.y = center.y - (center.y - camera.y) * camera.zoom / old;
   cameraChanged(); drawSelection();
 }
+function pinMode(object: DeskObject): PinVisibility {
+  if (object.type !== 'label') return 'all';
+  const series = pinSeriesMap.get(object.seriesId!);
+  return effectivePinVisibility(pinVisibility, series?.visibility ?? 'all');
+}
+function pinIsVisible(object: DeskObject) { return pinMode(object) !== 'hidden'; }
+function pinDescriptionVisible(object: DeskObject) { return pinMode(object) === 'all'; }
+function connectorForView(object: DeskObject): DeskObject {
+  if (!isConnector(object)) return object;
+  const points = endpoints(object);
+  for (const side of ['start', 'end'] as const) {
+    const binding = object[side === 'start' ? 'startBinding' : 'endBinding'];
+    const target = binding && renderedById.get(binding.objectId);
+    if (target?.type === 'label') points[side] = anchorPoint(pinScreenObject(target, camera.zoom), binding!.anchor);
+  }
+  return { ...object, x: points.start.x, y: points.start.y, x2: points.end.x, y2: points.end.y };
+}
+function refreshPinPresentation() {
+  for (const object of renderedScene) {
+    const node = drawnNodes.get(object.id);
+    if (!node) continue;
+    if (object.type === 'label') node.setAttribute('transform', pinTransform(object, camera.zoom));
+    else if (isConnector(object) && (object.startBinding || object.endBinding)) {
+      const visual = connectorForView(object);
+      node.setAttribute('transform', `translate(${visual.x} ${visual.y})`);
+      node.replaceChildren(); drawConnector(node, visual, camera.zoom); drawReactions(node, visual, true);
+    }
+  }
+}
+function drawPinThreads(scene: DeskObject[]) {
+  objectsLayer.querySelectorAll('[data-pin-thread]').forEach(node => node.remove());
+  for (const series of pinSeriesMap.values()) {
+    const thread = series.thread;
+    if (!thread.enabled || !thread.visible || effectivePinVisibility(pinVisibility, series.visibility) === 'hidden') continue;
+    const pins = pinThreadMembers(scene, series);
+    if (pins.length < 2) continue;
+    const first = scene.find(object => object.type === 'label' && object.seriesId === series.id);
+    const before = first && drawnNodes.get(first.id);
+    if (!before) continue;
+    const points = pins.map(object => `${object.x + object.width / 2},${object.y + object.height}`).join(' ');
+    const path = svg('polyline', { points, fill: 'none', stroke: thread.color, 'stroke-width': thread.width,
+      'stroke-opacity': thread.opacity, 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+      'vector-effect': 'non-scaling-stroke', 'pointer-events': 'none', 'data-pin-thread': series.id });
+    if (thread.dash !== 'solid') path.setAttribute('stroke-dasharray', thread.dash === 'dashed'
+      ? `${thread.width * 4} ${thread.width * 3}` : `${thread.width} ${thread.width * 2}`);
+    objectsLayer.insertBefore(path, before);
+  }
+}
 function drawObject(object: DeskObject) {
+  if (!pinIsVisible(object)) return;
+  object = connectorForView(object);
   const { width: w, height: h } = object;
-  const group = svg('g', { transform: `translate(${object.x} ${object.y})`, 'data-id': object.id, 'data-locked': String(!!object.locked) });
+  const group = svg('g', { transform: object.type === 'label' ? pinTransform(object, camera.zoom) : `translate(${object.x} ${object.y})`,
+    'data-id': object.id, 'data-locked': String(!!object.locked) });
+  drawnNodes.set(object.id, group);
   if (isConnector(object)) {
-    drawConnector(group, object, camera.zoom); drawReactions(group, object, descriptionsVisible);
+    drawConnector(group, object, camera.zoom); drawReactions(group, object, pinDescriptionVisible(object));
     objectsLayer.append(group); return;
   }
   const style = { fill: object.fill, 'fill-opacity': object.fillOpacity, stroke: object.stroke, 'stroke-width': object.strokeWidth };
@@ -262,7 +320,7 @@ function drawObject(object: DeskObject) {
     text.textContent = object.text; group.append(text);
   }
   drawShapeText(group, object);
-  drawLabelDescription(group, object, descriptionsVisible);
+  drawLabelDescription(group, object, pinDescriptionVisible(object));
   if (object.type === 'text') {
     group.append(svg('rect', { width: w, height: h, ...style }));
     drawMarkdown(group, object);
@@ -285,7 +343,7 @@ function drawObject(object: DeskObject) {
     }
     drawOpenLink(group, object);
   }
-  drawReactions(group, object, descriptionsVisible);
+  drawReactions(group, object, pinDescriptionVisible(object));
   objectsLayer.append(group);
 }
 function drawSelection(preview?: DeskObject[], scene = preview) {
@@ -296,11 +354,13 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
   fit.querySelector('.tool-caption')!.textContent = hasSelection ? '選択範囲' : '全体';
   overlays.replaceChildren();
   const selected = preview ?? desk.selected().map(id => desk.get(id));
-  drawAiPointing(overlays, desk.pointed().map(id => scene?.find(object => object.id === id) ?? desk.get(id)), camera.zoom, descriptionsVisible);
-  for (const object of selected) {
-    if (object.locked) { drawLockedSelection(overlays, object, camera.zoom, descriptionsVisible); continue; }
+  for (const object of desk.pointed().map(id => scene?.find(object => object.id === id) ?? desk.get(id)).filter(pinIsVisible))
+    drawAiPointing(overlays, [connectorForView(object)], camera.zoom, pinDescriptionVisible(object));
+  for (const source of selected.filter(pinIsVisible)) {
+    const object = connectorForView(source);
+    if (object.locked) { drawLockedSelection(overlays, object, camera.zoom, pinDescriptionVisible(object)); continue; }
     if (drawEndpointHandles(overlays, object, camera.zoom, selected.length === 1)) continue;
-    const visual = labelVisualBounds(object, descriptionsVisible);
+    const visual = labelVisualBounds(object, pinDescriptionVisible(object), camera.zoom);
     overlays.append(svg('rect', { x: visual.x - 3 / camera.zoom, y: visual.y - 3 / camera.zoom,
       width: visual.width + 6 / camera.zoom, height: visual.height + 6 / camera.zoom,
       fill: 'none', stroke: '#2563eb', 'stroke-width': 1.5 / camera.zoom, 'stroke-dasharray': `${5 / camera.zoom} ${3 / camera.zoom}`, 'pointer-events': 'none' }));
@@ -314,12 +374,16 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
 let previousObjectListSelection = '';
 let pendingObjectListSelection = false;
 function render(rebuild = true) {
+  pinSeriesMap.clear();
+  for (const series of desk.settingsSnapshot().series) pinSeriesMap.set(series.id, series);
   identityControls.refresh();
   if (rebuild) {
-    objectsLayer.replaceChildren();
-    const objects = desk.snapshot();
+    objectsLayer.replaceChildren(); drawnNodes.clear();
+    const objects = desk.snapshot(); renderedScene = objects;
+    renderedById.clear(); for (const object of objects) renderedById.set(object.id, object);
     desk.imageGeometry.observe(objects);
     objects.forEach(drawObject);
+    drawPinThreads(objects);
   }
   gridEnabled = desk.settingsSnapshot().grid.enabled;
   $('#grid-snap').setAttribute('aria-pressed', String(gridEnabled));
@@ -437,17 +501,23 @@ $('#zoom-reset').onclick = () => zoom(1 / camera.zoom);
 $('#grid-snap').onclick = () => {
   if (!busy && !editor.isActive()) attempt(() => execute([{ kind: 'grid_update', patch: { enabled: !gridEnabled } }]));
 };
-$('#label-descriptions').onclick = () => {
-  descriptionsVisible = !descriptionsVisible;
+function updatePinVisibilityButton() {
   const button = $('#label-descriptions');
-  button.setAttribute('aria-pressed', String(descriptionsVisible));
-  button.title = descriptionsVisible ? 'ピンの説明文を隠す' : 'ピンの説明文を表示';
+  button.removeAttribute('aria-pressed');
+  button.title = `すべてのピン：${pinVisibilityNames[pinVisibility]}（クリックで切替）`;
   button.setAttribute('aria-label', button.title);
-  render();
+  button.querySelector('.tool-caption')!.textContent = pinVisibilityNames[pinVisibility];
+  button.dataset.pinVisibility = pinVisibility;
+}
+$('#label-descriptions').onclick = () => {
+  pinVisibility = pinVisibility === 'all' ? 'pins' : pinVisibility === 'pins' ? 'hidden' : 'all';
+  updatePinVisibilityButton(); render();
 };
+updatePinVisibilityButton();
 function fitView(ids: string[], animation?: AnimationOptions) {
-  const objects = ids.length ? ids.map(id => desk.get(id)) : desk.snapshot();
-  const next = fittedCamera(objects, canvas.clientWidth, canvas.clientHeight, descriptionsVisible);
+  const objects = (ids.length ? ids.map(id => desk.get(id)) : desk.snapshot()).filter(pinIsVisible)
+    .map(object => pinDescriptionVisible(object) ? object : { ...object, description: '' });
+  const next = fittedCamera(objects, canvas.clientWidth, canvas.clientHeight, true);
   if (!next) return;
   if (animation) return animateCamera(next, animation);
   cameraAnimator.cancel('Instant camera change');
@@ -494,12 +564,14 @@ canvas.addEventListener('pointerdown', event => {
     mode = 'move';
   } else { if (!event.shiftKey) desk.select([]); render(); mode = 'marquee'; }
   const scene = desk.snapshot();
-  gesture = { mode, start: p, screen: screen(event), originals: desk.selected().map(id => desk.get(id)), scene, preview: scene, revision: desk.revision, camera: { x: camera.x, y: camera.y }, additive, grid: gridEnabled, gridSettings: desk.settingsSnapshot().grid, anchorId: id ?? resize ?? undefined };
+  gesture = { mode, start: p, screen: screen(event), originals: desk.selected().map(id => desk.get(id)), scene, snapScene: scene.filter(pinIsVisible), preview: scene, revision: desk.revision, camera: { x: camera.x, y: camera.y }, additive, grid: gridEnabled, gridSettings: desk.settingsSnapshot().grid, anchorId: id ?? resize ?? undefined };
   busy = true; canvas.setPointerCapture(event.pointerId); event.preventDefault(); canvas.focus();
 });
 function previewGesture(current: Gesture, point: { x: number; y: number }) {
-  const scene = gesturePreview(current, point, camera.zoom);
+  const scene = gesturePreview(current, point, camera.zoom); renderedScene = scene;
+  renderedById.clear(); for (const object of scene) renderedById.set(object.id, object);
   updateScenePreview(objectsLayer, scene, current.preview, drawObject); current.preview = scene;
+  refreshPinPresentation(); drawPinThreads(scene);
   drawSelection(scene.filter(o => desk.selected().includes(o.id)), scene);
   if (current.mode === 'move') for (const object of scene.filter(o => o.type === 'label' && desk.selected().includes(o.id))) {
     const origin = gridOrigin(object), size = 5 / camera.zoom;
@@ -508,7 +580,7 @@ function previewGesture(current: Gesture, point: { x: number; y: number }) {
     overlays.append(svg('path', { d: `M ${origin.x - size} ${origin.y - size * 1.5} L ${origin.x + size} ${origin.y - size * 1.5} L ${origin.x} ${origin.y} Z`,
       fill: '#2563eb', opacity: 0.3, 'pointer-events': 'none', 'data-grid-origin': object.id }));
   }
-  if (current.mode === 'start' || current.mode === 'end') drawSnapTargets(overlays, scene, endpointDragPoint(current, point), camera.zoom);
+  if (current.mode === 'start' || current.mode === 'end') drawSnapTargets(overlays, scene.filter(pinIsVisible).map(object => pinScreenObject(object, camera.zoom)), endpointDragPoint(current, point), camera.zoom);
 }
 canvas.addEventListener('pointermove', event => {
   desk.pointer = world(event);
@@ -539,8 +611,8 @@ function endGesture(event: PointerEvent, cancel = false) {
     } else if (current.mode === 'marquee') {
       const x1 = Math.min(p.x, current.start.x), x2 = Math.max(p.x, current.start.x);
       const y1 = Math.min(p.y, current.start.y), y2 = Math.max(p.y, current.start.y);
-      const selected = desk.snapshot().filter(object => {
-        const o = object.type === 'label' ? labelVisualBounds(object, descriptionsVisible) : bounds(object);
+      const selected = desk.snapshot().filter(pinIsVisible).filter(object => {
+        const o = object.type === 'label' ? labelVisualBounds(object, pinDescriptionVisible(object), camera.zoom) : bounds(object);
         return o.x >= x1 && o.y >= y1 && o.x + o.width <= x2 && o.y + o.height <= y2;
       }).map(o => o.id);
       desk.select([...new Set([...current.additive, ...selected])]);
