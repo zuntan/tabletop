@@ -13,6 +13,7 @@ import { randomUuid } from './portable-crypto';
 import { cameraAnimationFields, cameraMoveFields, cameraMoveSchema, type CameraBridge } from './camera-control';
 import { lockFields, lockOperations } from './object-lock';
 import { shareRead } from './share-read';
+import { textMeasureFields, type TextMeasureBridge } from './text-measure';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -35,6 +36,7 @@ export const objectSchema = z.object({
   id: z.string().min(1).max(100),
   type: z.enum(['rect', 'roundedRect', 'ellipse', 'line', 'arrow', 'text', 'image', 'svg', 'web', 'link', 'label']),
   cornerRadius: z.number().finite().min(0).max(100_000).default(16),
+  padding: z.number().finite().min(0).max(100_000).optional(),
   locked: z.boolean().optional(), // Mouse geometry protection only; not an authorization boundary.
   seriesId: z.string().min(1).max(100).optional(),
   number: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).optional(),
@@ -290,6 +292,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('lock'), ...lockFields }).strict(),
   z.object({ method: z.literal('fit'), ...cameraAnimationFields }).strict(),
   z.object({ method: z.literal('camera_get') }).strict(),
+  z.object({ method: z.literal('text_measure'), ...textMeasureFields }).strict(),
   z.object({ method: z.literal('camera_move'), ...cameraMoveFields }).strict(),
   z.object({ method: z.literal('changes'), sinceRevision: z.number().int().nonnegative(), limit: z.number().int().min(1).max(200).default(100) }),
   z.object({ method: z.literal('execute'), ...mcpBatchSchema.shape }),
@@ -297,11 +300,15 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('redo'), actor: z.string().min(1).max(100).default('agent-01') }),
 ]);
 export type Request = z.input<typeof requestSchema>;
-export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge): unknown {
+export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge): unknown {
   const request = requestSchema.parse(input);
   switch (request.method) {
     case 'share_read': return shareRead(desk, request.tool, request.expectedSessionId, request.id);
     case 'summary': return desk.summary();
+    case 'text_measure': {
+      if (!textMeasure) throw new Error('Text measurement requires a compatible browser');
+      return textMeasure(request.ids);
+    }
     case 'list': return { ...desk.summary(), objects: desk.list() };
     case 'get': {
       const object = desk.get(request.id);

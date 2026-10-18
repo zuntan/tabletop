@@ -20,6 +20,8 @@ export function drawMarkdown(group: SVGGElement, object: DeskObject) {
   foreign.setAttribute('width', String(object.width)); foreign.setAttribute('height', String(object.height));
   const content = document.createElement('div'); content.className = 'markdown-text';
   content.style.color = object.textColor; content.style.fontSize = `${object.fontSize}px`;
+  content.style.padding = `${object.padding ?? 6}px`;
+  content.style.borderRadius = `${Math.min(object.cornerRadius, object.width / 2, object.height / 2)}px`;
   // Only parser-generated HTML is inserted; raw HTML and embedded images are disabled.
   content.innerHTML = renderMarkdown(object.text);
   foreign.append(content); group.append(foreign);

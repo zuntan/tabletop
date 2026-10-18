@@ -19,6 +19,7 @@ import { readClipboardContent, svgClipboardFile, type ClipboardContent } from '.
 import { PartClipboard, partClipboardType, singleClipboardUrl } from './part-clipboard';
 import { effectivePinVisibility, pinTransform, pinScreenObject, pinThreadMembers, pinVisibilityNames, type PinVisibility } from './pin-series';
 import { drawMarkdown } from './markdown';
+import { measureDeskText, supportsTextMeasure } from './text-measure';
 import './markdown.css';
 import { createSidebar } from './sidebar';
 import './sidebar.css';
@@ -82,10 +83,14 @@ app.innerHTML = `
           <label hidden>塗り<input name="fill" type="text"></label><label hidden>線<input name="stroke" type="text"></label>
           <label>塗りの透過（%）<input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
           <label>線幅<input name="strokeWidth" type="number" min="0" step="any"></label><label>文字サイズ<input name="fontSize" type="number" min="1"></label>
+          <label hidden>角丸<input name="cornerRadius" type="number" min="0" step="any"></label>
+          <label hidden>内側の余白<input name="padding" type="number" min="0" step="any"></label>
           <label class="wide">テキスト<textarea name="text" rows="3"></textarea></label>
           <label class="wide">URL<input name="url" type="url"></label>
           <button type="submit" class="wide">変更を適用</button>
         </form>
+        <button id="text-measure" type="button" hidden>文章の収まりを確認</button>
+        <small id="text-measure-result" role="status"></small>
         <div id="color-controls" hidden></div>
         <div id="reaction-controls" hidden></div>
         <small>図形のダブルクリックで文字編集。矢印の両端をドラッグして接続できます。</small>
@@ -322,7 +327,7 @@ function drawObject(object: DeskObject) {
   drawShapeText(group, object);
   drawLabelDescription(group, object, pinDescriptionVisible(object));
   if (object.type === 'text') {
-    group.append(svg('rect', { width: w, height: h, ...style }));
+    group.append(svg('rect', { width: w, height: h, rx: Math.min(object.cornerRadius, w / 2, h / 2), ...style }));
     drawMarkdown(group, object);
   }
   if (['link', 'web', 'image', 'svg'].includes(object.type)) {
@@ -398,6 +403,8 @@ function render(rebuild = true) {
   authoring.update();
   $('#selected-label').textContent = ids.length ? `${ids.length} 個選択 · ${ids.join(', ')}` : '未選択';
   form.hidden = ids.length !== 1;
+  $<HTMLButtonElement>('#text-measure').hidden = !ids.length || !ids.some(id => supportsTextMeasure(desk.get(id)));
+  $('#text-measure-result').textContent = '';
   const link = $<HTMLAnchorElement>('#open-url'); link.hidden = true;
   if (ids.length === 1) {
     const object = desk.get(ids[0]);
@@ -489,6 +496,18 @@ function deleteSelection() {
 $('#delete').onclick = deleteSelection;
 $('#front').onclick = () => attempt(() => execute(desk.selected().map(id => ({ kind: 'reorder', id, index: desk.summary().count - 1 }))));
 $('#back').onclick = () => attempt(() => execute(desk.selected().slice().reverse().map(id => ({ kind: 'reorder', id, index: 0 }))));
+$('#text-measure').onclick = () => {
+  try {
+  const report = measureDeskText(desk, desk.selected(), id => drawnNodes.get(id));
+  $('#text-measure-result').textContent = report.measurements.map(item => {
+    const name = desk.get(item.id).text.split('\n')[0].slice(0, 24) || item.id;
+    if (item.status !== 'measured') return `${name}：${item.status === 'pending-fonts' ? 'フォント読込中' : item.status === 'unsupported' ? '対象外' : '測定できません'}`;
+    const state = item.overflow!.x || item.overflow!.y
+      ? `${item.overflow!.x ? '横にはみ出し' : ''}${item.overflow!.x && item.overflow!.y ? '・' : ''}${item.overflow!.y ? '縦にはみ出し' : ''}` : '枠内に収まっています';
+    return `${name}：${state}。必要な高さ ${item.requiredHeight}（現在 ${item.frame.height}）${item.canFitByHeight ? '' : '。高さだけでは解消できません'}`;
+  }).join('\n');
+  } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
+};
 form.onsubmit = event => {
   event.preventDefault();
   attempt(() => {
@@ -779,7 +798,7 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
       if ((busy && message.request.method !== 'camera_get') || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       if (['fit', 'camera_move'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing())) throw new Error('Human editing in progress. No camera change was made.');
       if (message.request.method === 'load_document') cameraAnimator.cancel('Desk contents replaced');
-      let result = dispatch(desk, message.request, cameraControls);
+      let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)));
       if (message.request.method === 'camera_move') result = await result;
       if (message.request.method === 'fit') {
         const ids = desk.pointed();

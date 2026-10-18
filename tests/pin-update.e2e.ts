@@ -8,7 +8,7 @@ test('pins and descriptions keep screen size, connector anchors and selection fo
   const { page, call, close, errors } = await openTestDesk('pin-fixed-size');
   try {
     await call('desk_execute', { operations: [
-      { kind: 'series_update', id: 'series-1', patch: { thread: { enabled: true } } },
+      { kind: 'series_update', id: 'series-1', patch: { thread: { enabled: true, visible: true } } },
       { kind: 'label_add', id: 'p1', seriesId: 'series-1', x: 300, y: 250, description: '説明文' },
       { kind: 'label_add', id: 'p2', seriesId: 'series-1', x: 500, y: 350 },
       { kind: 'update', id: 'p1', patch: { locked: true } },
@@ -59,7 +59,7 @@ test('global and series visibility compose in all nine combinations; thread prop
   const { page, call, close, errors } = await openTestDesk('pin-series-modes');
   try {
     await call('desk_execute', { operations: [
-      { kind: 'series_update', id: 'series-1', patch: { thread: { enabled: true } } },
+      { kind: 'series_update', id: 'series-1', patch: { thread: { enabled: true, visible: true } } },
       { kind: 'label_add', id: 'a', seriesId: 'series-1', x: 200, y: 200, description: 'A' },
       { kind: 'add', object: { id: 'card', type: 'rect', x: 600, y: 400 } },
       { kind: 'label_add', id: 'b', seriesId: 'series-1', x: 400, y: 200, description: 'B' },

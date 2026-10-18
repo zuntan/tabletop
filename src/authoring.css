@@ -42,3 +42,6 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 #thread-visible[aria-checked="true"] .thinking-switch-track::before { left: 18px; }
 #thread-colors { grid-column: 1 / -1; }
 #series-settings legend { font-size: 12px; }
+
+#text-measure { font-size: 11px; }
+#text-measure-result { display: block; white-space: pre-line; }
