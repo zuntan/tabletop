@@ -19,6 +19,8 @@ import { readClipboardContent, svgClipboardFile, type ClipboardContent } from '.
 import { PartClipboard, partClipboardType, singleClipboardUrl } from './part-clipboard';
 import { effectivePinVisibility, pinTransform, pinScreenObject, pinThreadMembers, pinVisibilityNames, type PinVisibility } from './pin-series';
 import { drawMarkdown } from './markdown';
+import { createActivityLed } from './activity-led';
+import './activity-led.css';
 import { measureDeskText, supportsTextMeasure } from './text-measure';
 import './markdown.css';
 import { createSidebar } from './sidebar';
@@ -110,7 +112,7 @@ app.innerHTML = `
       </section>
     </aside>
   </main>
-  <footer id="message" role="status">準備完了</footer>
+  <footer><span id="message" role="status">準備完了</span></footer>
   <input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" hidden>
 `;
 groupToolbar(app.querySelector<HTMLElement>('nav')!);
@@ -197,6 +199,7 @@ const lockControls = createLockControls($('#grid-snap'), form, () => {
 });
 $('#numbering-settings').after($('#label-descriptions'));
 $('main').append($('.toolbar-view'));
+const activityLed = createActivityLed($('footer'));
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });
@@ -769,7 +772,7 @@ const recovery = new BrowserConnection({
   beforeRelease: () => thinkingMode.assertAllowed('release'),
   handoff: url => { void connectionPanel.display(url); },
   handoffError: message => notify(message, true),
-  disconnected: () => { cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
+  disconnected: () => { activityLed.clear(); cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
   status: (state, detail) => {
     if (state === 'connected') connectionPanel.hide();
     const status = $('#connection');
@@ -793,6 +796,7 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
     try {
       const message = JSON.parse(String(event.data)); id = message.id;
       if (typeof id !== 'string') throw new Error('Invalid request ID');
+      if (typeof message.request?.method === 'string') activityLed.pulse(message.request.method);
       thinkingMode.assertAllowed(message.request?.method);
       if (['fit', 'camera_move'].includes(message.request.method)) humanScroll.assertIdle();
       if ((busy && message.request.method !== 'camera_get') || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
