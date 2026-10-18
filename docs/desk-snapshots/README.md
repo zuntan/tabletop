@@ -49,3 +49,9 @@ SHA-256：`b41127c8b9d8c4b63481ca6c899e8688e770715107c9e1cacb15a58bfb4063f8`
 [2026-10-18-02.tabletop](./2026-10-18-02.tabletop)：Tabletop main、60パーツ（内容カード27枚、背景27枚、案内と見出し6枚）、ピンなし。完了・未実装・使い方の実験・将来構想を4列に整理。format version 1。画像アセットなし。[内容と出典の整理記録](../desk-cleanup-2026-10-18.md)。
 
 SHA-256：`f9eedbd0a6a276f17f090f964bba078b4c274c7426c3a9590dcc05aa078b1ef4`
+
+## 2026-10-18 文章の測定案を追加
+
+[2026-10-18-03.tabletop](./2026-10-18-03.tabletop)：Tabletop main、62パーツ、ピンなし。整理後の机に「文章の収まりを測る」未実装カードを追加。format version 1、画像アセットなし。
+
+SHA-256：`b827e0786fa53e4f26369c21d99b8e1349c28e0b5f66482dadc2c6b8d41cc4a3`
