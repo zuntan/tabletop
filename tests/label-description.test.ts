@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Desk } from '../src/model.js';
-import { anchors, anchorPoint, snap } from '../src/geometry.js';
+import { anchorsFor, anchorPoint, snap } from '../src/geometry.js';
 
 test('individual descriptions preserve series numbers, geometry, bindings and atomic history', () => {
   const desk = new Desk();
@@ -23,12 +23,12 @@ test('individual descriptions preserve series numbers, geometry, bindings and at
   assert.throws(() => desk.execute({ operations: [{ kind: 'update', id: 'a', patch: { text: 'forged' } }] }));
 });
 
-test('every label frame supports four fixed midpoint connections', () => {
+test('every label frame exposes one center connection', () => {
   const desk = new Desk();
   desk.execute({ operations: [{ kind: 'label_add', id: 'a', seriesId: 'series-1', x: 100, y: 120 }] });
   for (const shape of ['text', 'rect', 'roundedRect', 'ellipse', 'pin'] as const) {
     desk.execute({ operations: [{ kind: 'series_update', id: 'series-1', patch: { shape } }] });
-    for (const anchor of anchors) {
+    for (const anchor of anchorsFor(desk.get('a'))) {
       const point = anchorPoint(desk.get('a'), anchor);
       assert.deepEqual(snap(point, desk.snapshot(), 1)?.binding, { objectId: 'a', anchor });
     }

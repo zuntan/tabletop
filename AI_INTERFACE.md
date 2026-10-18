@@ -131,7 +131,7 @@ LANは毎回の起動で禁止です。人間の明示承認後だけ `desk_netw
   "operations": [
     { "kind": "add", "object": { "id": "a", "type": "rect", "x": 100, "y": 100, "text": "開始" } },
     { "kind": "label_add", "id": "p1", "seriesId": "series-1", "x": 450, "y": 110, "description": "確認する" },
-    { "kind": "add", "object": { "id": "edge", "type": "arrow", "startBinding": { "objectId": "a", "anchor": "right" }, "endBinding": { "objectId": "p1", "anchor": "left" } } }
+    { "kind": "add", "object": { "id": "edge", "type": "arrow", "startBinding": { "objectId": "a", "anchor": "right" }, "endBinding": { "objectId": "p1", "anchor": "center" } } }
   ]
 }
 ```
@@ -212,3 +212,7 @@ LANは毎回の起動で禁止です。人間の明示承認後だけ `desk_netw
 `desk_text_measure({ids:["card-a"]})` はtext・rect・roundedRectの縦横はみ出しと、現在幅で必要な高さをブラウザ描画から読み取ります。測定のみで編集・選択・カメラ変更はせず、ひとりで考える中も使えます。`status` が `measured` の結果だけを利用し、横にはみ出す場合は高さだけで解決できません。フォント待ち等は成功扱いしません。[応答と制限](./docs/text-measure.md)。
 
 textは `cornerRadius` と上下左右共通の `padding`（省略時6）で一枚のMarkdownカードにできます。背景と本文を別パーツに重ねる必要はありません。
+
+## 8点アンカー
+
+線・矢印のBindingは上下左右に加え `top-left` / `top-right` / `bottom-left` / `bottom-right` を指定できます。角丸・楕円の斜め位置は輪郭上です。ピンの新規接続は外枠中心の `center` を使い、旧上下左右Bindingは保持します。直接のピン取り付け・線同士の接続は未実装。[仕様](./docs/eight-anchors.md)。

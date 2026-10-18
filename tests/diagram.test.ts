@@ -25,7 +25,7 @@ test('legacy line geometry is converted without changing its visual endpoints', 
   desk.execute({ operations: [{ kind: 'add', object: objectSchema.parse({ id: 'line', type: 'line', x: 10, y: 20, width: 100, height: 60 }) }] });
   assert.deepEqual(endpoints(desk.get('line')), { start: { x: 10, y: 80 }, end: { x: 110, y: 20 } });
 });
-test('snapping uses four anchors, screen-space tolerance and frontmost ties', () => {
+test('snapping preserves side anchors, screen-space tolerance and frontmost ties', () => {
   const rect = shape(), ellipse = shape('ellipse', 'ellipse');
   assert.deepEqual(anchorPoint(ellipse, 'bottom'), { x: 200, y: 200 });
   assert.equal(snap({ x: 105, y: 152 }, [rect, ellipse], 9)?.binding.objectId, 'ellipse');

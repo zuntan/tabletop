@@ -1,6 +1,6 @@
 import { groupPinLayers } from './pin-series';
 import { z } from 'zod';
-import { resolveConnections } from './geometry';
+import { resolveConnections, anchorNames } from './geometry';
 import { initialSettings, settingsOperations, applySettingsOperation, materializeLabels, creationAppearance, nextNumber, formatNumber, settingsSchema } from './settings';
 import type { Settings } from './settings';
 import { deskContext } from './desk-context';
@@ -29,7 +29,7 @@ const source = z.string().max(8_000_000).refine(value =>
 
 const bindingSchema = z.object({
   objectId: z.string().min(1).max(100),
-  anchor: z.enum(['top', 'right', 'bottom', 'left']),
+  anchor: z.enum(anchorNames),
 }).strict();
 
 export const objectSchema = z.object({

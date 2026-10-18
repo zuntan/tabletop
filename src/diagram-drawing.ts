@@ -1,5 +1,5 @@
 import type { DeskObject } from './model';
-import { anchors, anchorPoint, endpoints, isConnector, isShape, isConnectable, snap, type Point } from './geometry';
+import { anchorsFor, anchorPoint, endpoints, isConnector, isShape, isConnectable, snap, type Point } from './geometry';
 import { numberCenterY } from './pin-shape';
 
 export function element<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}): SVGElementTagNameMap[K] {
@@ -51,7 +51,7 @@ export function drawSnapTargets(layer: SVGGElement, objects: DeskObject[], point
   const candidate = snap(point, objects, 18 / zoom);
   for (const object of objects) {
     if (!isConnectable(object)) continue;
-    for (const anchor of anchors) {
+    for (const anchor of anchorsFor(object)) {
       const p = anchorPoint(object, anchor);
       const active = candidate?.binding.objectId === object.id && candidate.binding.anchor === anchor;
       layer.append(element('circle', { cx: p.x, cy: p.y, r: (active ? 8 : 4) / zoom,

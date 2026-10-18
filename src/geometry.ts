@@ -1,9 +1,13 @@
 import type { DeskObject } from './model';
 
 export type Point = { x: number; y: number };
-export type Anchor = 'top' | 'right' | 'bottom' | 'left';
+export const anchorNames = ['top', 'right', 'bottom', 'left', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'center'] as const;
+export type Anchor = typeof anchorNames[number];
 export type Binding = { objectId: string; anchor: Anchor };
-export const anchors: Anchor[] = ['top', 'right', 'bottom', 'left'];
+export const anchors: readonly Anchor[] = anchorNames.slice(0, 8);
+export function anchorsFor(object: DeskObject): readonly Anchor[] {
+  return object.type === 'label' ? ['center'] : anchors;
+}
 export const isConnector = (object: DeskObject) => object.type === 'line' || object.type === 'arrow';
 export const isShape = (object: DeskObject) => object.type === 'rect' || object.type === 'roundedRect'
   || object.type === 'ellipse' || (object.type === 'label' && object.labelShape !== 'text');
@@ -32,6 +36,18 @@ export function anchorPoint(object: DeskObject, anchor: Anchor): Point {
     case 'right': return { x: object.x + object.width, y: object.y + object.height / 2 };
     case 'bottom': return { x: object.x + object.width / 2, y: object.y + object.height };
     case 'left': return { x: object.x, y: object.y + object.height / 2 };
+    case 'center': return { x: object.x + object.width / 2, y: object.y + object.height / 2 };
+    default: {
+      const shape = object.type === 'label' ? object.labelShape : object.type;
+      const curved = shape === 'ellipse';
+      const radius = shape === 'roundedRect' || object.type === 'text'
+        ? Math.min(object.cornerRadius, object.width / 2, object.height / 2) : 0;
+      const inset = 1 - Math.SQRT1_2;
+      const dx = curved ? object.width / 2 * inset : radius * inset;
+      const dy = curved ? object.height / 2 * inset : radius * inset;
+      return { x: object.x + (anchor.endsWith('left') ? dx : object.width - dx),
+        y: object.y + (anchor.startsWith('top') ? dy : object.height - dy) };
+    }
   }
 }
 export function snap(point: Point, objects: DeskObject[], threshold: number) {
@@ -40,7 +56,7 @@ export function snap(point: Point, objects: DeskObject[], threshold: number) {
   // Favor the frontmost object when two anchors coincide.
   for (const object of objects.slice().reverse()) {
     if (!isConnectable(object)) continue;
-    for (const anchor of anchors) {
+    for (const anchor of anchorsFor(object)) {
       const candidate = anchorPoint(object, anchor);
       const d = Math.hypot(candidate.x - point.x, candidate.y - point.y);
       if (d <= distance && (!closest || d < distance)) {

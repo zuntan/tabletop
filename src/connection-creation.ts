@@ -2,19 +2,21 @@ import type { DeskObject } from './model';
 import { anchorPoint, isConnectable, type Anchor, type Point } from './geometry';
 
 const center = (object: DeskObject): Point => ({ x: object.x + object.width / 2, y: object.y + object.height / 2 });
-/** Choose the side crossed by a ray from the frame center toward the other center. */
+/** Choose one of eight directions, normalized to the target's aspect ratio. */
 export function facingAnchor(object: DeskObject, toward: Point, fallback: Anchor = 'right'): Anchor {
+  if (object.type === 'label') return 'center';
   const origin = center(object), dx = toward.x - origin.x, dy = toward.y - origin.y;
   if (!dx && !dy) return fallback;
-  return Math.abs(dx) * object.height >= Math.abs(dy) * object.width
-    ? dx >= 0 ? 'right' : 'left' : dy >= 0 ? 'bottom' : 'top';
+  const directions: Anchor[] = ['right', 'bottom-right', 'bottom', 'bottom-left', 'left', 'top-left', 'top', 'top-right'];
+  const sector = Math.round(Math.atan2(dy / object.height, dx / object.width) / (Math.PI / 4));
+  return directions[(sector + 8) % 8];
 }
 
 export function selectedConnection(selected: DeskObject[]): Partial<DeskObject> {
   const targets = selected.filter(isConnectable);
   if (targets.length < 1 || targets.length > 2) return {};
   const [source, target] = targets;
-  const startAnchor = target ? facingAnchor(source, center(target)) : 'right';
+  const startAnchor = target ? facingAnchor(source, center(target)) : source.type === 'label' ? 'center' : 'right';
   const endAnchor = target ? facingAnchor(target, center(source), 'left') : undefined;
   const start = anchorPoint(source, startAnchor);
   const end = target && endAnchor ? anchorPoint(target, endAnchor) : { x: start.x + 120, y: start.y };

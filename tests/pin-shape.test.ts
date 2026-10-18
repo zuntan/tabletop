@@ -33,7 +33,8 @@ test('pin path ends at bottom-center, numbers sit in the rounded head and anchor
   const point = { x: 118, y: 168 };
   assert.deepEqual(gridOrigin(desk.get('p')), point);
   assert.deepEqual(anchorPoint(desk.get('p'), 'bottom'), point);
-  assert.deepEqual(snap(point, desk.snapshot(), 1)?.binding, { objectId: 'p', anchor: 'bottom' });
+  assert.equal(snap(point, desk.snapshot(), 1), null);
+  assert.deepEqual(snap(anchorPoint(desk.get('p'), 'center'), desk.snapshot(), 1)?.binding, { objectId: 'p', anchor: 'center' });
   const before = desk.get('a');
   desk.execute({ operations: [{ kind: 'series_update', id: 'series-1', patch: { shape: 'text' } }] });
   assert.deepEqual(desk.get('a'), before);
