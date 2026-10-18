@@ -15,7 +15,8 @@ import { drawLabelDescription, labelVisualBounds } from './label-description';
 import { gridPoint, gridOrigin } from './grid';
 import { pinPath } from './pin-shape';
 import { drawOpenLink } from './link-card';
-import { readClipboardFiles, svgClipboardFile } from './clipboard';
+import { readClipboardContent, svgClipboardFile, type ClipboardContent } from './clipboard';
+import { PartClipboard, partClipboardType, singleClipboardUrl } from './part-clipboard';
 import { drawMarkdown } from './markdown';
 import './markdown.css';
 import { createSidebar } from './sidebar';
@@ -43,6 +44,7 @@ import { createLockControls } from './lock-controls';
 import { drawLockedSelection } from './lock-drawing';
 
 const desk = new Desk();
+const partClipboard = new PartClipboard();
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
   <header><div class="brand">Tabletop <small>人間とAIの共有作業机</small></div>
@@ -191,7 +193,7 @@ const reactionControls = createReactionControls($('#reaction-controls'), () => d
 const thinkingMode = createThinkingMode($('header'), () => { cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
-createDeskFileControls($('header'), desk, () => { render(); fitView(desk.selected()); },
+createDeskFileControls($('header'), desk, () => { partClipboard.clear(); render(); fitView(desk.selected()); },
   () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing());
 const labels: Record<DeskObject['type'], string> = { rect: '矩形', roundedRect: '角丸矩形', label: 'ピン', ellipse: '楕円', line: '線', arrow: '矢印', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
@@ -588,13 +590,55 @@ async function addFiles(files: File[]) {
   } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
   finally { busy = false; }
 }
-$('#clipboard').onclick = async () => {
-  if (busy || editor.isActive()) return;
-  authoring.stopPlacement(); busy = true;
+function clipboardTextTarget(target: EventTarget | null) {
+  return editor.isActive() || identityControls.isEditing() || colorControls.isOpen()
+    || target instanceof Element && !!target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"])');
+}
+for (const kind of ['copy', 'cut'] as const) window.addEventListener(kind, event => {
+  if (clipboardTextTarget(event.target) || !getSelection()?.isCollapsed || busy || gesture || !event.clipboardData) return;
+  const selected = new Set(desk.selected());
+  const objects = desk.snapshot().filter(object => selected.has(object.id));
+  if (!objects.length) return;
+  event.preventDefault();
   try {
-    const files = await readClipboardFiles();
-    if (files.length) await addFiles(files);
-    else notify('クリップボードに画像またはSVGコードがありません', true);
+    const copied = partClipboard.write(event.clipboardData, objects);
+    if (kind === 'cut') {
+      desk.execute({ actor: 'human', expectedRevision: desk.revision, operations: objects.map(object => ({ kind: 'delete', id: object.id })) });
+      render();
+    }
+    notify(`${copied.count}パーツを${kind === 'cut' ? 'カット' : 'コピー'}しました${copied.text ? '' : '（机内の貼り付けのみ）'}`);
+  } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
+});
+async function pasteClipboard(content: ClipboardContent) {
+  authoring.stopPlacement();
+  if (partClipboard.matches(content.token, content.html)) {
+    desk.select(partClipboard.paste(desk));
+    render(); notify(`${desk.selected().length}パーツを貼り付けました`);
+    return;
+  }
+  if (content.files.length) { await addFiles(content.files); return; }
+  const file = svgClipboardFile(content.text);
+  if (file) { await addFiles([file]); return; }
+  if (!content.text.trim()) { notify('貼り付けられる文字列・画像・SVGがありません', true); return; }
+  if (content.text.length > 100_000) throw new Error('貼り付ける文字列は10万文字以下にしてください');
+  const url = singleClipboardUrl(content.text);
+  const id = `${url ? 'link' : 'text'}-${randomUuid()}`;
+  const width = url ? 320 : 360;
+  const lines = content.text.split('\n').reduce((count, line) => count + Math.max(1, Math.ceil(line.length / 24)), 0);
+  const height = url ? 60 : Math.min(1200, Math.max(120, (lines + 1) * desk.settingsSnapshot().defaults.fontSize * 1.5));
+  execute([{ kind: 'add', object: { ...creationAppearance(url ? 'link' : 'text', desk.settingsSnapshot().defaults),
+    id, type: url ? 'link' : 'text', ...gridPosition({ x: (120 - camera.x) / camera.zoom, y: (100 - camera.y) / camera.zoom }),
+    width, height, text: url ?? content.text, ...(url ? { url } : {}) } }]);
+  desk.select([id]); render(); notify(url ? 'リンクを貼り付けました' : 'テキストを貼り付けました');
+}
+$('#clipboard').onclick = async () => {
+  if (busy || gesture || editor.isActive() || identityControls.isEditing()) return;
+  const revision = desk.revision;
+  busy = true;
+  try {
+    const content = await readClipboardContent();
+    if (desk.revision !== revision) throw new Error('読み取り中に机が変更されました。もう一度貼り付けてください');
+    await pasteClipboard(content);
   } catch (error) {
     notify(error instanceof DOMException && error.name === 'NotAllowedError'
       ? 'クリップボードの読み取りを許可するか、Ctrl+Vで貼り付けてください'
@@ -606,15 +650,15 @@ $<HTMLInputElement>('#file').onchange = event => { const input = event.target as
 $('#workspace').addEventListener('dragover', event => { event.preventDefault(); });
 $('#workspace').addEventListener('drop', event => { event.preventDefault(); if (!busy) void addFiles([...event.dataTransfer?.files ?? []]); });
 window.addEventListener('paste', event => {
-  if ((event.target as Element).closest('input,textarea') || busy) return;
-  const files = [...event.clipboardData?.files ?? []];
-  try {
-    if (!files.length) {
-      const file = svgClipboardFile(event.clipboardData?.getData('text/plain') ?? '');
-      if (file) files.push(file);
-    }
-    if (files.length) { event.preventDefault(); void addFiles(files); }
-  } catch (error) { event.preventDefault(); notify(error instanceof Error ? error.message : String(error), true); }
+  if (clipboardTextTarget(event.target) || busy || gesture || !event.clipboardData) return;
+  const data = event.clipboardData;
+  const content: ClipboardContent = { text: data.getData('text/plain'), html: data.getData('text/html'),
+    token: data.getData(partClipboardType), files: [...data.files] };
+  if (!content.text && !content.files.length && !partClipboard.matches(content.token, content.html)) return;
+  event.preventDefault();
+  busy = true;
+  void pasteClipboard(content).catch(error => notify(error instanceof Error ? error.message : String(error), true))
+    .finally(() => { busy = false; });
 });
 
 const recovery = new BrowserConnection({
@@ -661,7 +705,7 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
       // Read-only requests must not rebuild iframes or steal form edits.
       if (message.request.method === 'point') drawSelection();
       if (['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method)) render();
-      if (message.request.method === 'load_document') fitView(desk.selected());
+      if (message.request.method === 'load_document') { partClipboard.clear(); fitView(desk.selected()); }
     } catch (error) { ws.send(JSON.stringify({ id, error: error instanceof Error ? error.message : String(error) })); }
   }, manual, host);
 }

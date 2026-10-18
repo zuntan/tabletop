@@ -97,7 +97,8 @@ test('media cards edit optional links and add clipboard images or safe SVG sourc
     assert.equal((await call('desk_summary')).count, 3);
     await paste('<svg xmlns="http://www.w3.org/2000/svg"><broken></svg>');
     assert.match(await page.locator('#message').innerText(), /有効なSVG/);
-    await paste('ordinary text'); assert.equal((await call('desk_summary')).count, 3);
+    await paste('ordinary text'); assert.equal((await call('desk_summary')).count, 4);
+    assert.equal((await call('desk_get', { id: (await call('desk_selection')).ids[0] })).type, 'text');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); await client.close(); await transport.close(); }
 });

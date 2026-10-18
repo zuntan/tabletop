@@ -14,26 +14,29 @@ export function svgClipboardFile(text: string): File | null {
   return new File([source], 'クリップボード.svg', { type: 'image/svg+xml' });
 }
 
-export async function readClipboardFiles(): Promise<File[]> {
+export type ClipboardContent = { text: string; html: string; token: string; files: File[] };
+
+/** Read once so the toolbar sees the same clipboard item for text, files and markers. */
+export async function readClipboardContent(): Promise<ClipboardContent> {
   if (!navigator.clipboard) throw new Error('クリップボードを読み取れません。Ctrl+Vで貼り付けてください');
+  const result: ClipboardContent = { text: '', html: '', token: '', files: [] };
   if (!navigator.clipboard.read) {
-    const file = svgClipboardFile(await navigator.clipboard.readText());
-    return file ? [file] : [];
+    result.text = await navigator.clipboard.readText();
+    return result;
   }
   const items = await navigator.clipboard.read();
-  const files: File[] = [];
   for (const item of items) {
+    for (const [type, key] of [['text/plain', 'text'], ['text/html', 'html'], ['application/x-tabletop-copy', 'token']] as const) {
+      if (item.types.includes(type)) result[key] += await (await item.getType(type)).text();
+    }
     const type = imageTypes.find(type => item.types.includes(type));
     if (type) {
       const blob = await item.getType(type);
       if (type === 'image/svg+xml') {
         const file = svgClipboardFile(await blob.text());
-        if (file) files.push(file);
-      } else files.push(new File([blob], 'クリップボード画像', { type }));
-    } else if (item.types.includes('text/plain')) {
-      const file = svgClipboardFile(await (await item.getType('text/plain')).text());
-      if (file) files.push(file);
+        if (file) result.files.push(file);
+      } else result.files.push(new File([blob], 'クリップボード画像', { type }));
     }
   }
-  return files;
+  return result;
 }
