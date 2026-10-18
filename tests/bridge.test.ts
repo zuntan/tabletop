@@ -51,7 +51,7 @@ test('real stdio MCP server relays tools to a browser state and rejects unauthor
     await rejectConnection(`ws://127.0.0.1:${port}/bridge?token=${token}`, 'https://evil.example', 403);
     ws = (await pairPeer(`ws://127.0.0.1:${port}/bridge?token=${token}`, origin)).ws;
     const desk = new Desk();
-    let legacy = false, legacyName = false, mutationRequests = 0;
+    let legacy = false, legacyName = false, legacyBackground = false, mutationRequests = 0;
     ws.on('message', data => {
       const message = JSON.parse(data.toString());
       try {
@@ -59,6 +59,7 @@ test('real stdio MCP server relays tools to a browser state and rejects unauthor
         const result = dispatch(desk, message.request) as Record<string, unknown>;
         if (legacy && message.request.method === 'settings') delete result.grid;
         if (legacyName && message.request.method === 'settings') delete result.name;
+        if (legacyBackground && message.request.method === 'settings') delete result.background;
         ws!.send(JSON.stringify({ id: message.id, result }));
       }
       catch (error) { ws!.send(JSON.stringify({ id: message.id, error: String(error) })); }
@@ -97,6 +98,11 @@ test('real stdio MCP server relays tools to a browser state and rejects unauthor
     assert.equal(blockedName.isError, true); assert.match(JSON.stringify(blockedName.content), /does not support desk names/);
     assert.equal(mutationRequests, sent); assert.equal(desk.revision, revision);
     legacyName = false;
+    legacyBackground = true;
+    const blockedBackground = await client.callTool({ name: 'desk_execute', arguments: { operations: [{ kind: 'background_update', patch: { wallpaper: 'wood' } }] } });
+    assert.equal(blockedBackground.isError, true); assert.match(JSON.stringify(blockedBackground.content), /does not support wallpapers/);
+    assert.equal(mutationRequests, sent); assert.equal(desk.revision, revision);
+    legacyBackground = false;
     await call('desk_execute', { operations: [{ kind: 'desk_rename', name: 'AI named desk' }] });
     assert.equal((await call('desk_summary')).name, 'AI named desk');
     ws.close(); await once(ws, 'close');

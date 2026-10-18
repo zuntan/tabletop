@@ -20,6 +20,7 @@ import { PartClipboard, partClipboardType, singleClipboardUrl } from './part-cli
 import { effectivePinVisibility, pinTransform, pinScreenObject, pinThreadMembers, pinVisibilityNames, type PinVisibility } from './pin-series';
 import { drawMarkdown } from './markdown';
 import { createActivityLed } from './activity-led';
+import { createDeskBackground } from './desk-background';
 import './activity-led.css';
 import { measureDeskText, supportsTextMeasure } from './text-measure';
 import './markdown.css';
@@ -69,7 +70,9 @@ app.innerHTML = `
     <section id="workspace" aria-label="共有キャンバス">
       <svg id="canvas" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tabletop キャンバス" tabindex="0">
         <defs><pattern id="dots" x="-12" y="-12" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="12" cy="12" r="1" fill="#cbd5e1"/></pattern></defs>
-        <rect width="100%" height="100%" fill="url(#dots)"/>
+        <rect id="desk-background" width="100%" height="100%" fill="#f8fafc"/>
+        <rect id="desk-wallpaper" width="100%" height="100%" fill="none"/>
+        <rect id="desk-grid" width="100%" height="100%" fill="url(#dots)"/>
         <g id="viewport"><g id="objects"></g><g id="overlays"></g></g>
       </svg>
       <div id="empty">ここに資料を広げて、いっしょに考える。<small>上のツールから追加 · 画像をドロップ · AIからMCPで操作</small></div>
@@ -121,6 +124,7 @@ const $ = <T extends HTMLElement = HTMLElement>(selector: string) => app.querySe
 headerIcon($<HTMLButtonElement>('#undo'), 'undo', '元に戻す');
 headerIcon($<HTMLButtonElement>('#redo'), 'redo', 'やり直す');
 const canvas = app.querySelector<SVGSVGElement>('#canvas')!;
+const deskBackground = createDeskBackground(canvas);
 const viewport = app.querySelector<SVGGElement>('#viewport')!;
 const objectsLayer = app.querySelector<SVGGElement>('#objects')!;
 const overlays = app.querySelector<SVGGElement>('#overlays')!;
@@ -238,8 +242,10 @@ function world(event: PointerEvent | WheelEvent) {
   return { x: (p.x - camera.x) / camera.zoom, y: (p.y - camera.y) / camera.zoom };
 }
 function cameraChanged() {
+  const settings = desk.settingsSnapshot();
+  deskBackground.update(settings.background, camera);
   viewport.setAttribute('transform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
-  const grid = desk.settingsSnapshot().grid, dots = app.querySelector('#dots')!;
+  const grid = settings.grid, dots = app.querySelector('#dots')!;
   dots.setAttribute('width', String(grid.interval)); dots.setAttribute('height', String(grid.interval));
   dots.setAttribute('x', String(grid.origin.x - grid.interval / 2)); dots.setAttribute('y', String(grid.origin.y - grid.interval / 2));
   dots.querySelector('circle')!.setAttribute('cx', String(grid.interval / 2));

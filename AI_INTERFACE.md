@@ -216,3 +216,7 @@ textは `cornerRadius` と上下左右共通の `padding`（省略時6）で一�
 ## 8点アンカー
 
 線・矢印のBindingは上下左右に加え `top-left` / `top-right` / `bottom-left` / `bottom-right` を指定できます。角丸・楕円の斜め位置は輪郭上です。ピンの新規接続は外枠中心の `center` を使い、旧上下左右Bindingは保持します。直接のピン取り付け・線同士の接続は未実装。[仕様](./docs/eight-anchors.md)。
+
+## 机の壁紙
+
+`desk_execute` の `background_update` で `settings.background` を部分更新します。例：`{"kind":"background_update","patch":{"wallpaper":"wood"}}`。柄は `none` / `wood` / `cutting-mat` / `pink-notebook`。colorとshowGridはnullで柄に応じた自動値へ戻せます。パーツの色やスナップを変えず、Undo・保存に対応。設定画面は未実装。[仕様と互換性](./docs/desk-background.md)。

@@ -5,6 +5,11 @@ import { gridSettingsSchema } from './grid-settings';
 import { deskNameSchema } from './desk-identity';
 
 export const colorSchema = z.string().regex(/^(#[0-9a-fA-F]{3,8}|transparent|[a-zA-Z]{1,20})$/);
+export const backgroundSchema = z.object({
+  wallpaper: z.enum(['none', 'wood', 'cutting-mat', 'pink-notebook']).default('none'),
+  color: colorSchema.nullable().default(null),
+  showGrid: z.boolean().nullable().default(null),
+}).strict();
 export const appearanceSchema = z.object({
   fill: colorSchema.default('#dbeafe'),
   fillOpacity: z.number().finite().min(0).max(1).default(0.3),
@@ -36,6 +41,7 @@ export const seriesPatchSchema = seriesSchema.omit({ id: true }).partial().exten
 export const settingsOperations = [
   z.object({ kind: z.literal('desk_rename'), name: deskNameSchema }).strict(),
   z.object({ kind: z.literal('grid_update'), patch: gridSettingsSchema.partial() }).strict(),
+  z.object({ kind: z.literal('background_update'), patch: backgroundSchema.partial() }).strict(),
   z.object({ kind: z.literal('defaults_update'), patch: appearanceSchema.partial() }).strict(),
   z.object({ kind: z.literal('series_add'), series: seriesSchema.partial().required({ id: true, name: true }) }).strict(),
   z.object({ kind: z.literal('series_update'), id: z.string(), patch: seriesPatchSchema }).strict(),
@@ -47,6 +53,7 @@ export type Appearance = z.infer<typeof appearanceSchema>;
 export type Series = z.infer<typeof seriesSchema>;
 export const settingsSchema = z.object({ defaults: appearanceSchema, series: z.array(seriesSchema).max(2000),
   grid: gridSettingsSchema.default({}),
+  background: backgroundSchema.default({}),
   name: deskNameSchema.default(''),
 }).strict();
 export type Settings = z.infer<typeof settingsSchema>;
@@ -94,6 +101,8 @@ export function applySettingsOperation(operation: SettingsOperation, objects: De
     settings.name = deskNameSchema.parse(operation.name);
   } else if (operation.kind === 'grid_update') {
     settings.grid = gridSettingsSchema.parse({ ...settings.grid, ...operation.patch });
+  } else if (operation.kind === 'background_update') {
+    settings.background = backgroundSchema.parse({ ...settings.background, ...operation.patch });
   } else if (operation.kind === 'defaults_update') {
     settings.defaults = appearanceSchema.parse({ ...settings.defaults, ...operation.patch });
   } else if (operation.kind === 'series_add') {
