@@ -35,7 +35,8 @@ test('traffic LED has visible dark gaps, stable command colors and a bounded bur
     assert.ok(lit.length >= 2 && lit.length <= 5, `burst should drop queued pulses: ${lit.length}`);
     for (let i = 0; i < events.length - 1; i++) {
       assert.notEqual(events[i].lit, events[i + 1].lit);
-      assert.ok(events[i + 1].at - events[i].at >= 120, 'both light and dark must be visible');
+      const minimum = events[i].lit === 'true' ? 100 : 40;
+      assert.ok(events[i + 1].at - events[i].at >= minimum, 'both light and dark must be visible');
     }
     assert.equal(await led.getAttribute('data-lit'), 'false');
     assert.equal(await led.evaluate(el => getComputedStyle(el).pointerEvents), 'none');

@@ -1,4 +1,4 @@
 footer { display: flex; align-items: center; gap: 12px; }
 footer #message { flex: 1; min-width: 0; }
 #ai-activity-led { display: inline-block; flex: 0 0 15px; width: 15px; height: 15px; box-sizing: border-box; border: 2px solid #94a3b8; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #64748b, #273449 75%); box-shadow: 0 0 0 4px #f8fafce6, 0 1px 5px #0f172a33; pointer-events: none; }
-#ai-activity-led[data-lit="true"] { background: radial-gradient(circle at 35% 30%, #ffffffc9, transparent 65%), var(--activity-color); box-shadow: 0 0 0 4px #f8fafce6, 0 0 8px 2px var(--activity-color); }
+#ai-activity-led[data-lit="true"] { background: radial-gradient(circle at 35% 30%, #ffffff4d, transparent 55%), var(--activity-color); box-shadow: 0 0 0 4px #f8fafce6, 0 0 8px 2px var(--activity-color); }

@@ -1,5 +1,5 @@
-const colors = ['#38bdf8', '#a78bfa', '#34d399', '#fbbf24', '#fb7185', '#2dd4bf'];
-const onMs = 180, offMs = 180, maxPending = 3;
+const activityColor = '#00ff00';
+const onMs = 120, offMs = 60, maxPending = 4;
 
 /** A lossy traffic lamp, independent of command execution or success. */
 export function createActivityLed(container: HTMLElement) {
@@ -32,11 +32,9 @@ export function createActivityLed(container: HTMLElement) {
   window.addEventListener('pagehide', clear);
   reduced.addEventListener('change', clear);
   return {
-    pulse(method: string) {
+    pulse(_method: string) {
       if (document.hidden) return;
-      let hash = 0;
-      for (const char of method) hash = (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0;
-      const color = colors[hash % colors.length];
+      const color = activityColor;
       if (reduced.matches) {
         // Avoid repetitive flashing: remain lit until traffic has been quiet.
         clear(); active = true; light(color); timer = setTimeout(clear, 700); return;
