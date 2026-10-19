@@ -65,3 +65,5 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 #text-measure { font-size: 11px; }
 #text-measure-result { display: block; white-space: pre-line; }
 #text-measure-result[hidden] { display: none; }
+.inline-editor .editor-markdown-preview { position: absolute; overflow: hidden; pointer-events: none; user-select: none; }
+.inline-editor-actions .editor-preview-toggle { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 28px; padding: 4px; }

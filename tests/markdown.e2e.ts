@@ -8,7 +8,7 @@ test('Markdown memo keeps source editing, independent colors and safe links with
     await page.locator('#grid-snap').click(); // Markdown gesture behavior is independent of grid placement.
     const destination = `http://127.0.0.1:${port}/missing`;
     const source = `# Memo\n\n**strong**\nsecond line\n\n- item\n\n[open](${destination})`;
-    await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'memo', type: 'text', x: 250, y: 150, width: 400, height: 320, text: source } }] });
+    await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'memo', type: 'text', x: 250, y: 150, width: 400, height: 320, text: source, fill: 'transparent', stroke: 'transparent' } }] });
     const memo = page.locator('[data-id="memo"]');
     assert.equal(await memo.locator('h1').innerText(), 'Memo');
     assert.equal(await memo.locator('strong').innerText(), 'strong');

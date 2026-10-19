@@ -1,3 +1,4 @@
+import { createMarkdownPreview } from './markdown-preview';
 import { shapeTypes } from './shape-definitions';
 import { pinScreenObject } from './pin-series';
 import type { DeskObject } from './model';
@@ -5,13 +6,13 @@ type EditorPatch = { text?: string; description?: string; url?: string; mermaidS
 
 export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement,
   save: (object: DeskObject, patch: EditorPatch, fresh: boolean) => void) {
-  let active: { object: DeskObject; fresh: boolean; panel: HTMLDivElement; text: HTMLTextAreaElement; url?: HTMLInputElement; source?: HTMLTextAreaElement; error: HTMLElement; resizeObserver?: ResizeObserver } | null = null;
+  let active: { object: DeskObject; fresh: boolean; panel: HTMLDivElement; text: HTMLTextAreaElement; url?: HTMLInputElement; source?: HTMLTextAreaElement; error: HTMLElement; resizeObserver?: ResizeObserver; disposePreview?: () => void } | null = null;
   let composing = false;
   const textFrameTypes = new Set(['text', ...shapeTypes]);
   let submitMode: 'enter' | 'mod-enter' = 'enter';
   try { if (localStorage.getItem('tabletop.editor.submit-key') === 'mod-enter') submitMode = 'mod-enter'; }
   catch { /* Keep the in-memory preference when browser storage is unavailable. */ }
-  function close() { active?.resizeObserver?.disconnect(); active?.panel.remove(); active = null; composing = false; }
+  function close() { active?.disposePreview?.(); active?.resizeObserver?.disconnect(); active?.panel.remove(); active = null; composing = false; }
   function reposition() {
     if (!active) return;
     const matrix = viewport.getScreenCTM(); if (!matrix) return;
@@ -85,6 +86,7 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       };
       mode.setAttribute('aria-describedby', hint.id);
       actions.append(hint); if (!source) actions.append(mode); panel.append(actions); updateHint();
+      const disposePreview = object.type === 'text' ? createMarkdownPreview(panel, text, actions) : undefined;
       const error = document.createElement('div'); error.className = 'editor-error'; error.setAttribute('role', 'alert'); panel.append(error);
       const matrix = viewport.getScreenCTM();
       const width = object.type === 'label' ? object.width : object.width * (matrix?.a ?? 1);
@@ -94,7 +96,7 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       const resizeObserver = matchesTextPart ? new ResizeObserver(() => {
         if (active?.text === text) panel.style.width = `${text.offsetWidth + 20}px`;
       }) : undefined;
-      active = { object, fresh, panel, text, url, source, error, resizeObserver }; workspace.append(panel);
+      active = { object, fresh, panel, text, url, source, error, resizeObserver, disposePreview }; workspace.append(panel);
       resizeObserver?.observe(text); reposition();
       panel.addEventListener('compositionstart', () => { composing = true; });
       panel.addEventListener('compositionend', () => { composing = false; });
