@@ -103,3 +103,9 @@ SHA-256：`da3de6e21953a16abc7b66c17781e598dec7bbc0d41cabab62e0961c37bb59e3`
 [2026-10-20-02.tabletop](./2026-10-20-02.tabletop)：Tabletop main、145パーツ。接合部の丸め、Mermaid原本3枚（フロー・シーケンス・構文エラー見本）、編集可能なフロー模造、プレゼン用イラストPNGを含む。Aboutを実装予定へ繰り上げ、ベジェを将来案へ整理した状態。PNGはアーカイブ内に埋め込み済み。format version 1、Mermaid対応版が必要。会話時点のカード表記・試作配置をそのまま保持。秘密の接続情報を含まないことを確認。
 
 SHA-256：`4bbe8f8f4512c33b93d26ad636052ad928bb34e7113912e2eee9e4eb94a32cde`
+
+## 2026-10-20-03
+
+[2026-10-20-03.tabletop](./2026-10-20-03.tabletop)：Tabletop main、145パーツ。Mermaid原本と模造手順カードを完了エリアへ移動し、desk_helpによる共通説明書と、指定時間だけ待つIRQ構想を記録。並列会話は必須条件としない。イラストPNGを含む。format version 1、Mermaid対応版が必要。秘密の接続情報を含まないことを確認。
+
+SHA-256：`8c4ce27943e3dfa2e0a8fd838258ab46643b4d817b8d0cc1439ec9de50946ede`

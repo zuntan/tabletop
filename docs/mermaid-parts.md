@@ -4,7 +4,7 @@
 
 ## 範囲
 
-Mermaidソースを保持して一枚の図として表示する原本パーツ。Tabletop部品への変換、相互変換、Mermaid専用の図形編集操作は実装しない。原本の隣へAIが既存部品で模造する作業は、別の説明書／SKILL案とする。
+Mermaidソースを保持して一枚の図として表示する原本パーツ。Tabletop部品への変換、相互変換、Mermaid専用の図形編集操作は実装しない。原本の隣へAIが既存部品で模造する作業は、共通説明書として`desk_help`の`mermaid-imitation`トピックから取得できる。原文は[Mermaid模造手順](./help/mermaid-imitation.md)。エージェントへのSKILL登録は行わない。
 
 ## 人間の操作
 

@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { mcpBatchSchema as batchSchema, type Request } from './model.js';
 import { gridSettingsSchema } from './grid-settings.js';
 import { textMeasureFields } from './text-measure.js';
+import { registerHelpTools } from './help-tools.js';
 import { registerAssetTools } from './asset-tools.js';
 import { registerDeskFileTools } from './desk-file-tools.js';
 import { isStaticPathInside } from './static-path.js';
@@ -204,6 +205,7 @@ for (const [name, description, inputSchema] of tools) {
     }
   });
 }
+registerHelpTools(mcp);
 registerAssetTools(mcp, compatibleRequest);
 registerDeskFileTools(mcp, request);
 registerShareTools(mcp, sharing);
