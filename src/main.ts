@@ -335,8 +335,9 @@ function refreshPinPresentation() {
     else if (isConnector(object) && (object.startBinding || object.endBinding || renderedRounding.has(object.id) || previousRounding.has(object.id))) {
       const visual = connectorForView(object);
       node.setAttribute('transform', `translate(${visual.x} ${visual.y})`);
-      node.replaceChildren(); drawConnector(node, visual, camera.zoom, renderedRounding.get(object.id)); drawReactions(node, visual, true);
+      node.replaceChildren(); drawConnector(node, visual, camera.zoom, renderedRounding.get(object.id));
     }
+    drawReactions(node, connectorForView(object), pinDescriptionVisible(object), camera.zoom);
   }
 }
 function drawPinThreads(scene: DeskObject[]) {
@@ -366,7 +367,7 @@ function drawObject(object: DeskObject) {
     'data-id': object.id, 'data-locked': String(!!object.locked) });
   drawnNodes.set(object.id, group);
   if (isConnector(object)) {
-    drawConnector(group, object, camera.zoom, renderedRounding.get(object.id)); drawReactions(group, object, pinDescriptionVisible(object));
+    drawConnector(group, object, camera.zoom, renderedRounding.get(object.id)); drawReactions(group, object, pinDescriptionVisible(object), camera.zoom);
     objectsLayer.append(group); return;
   }
   const style = { fill: object.fill, 'fill-opacity': object.fillOpacity, stroke: object.stroke, 'stroke-width': object.strokeWidth };
@@ -414,7 +415,7 @@ function drawObject(object: DeskObject) {
     if (object.type === 'mermaid') drawMermaidCard(group, object);
     drawOpenLink(group, object);
   }
-  drawReactions(group, object, pinDescriptionVisible(object));
+  drawReactions(group, object, pinDescriptionVisible(object), camera.zoom);
   objectsLayer.append(group);
 }
 function drawSelection(preview?: DeskObject[], scene = preview) {
