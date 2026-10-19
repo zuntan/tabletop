@@ -307,6 +307,8 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('point'), ids: z.array(z.string()).max(2000) }),
   z.object({ method: z.literal('lock'), ...lockFields }).strict(),
   z.object({ method: z.literal('fit'), ...cameraAnimationFields }).strict(),
+  z.object({ method: z.literal('ui_get') }).strict(),
+  z.object({ method: z.literal('ui_set'), theme: z.enum(['light', 'dark']) }).strict(),
   z.object({ method: z.literal('camera_get') }).strict(),
   z.object({ method: z.literal('text_measure'), ...textMeasureFields }).strict(),
   z.object({ method: z.literal('camera_move'), ...cameraMoveFields }).strict(),
@@ -316,11 +318,17 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('redo'), actor: z.string().min(1).max(100).default('agent-01') }),
 ]);
 export type Request = z.input<typeof requestSchema>;
-export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge): unknown {
+export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge, ui?: { get(): { theme: 'light' | 'dark' }; set(theme: 'light' | 'dark'): { theme: 'light' | 'dark' } }): unknown {
   const request = requestSchema.parse(input);
   switch (request.method) {
     case 'share_read': return shareRead(desk, request.tool, request.expectedSessionId, request.id);
     case 'summary': return desk.summary();
+    case 'ui_get':
+      if (!ui) throw new Error('UI controls require a compatible browser');
+      return ui.get();
+    case 'ui_set':
+      if (!ui) throw new Error('UI controls require a compatible browser');
+      return ui.set(request.theme);
     case 'text_measure': {
       if (!textMeasure) throw new Error('Text measurement requires a compatible browser');
       return textMeasure(request.ids);
@@ -342,7 +350,7 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, text
       return desk.replaceDocument(request.document, request.actor);
     }
     case 'settings': return desk.listSettings();
-    case 'context': return deskContext(desk, request.sinceRevision, request.limit);
+    case 'context': return { ...deskContext(desk, request.sinceRevision, request.limit), ...(ui ? { ui: ui.get() } : {}) };
     case 'selection': return { ids: desk.selected(), aiPointing: desk.pointed(), pointer: desk.pointer };
     case 'select': return desk.select(request.ids);
     case 'point': return desk.point(request.ids);

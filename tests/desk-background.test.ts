@@ -5,7 +5,7 @@ import { encodeDeskFile, decodeDeskFile } from '../src/desk-file';
 
 test('wallpaper changes are atomic settings edits, preserve parts and grid, and share undo', () => {
   const desk = new Desk();
-  assert.deepEqual(desk.settingsSnapshot().background, { wallpaper: 'none', color: null, showGrid: null });
+  assert.deepEqual(desk.settingsSnapshot().background, { wallpaper: 'none', color: null, showGrid: null, selectionColor: null, pointingColor: null });
   desk.execute({ operations: [{ kind: 'add', object: { id: 'note', type: 'text', text: '机の文章', fill: '#fb7185' } }] });
   desk.select(['note']); const objects = desk.snapshot(), settings = desk.settingsSnapshot();
   dispatch(desk, { method: 'execute', operations: [{ kind: 'background_update', patch: { wallpaper: 'wood' } }] });
@@ -25,7 +25,7 @@ test('wallpaper presets and overrides round-trip; older files get the unchanged 
     const desk = new Desk();
     desk.execute({ operations: [{ kind: 'background_update', patch: { wallpaper, color: '#ffeedd', showGrid: true } }] });
     const restored = await decodeDeskFile(await encodeDeskFile(desk));
-    assert.deepEqual(restored.settings.background, { wallpaper, color: '#ffeedd', showGrid: true });
+    assert.deepEqual(restored.settings.background, { wallpaper, color: '#ffeedd', showGrid: true, selectionColor: null, pointingColor: null });
     desk.execute({ operations: [{ kind: 'background_update', patch: { color: null } }] });
     assert.equal(desk.settingsSnapshot().background.wallpaper, wallpaper); assert.equal(desk.settingsSnapshot().background.showGrid, true);
   }

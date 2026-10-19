@@ -219,9 +219,16 @@ textは `cornerRadius` と上下左右共通の `padding`（省略時6）で一�
 
 ## 机の壁紙
 
-`desk_execute` の `background_update` で `settings.background` を部分更新します。例：`{"kind":"background_update","patch":{"wallpaper":"wood"}}`。柄は `none` / `wood` / `cutting-mat` / `pink-notebook`。colorとshowGridはnullで柄に応じた自動値へ戻せます。パーツの色やスナップを変えず、Undo・保存に対応。設定画面は未実装。[仕様と互換性](./docs/desk-background.md)。
+`desk_execute` の `background_update` で `settings.background` を部分更新します。例：`{"kind":"background_update","patch":{"wallpaper":"wood"}}`。柄は `none` / `wood` / `cutting-mat` / `pink-notebook` / `charcoal`。colorとshowGridはnullで柄に応じた自動値へ戻せます。selectionColor／pointingColorは人間／AIの枠色を上書きし、nullなら壁紙の既定色。wallpaper指定時は、同時に指定した色を除き枠色を自動へ戻します。パーツの色やスナップを変えず、Undo・保存に対応。壁紙の設定画面は未実装。UIの明暗はブラウザ側の独立した設定です。[仕様と互換性](./docs/desk-background.md)。
 ## 線・矢印の線種
 
 線・矢印の任意属性 `dash` は `solid` / `dashed` / `dotted`。省略は実線。端点とBindingは維持され、矢印先端は塗りつぶしのまま。[仕様](./docs/connector-line-style.md)。
 
 内部の接続パーツは `type: "line"` に統一。`startMarker` / `endMarker` は `none` / `arrow` / `circle` / `diamond`。新規の矢印は `{"type":"line","endMarker":"arrow"}`、両矢印は両方arrowを指定する。旧 `type:"arrow"` は入口で変換して受け付けるが、保存・返却はlineのみ。
+
+### ブラウザUIの表示モード
+
+`desk_context.ui.theme` / `desk_ui_get` は接続中ブラウザの `light` または `dark` を返す。
+人間の依頼時は `desk_ui_set({theme: "light" | "dark"})` で切り替えられる。
+ブラウザ内の好みとして記憶し、机の保存・リビジョン・Undo・壁紙には影響しない。
+ひとりで考えるモードでは取得のみ。表示状態はリビジョンが同じでも変わり得る。

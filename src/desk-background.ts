@@ -2,7 +2,7 @@ import type { Settings } from './settings';
 import { element } from './diagram-drawing';
 
 export const wallpaperColors = {
-  none: '#f8fafc', wood: '#dfc49e', 'cutting-mat': '#315e50', 'pink-notebook': '#fff0f4',
+  none: '#f8fafc', wood: '#dfc49e', 'cutting-mat': '#315e50', 'pink-notebook': '#fff0f4', charcoal: '#252b33',
 } as const;
 
 /** Built-in SVG textures only; no assets, requests, UI theme or document objects. */
@@ -51,7 +51,7 @@ export function createDeskBackground(canvas: SVGSVGElement) {
       if (background.wallpaper !== previous) { draw(background.wallpaper); previous = background.wallpaper; }
       base.setAttribute('fill', background.color ?? wallpaperColors[background.wallpaper]);
       base.dataset.wallpaper = background.wallpaper;
-      texture.setAttribute('fill', background.wallpaper === 'none' ? 'none' : 'url(#desk-surface-pattern)');
+      texture.setAttribute('fill', background.wallpaper === 'none' || background.wallpaper === 'charcoal' ? 'none' : 'url(#desk-surface-pattern)');
       pattern.setAttribute('patternTransform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
       grid.setAttribute('visibility', (background.showGrid ?? background.wallpaper === 'none') ? 'visible' : 'hidden');
     },

@@ -6,9 +6,11 @@ import { deskNameSchema } from './desk-identity';
 
 export const colorSchema = z.string().regex(/^(#[0-9a-fA-F]{3,8}|transparent|[a-zA-Z]{1,20})$/);
 export const backgroundSchema = z.object({
-  wallpaper: z.enum(['none', 'wood', 'cutting-mat', 'pink-notebook']).default('none'),
+  wallpaper: z.enum(['none', 'wood', 'cutting-mat', 'pink-notebook', 'charcoal']).default('none'),
   color: colorSchema.nullable().default(null),
   showGrid: z.boolean().nullable().default(null),
+  selectionColor: colorSchema.nullable().default(null),
+  pointingColor: colorSchema.nullable().default(null),
 }).strict();
 export const appearanceSchema = z.object({
   fill: colorSchema.default('#dbeafe'),
@@ -102,7 +104,8 @@ export function applySettingsOperation(operation: SettingsOperation, objects: De
   } else if (operation.kind === 'grid_update') {
     settings.grid = gridSettingsSchema.parse({ ...settings.grid, ...operation.patch });
   } else if (operation.kind === 'background_update') {
-    settings.background = backgroundSchema.parse({ ...settings.background, ...operation.patch });
+    settings.background = backgroundSchema.parse({ ...settings.background,
+      ...(operation.patch.wallpaper !== undefined ? { selectionColor: null, pointingColor: null } : {}), ...operation.patch });
   } else if (operation.kind === 'defaults_update') {
     settings.defaults = appearanceSchema.parse({ ...settings.defaults, ...operation.patch });
   } else if (operation.kind === 'series_add') {

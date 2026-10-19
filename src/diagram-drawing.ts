@@ -46,13 +46,13 @@ export function drawShapeText(group: SVGGElement, object: DeskObject) {
   });
   group.append(text);
 }
-export function drawEndpointHandles(layer: SVGGElement, object: DeskObject, zoom: number, interactive: boolean) {
+export function drawEndpointHandles(layer: SVGGElement, object: DeskObject, zoom: number, interactive: boolean, color = '#2563eb') {
   if (!isConnector(object)) return false;
   const points = endpoints(object);
   for (const side of ['start', 'end'] as const) {
     const point = points[side], connected = !!object[side === 'start' ? 'startBinding' : 'endBinding'];
     layer.append(element('circle', { cx: point.x, cy: point.y, r: 6 / zoom,
-      fill: connected ? '#16a34a' : '#2563eb', stroke: '#fff', 'stroke-width': 1.5 / zoom,
+      fill: connected ? '#16a34a' : color, stroke: '#fff', 'stroke-width': 1.5 / zoom,
       ...(interactive ? { 'data-endpoint': side, 'data-connector': object.id, class: 'endpoint-handle' } : { 'pointer-events': 'none' }) }));
   }
   return true;

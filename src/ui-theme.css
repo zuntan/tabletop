@@ -1,0 +1,59 @@
+/* UI only: never recolor SVG desk objects, Markdown cards or wallpaper. */
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ui-bg: #171e28;
+  --ui-panel: #202936;
+  --ui-input: #18222f;
+  --ui-text: #e2e8f0;
+  --ui-muted: #a6b4c7;
+  --ui-border: #48576b;
+  --ui-hover: #2c3e54;
+  --ui-active: #25486a;
+  color: var(--ui-text); background: var(--ui-bg);
+}
+:root[data-theme="dark"] #app { background: var(--ui-bg); color: var(--ui-text); }
+:root[data-theme="dark"] #app header { background: #111923; }
+:root[data-theme="dark"] #app nav,
+:root[data-theme="dark"] #sidebar,
+:root[data-theme="dark"] #app footer { background: var(--ui-bg); border-color: var(--ui-border); }
+:root[data-theme="dark"] #app .toolbar-group,
+:root[data-theme="dark"] #app .sidebar-heading,
+:root[data-theme="dark"] #app .sidebar-panel,
+:root[data-theme="dark"] #app fieldset,
+:root[data-theme="dark"] #app .toolbar-edit-actions { border-color: var(--ui-border); }
+:root[data-theme="dark"] #app .toolbar-view { background: #202936f5; }
+:root[data-theme="dark"] #app button,
+:root[data-theme="dark"] #app input,
+:root[data-theme="dark"] #app textarea,
+:root[data-theme="dark"] #app select { background: var(--ui-input); border-color: var(--ui-border); color: var(--ui-text); }
+:root[data-theme="dark"] #app button:hover:not(:disabled) { background: var(--ui-hover); border-color: #7b9bc0; }
+:root[data-theme="dark"] #app button[aria-pressed="true"],
+:root[data-theme="dark"] #app button.active,
+:root[data-theme="dark"] #app button[aria-selected="true"] { background: var(--ui-active); border-color: #60a5fa; }
+:root[data-theme="dark"] #app label,
+:root[data-theme="dark"] #app aside small,
+:root[data-theme="dark"] #app aside p,
+:root[data-theme="dark"] #app #selected-label,
+:root[data-theme="dark"] #app .history-row,
+:root[data-theme="dark"] #app .tool-caption,
+:root[data-theme="dark"] #app .number-preset-menu,
+:root[data-theme="dark"] #app #series-panel select { color: var(--ui-muted); }
+:root[data-theme="dark"] #app .history-row { border-color: var(--ui-border); }
+:root[data-theme="dark"] #sidebar h2 { color: var(--ui-text); }
+:root[data-theme="dark"] #sidebar a { color: #93c5fd; }
+:root[data-theme="dark"] #app .inline-editor { background: var(--ui-panel); border-color: #60a5fa; }
+:root[data-theme="dark"] #app .inline-editor small { color: var(--ui-muted); }
+:root[data-theme="dark"] #app .editor-error,
+:root[data-theme="dark"] #app #message.error { color: #fda4af; }
+:root[data-theme="dark"] .number-preset-palette,
+:root[data-theme="dark"] #reaction-palette,
+:root[data-theme="dark"] .pcr-app.tabletop-palette { background: var(--ui-panel); border-color: var(--ui-border); color: var(--ui-muted); box-shadow: 0 4px 18px #0007; }
+:root[data-theme="dark"] .number-preset-choices button,
+:root[data-theme="dark"] .pcr-app.tabletop-palette .transparent-choice { background: var(--ui-input); border-color: var(--ui-border); color: var(--ui-text); }
+:root[data-theme="dark"] .number-preset-choices button:hover,
+:root[data-theme="dark"] .number-preset-choices button[aria-pressed="true"],
+:root[data-theme="dark"] .pcr-app.tabletop-palette .transparent-choice[aria-pressed="true"] { background: var(--ui-active); border-color: #60a5fa; }
+:root[data-theme="dark"] .pcr-app.tabletop-palette .pcr-swatches > button[aria-pressed="true"] { outline-color: #e2e8f0; }
+:root[data-theme="dark"] #ai-activity-led { box-shadow: 0 0 0 4px #171e28e6, 0 1px 5px #0007; }
+:root[data-theme="dark"] #ai-activity-led[data-lit="true"] { box-shadow: 0 0 0 4px #171e28e6, 0 0 8px 2px var(--activity-color); }

@@ -5,6 +5,9 @@ import { createColorControls } from './color-controls';
 import { drawConnector, drawShapeText, drawEndpointHandles, drawSnapTargets, updateScenePreview } from './diagram-drawing';
 import { gestureOperations, gesturePreview, endpointDragPoint, type Gesture } from './diagram-gestures';
 import { createPropertyEditor } from './property-editor';
+import { frameColors } from './frame-colors';
+import { createUiThemeButton, getUiTheme, setUiTheme } from './ui-theme';
+import './ui-theme.css';
 import './diagram.css';
 import './authoring.css';
 import { createInlineEditor } from './inline-editor';
@@ -224,6 +227,7 @@ const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
 createDeskFileControls($('header'), desk, () => { partClipboard.clear(); render(); fitView(desk.selected()); },
   () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing());
+createUiThemeButton($('header'));
 const labels: Record<DeskObject['type'], string> = { rect: '矩形', roundedRect: '角丸矩形', label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
@@ -373,6 +377,7 @@ function drawObject(object: DeskObject) {
   objectsLayer.append(group);
 }
 function drawSelection(preview?: DeskObject[], scene = preview) {
+  const colors = frameColors(desk.settingsSnapshot().background);
   $<HTMLButtonElement>('#clear-ai-pointing').disabled = desk.pointed().length === 0;
   const fit = $('#fit'), hasSelection = desk.selected().length > 0;
   fit.title = hasSelection ? '選択範囲を表示' : '全体表示';
@@ -381,18 +386,18 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
   overlays.replaceChildren();
   const selected = preview ?? desk.selected().map(id => desk.get(id));
   for (const object of desk.pointed().map(id => scene?.find(object => object.id === id) ?? desk.get(id)).filter(pinIsVisible))
-    drawAiPointing(overlays, [connectorForView(object)], camera.zoom, pinDescriptionVisible(object));
+    drawAiPointing(overlays, [connectorForView(object)], camera.zoom, pinDescriptionVisible(object), colors.pointing);
   for (const source of selected.filter(pinIsVisible)) {
     const object = connectorForView(source);
-    if (object.locked) { drawLockedSelection(overlays, object, camera.zoom, pinDescriptionVisible(object)); continue; }
-    if (drawEndpointHandles(overlays, object, camera.zoom, selected.length === 1)) continue;
+    if (object.locked) { drawLockedSelection(overlays, object, camera.zoom, pinDescriptionVisible(object), colors.selection); continue; }
+    if (drawEndpointHandles(overlays, object, camera.zoom, selected.length === 1, colors.selection)) continue;
     const visual = labelVisualBounds(object, pinDescriptionVisible(object), camera.zoom);
     overlays.append(svg('rect', { x: visual.x - 3 / camera.zoom, y: visual.y - 3 / camera.zoom,
       width: visual.width + 6 / camera.zoom, height: visual.height + 6 / camera.zoom,
-      fill: 'none', stroke: '#2563eb', 'stroke-width': 1.5 / camera.zoom, 'stroke-dasharray': `${5 / camera.zoom} ${3 / camera.zoom}`, 'pointer-events': 'none' }));
+      fill: 'none', stroke: colors.selection, 'stroke-width': 1.5 / camera.zoom, 'stroke-dasharray': `${5 / camera.zoom} ${3 / camera.zoom}`, 'pointer-events': 'none', 'data-human-selection': object.id }));
     if (selected.length === 1 && object.type !== 'label') overlays.append(svg('rect', {
       x: object.x + object.width - 5 / camera.zoom, y: object.y + object.height - 5 / camera.zoom,
-      width: 10 / camera.zoom, height: 10 / camera.zoom, fill: '#2563eb', stroke: '#fff',
+      width: 10 / camera.zoom, height: 10 / camera.zoom, fill: colors.selection, stroke: '#fff',
       'stroke-width': 1 / camera.zoom, 'data-resize': object.id, class: 'resize-handle',
     }));
   }
@@ -634,7 +639,8 @@ canvas.addEventListener('pointermove', event => {
 
   } else {
     drawSelection();
-    overlays.append(svg('rect', { x: Math.min(p.x, gesture.start.x), y: Math.min(p.y, gesture.start.y), width: Math.abs(delta.x), height: Math.abs(delta.y), fill: '#2563eb22', stroke: '#2563eb', 'stroke-width': 1 / camera.zoom }));
+    const color = frameColors(desk.settingsSnapshot().background).selection;
+    overlays.append(svg('rect', { x: Math.min(p.x, gesture.start.x), y: Math.min(p.y, gesture.start.y), width: Math.abs(delta.x), height: Math.abs(delta.y), fill: color, 'fill-opacity': .13, stroke: color, 'stroke-width': 1 / camera.zoom }));
   }
 });
 function endGesture(event: PointerEvent, cancel = false) {
@@ -818,7 +824,7 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
       if ((busy && message.request.method !== 'camera_get') || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       if (['fit', 'camera_move'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing())) throw new Error('Human editing in progress. No camera change was made.');
       if (message.request.method === 'load_document') cameraAnimator.cancel('Desk contents replaced');
-      let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)));
+      let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme });
       if (message.request.method === 'camera_move') result = await result;
       if (message.request.method === 'fit') {
         const ids = desk.pointed();
