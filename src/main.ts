@@ -87,7 +87,7 @@ app.innerHTML = `
           <label hidden>終点X<input name="x2" type="number" step="any" disabled></label><label hidden>終点Y<input name="y2" type="number" step="any" disabled></label>
           <label>幅<input name="width" type="number" min="1" step="any"></label><label>高さ<input name="height" type="number" min="1" step="any"></label>
           <label hidden>塗り<input name="fill" type="text"></label><label hidden>線<input name="stroke" type="text"></label>
-          <label>塗りの透過（%）<input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
+          <label>塗り透過（%）<input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
           <label>線幅<input name="strokeWidth" type="number" min="0" step="any"></label><label>文字サイズ<input name="fontSize" type="number" min="1"></label>
           <label hidden>角丸<input name="cornerRadius" type="number" min="0" step="any"></label>
           <label hidden>内側の余白<input name="padding" type="number" min="0" step="any"></label>

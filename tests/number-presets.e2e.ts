@@ -34,7 +34,7 @@ test('numeric preset menus preserve direct input, property drafts, pin series an
     assert.equal(await properties.getByRole('button', { name: '線幅の候補', exact: true }).isDisabled(), true);
     const series = page.locator('#series-settings');
     await choose(series, '線幅の候補', '4');
-    await choose(series, '糸の透過（%）の候補', '70');
+    await choose(series.locator('fieldset'), '塗り透過（%）の候補', '70');
     const settings = await call('desk_settings');
     assert.equal(settings.series[0].strokeWidth, 4);
     assert.ok(Math.abs(settings.series[0].thread.opacity - 0.3) < 1e-9);

@@ -34,6 +34,7 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 #default-colors .color-value { display: none; }
 #series-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
 #series-settings label { display: flex; flex-direction: column; }
+#series-colors, #series-info { grid-column: 1 / -1; }
 #series-settings fieldset { grid-column: 1 / -1; min-width: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; }
 #series-settings fieldset label:has(input[type="checkbox"]) { flex-direction: row; align-items: center; gap: 6px; }
 #series-settings fieldset input, #series-settings fieldset select { min-width: 0; max-width: 100%; }

@@ -16,7 +16,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
   const settingsButton = toolbar.querySelector<HTMLButtonElement>('#numbering-settings')!;
   iconButton(settingsButton, '⚑⚙', 'ピンシリーズ');
   const width = toolbar.querySelector<HTMLInputElement>('#default-width')!;
-  const opacityLabel = document.createElement('label'); opacityLabel.textContent = '塗り透過%';
+  const opacityLabel = document.createElement('label'); opacityLabel.textContent = '塗り透過（%）';
   const opacity = document.createElement('input'); opacity.id = 'default-opacity'; opacity.type = 'number';
   opacity.min = '0'; opacity.max = '100'; opacity.step = '1'; opacity.setAttribute('aria-label', '新規と選択対象の塗り透過（%）');
   opacityLabel.append(opacity); toolbar.insertBefore(opacityLabel, settingsButton);
@@ -52,19 +52,20 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     <label>文字サイズ<input name="fontSize" type="number" min="1" max="1000"></label>
     <button id="series-fit" type="button" title="現在の番号と次の番号に合わせて、シリーズ全体の枠をタイトにします">枠を文字にあわせる</button>
     <label>線幅<input name="strokeWidth" type="number" min="0" max="100" step="any"></label>
-    <label>塗りの透過（%）<input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
+    <label>塗り透過（%）<input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
+    <div id="series-colors"></div><small id="series-info"></small>
     <fieldset><legend>糸</legend>
       <button id="thread-visible" type="button" role="switch" aria-label="糸を表示"><span>糸を表示</span><span class="thinking-switch-track" aria-hidden="true"></span><span class="thinking-switch-state" aria-hidden="true"></span></button>
       <div id="thread-colors"></div>
       <label>線幅<input name="thread.width" type="number" min="0" max="100" step="any"></label>
-      <label>透過（%）<input name="thread.opacity" type="number" min="0" max="100"></label>
+      <label>塗り透過（%）<input name="thread.opacity" type="number" min="0" max="100"></label>
       <label>線種<select name="thread.dash"><option value="solid">実線</option><option value="dashed">破線</option><option value="dotted">点線</option></select></label>
-    </fieldset></form><div id="series-colors"></div><small id="series-info"></small>`;
+    </fieldset></form>`;
   const choice = panel.querySelector<HTMLSelectElement>('#series-choice')!;
   const form = panel.querySelector<HTMLFormElement>('#series-settings')!;
   addFormNumberPresets(form);
-  addNumberPresets(form.elements.namedItem('thread.width') as HTMLInputElement, numberPresets.strokeWidth, '糸の線幅');
-  addNumberPresets(form.elements.namedItem('thread.opacity') as HTMLInputElement, numberPresets.fillOpacity, '糸の透過（%）');
+  addNumberPresets(form.elements.namedItem('thread.width') as HTMLInputElement, numberPresets.strokeWidth, '線幅');
+  addNumberPresets(form.elements.namedItem('thread.opacity') as HTMLInputElement, numberPresets.fillOpacity, '塗り透過（%）');
   for (const [value, name] of Object.entries(pinVisibilityNames))
     panel.querySelector<HTMLSelectElement>('#series-visibility')!.add(new Option(name, value));
   const formatNames = ['1, 2…', 'a〜z', 'A〜Z', 'i〜xx', 'I〜XX', '①〜⑳', 'ア〜ン'];
