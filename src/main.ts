@@ -433,10 +433,10 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
   }
   const colors = frameColors(desk.settingsSnapshot().background);
   $<HTMLButtonElement>('#clear-ai-pointing').disabled = desk.pointed().length === 0;
-  const fit = $('#fit'), hasSelection = desk.selected().length > 0;
-  fit.title = hasSelection ? '選択範囲を表示' : '全体表示';
+  const fit = $('#fit'), hasSelection = desk.selected().length > 0, hasPointing = desk.pointed().length > 0;
+  fit.title = hasSelection ? '選択範囲を表示' : hasPointing ? 'AI指差し範囲を表示' : '全体表示';
   fit.setAttribute('aria-label', fit.title);
-  fit.querySelector('.tool-caption')!.textContent = hasSelection ? '選択範囲' : '全体';
+  fit.querySelector('.tool-caption')!.textContent = hasSelection ? '選択範囲' : hasPointing ? 'AI指差し' : '全体';
   overlays.replaceChildren();
   const selected = preview ?? desk.selected().map(id => desk.get(id));
   for (const object of desk.pointed().map(id => scene?.find(object => object.id === id) ?? desk.get(id)).filter(pinIsVisible))
@@ -637,13 +637,14 @@ function fitView(ids: string[], animation?: AnimationOptions) {
   Object.assign(camera, next);
   cameraChanged(); drawSelection();
 }
-function focusHumanSelection() {
-  void fitView(desk.selected(), {})?.catch(error => {
+function focusObjects(ids: string[]) {
+  void fitView(ids, {})?.catch(error => {
     if (!(error instanceof Error && error.message.startsWith('Camera animation cancelled:')))
       notify(error instanceof Error ? error.message : String(error), true);
   });
 }
-$('#fit').onclick = focusHumanSelection;
+function focusHumanSelection() { focusObjects(desk.selected()); }
+$('#fit').onclick = () => focusObjects(desk.selected().length ? desk.selected() : desk.pointed());
 canvas.addEventListener('dblclick', event => {
   const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
   if (target.closest('[data-open-url], [data-markdown-link]')) return;

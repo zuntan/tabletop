@@ -7,7 +7,7 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 .tool-icon { font-size: 18px; line-height: 1; }
 .ui-icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
 .tool-caption { display: block; font-size: 10px; line-height: 1.1; font-weight: normal; }
-.toolbar-edit-actions { display: flex; flex: none; align-items: center; gap: 6px; padding-left: 6px; border-left: 1px solid #e2e8f0; }
+.toolbar-edit-actions { display: flex; flex-wrap: wrap; max-width: 100%; flex: none; align-items: center; gap: 6px; padding-left: 6px; border-left: 1px solid #e2e8f0; }
 .toolbar-view { position: absolute; right: 12px; bottom: 12px; z-index: 4; flex-wrap: nowrap; gap: 4px; padding: 4px; background: #fffffff2; box-shadow: 0 2px 10px #0f172a26; }
 .toolbar-view .tool-button { min-width: 40px; }
 #workspace > .hint { max-width: calc(100% - 36px); }

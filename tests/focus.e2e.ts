@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { openTestDesk } from './desk-browser';
 import { fittedCamera } from '../src/focus-camera';
 
-test('human and AI fit their own targets while camera actions preserve the document and selections', { timeout: 35_000 }, async () => {
+test('human fit prioritizes selection then AI pointing then all, while MCP fit and the document stay independent', { timeout: 35_000 }, async () => {
   const { page, call, client, close, errors } = await openTestDesk('focus-camera');
   const camera = () => page.locator('#viewport').evaluate(el => {
     const matrix = (el as unknown as SVGGElement).transform.baseVal.consolidate()!.matrix;
@@ -43,10 +43,13 @@ test('human and AI fit their own targets while camera actions preserve the docum
     await page.locator('#fit').click(); await check(['human', 'memo']);
     await call('desk_select', { ids: [] });
     await call('desk_point', { ids: ['ai'] });
+    assert.equal(await page.locator('#fit .tool-caption').textContent(), 'AI指差し');
+    assert.equal(await page.locator('#fit').getAttribute('aria-label'), 'AI指差し範囲を表示');
+    await page.locator('#fit').click(); await check(['ai']);
+    assert.deepEqual((await call('desk_state')).selection, []);
+    await page.locator('#clear-ai-pointing').click();
     assert.equal(await page.locator('#fit .tool-caption').textContent(), '全体');
-    await page.locator('#fit').click();
-    assert.notDeepEqual(await camera(), fittedCamera(before.objects, size.width, size.height), 'whole-desk focus exposes intermediate frames');
-    await check([]); // Ignore the AI target for human actions.
+    await page.locator('#fit').click(); await check([]);
     const after = await call('desk_state');
     assert.deepEqual(after.objects, before.objects);
     assert.deepEqual(after.settings, before.settings);

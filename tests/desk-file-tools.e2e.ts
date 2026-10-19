@@ -53,7 +53,14 @@ test('real MCP save/load round-trip, browser interoperability, conflicts and saf
     await writeFile(join(root, 'broken.tabletop'), zipSync({ 'manifest.json': strToU8('{broken') }));
     await fails('desk_load', { filename: 'broken.tabletop', ...current });
     await fails('desk_load', { filename: 'missing.tabletop', ...current });
+    // Reusing IDs must not retain either participant's selection frame after replacement.
+    await call('desk_select', { ids: ['note'] }); await call('desk_point', { ids: ['note'] });
+    assert.ok(await page.locator('[data-ai-point="note"]').count());
     const loaded = await call('desk_load', { filename: 'desk.tabletop', ...current });
+    assert.deepEqual((await call('desk_state')).selection, []);
+    assert.deepEqual((await call('desk_state')).aiPointing, []);
+    assert.equal(await page.locator('[data-ai-point], [data-human-selection], [data-resize], [data-endpoint]').count(), 0);
+    assert.equal(await page.locator('#object-list .active').count(), 0);
     assert.equal(loaded.count, 4); assert.deepEqual(loaded.missingAssets, []);
     assert.equal((await call('desk_changes', { sinceRevision: summary.revision })).changes.at(-1).actor, 'agent-01');
     assert.deepEqual((await call('desk_state')).objects, original.objects);
@@ -64,10 +71,15 @@ test('real MCP save/load round-trip, browser interoperability, conflicts and saf
     await call('desk_undo'); assert.equal((await call('desk_get', { id: 'note' })).text, 'Changed');
     await call('desk_redo'); assert.equal((await call('desk_get', { id: 'note' })).text, 'Saved');
     // The browser UI must load files written by MCP.
+    await call('desk_select', { ids: ['note'] }); await call('desk_point', { ids: ['note'] });
     page.once('dialog', dialog => dialog.accept());
     await page.locator('#desk-file').setInputFiles(saved.path);
     await page.waitForFunction(() => document.querySelector('#message')?.textContent === '読込完了');
     assert.deepEqual((await call('desk_state')).objects, original.objects);
+    assert.deepEqual((await call('desk_state')).selection, []);
+    assert.deepEqual((await call('desk_state')).aiPointing, []);
+    assert.equal(await page.locator('[data-ai-point], [data-human-selection], [data-resize], [data-endpoint]').count(), 0);
+    assert.equal(await page.locator('#object-list .active').count(), 0);
     // And MCP must load a browser-downloaded file.
     const downloading = page.waitForEvent('download'); await page.locator('#save-desk').click();
     const download = await downloading;
