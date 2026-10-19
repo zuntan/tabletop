@@ -35,7 +35,7 @@ const bindingSchema = z.object({
 export const endpointShapeSchema = z.enum(['none', 'arrow', 'circle', 'diamond']);
 const objectFields = z.object({
   id: z.string().min(1).max(100),
-  type: z.enum(['rect', 'roundedRect', 'ellipse', 'line', 'text', 'image', 'svg', 'web', 'link', 'label']),
+  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'web', 'link', 'label']),
   cornerRadius: z.number().finite().min(0).max(100_000).default(16),
   padding: z.number().finite().min(0).max(100_000).optional(),
   locked: z.boolean().optional(), // Mouse geometry protection only; not an authorization boundary.
@@ -65,6 +65,7 @@ const objectFields = z.object({
   endMarker: endpointShapeSchema.optional(),
   text: z.string().max(100_000).default(''),
   textColor: color.default('#0f172a'),
+  textFit: z.enum(['auto', 'shrink']).optional(),
   fontSize: z.number().finite().min(1).max(1000).default(24),
   src: source.optional(),
   url: z.string().max(4096).refine(value => value === '' || safeUrl(value), 'Expected an HTTP(S) URL').optional(),
@@ -81,7 +82,7 @@ function normalizeLegacyConnector(input: unknown): unknown {
 export const objectSchema = z.preprocess(normalizeLegacyConnector, objectFields);
 export const patchSchema = objectFields.omit({ id: true, type: true }).partial();
 const addObjectFields = objectFields.partial().required({ id: true, type: true });
-const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'line', 'arrow', 'text', 'image', 'svg', 'web', 'link', 'label']) })
+const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'web', 'link', 'label']) })
   .transform(object => normalizeLegacyConnector(object) as z.input<typeof addObjectFields>);
 export const operationSchema = z.discriminatedUnion('kind', [
   ...settingsOperations,

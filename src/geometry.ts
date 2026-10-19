@@ -1,3 +1,4 @@
+import { isShapeType, isNewShape } from './shape-definitions';
 import { resolveTextCallouts } from './text-callouts';
 import { resolvePinAttachments } from './pin-attachments';
 import { resolveJunctions } from './connector-junctions';
@@ -9,11 +10,10 @@ export type Anchor = typeof anchorNames[number];
 export type Binding = { objectId: string; anchor: Anchor };
 export const anchors: readonly Anchor[] = anchorNames.slice(0, 8);
 export function anchorsFor(object: DeskObject): readonly Anchor[] {
-  return object.type === 'label' ? ['center'] : anchors;
+  return object.type === 'label' ? ['center'] : isNewShape(object.type) ? ['top', 'right', 'bottom', 'left'] : anchors;
 }
 export const isConnector = (object: DeskObject) => object.type === 'line';
-export const isShape = (object: DeskObject) => object.type === 'rect' || object.type === 'roundedRect'
-  || object.type === 'ellipse' || (object.type === 'label' && object.labelShape !== 'text');
+export const isShape = (object: DeskObject) => isShapeType(object.type) || (object.type === 'label' && object.labelShape !== 'text');
 export const isConnectable = (object: DeskObject) => isShape(object) || object.type === 'label' || object.type === 'text';
 
 export function endpoints(object: DeskObject): { start: Point; end: Point } {
@@ -39,6 +39,8 @@ export function bounds(object: DeskObject) {
     width: Math.abs(end.x - start.x), height: Math.abs(end.y - start.y) };
 }
 export function anchorPoint(object: DeskObject, anchor: Anchor): Point {
+  if (isNewShape(object.type) && !['top', 'right', 'bottom', 'left'].includes(anchor))
+    throw new Error('This shape supports only top/right/bottom/left anchors');
   switch (anchor) {
     case 'top': return { x: object.x + object.width / 2, y: object.y };
     case 'right': return { x: object.x + object.width, y: object.y + object.height / 2 };

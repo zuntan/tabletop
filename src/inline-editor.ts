@@ -1,3 +1,4 @@
+import { shapeTypes } from './shape-definitions';
 import { pinScreenObject } from './pin-series';
 import type { DeskObject } from './model';
 type EditorPatch = { text?: string; description?: string; url?: string };
@@ -6,7 +7,7 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
   save: (object: DeskObject, patch: EditorPatch, fresh: boolean) => void) {
   let active: { object: DeskObject; fresh: boolean; panel: HTMLDivElement; text: HTMLTextAreaElement; url?: HTMLInputElement; error: HTMLElement; resizeObserver?: ResizeObserver } | null = null;
   let composing = false;
-  const textFrameTypes = new Set(['text', 'rect', 'roundedRect', 'ellipse']);
+  const textFrameTypes = new Set(['text', ...shapeTypes]);
   let submitMode: 'enter' | 'mod-enter' = 'enter';
   try { if (localStorage.getItem('tabletop.editor.submit-key') === 'mod-enter') submitMode = 'mod-enter'; }
   catch { /* Keep the in-memory preference when browser storage is unavailable. */ }

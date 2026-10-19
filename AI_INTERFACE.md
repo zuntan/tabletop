@@ -254,3 +254,6 @@ label.attachmentは{objectId,anchor}またはnull。テキスト・矩形・角�
 
 ## テキストの吹き出し（試用）
 text.calloutは{x,y,binding?:{objectId,anchor}|null}、null/省略で無効。先端はワールド座標。本文としっぽは一パーツで、根元は自動配置。対象のアンカー変更に先端だけが追従する。詳細はdocs/text-callouts.md。
+
+## 図形の追加と文字サイズ
+既存rect/roundedRect/ellipseにdiamond/parallelogram/cylinder/document/cloudを追加。新5種のアンカーはtop/right/bottom/leftのみ。textFit:autoで拡大縮小、shrinkで指定fontSizeを上限に縮小。省略は従来の固定文字サイズ。図形の近似・文字サイズはdocs/diagram-shapes.md参照。
