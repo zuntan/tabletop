@@ -67,6 +67,11 @@ export class PartClipboard {
           patch: { attachment: { ...object.attachment, objectId: ids.get(object.attachment.objectId)! } } });
       } else {
         const copy = { ...object, id, x: object.x + offset, y: object.y + offset };
+        if (object.callout) {
+          const binding = object.callout.binding, target = binding && ids.get(binding.objectId);
+          copy.callout = { ...object.callout, x: object.callout.x + offset, y: object.callout.y + offset,
+            binding: binding && target ? { ...binding, objectId: target } : null };
+        }
         if (isConnector(object)) {
           const points = endpoints(object);
           Object.assign(copy, { x: points.start.x + offset, y: points.start.y + offset, x2: points.end.x + offset, y2: points.end.y + offset });

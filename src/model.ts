@@ -48,6 +48,7 @@ const objectFields = z.object({
   y: coordinate.default(0),
   x2: coordinate.optional(),
   y2: coordinate.optional(),
+  callout: z.object({ x: coordinate, y: coordinate, style: z.enum(['speech', 'thought', 'leader']).optional(), binding: bindingSchema.nullable().optional() }).strict().nullable().optional(),
   attachment: bindingSchema.nullable().optional(),
   startJunction: z.string().min(1).max(200).nullable().optional(),
   endJunction: z.string().min(1).max(200).nullable().optional(),

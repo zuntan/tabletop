@@ -251,3 +251,6 @@ textは `cornerRadius` と上下左右共通の `padding`（省略時6）で一�
 
 ## ピンの直接取り付け
 label.attachmentは{objectId,anchor}またはnull。テキスト・矩形・角丸矩形・楕円へ先端を留め、対象変更に追従。ピン同士・線への取り付けは禁止。明示的なupdateで設定・解除する。詳細はdocs/pin-attachments.md。
+
+## テキストの吹き出し（試用）
+text.calloutは{x,y,binding?:{objectId,anchor}|null}、null/省略で無効。先端はワールド座標。本文としっぽは一パーツで、根元は自動配置。対象のアンカー変更に先端だけが追従する。詳細はdocs/text-callouts.md。
