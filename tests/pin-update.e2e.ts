@@ -25,7 +25,10 @@ test('pins and descriptions keep screen size, connector anchors and selection fo
         const description = pin.querySelector('[data-label-description]')!.getBoundingClientRect();
         const frame = document.querySelector('[data-ai-point="p1"]')!.getBoundingClientRect();
         const line = document.querySelector('[data-id="edge"] .connector-line') as SVGLineElement;
-        const endpoint = new DOMPoint(line.x2.baseVal.value, line.y2.baseVal.value).matrixTransform(line.getScreenCTM()!);
+        // The shaft is inset under its marker; the marker tip is the logical endpoint.
+        const marker = document.querySelector('[data-id="edge"] .arrow-head') as SVGPolygonElement;
+        const tip = marker.points.getItem(0);
+        const endpoint = new DOMPoint(tip.x, tip.y).matrixTransform(marker.getScreenCTM()!);
         return { width: shape.width, height: shape.height, description: description.width, frame: frame.width,
           right: shape.right, centerY: shape.top + shape.height / 2, endX: endpoint.x, endY: endpoint.y,
           lock: document.querySelector('[data-lock-badge="p1"]')!.getBoundingClientRect().width };

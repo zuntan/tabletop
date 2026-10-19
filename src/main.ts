@@ -1,3 +1,4 @@
+import { isPinAttachmentTarget } from './pin-attachments';
 import { createDeskMenu } from './desk-menu';
 import './style.css';
 import { Desk, dispatch, objectSchema, type DeskObject, type Operation } from './model';
@@ -598,7 +599,7 @@ canvas.addEventListener('auxclick', event => { if (event.button === 1) event.pre
 canvas.addEventListener('pointerdown', event => {
   if (gesture || editor.isActive() || (event.button !== 0 && event.button !== 1)) return;
   if (!space && (event.target as Element).closest('[data-open-url], [data-markdown-link]')) return;
-  if (event.button === 0 && !space && authoring.place(gridPosition(world(event)))) { event.preventDefault(); return; }
+  if (event.button === 0 && !space && authoring.place(gridPosition(world(event)), camera.zoom)) { event.preventDefault(); return; }
   const target = event.target as Element;
   const resize = target.closest('[data-resize]')?.getAttribute('data-resize');
   const endpoint = target.closest('[data-endpoint]')?.getAttribute('data-endpoint');
@@ -635,6 +636,11 @@ function previewGesture(current: Gesture, point: { x: number; y: number }) {
       stroke: '#2563eb', 'stroke-width': 1 / camera.zoom, opacity: 0.5, 'pointer-events': 'none' }));
     overlays.append(svg('path', { d: `M ${origin.x - size} ${origin.y - size * 1.5} L ${origin.x + size} ${origin.y - size * 1.5} L ${origin.x} ${origin.y} Z`,
       fill: '#2563eb', opacity: 0.3, 'pointer-events': 'none', 'data-grid-origin': object.id }));
+  }
+  if (!current.detach && current.mode === 'move' && current.originals.length === 1 && current.originals[0].type === 'label') {
+    const pin = scene.find(o => o.id === current.originals[0].id)!;
+    drawSnapTargets(overlays, scene.filter(isPinAttachmentTarget).filter(pinIsVisible),
+      { x: pin.x + pin.width / 2, y: pin.y + pin.height }, camera.zoom);
   }
   if (!current.detach && (current.mode === 'start' || current.mode === 'end')) drawSnapTargets(overlays, scene.filter(pinIsVisible).filter(object => !current.originals.some(o => o.id === object.id)).map(object => pinScreenObject(object, camera.zoom)), endpointDragPoint(current, point), camera.zoom);
 }

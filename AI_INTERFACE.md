@@ -248,3 +248,6 @@ textは `cornerRadius` と上下左右共通の `padding`（省略時6）で一�
 
 ## 線同士の接合（開発ブランチ）
 線のstartJunction/endJunctionで端点グループを共有。保存・Undoに含む。図形へのstartBinding/endBindingとは別。詳しくは[接合仕様](docs/connector-junctions.md)。
+
+## ピンの直接取り付け
+label.attachmentは{objectId,anchor}またはnull。テキスト・矩形・角丸矩形・楕円へ先端を留め、対象変更に追従。ピン同士・線への取り付けは禁止。明示的なupdateで設定・解除する。詳細はdocs/pin-attachments.md。

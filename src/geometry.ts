@@ -1,3 +1,4 @@
+import { resolvePinAttachments } from './pin-attachments';
 import { resolveJunctions } from './connector-junctions';
 import type { DeskObject } from './model';
 
@@ -70,6 +71,7 @@ export function snap(point: Point, objects: DeskObject[], threshold: number) {
 
 /** Resolve after the entire atomic batch, allowing forward references inside it. */
 export function resolveConnections(objects: DeskObject[], before: DeskObject[] = []): DeskObject[] {
+  objects = resolvePinAttachments(objects, before);
   const map = new Map(objects.map(o => [o.id, o]));
   const previous = new Map(before.map(o => [o.id, o]));
   const resolved = objects.map(object => {

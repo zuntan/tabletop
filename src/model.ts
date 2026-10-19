@@ -48,6 +48,7 @@ const objectFields = z.object({
   y: coordinate.default(0),
   x2: coordinate.optional(),
   y2: coordinate.optional(),
+  attachment: bindingSchema.nullable().optional(),
   startJunction: z.string().min(1).max(200).nullable().optional(),
   endJunction: z.string().min(1).max(200).nullable().optional(),
   startBinding: bindingSchema.nullable().optional(),
@@ -229,8 +230,8 @@ export class Desk {
       const index = after.findIndex(o => o.id === operation.id);
       if (index < 0) throw new Error(`Unknown object: ${operation.id}`);
       if (operation.kind === 'update') {
-        if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'description', 'reactions', 'locked'].includes(key))) {
-          throw new Error('Labels allow only position, description, reaction and mouse lock updates; use series_update for shared appearance');
+        if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'attachment', 'description', 'reactions', 'locked'].includes(key))) {
+          throw new Error('Labels allow only position, attachment, description, reaction and mouse lock updates; use series_update for shared appearance');
         }
         after[index] = validateObject({ ...after[index], ...operation.patch });
       }

@@ -1,3 +1,4 @@
+import { snapPinAttachment } from './pin-attachments';
 import { objectSchema, type Desk, type DeskObject, type Operation } from './model';
 import { colorOperations, createColorControls } from './color-controls';
 import { isConnector, isShape } from './geometry';
@@ -161,10 +162,14 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     selectButton.setAttribute('aria-pressed', String(!placing));
   }
   return { update, stopPlacement, isPlacing: () => placing,
-    place(point: { x: number; y: number }) {
+    place(point: { x: number; y: number }, zoom = 1) {
       if (!placing) return false;
       const current = series(), id = `label-${randomUuid().slice(0, 8)}`;
-      apply([{ kind: 'label_add', id, seriesId: chosen, x: point.x - current.width / 2, y: point.y - current.height }]);
+      const candidate = snapPinAttachment(point, desk.snapshot(), 18 / zoom);
+      const tip = candidate?.point ?? point;
+      const operations: Operation[] = [{ kind: 'label_add', id, seriesId: chosen, x: tip.x - current.width / 2, y: tip.y - current.height }];
+      if (candidate) operations.push({ kind: 'update', id, patch: { attachment: candidate.binding } });
+      apply(operations);
       return true;
     },
   };
