@@ -6,15 +6,15 @@ test('toolbar captions stay visible and flexible groups keep editing actions tog
   const { page, call, close, errors } = await openTestDesk('toolbar-captions');
   try {
     await page.setViewportSize({ width: 1920, height: 1080 });
-    const tools = page.locator('nav .tool-button'); assert.ok(await tools.count() >= 18);
+    const tools = page.locator('nav .tool-button'); assert.ok(await tools.count() >= 16);
     assert.deepEqual(await page.locator('.toolbar-parts > button').evaluateAll(elements => elements.map(element => element.getAttribute('data-add') || element.id)),
-      ['selection-mode', 'clear-ai-pointing', 'rect', 'roundedRect', 'ellipse', 'line', 'arrow', 'numbering', 'text', 'image', 'web', 'link', 'clipboard']);
+      ['selection-mode', 'clear-ai-pointing', 'rect', 'line', 'arrow', 'numbering', 'text', 'image', 'web', 'link', 'clipboard']);
     for (const button of await tools.all()) {
       assert.equal(await button.locator('.tool-caption').isVisible(), true);
       assert.ok((await button.locator('.tool-caption').innerText()).length > 0);
       assert.ok(await button.getAttribute('aria-label'));
     }
-    assert.equal(await page.locator('[data-add="rect"] .tool-caption').innerText(), '矩形');
+    assert.equal(await page.locator('[data-add="rect"] .tool-caption').innerText(), '図形');
     assert.equal(await page.locator('[data-add="web"] .tool-caption').innerText(), 'Web資料');
     assert.equal(await page.locator('#numbering-settings .tool-caption').innerText(), 'ピン設定');
     for (const selector of ['#numbering', '#numbering-settings']) {

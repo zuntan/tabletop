@@ -1,8 +1,9 @@
+import { isShapeType } from './shape-definitions';
 import type { DeskObject } from './model';
 import { anchorPoint, snap, type Point } from './geometry';
 
 export const isPinAttachmentTarget = (object: DeskObject) =>
-  ['text', 'rect', 'roundedRect', 'ellipse'].includes(object.type);
+  object.type === 'text' || isShapeType(object.type);
 export function snapPinAttachment(point: Point, objects: DeskObject[], threshold: number) {
   return snap(point, objects.filter(isPinAttachmentTarget), threshold);
 }

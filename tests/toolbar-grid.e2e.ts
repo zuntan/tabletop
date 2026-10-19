@@ -108,7 +108,8 @@ test('toolbar, remembered numbering, descriptions and world grid work together',
     assert.equal((await call('desk_get', { id: label.id })).x, moved.x + 24);
     await page.locator('#numbering').click(); await page.keyboard.press('Escape');
     assert.equal(await selection.getAttribute('aria-pressed'), 'true');
-    await page.locator('#numbering').click(); await page.locator('[data-add="rect"]').click();
+    await page.locator('#numbering').click(); await page.getByRole('button', { name: '図形の候補', exact: true }).click();
+    await page.getByRole('dialog', { name: '図形の候補', exact: true }).getByRole('button', { name: '矩形', exact: true }).click();
     assert.equal(await selection.getAttribute('aria-pressed'), 'true');
     await place(750, 550);
     assert.equal((await call('desk_summary')).count, countBeforeSelection + 1);

@@ -37,7 +37,8 @@ test('defaults, inline editing and independent numbering systems work through UI
     await client.connect(transport); await call('desk_pairing_open', { confirm: true }); await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     await color('default-fill', '#22c55e');
-    await page.locator('[data-add="roundedRect"]').click();
+    await page.getByRole('button', { name: '図形の候補', exact: true }).click();
+    await page.getByRole('dialog', { name: '図形の候補', exact: true }).getByRole('button', { name: '角丸矩形', exact: true }).click();
     const first = (await call('desk_list')).objects[0]; assert.equal(first.fill, '#22c55e');
     assert.equal(await page.locator(`[data-id="${first.id}"] rect`).getAttribute('rx'), '16');
     const before = (await call('desk_summary')).revision;
@@ -49,7 +50,8 @@ test('defaults, inline editing and independent numbering systems work through UI
     await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'different', type: 'ellipse', x: 500, y: 50, fill: '#ffffff' } }] });
     await call('desk_select', { ids: ['different'] });
     assert.equal((await call('desk_settings')).defaults.fill, '#93c5fd');
-    await page.locator('[data-add="rect"]').click();
+    await page.getByRole('button', { name: '図形の候補', exact: true }).click();
+    await page.getByRole('dialog', { name: '図形の候補', exact: true }).getByRole('button', { name: '矩形', exact: true }).click();
     assert.equal((await call('desk_list')).objects.at(-1).fill, '#93c5fd');
     await call('desk_select', { ids: [first.id] });
     await page.locator('#front').click();

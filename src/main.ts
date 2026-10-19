@@ -1,3 +1,5 @@
+import { createShapePicker, createTextFitPicker } from './shape-picker';
+import { shapeNames, isShapeType, shapePaths } from './shape-definitions';
 import { createCalloutPicker } from './callout-picker';
 import { calloutPath, drawCalloutLeader } from './text-callouts';
 import { isPinAttachmentTarget } from './pin-attachments';
@@ -103,6 +105,7 @@ app.innerHTML = `
           <label hidden>終点形状<select name="endMarker" disabled><option value="none">なし</option><option value="arrow">矢印</option><option value="circle">丸</option><option value="diamond">ひし形</option></select></label>
           <label hidden>角丸<input name="cornerRadius" type="number" min="0" step="any"></label>
           <label hidden>内側の余白<input name="padding" type="number" min="0" step="any"></label>
+          <label hidden>文字サイズ調整<select name="textFit" disabled><option value="fixed" hidden>指定サイズ（既存）</option><option value="auto">完全自動</option><option value="shrink">縮小のみ</option></select></label>
           <label hidden>吹き出し<select name="calloutMode" disabled><option value="none">なし</option><option value="speech">三角</option><option value="thought">考え事</option><option value="leader">引き出し線</option></select></label>
           <label class="wide">テキスト<textarea name="text" rows="3"></textarea></label>
           <label class="wide">URL<input name="url" type="url"></label>
@@ -152,6 +155,7 @@ const propertyEditor = createPropertyEditor(form, desk, (id, patch) => {
 addFormNumberPresets(form);
 const updateConnectorLineStyle = createLineStylePicker(form.elements.namedItem('dash') as HTMLSelectElement);
 const updateStartMarker = createEndpointPicker(form.elements.namedItem('startMarker') as HTMLSelectElement, '始点形状', 'start');
+const updateTextFit = createTextFitPicker(form.elements.namedItem('textFit') as HTMLSelectElement);
 const updateCallout = createCalloutPicker(form.elements.namedItem('calloutMode') as HTMLSelectElement);
 const updateEndMarker = createEndpointPicker(form.elements.namedItem('endMarker') as HTMLSelectElement, '終点形状', 'end');
 const camera = { x: 60, y: 50, zoom: 1 };
@@ -241,11 +245,11 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
   const background = desk.settingsSnapshot().background;
   deskBackground.update({ ...background, ...preview }, camera);
 });
-const labels: Record<DeskObject['type'], string> = { rect: '矩形', roundedRect: '角丸矩形', label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
+const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
   const category = object.type === 'label' ? 'pins' : object.type === 'text' ? 'text'
-    : ['rect', 'roundedRect', 'ellipse'].includes(object.type) ? 'shapes'
+    : isShapeType(object.type) ? 'shapes'
       : object.type === 'line' ? 'lines'
         : ['image', 'svg'].includes(object.type) ? 'images' : 'other';
   return $(`#object-filter-${category}`).getAttribute('aria-pressed') === 'true';
@@ -370,6 +374,11 @@ function drawObject(object: DeskObject) {
       'text-anchor': 'middle', 'dominant-baseline': 'middle', 'pointer-events': 'none' });
     text.textContent = object.text; group.append(text);
   }
+  const extraShape = shapePaths(object.type, w, h);
+  if (extraShape) {
+    group.append(svg('path', { d: extraShape.outline, ...style, class: 'diagram-shape', 'stroke-linejoin': 'round' }));
+    if ('detail' in extraShape && extraShape.detail) group.append(svg('path', { d: extraShape.detail, fill: 'none', stroke: object.stroke, 'stroke-width': object.strokeWidth, 'pointer-events': 'none' }));
+  }
   drawShapeText(group, object);
   drawLabelDescription(group, object, pinDescriptionVisible(object));
   if (object.type === 'text') {
@@ -468,7 +477,7 @@ function render(rebuild = true) {
     const object = desk.get(ids[0]);
     propertyEditor.sync(object);
     updateConnectorLineStyle();
-    updateStartMarker(); updateEndMarker(); updateCallout();
+    updateStartMarker(); updateEndMarker(); updateCallout(); updateTextFit();
     if (object.url) { link.href = object.url; link.hidden = false; }
   }
   lockControls.update(ids.map(id => desk.get(id)));
@@ -537,6 +546,7 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
   const center = { x: (120 - camera.x) / camera.zoom + offset, y: (100 - camera.y) / camera.zoom + offset };
   const object = objectSchema.parse({ id: `${type}-${randomUuid().slice(0, 8)}`, type, ...gridPosition(center),
     ...creationAppearance(type, desk.settingsSnapshot().defaults),
+    ...(isShapeType(type) ? { textFit: 'shrink' } : {}),
     ...(type === 'text' ? { width: 280, height: 80 } : {}),
     ...(['line', 'arrow'].includes(type) ? selectedConnection(desk.selected().map(id => desk.get(id))) : {}),
     ...(['web', 'link'].includes(type) ? { width: type === 'web' ? 480 : 320, height: type === 'web' ? 340 : 60 } : {}), ...extra });
@@ -548,6 +558,11 @@ app.querySelectorAll<HTMLButtonElement>('[data-add]').forEach(button => button.o
   const type = (kind === 'arrow' ? 'line' : kind) as DeskObject['type'];
   if (!busy && !editor.isActive()) attempt(() => newObject(type, kind === 'arrow' ? { endMarker: 'arrow' } : {}));
 });
+createShapePicker($<HTMLButtonElement>('[data-add="rect"]'), type => {
+  if (!busy && !editor.isActive()) attempt(() => newObject(type));
+});
+$('[data-add="roundedRect"]').remove(); $('[data-add="ellipse"]').remove();
+
 $('#undo').onclick = () => attempt(() => { desk.undo(); });
 $('#clear-ai-pointing').onclick = () => { desk.point([]); drawSelection(); };
 $('#redo').onclick = () => attempt(() => { desk.redo(); });
@@ -611,7 +626,7 @@ canvas.addEventListener('dblclick', event => {
   const id = target.closest('[data-id]')?.getAttribute('data-id');
   if (!id || busy || editor.isActive()) return;
   const object = desk.get(id);
-  if (['rect', 'roundedRect', 'ellipse', 'text', 'link', 'web', 'label', 'image', 'svg'].includes(object.type)) editor.open(object);
+  if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg'].includes(object.type)) editor.open(object);
 });
 canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture) zoom(Math.exp(-event.deltaY * 0.001), screen(event)); }, { passive: false });
 // Middle-button release can paste the Linux primary selection after the pan ends.

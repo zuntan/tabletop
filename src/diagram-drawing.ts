@@ -1,3 +1,4 @@
+import { fittedShapeFont } from './shape-definitions';
 import { snapConnectorEndpoint } from './connector-junctions';
 import type { DeskObject } from './model';
 import { anchorsFor, anchorPoint, endpoints, isConnector, isShape, isConnectable, snap, type Point } from './geometry';
@@ -35,14 +36,19 @@ export function drawConnector(group: SVGGElement, object: DeskObject, zoom: numb
     drawConnectorMarker(group, object.endMarker ?? 'none', dx, dy, angle, size, object.stroke, 'end');
   }
 }
+const shapeMeasure = typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d');
 export function drawShapeText(group: SVGGElement, object: DeskObject) {
   if (!isShape(object) || !object.text) return;
   const lines = object.text.split('\n');
-  const text = element('text', { fill: object.textColor, 'font-size': object.fontSize,
+  const measure = shapeMeasure;
+  if (measure) measure.font = '100px sans-serif';
+  const size = object.type === 'label' ? object.fontSize : fittedShapeFont(object.type, object.width, object.height,
+    object.text, object.fontSize, object.textFit, line => measure ? measure.measureText(line).width / 100 : line.length * .6);
+  const text = element('text', { fill: object.textColor, 'font-size': size,
     'font-family': 'sans-serif', 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'pointer-events': 'none', class: 'shape-text' });
   lines.forEach((line, i) => {
     const span = element('tspan', { x: object.width / 2,
-      y: numberCenterY(object.type === 'label' ? object.labelShape : undefined, object.height) + (i - (lines.length - 1) / 2) * object.fontSize * 1.25 });
+      y: numberCenterY(object.type === 'label' ? object.labelShape : undefined, object.height) + (i - (lines.length - 1) / 2) * size * 1.25 });
     span.textContent = line; text.append(span);
   });
   group.append(text);
