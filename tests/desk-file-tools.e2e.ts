@@ -1,3 +1,4 @@
+import { publishObject } from '../src/object-properties';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
@@ -30,7 +31,7 @@ test('real MCP save/load round-trip, browser interoperability, conflicts and saf
     assert.equal(saved.path, join(root, 'desk.tabletop')); assert.equal(saved.revision, original.revision); assert.equal(saved.formatVersion, 1);
     const bytes = await readFile(saved.path);
     const decoded = await decodeDeskFile(bytes);
-    assert.deepEqual(decoded.objects, original.objects); assert.deepEqual(decoded.settings, original.settings);
+    assert.deepEqual(decoded.objects.map(publishObject), original.objects); assert.deepEqual(decoded.settings, original.settings);
     assert.deepEqual(await call('desk_state'), original);
     async function fails(name: string, args: Record<string, unknown>) {
       const before = await call('desk_state');

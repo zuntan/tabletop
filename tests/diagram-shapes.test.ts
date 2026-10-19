@@ -1,3 +1,4 @@
+import { publishObject } from '../src/object-properties';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Desk, objectSchema } from '../src/model';
@@ -27,7 +28,7 @@ test('five new shapes share cardinal anchors, text and save/Undo without changin
   }
   const saved = await decodeDeskFile(await encodeDeskFile(desk));
   const restored = new Desk(); restored.replaceDocument({ objects: saved.objects, settings: saved.settings });
-  assert.deepEqual(restored.snapshot(), desk.snapshot());
+  assert.deepEqual(restored.snapshot().map(publishObject), desk.snapshot().map(publishObject));
   assert.equal(anchorsFor(objectSchema.parse({ id: 'old', type: 'ellipse' })).length, 8);
 });
 test('two approximation families and two fit modes enlarge or shrink without changing the requested font', () => {

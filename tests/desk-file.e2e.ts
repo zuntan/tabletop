@@ -1,3 +1,4 @@
+import { publishObject } from '../src/object-properties';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -22,7 +23,7 @@ test('save/download, load/upload, shared Undo, rejected file, and cancel work in
     assert.match(download.suggestedFilename(), /\.tabletop$/);
     const bytes = await readFile((await download.path())!);
     const parsed = await decodeDeskFile(bytes);
-    assert.deepEqual(parsed.objects, original.objects);
+    assert.deepEqual(parsed.objects.map(publishObject), original.objects);
     await call('desk_execute', { operations: [{ kind: 'update', id: 'note', patch: { text: 'Changed' } }] });
     page.once('dialog', dialog => dialog.accept());
     await page.locator('#desk-file').setInputFiles({ name: 'roundtrip.tabletop', mimeType: 'application/zip', buffer: bytes });

@@ -1,3 +1,4 @@
+import { publishObject } from '../src/object-properties';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Desk, type DeskObject } from '../src/model';
@@ -85,7 +86,7 @@ test('closed triangle uses independent point groups; deletion detaches only remo
   assert.equal(desk.get('c').x2, 30); assert.equal(desk.get('c').y, 100);
   const saved = await decodeDeskFile(await encodeDeskFile(desk));
   const restored = new Desk(); restored.replaceDocument({ objects: saved.objects, settings: saved.settings });
-  assert.deepEqual(restored.snapshot(), desk.snapshot());
+  assert.deepEqual(restored.snapshot().map(publishObject), desk.snapshot().map(publishObject));
   desk.execute({ operations: [{ kind: 'delete', id: 'a' }] });
   assert.equal(desk.get('b').startJunction, null); assert.equal(desk.get('c').endJunction, null);
   assert.equal(desk.get('b').endJunction, 'bc');

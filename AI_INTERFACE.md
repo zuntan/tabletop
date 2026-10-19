@@ -257,3 +257,6 @@ text.calloutは{x,y,binding?:{objectId,anchor}|null}、null/省略で無効。�
 
 ## 図形の追加と文字サイズ
 既存rect/roundedRect/ellipseにdiamond/parallelogram/cylinder/document/cloudを追加。新5種のアンカーはtop/right/bottom/leftのみ。textFit:autoで拡大縮小、shrinkで指定fontSizeを上限に縮小。省略は従来の固定文字サイズ。図形の近似・文字サイズはdocs/diagram-shapes.md参照。
+
+## 有効なプロパティのみの取得・保存
+保存とMCP取得・履歴・共有GETは、種類ごとに意味のある項目だけを出力する。線の塗り・文字サイズや、メディアの固定装飾に対する見かけの設定値は出さない。有効な0や既定値は残す。旧ファイルの読取は互換。詳細はdocs/meaningful-properties.md。
