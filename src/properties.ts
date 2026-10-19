@@ -4,7 +4,7 @@ import type { DeskObject } from './model';
 import { isConnector } from './geometry';
 import { supportsFill, transparencyPercent, opacityFromPercent } from './fill-opacity';
 
-const fields = ['x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'url'] as const;
+const fields = ['x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'url'] as const;
 const numeric = new Set(['x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'junctionRounding', 'fontSize', 'cornerRadius', 'padding']);
 export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   const connector = isConnector(object);
@@ -12,6 +12,10 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   for (const name of fields) {
     const input = form.elements.namedItem(name) as HTMLInputElement;
     if (!input) continue;
+    if (name === 'mermaidSource') {
+      input.disabled = object.type !== 'mermaid'; input.closest('label')!.hidden = object.type !== 'mermaid';
+      input.value = object.mermaidSource ?? ''; continue;
+    }
     if (name === 'junctionRounding') {
       input.disabled = !connector; input.closest('label')!.hidden = !connector;
       input.value = String(object.junctionRounding ?? 0); continue;
@@ -36,7 +40,7 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
       input.value = String(name === 'padding' ? object.padding ?? 6 : object.cornerRadius);
       continue;
     }
-    if (name === 'text') input.closest('label')!.firstChild!.textContent = object.type === 'label' ? '説明文' : ['image', 'svg'].includes(object.type) ? 'タイトル' : 'テキスト';
+    if (name === 'text') input.closest('label')!.firstChild!.textContent = object.type === 'label' ? '説明文' : ['image', 'svg', 'mermaid'].includes(object.type) ? 'タイトル' : 'テキスト';
     if (name === 'url') input.closest('label')!.firstChild!.textContent = ['image', 'svg'].includes(object.type) ? 'URL（任意）' : 'URL';
     input.value = name === 'fillOpacity' ? String(transparencyPercent(object.fillOpacity))
       : String(object.type === 'label' && name === 'text' ? object.description ?? '' : object[name] ?? '');

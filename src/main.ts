@@ -9,6 +9,7 @@ import { Desk, dispatch, objectSchema, type DeskObject, type Operation } from '.
 import { anchorPoint, bounds, endpoints, isConnector, isShape } from './geometry';
 import { createColorControls } from './color-controls';
 import { buildJunctionRounding } from './junction-rounding';
+import { drawMermaidCard, defaultMermaidSource, renderMermaid } from './mermaid-card';
 import { drawConnector, drawShapeText, drawEndpointHandles, drawSnapTargets, updateScenePreview } from './diagram-drawing';
 import { gestureOperations, gesturePreview, endpointDragPoint, type Gesture } from './diagram-gestures';
 import { createPropertyEditor } from './property-editor';
@@ -72,7 +73,7 @@ app.innerHTML = `
   <nav aria-label="追加ツール">
     <button data-add="rect">▭ 矩形</button><button data-add="roundedRect">▢ 角丸矩形</button><button data-add="ellipse">◯ 楕円</button>
     <button data-add="line">╱ 線</button><button data-add="arrow">↗ 矢印</button>
-    <button data-add="text">T テキスト</button><button id="image">画像 / SVG</button>
+    <button data-add="text">T テキスト</button><button id="image">画像 / SVG</button><button data-add="mermaid">Mermaid</button>
     <button id="clipboard" title="クリップボードから追加" aria-label="クリップボードから追加">▣ クリップボードから追加</button>
     <button data-add="web">Web資料</button><button data-add="link">リンク</button>
     <button id="numbering">ピン</button><div id="authoring-tools"></div>
@@ -110,6 +111,7 @@ app.innerHTML = `
           <label hidden>文字サイズ調整<select name="textFit" disabled><option value="fixed" hidden>指定サイズ（既存）</option><option value="auto">完全自動</option><option value="shrink">縮小のみ</option></select></label>
           <label hidden>吹き出し<select name="calloutMode" disabled><option value="none">なし</option><option value="speech">三角</option><option value="thought">考え事</option><option value="leader">引き出し線</option></select></label>
           <label class="wide">テキスト<textarea name="text" rows="3"></textarea></label>
+          <label class="wide" hidden>Mermaidソース<textarea name="mermaidSource" rows="8" spellcheck="false" disabled></textarea></label>
           <label class="wide">URL<input name="url" type="url"></label>
         </form>
         <button id="text-measure" type="button" hidden>文章の収まりを確認</button>
@@ -248,13 +250,13 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
   const background = desk.settingsSnapshot().background;
   deskBackground.update({ ...background, ...preview }, camera);
 });
-const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
+const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
   const category = object.type === 'label' ? 'pins' : object.type === 'text' ? 'text'
     : isShapeType(object.type) ? 'shapes'
       : object.type === 'line' ? 'lines'
-        : ['image', 'svg'].includes(object.type) ? 'images' : 'other';
+        : ['image', 'svg', 'mermaid'].includes(object.type) ? 'images' : 'other';
   return $(`#object-filter-${category}`).getAttribute('aria-pressed') === 'true';
 }
 
@@ -393,7 +395,7 @@ function drawObject(object: DeskObject) {
     if (object.callout) drawCalloutLeader(group, object);
     drawMarkdown(group, object);
   }
-  if (['link', 'web', 'image', 'svg'].includes(object.type)) {
+  if (['link', 'web', 'image', 'svg', 'mermaid'].includes(object.type)) {
     group.append(svg('rect', { width: w, height: h, rx: 6, fill: '#ffffff', stroke: '#94a3b8' }));
     const title = svg('text', { x: 12, y: 23, 'font-size': 14, fill: '#1d4ed8' });
     title.textContent = (object.text || object.url || '').slice(0, Math.max(0, Math.floor((w - 52) / 8))); group.append(title);
@@ -409,6 +411,7 @@ function drawObject(object: DeskObject) {
       iframe.loading = 'lazy'; iframe.style.pointerEvents = 'none';
       foreign.append(iframe); group.append(foreign);
     }
+    if (object.type === 'mermaid') drawMermaidCard(group, object);
     drawOpenLink(group, object);
   }
   drawReactions(group, object, pinDescriptionVisible(object));
@@ -553,10 +556,11 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
   const object = objectSchema.parse({ id: `${type}-${randomUuid().slice(0, 8)}`, type, ...gridPosition(center),
     ...creationAppearance(type, desk.settingsSnapshot().defaults),
     ...(isShapeType(type) ? { textFit: 'shrink' } : {}),
+    ...(type === 'mermaid' ? { width: 480, height: 354, text: 'Mermaid', mermaidSource: defaultMermaidSource } : {}),
     ...(type === 'text' ? { width: 280, height: 80 } : {}),
     ...(['line', 'arrow'].includes(type) ? selectedConnection(desk.selected().map(id => desk.get(id))) : {}),
     ...(['web', 'link'].includes(type) ? { width: type === 'web' ? 480 : 320, height: type === 'web' ? 340 : 60 } : {}), ...extra });
-  if (['text', 'web', 'link'].includes(type)) { editor.open(object, true); return; }
+  if (['text', 'web', 'link', 'mermaid'].includes(type)) { editor.open(object, true); return; }
   execute([{ kind: 'add', object }], 'desk'); desk.select([object.id]);
 }
 app.querySelectorAll<HTMLButtonElement>('[data-add]').forEach(button => button.onclick = () => {
@@ -632,7 +636,7 @@ canvas.addEventListener('dblclick', event => {
   const id = target.closest('[data-id]')?.getAttribute('data-id');
   if (!id || busy || editor.isActive()) return;
   const object = desk.get(id);
-  if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg'].includes(object.type)) editor.open(object);
+  if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg', 'mermaid'].includes(object.type)) editor.open(object);
 });
 canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture) zoom(Math.exp(-event.deltaY * 0.001), screen(event)); }, { passive: false });
 // Middle-button release can paste the Linux primary selection after the pan ends.
@@ -889,8 +893,8 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
       if ((busy && message.request.method !== 'camera_get') || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       if (['fit', 'camera_move'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing())) throw new Error('Human editing in progress. No camera change was made.');
       if (message.request.method === 'load_document') cameraAnimator.cancel('Desk contents replaced');
-      let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme });
-      if (message.request.method === 'camera_move') result = await result;
+      let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid);
+      if (['camera_move', 'mermaid_render'].includes(message.request.method)) result = await result;
       if (message.request.method === 'fit') {
         const ids = desk.pointed();
         await fitView(ids, { durationMs: message.request.durationMs });

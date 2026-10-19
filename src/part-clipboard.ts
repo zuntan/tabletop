@@ -9,6 +9,7 @@ const escapeHtml = (text: string) => text.replace(/[&<>"']/g, char => ({ '&': '&
 export function partClipboardText(objects: DeskObject[]): string {
   return objects.flatMap(object => {
     if (object.type === 'image' || isConnector(object)) return [];
+    if (object.type === 'mermaid') return [object.mermaidSource ?? ''];
     if (object.type === 'svg') {
       const match = /^data:image\/svg\+xml;base64,([A-Za-z0-9+/=\s]+)$/.exec(object.src ?? '');
       if (!match) return []; // Copying a remote SVG must not fetch its URL.

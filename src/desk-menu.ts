@@ -96,6 +96,8 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     const link = document.createElement('a'); link.href = 'https://github.com/zuntan/tabletop'; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'GitHub · zuntan/tabletop';
     const license = document.createElement('a'); license.href = '/licenses/tabler-icons.txt'; license.target = '_blank'; license.rel = 'noopener noreferrer'; license.textContent = 'Tabler Icons · MITライセンス';
     const licenses = document.createElement('p'); licenses.append(license);
+    const mermaidLicense = document.createElement('a'); mermaidLicense.href = '/licenses/mermaid.txt'; mermaidLicense.target = '_blank'; mermaidLicense.rel = 'noopener noreferrer'; mermaidLicense.textContent = 'Mermaid · MITライセンス';
+    licenses.append(document.createElement('br'), mermaidLicense);
     panel.append(text, description, link, licenses);
   }
   button.onclick = () => {

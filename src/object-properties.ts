@@ -9,6 +9,7 @@ const text = ['text', 'textColor', 'fontSize'] as const;
 export function objectPropertyNames(object: DeskObject): readonly (keyof DeskObject)[] {
   if (object.type === 'line') return [...common, 'x2', 'y2', 'stroke', 'strokeWidth', 'dash',
     'startMarker', 'endMarker', 'startBinding', 'endBinding', 'startJunction', 'endJunction', 'junctionRounding'];
+  if (object.type === 'mermaid') return [...common, ...box, 'text', 'mermaidSource'];
   if (object.type === 'text') return [...common, ...box, ...paint, ...text, 'cornerRadius', 'padding', 'callout'];
   if (isShapeType(object.type)) return [...common, ...box, ...paint, ...text, 'textFit',
     ...(object.type === 'roundedRect' ? ['cornerRadius' as const] : [])];
