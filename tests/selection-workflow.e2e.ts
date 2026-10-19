@@ -52,10 +52,10 @@ test('fill transparency controls affect only fills and editor key preference sup
     assert.equal((await call('desk_settings')).defaults.fillOpacity, 0.65);
     await page.locator('#undo').click(); assert.equal((await call('desk_get', { id: 'memo' })).fillOpacity, 0.3);
     await page.locator('#properties [name="fillOpacity"]').fill('20');
-    await page.locator('#properties button[type="submit"]').click();
+    await page.locator('#properties [name="fillOpacity"]').press('Enter');
     assert.equal((await call('desk_get', { id: 'memo' })).fillOpacity, 0.8);
     await call('desk_execute', { operations: [{ kind: 'update', id: 'memo', patch: { fillOpacity: 0.333 } }] });
-    await page.locator('#properties [name="x"]').fill('260'); await page.locator('#properties button[type="submit"]').click();
+    await page.locator('#properties [name="x"]').fill('260'); await page.locator('#properties [name="x"]').press('Enter');
     assert.equal((await call('desk_get', { id: 'memo' })).fillOpacity, 0.333);
     await memo.locator('h2').dblclick();
     const input = page.locator('[data-inline-text]'); const mode = page.getByRole('button', { name: 'Enter改行モード' });

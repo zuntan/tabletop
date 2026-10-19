@@ -94,7 +94,7 @@ test('browser UI and real stdio agent share objects, gestures, selection and his
     assert.equal(await page.locator('#open-url').getAttribute('href'), `http://127.0.0.1:${port}/missing-page`);
     await call('desk_select', { ids: [id] });
     await page.locator('#properties input[name="x"]').fill('123');
-    await page.getByRole('button', { name: '変更を適用', exact: true }).click();
+    await page.locator('#properties input[name="x"]').press('Enter');
     assert.equal((await call('desk_get', { id })).x, 123);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); await client.close(); await transport.close(); }

@@ -51,10 +51,11 @@ test('text card properties, copy, undo and save/load keep padding and corner rad
     await call('desk_select', { ids: ['card'] });
     await page.locator('#properties [name="padding"]').fill('24');
     await page.locator('#properties [name="cornerRadius"]').fill('18');
-    await page.locator('#properties button[type="submit"]').click();
+    await page.locator('#properties [name="cornerRadius"]').press('Enter');
     let card = await call('desk_get', { id: 'card' }); assert.equal(card.padding, 24); assert.equal(card.cornerRadius, 18);
-    await call('desk_undo'); card = await call('desk_get', { id: 'card' }); assert.equal(card.padding, undefined); assert.equal(card.cornerRadius, 16);
-    await call('desk_redo');
+    await call('desk_undo'); card = await call('desk_get', { id: 'card' }); assert.equal(card.padding, 24); assert.equal(card.cornerRadius, 16);
+    await call('desk_undo'); assert.equal((await call('desk_get', { id: 'card' })).padding, undefined);
+    await call('desk_redo'); await call('desk_redo');
     await page.locator('#canvas').focus(); await page.keyboard.press('Control+c'); await page.keyboard.press('Control+v');
     await page.waitForFunction(() => document.querySelectorAll('#objects > [data-id]').length === 2);
     const state = await call('desk_state'); assert.equal(state.objects[1].padding, 24); assert.equal(state.objects[1].cornerRadius, 18);

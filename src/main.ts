@@ -4,7 +4,7 @@ import { anchorPoint, bounds, endpoints, isConnector, isShape } from './geometry
 import { createColorControls } from './color-controls';
 import { drawConnector, drawShapeText, drawEndpointHandles, drawSnapTargets, updateScenePreview } from './diagram-drawing';
 import { gestureOperations, gesturePreview, endpointDragPoint, type Gesture } from './diagram-gestures';
-import { syncProperties, propertyPatch } from './properties';
+import { createPropertyEditor } from './property-editor';
 import './diagram.css';
 import './authoring.css';
 import { createInlineEditor } from './inline-editor';
@@ -98,7 +98,6 @@ app.innerHTML = `
           <label hidden>内側の余白<input name="padding" type="number" min="0" step="any"></label>
           <label class="wide">テキスト<textarea name="text" rows="3"></textarea></label>
           <label class="wide">URL<input name="url" type="url"></label>
-          <button type="submit" class="wide">変更を適用</button>
         </form>
         <button id="text-measure" type="button" hidden>文章の収まりを確認</button>
         <small id="text-measure-result" role="status" hidden></small>
@@ -139,6 +138,9 @@ let renderedScene: DeskObject[] = [];
 const pinSeriesMap = new Map<string, Series>();
 const renderedById = new Map<string, DeskObject>();
 const form = $<HTMLFormElement>('#properties');
+const propertyEditor = createPropertyEditor(form, desk, (id, patch) => {
+  execute([{ kind: 'update', id, patch }]); render(); notify(`revision ${desk.revision} · ${desk.summary().count} オブジェクト`);
+}, message => notify(message, true));
 addFormNumberPresets(form);
 const updateConnectorLineStyle = createLineStylePicker(form.elements.namedItem('dash') as HTMLSelectElement);
 const updateStartMarker = createEndpointPicker(form.elements.namedItem('startMarker') as HTMLSelectElement, '始点形状', 'start');
@@ -422,13 +424,14 @@ function render(rebuild = true) {
   authoring.update();
   $('#selected-label').textContent = ids.length ? `${ids.length} 個選択 · ${ids.join(', ')}` : '未選択';
   form.hidden = ids.length !== 1;
+  if (ids.length !== 1) propertyEditor.clear();
   // Human measurement UI is paused; the read-only MCP tool remains available.
   $<HTMLButtonElement>('#text-measure').hidden = true;
   $('#text-measure-result').textContent = '';
   const link = $<HTMLAnchorElement>('#open-url'); link.hidden = true;
   if (ids.length === 1) {
     const object = desk.get(ids[0]);
-    syncProperties(form, object);
+    propertyEditor.sync(object);
     updateConnectorLineStyle();
     updateStartMarker(); updateEndMarker();
     if (object.url) { link.href = object.url; link.hidden = false; }
@@ -530,19 +533,6 @@ $('#text-measure').onclick = () => {
     return `${name}：${state}。必要な高さ ${item.requiredHeight}（現在 ${item.frame.height}）${item.canFitByHeight ? '' : '。高さだけでは解消できません'}`;
   }).join('\n');
   } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
-};
-form.onsubmit = event => {
-  event.preventDefault();
-  attempt(() => {
-    const object = desk.get(desk.selected()[0]);
-    const patch = propertyPatch(form, object);
-    execute([{ kind: 'update', id: object.id, patch }]);
-  });
-};
-form.onchange = event => {
-  const input = event.target;
-  if ((input instanceof HTMLInputElement || input instanceof HTMLSelectElement) && ['strokeWidth', 'dash', 'startMarker', 'endMarker'].includes(input.name) && desk.selected().length === 1
-    && isConnector(desk.get(desk.selected()[0]))) form.requestSubmit();
 };
 $('#zoom-in').onclick = () => zoom(1.25);
 $('#zoom-out').onclick = () => zoom(0.8);

@@ -34,16 +34,22 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
     if (name === 'fillOpacity' || name === 'fontSize' || name === 'text') input.closest('label')!.hidden = connector;
   }
 }
-export function propertyPatch(form: HTMLFormElement, object: DeskObject): Partial<DeskObject> {
-  const patch: Record<string, unknown> = {};
-  for (const [key, value] of new FormData(form)) {
-    if (key === 'dash' && value === (object.dash ?? 'solid')) continue;
-    if (key === 'padding' && Number(value) === (object.padding ?? 6)) continue;
-    if (key === 'fillOpacity' && String(value) === String(transparencyPercent(object.fillOpacity))) continue;
-    const parsed = key === 'fillOpacity' ? opacityFromPercent(String(value)) : numeric.has(key) ? Number(value) : String(value);
-    const field = object.type === 'label' && key === 'text' ? 'description' : key;
-    if (parsed !== (object[field as keyof DeskObject] ?? '')) patch[field] = parsed;
-  }
+export function propertyValue(object: DeskObject, key: string): string {
+  if (key === 'text' && object.type === 'label') return object.description ?? '';
+  if (key === 'fillOpacity') return String(transparencyPercent(object.fillOpacity));
+  if (key === 'padding') return String(object.padding ?? 6);
+  if (key === 'dash') return object.dash ?? 'solid';
+  if (key === 'startMarker' || key === 'endMarker') return object[key] ?? 'none';
+  return String(object[key as keyof DeskObject] ?? '');
+}
+
+export function propertyFieldPatch(key: string, value: string, object: DeskObject): Partial<DeskObject> {
+  if (!(fields as readonly string[]).includes(key)) throw new Error('Unknown property');
+  if (value === propertyValue(object, key)) return {};
+  if ((numeric.has(key) || key === 'fillOpacity') && (!value.trim() || !Number.isFinite(Number(value)))) throw new Error('有効な数値を入力してください');
+  const field = object.type === 'label' && key === 'text' ? 'description' : key;
+  const parsed = key === 'fillOpacity' ? opacityFromPercent(value) : numeric.has(key) ? Number(value) : value;
+  const patch: Record<string, unknown> = { [field]: parsed };
   if (isConnector(object)) {
     if ('x' in patch || 'y' in patch) patch.startBinding = null;
     if ('x2' in patch || 'y2' in patch) patch.endBinding = null;

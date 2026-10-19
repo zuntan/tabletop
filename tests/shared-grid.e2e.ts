@@ -32,7 +32,7 @@ test('shared snap defaults, public MCP placement, exact numeric editing and save
     assert.equal((await call('desk_summary')).revision, revision + 1); assert.equal(await button.getAttribute('aria-pressed'), 'true');
     await call('desk_select', { ids: ['precise'] });
     await page.locator('#properties [name="x"]').fill('307.5');
-    await page.locator('#properties button[type="submit"]').click();
+    await page.locator('#properties [name="x"]').press('Enter');
     assert.equal((await call('desk_get', { id: 'precise' })).x, 307.5);
     await button.click(); assert.equal((await call('desk_settings')).grid.enabled, false);
     await execute([{ kind: 'add', object: { id: 'off', type: 'rect', x: 35, y: 35 } }]);

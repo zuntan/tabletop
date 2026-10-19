@@ -17,7 +17,7 @@
 .sidebar-tabs [aria-selected="true"] { background: #dbeafe; border-color: #2563eb; }
 .sidebar-panels { flex: 1; min-height: 0; overflow: hidden; }
 .sidebar-panel { height: 100%; overflow-y: auto; padding: 0 15px 72px; }
-.sidebar-panel #property-lock, .sidebar-panel #property-lock-mixed, .sidebar-panel #properties button[type="submit"], .sidebar-panel #series-add, .sidebar-panel #series-fit, .sidebar-panel #connect-form > button[type="submit"], .sidebar-panel #handoff-start, .sidebar-panel #handoff-hide { font-size: 10px; }
+.sidebar-panel #property-lock, .sidebar-panel #property-lock-mixed, .sidebar-panel #series-add, .sidebar-panel #series-fit, .sidebar-panel #connect-form > button[type="submit"], .sidebar-panel #handoff-start, .sidebar-panel #handoff-hide { font-size: 10px; }
 .sidebar-panel .property-lock-control { display: flex; align-items: center; gap: 7px; width: 100%; margin: 8px 0 4px; }
 .property-lock-label { flex: 1; font-size: 12px; text-align: left; }
 .sidebar-panel #property-lock { display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 88px; height: 32px; padding: 4px 8px; }

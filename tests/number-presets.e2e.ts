@@ -24,12 +24,11 @@ test('numeric preset menus preserve direct input, property drafts, pin series an
     await choose(properties, '角丸の候補', '16');
     await choose(properties, '文字サイズの候補', '48');
     assert.equal(await properties.locator('[name="padding"]').inputValue(), '32');
-    await properties.getByRole('button', { name: '変更を適用' }).click();
     assert.equal(await properties.evaluate(el => (el as HTMLFormElement).checkValidity()), true,
       JSON.stringify(await properties.locator(':invalid').evaluateAll(els => els.map(el => ({ name: (el as HTMLInputElement).name, value: (el as HTMLInputElement).value })))));
     const card = await call('desk_get', { id: 'card' });
     assert.equal(card.padding, 32); assert.equal(card.cornerRadius, 16); assert.equal(card.fontSize, 48);
-    await call('desk_undo'); assert.notEqual((await call('desk_get', { id: 'card' })).padding, 32);
+    await call('desk_undo'); assert.equal((await call('desk_get', { id: 'card' })).fontSize, 24);
     await call('desk_execute', { operations: [{ kind: 'label_add', id: 'pin', seriesId: 'series-1', x: 500, y: 500 }] });
     await call('desk_select', { ids: ['pin'] });
     assert.equal(await properties.getByRole('button', { name: '線幅の候補', exact: true }).isDisabled(), true);

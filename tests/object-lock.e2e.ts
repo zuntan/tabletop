@@ -71,7 +71,7 @@ test('mouse lock controls, bottom-right badge and mixed selection protect geomet
     assert.equal((await call('desk_get', { id: 'a' })).text, 'Double-click allowed');
     assert.equal((await call('desk_get', { id: 'a' })).locked, true);
     await page.locator('#properties [name="x"]').fill('125');
-    await page.locator('#properties [type="submit"]').click();
+    await page.locator('#properties [name="x"]').press('Enter');
     assert.equal((await call('desk_get', { id: 'a' })).x, 125);
     await page.locator('#property-lock').click();
     assert.equal((await call('desk_get', { id: 'a' })).locked, false);
