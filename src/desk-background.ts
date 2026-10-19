@@ -1,6 +1,8 @@
 import type { Settings } from './settings';
 import { element } from './diagram-drawing';
 
+export const wallpaperUnderlayColor = '#808080';
+
 export const wallpaperColors = {
   none: '#f8fafc', wood: '#dfc49e', 'cutting-mat': '#315e50', 'pink-notebook': '#fff0f4', charcoal: '#252b33',
 } as const;
@@ -13,6 +15,11 @@ export function createDeskBackground(canvas: SVGSVGElement) {
   const base = canvas.querySelector<SVGRectElement>('#desk-background')!;
   const texture = canvas.querySelector<SVGRectElement>('#desk-wallpaper')!;
   const grid = canvas.querySelector<SVGRectElement>('#desk-grid')!;
+  // Composite the whole wallpaper once, so its texture does not fade independently.
+  const underlay = element('rect', { id: 'desk-underlay', width: '100%', height: '100%', fill: wallpaperUnderlayColor, 'aria-hidden': 'true' });
+  const surface = element('g', { id: 'desk-surface', 'aria-hidden': 'true' });
+  base.before(underlay, surface);
+  surface.append(base, texture, grid);
   for (const node of [base, texture, grid]) node.setAttribute('aria-hidden', 'true');
   let previous = '';
   function draw(wallpaper: Settings['background']['wallpaper']) {
@@ -49,6 +56,9 @@ export function createDeskBackground(canvas: SVGSVGElement) {
   return {
     update(background: Settings['background'], camera: { x: number; y: number; zoom: number }) {
       if (background.wallpaper !== previous) { draw(background.wallpaper); previous = background.wallpaper; }
+      const gray = Math.round(background.underlayBrightness * 255).toString(16).padStart(2, '0');
+      underlay.setAttribute('fill', '#' + gray.repeat(3));
+      surface.setAttribute('opacity', String(background.opacity));
       base.setAttribute('fill', background.color ?? wallpaperColors[background.wallpaper]);
       base.dataset.wallpaper = background.wallpaper;
       texture.setAttribute('fill', background.wallpaper === 'none' || background.wallpaper === 'charcoal' ? 'none' : 'url(#desk-surface-pattern)');

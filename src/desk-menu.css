@@ -1,0 +1,22 @@
+#desk-menu-panel {
+  position: fixed; inset: 76px 18px auto auto; margin: 0;
+  width: 320px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 96px);
+  overflow: auto; padding: 16px; border: 1px solid var(--ui-border, #cbd5e1);
+  border-radius: 10px; background: var(--ui-panel, #fff); color: var(--ui-text, #334155);
+  box-shadow: 0 8px 28px #0003; font-size: 13px;
+}
+#desk-menu-panel .desk-menu-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+#desk-menu-panel h2 { font-size: 15px; margin: 0; }
+#desk-menu-panel .desk-menu-heading button { display: flex; padding: 4px; }
+#desk-menu-panel .desk-menu-item { display: block; width: 100%; text-align: left; margin-top: 8px; }
+#desk-menu-panel .desk-menu-field { display: grid; gap: 7px; margin-top: 16px; }
+#desk-menu-panel select { width: 100%; border: 1px solid var(--ui-border, #cbd5e1); border-radius: 6px; padding: 7px; color: inherit; background: var(--ui-input, #fff); }
+#desk-menu-panel .desk-menu-range { display: flex; align-items: center; gap: 12px; }
+#desk-menu-panel input[type=range] { flex: 1; min-width: 0; accent-color: #3b82f6; }
+#desk-menu-panel output { width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
+#desk-menu-panel .desk-menu-note { color: var(--ui-muted, #64748b); font-size: 12px; line-height: 1.6; }
+#desk-menu-panel .desk-menu-colors { display: flex; align-items: center; gap: 12px; }
+#desk-menu-panel input[type=color] { width: 44px; height: 30px; padding: 2px; border: 1px solid var(--ui-border, #cbd5e1); border-radius: 5px; }
+#desk-menu-panel .desk-menu-colors label { display: flex; align-items: center; gap: 4px; }
+#desk-menu-panel a { color: #2563eb; }
+:root[data-theme=dark] #desk-menu-panel a { color: #93c5fd; }

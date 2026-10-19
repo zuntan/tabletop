@@ -8,6 +8,8 @@ export const colorSchema = z.string().regex(/^(#[0-9a-fA-F]{3,8}|transparent|[a-
 export const backgroundSchema = z.object({
   wallpaper: z.enum(['none', 'wood', 'cutting-mat', 'pink-notebook', 'charcoal']).default('none'),
   color: colorSchema.nullable().default(null),
+  opacity: z.number().finite().min(0).max(1).default(1),
+  underlayBrightness: z.number().finite().min(0).max(1).default(0.5),
   showGrid: z.boolean().nullable().default(null),
   selectionColor: colorSchema.nullable().default(null),
   pointingColor: colorSchema.nullable().default(null),
@@ -26,6 +28,7 @@ export const pinThreadSchema = z.object({
   enabled: z.boolean().default(true), visible: z.boolean().default(false),
   color: colorSchema.default('#64748b'), width: z.number().finite().min(0).max(100).default(2),
   opacity: z.number().finite().min(0).max(1).default(1),
+  underlayBrightness: z.number().finite().min(0).max(1).default(0.5),
   dash: z.enum(['solid', 'dashed', 'dotted']).default('solid'),
 }).strict();
 export const seriesSchema = appearanceSchema.extend({

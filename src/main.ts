@@ -1,3 +1,4 @@
+import { createDeskMenu } from './desk-menu';
 import './style.css';
 import { Desk, dispatch, objectSchema, type DeskObject, type Operation } from './model';
 import { anchorPoint, bounds, endpoints, isConnector, isShape } from './geometry';
@@ -228,6 +229,13 @@ const identityControls = createDeskIdentityControls($('header'), desk,
 createDeskFileControls($('header'), desk, () => { partClipboard.clear(); render(); fitView(desk.selected()); },
   () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing());
 createUiThemeButton($('header'));
+const deskMenu = createDeskMenu($('header'), desk, patch => {
+  if (busy || gesture || editor.isActive()) { notify('操作が終わってから設定を変更してください', true); deskMenu.refresh(); return; }
+  attempt(() => execute([{ kind: 'background_update', patch }]));
+}, preview => {
+  const background = desk.settingsSnapshot().background;
+  deskBackground.update({ ...background, ...preview }, camera);
+});
 const labels: Record<DeskObject['type'], string> = { rect: '矩形', roundedRect: '角丸矩形', label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
@@ -408,6 +416,7 @@ function render(rebuild = true) {
   pinSeriesMap.clear();
   for (const series of desk.settingsSnapshot().series) pinSeriesMap.set(series.id, series);
   identityControls.refresh();
+  deskMenu.refresh();
   if (rebuild) {
     objectsLayer.replaceChildren(); drawnNodes.clear();
     const objects = desk.snapshot(); renderedScene = objects;

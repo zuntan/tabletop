@@ -27,6 +27,17 @@ test('AI switches three built-in wallpapers without changing parts, snapping or 
     await call('desk_execute', { operations: [{ kind: 'background_update', patch: { color: '#ffeedd', showGrid: true } }] });
     assert.equal(await page.locator('#desk-background').getAttribute('fill'), '#ffeedd');
     assert.equal(await page.locator('#desk-grid').getAttribute('visibility'), 'visible');
+    for (const opacity of [0, 0.5, 1]) {
+      await call('desk_execute', { operations: [{ kind: 'background_update', patch: { opacity } }] });
+      assert.equal(await page.locator('#desk-surface').getAttribute('opacity'), String(opacity));
+      assert.equal(await page.locator('#desk-underlay').getAttribute('fill'), '#808080');
+      assert.equal(await page.locator('#desk-surface #desk-background').count(), 1);
+      assert.equal(await page.locator('#desk-surface #desk-wallpaper').count(), 1);
+      assert.equal(await page.locator('#desk-surface #desk-grid').count(), 1);
+      assert.deepEqual((await call('desk_state')).objects, before.objects);
+      assert.equal(await page.locator('#desk-surface [data-id="note"]').count(), 0);
+    }
+    await call('desk_execute', { operations: [{ kind: 'background_update', patch: { opacity: 0.5 } }] });
     const saved = await call('desk_save', { filename: `wallpaper-${Date.now()}.tabletop` });
     await call('desk_execute', { operations: [{ kind: 'background_update', patch: { wallpaper: 'none', color: null, showGrid: null } }] });
     assert.equal(await page.locator('#desk-wallpaper').getAttribute('fill'), 'none');
@@ -34,6 +45,7 @@ test('AI switches three built-in wallpapers without changing parts, snapping or 
     await call('desk_load', { filename: saved.filename, confirm: true, expectedSessionId: now.sessionId, expectedRevision: now.revision });
     assert.equal(await page.locator('#desk-background').getAttribute('data-wallpaper'), 'pink-notebook');
     assert.equal(await page.locator('#desk-background').getAttribute('fill'), '#ffeedd');
+    assert.equal(await page.locator('#desk-surface').getAttribute('opacity'), '0.5');
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });
