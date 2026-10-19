@@ -1,3 +1,4 @@
+import { snapConnectorEndpoint } from './connector-junctions';
 import type { DeskObject } from './model';
 import { anchorsFor, anchorPoint, endpoints, isConnector, isShape, isConnectable, snap, type Point } from './geometry';
 import { numberCenterY } from './pin-shape';
@@ -50,7 +51,7 @@ export function drawEndpointHandles(layer: SVGGElement, object: DeskObject, zoom
   if (!isConnector(object)) return false;
   const points = endpoints(object);
   for (const side of ['start', 'end'] as const) {
-    const point = points[side], connected = !!object[side === 'start' ? 'startBinding' : 'endBinding'];
+    const point = points[side], connected = !!(object[side === 'start' ? 'startBinding' : 'endBinding'] || object[side === 'start' ? 'startJunction' : 'endJunction']);
     layer.append(element('circle', { cx: point.x, cy: point.y, r: 6 / zoom,
       fill: connected ? '#16a34a' : color, stroke: '#fff', 'stroke-width': 1.5 / zoom,
       ...(interactive ? { 'data-endpoint': side, 'data-connector': object.id, class: 'endpoint-handle' } : { 'pointer-events': 'none' }) }));
@@ -59,6 +60,16 @@ export function drawEndpointHandles(layer: SVGGElement, object: DeskObject, zoom
 }
 export function drawSnapTargets(layer: SVGGElement, objects: DeskObject[], point: Point, zoom: number) {
   const candidate = snap(point, objects, 18 / zoom);
+  const line = snapConnectorEndpoint(point, objects, 18 / zoom, '');
+  for (const object of objects.filter(isConnector)) {
+    const points = endpoints(object);
+    for (const side of ['start', 'end'] as const) {
+      const p = points[side], active = line?.object.id === object.id && line.side === side;
+      layer.append(element('circle', { cx: p.x, cy: p.y, r: (active ? 8 : 4) / zoom,
+        fill: active ? '#16a34a' : '#fff', stroke: active ? '#15803d' : '#94a3b8',
+        'stroke-width': 1.5 / zoom, 'pointer-events': 'none', class: active ? 'snap-target active' : 'snap-target' }));
+    }
+  }
   for (const object of objects) {
     if (!isConnectable(object)) continue;
     for (const anchor of anchorsFor(object)) {

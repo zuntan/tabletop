@@ -620,7 +620,7 @@ canvas.addEventListener('pointerdown', event => {
     mode = 'move';
   } else { if (!extendSelection) desk.select([]); render(); mode = 'marquee'; }
   const scene = desk.snapshot();
-  gesture = { mode, start: p, screen: screen(event), originals: desk.selected().map(id => desk.get(id)), scene, snapScene: scene.filter(pinIsVisible), preview: scene, revision: desk.revision, camera: { x: camera.x, y: camera.y }, additive, grid: gridEnabled, gridSettings: desk.settingsSnapshot().grid, anchorId: id ?? resize ?? undefined };
+  gesture = { mode, start: p, screen: screen(event), originals: desk.selected().map(id => desk.get(id)), scene, snapScene: scene.filter(pinIsVisible), preview: scene, revision: desk.revision, camera: { x: camera.x, y: camera.y }, additive, grid: gridEnabled, gridSettings: desk.settingsSnapshot().grid, anchorId: id ?? resize ?? undefined, detach: event.altKey };
   busy = true; canvas.setPointerCapture(event.pointerId); event.preventDefault(); canvas.focus();
 });
 function previewGesture(current: Gesture, point: { x: number; y: number }) {
@@ -636,11 +636,12 @@ function previewGesture(current: Gesture, point: { x: number; y: number }) {
     overlays.append(svg('path', { d: `M ${origin.x - size} ${origin.y - size * 1.5} L ${origin.x + size} ${origin.y - size * 1.5} L ${origin.x} ${origin.y} Z`,
       fill: '#2563eb', opacity: 0.3, 'pointer-events': 'none', 'data-grid-origin': object.id }));
   }
-  if (current.mode === 'start' || current.mode === 'end') drawSnapTargets(overlays, scene.filter(pinIsVisible).map(object => pinScreenObject(object, camera.zoom)), endpointDragPoint(current, point), camera.zoom);
+  if (!current.detach && (current.mode === 'start' || current.mode === 'end')) drawSnapTargets(overlays, scene.filter(pinIsVisible).filter(object => !current.originals.some(o => o.id === object.id)).map(object => pinScreenObject(object, camera.zoom)), endpointDragPoint(current, point), camera.zoom);
 }
 canvas.addEventListener('pointermove', event => {
   desk.pointer = world(event);
   if (!gesture) return;
+  gesture.detach = event.altKey;
   const p = world(event), delta = { x: p.x - gesture.start.x, y: p.y - gesture.start.y };
   if (gesture.mode !== 'pan' && gesture.mode !== 'marquee') { previewGesture(gesture, p); return; }
   if (gesture.mode === 'pan') {
@@ -657,6 +658,7 @@ function endGesture(event: PointerEvent, cancel = false) {
   gesture = null; busy = false;
   if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
   if (cancel) { render(); return; }
+  current.detach = event.altKey;
   const p = world(event);
   if (current.mode !== 'pan' && current.mode !== 'marquee' && !gestureOperations(current, p, camera.zoom).length) {
     drawSelection(); return;

@@ -1,3 +1,5 @@
+import { randomUuid } from './portable-crypto';
+import { junctionMembers, junctionField, bindingField, snapConnectorEndpoint } from './connector-junctions';
 import { pinScreenObject } from './pin-series';
 import type { DeskObject, Operation } from './model';
 import { endpoints, isConnector, resolveConnections, snap, type Point } from './geometry';
@@ -18,6 +20,8 @@ export type Gesture = {
   grid?: boolean;
   gridSettings?: GridSettings;
   anchorId?: string;
+  detach?: boolean;
+  junctionId?: string;
 };
 export function gestureOperations(gesture: Gesture, point: Point, zoom: number): Operation[] {
   let dx = point.x - gesture.start.x, dy = point.y - gesture.start.y;
@@ -28,27 +32,69 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
     const delta = gridMoveDelta(anchor, { x: dx, y: dy }, gesture.gridSettings); dx = delta.x; dy = delta.y;
     if (dx === 0 && dy === 0) return [];
   }
-  return movable.map(object => {
+  const patches = new Map<string, Partial<DeskObject>>();
+  const put = (id: string, patch: Partial<DeskObject>) => patches.set(id, { ...patches.get(id), ...patch });
+  const selected = new Set(movable.map(o => o.id));
+  const movingJunctions = new Set<string>();
+  movable.forEach(object => {
     let patch: Partial<DeskObject>;
     if (gesture.mode === 'start' || gesture.mode === 'end') {
       const points = endpoints(object), side = gesture.mode;
       const next = { x: points[side].x + dx, y: points[side].y + dy };
-      const candidate = snap(next, (gesture.snapScene ?? gesture.scene).map(object => pinScreenObject(object, zoom)), 18 / zoom);
-      const p = candidate?.point ?? (gesture.grid ? gridPoint(next, gesture.gridSettings) : next);
-      patch = side === 'start' ? { x: p.x, y: p.y, startBinding: candidate?.binding ?? null }
-        : { x2: p.x, y2: p.y, endBinding: candidate?.binding ?? null };
+      const jf = junctionField(side), bf = bindingField(side);
+      const sourceGroup = object[jf];
+      const candidates = (gesture.snapScene ?? gesture.scene).filter(o => o.id !== object.id).map(o => pinScreenObject(o, zoom));
+      const shape = gesture.detach ? null : snap(next, candidates, 18 / zoom);
+      const line = gesture.detach ? null : snapConnectorEndpoint(next, candidates, 18 / zoom, object.id, sourceGroup ?? undefined);
+      // Prefer the closest anchor; shapes win an exact tie.
+      const candidate = line && (!shape || Math.hypot(next.x-line.point.x, next.y-line.point.y) < Math.hypot(next.x-shape.point.x, next.y-shape.point.y)) ? line : null;
+      const position = candidate?.point ?? shape?.point ?? (gesture.grid ? gridPoint(next, gesture.gridSettings) : next);
+      patch = side === 'start' ? { x: position.x, y: position.y } : { x2: position.x, y2: position.y };
+      patch[bf] = candidate ? null : shape?.binding ?? null;
+      if (gesture.detach) patch[jf] = null;
+      else if (candidate) {
+        const targetGroup = candidate.object[junctionField(candidate.side)];
+        const members = [
+          ...(sourceGroup ? junctionMembers(gesture.scene, sourceGroup) : [{ object, side }]),
+          ...(targetGroup ? junctionMembers(gesture.scene, targetGroup) : [{ object: candidate.object, side: candidate.side }]),
+        ];
+        const unique = [...new Map(members.map(m => [m.object.id + ':' + m.side, m])).values()];
+        if (new Set(unique.map(m => m.object.id)).size === unique.length) {
+          const id = targetGroup ?? sourceGroup ?? (gesture.junctionId ??= 'junction-' + randomUuid());
+          for (const member of unique) put(member.object.id, {
+            [junctionField(member.side)]: id,
+            ...(member.side === 'start' ? { x: position.x, y: position.y } : { x2: position.x, y2: position.y }),
+          });
+          patch[jf] = id;
+        } else {
+          // A line cannot attach both ends to one point: simply do not attach.
+          patch = side === 'start' ? { x: next.x, y: next.y } : { x2: next.x, y2: next.y };
+          patch[bf] = null;
+        }
+      }
+      if (sourceGroup && !gesture.detach) movingJunctions.add(sourceGroup);
     } else if (gesture.mode === 'resize') {
       const corner = { x: object.x + object.width + dx, y: object.y + object.height + dy };
       const next = gesture.grid ? gridPoint(corner, gesture.gridSettings) : corner;
       patch = { width: Math.max(1, next.x - object.x), height: Math.max(1, next.y - object.y) };
     } else if (isConnector(object)) {
       const { start, end } = endpoints(object);
-      patch = { x: start.x + dx, y: start.y + dy, x2: end.x + dx, y2: end.y + dy, startBinding: null, endBinding: null };
+      patch = { x: start.x + dx, y: start.y + dy, x2: end.x + dx, y2: end.y + dy, startBinding: object.startBinding && selected.has(object.startBinding.objectId) ? object.startBinding : null,
+        endBinding: object.endBinding && selected.has(object.endBinding.objectId) ? object.endBinding : null };
+      for (const side of ['start', 'end'] as const) if (object[junctionField(side)]) movingJunctions.add(object[junctionField(side)]!);
     } else {
       patch = { x: object.x + dx, y: object.y + dy };
     }
-    return { kind: 'update', id: object.id, patch };
+    put(object.id, patch);
+    return object;
   });
+  // Glue belongs to the shape. Moving a joined line peels the point group away
+  // without breaking line-to-line joints or pulling the shape.
+  for (const id of movingJunctions) for (const { object, side } of junctionMembers(gesture.scene, id)) {
+    const binding = object[bindingField(side)];
+    if (binding && !selected.has(binding.objectId) && !Object.hasOwn(patches.get(object.id) ?? {}, bindingField(side))) put(object.id, { [bindingField(side)]: null });
+  }
+  return [...patches].map(([id, patch]) => ({ kind: 'update' as const, id, patch }));
 }
 export function gesturePreview(gesture: Gesture, point: Point, zoom: number): DeskObject[] {
   const operations = gestureOperations(gesture, point, zoom);

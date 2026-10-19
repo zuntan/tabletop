@@ -311,3 +311,6 @@ MCP再起動後、通常保存先のtabletop-main-eight-anchors-2026-10-18.table
 
 ## 木目画像タイルの試用
 提供された2枚を木目1・木目2として追加。従来woodはフローリングと表示。継ぎ目は許容し、1672×941単位で繰り返す。
+
+## feat/connector-junctions（開発中）
+線同士の対称接合、端点だけの追従、Alt切断、図形の接着との分離、保存・コピペ・Undo対応。ピンの取り付けと吹き出しは未着手。詳細はdocs/connector-junctions.md。

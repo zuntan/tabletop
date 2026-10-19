@@ -48,6 +48,8 @@ const objectFields = z.object({
   y: coordinate.default(0),
   x2: coordinate.optional(),
   y2: coordinate.optional(),
+  startJunction: z.string().min(1).max(200).nullable().optional(),
+  endJunction: z.string().min(1).max(200).nullable().optional(),
   startBinding: bindingSchema.nullable().optional(),
   endBinding: bindingSchema.nullable().optional(),
   width: dimension.default(180),

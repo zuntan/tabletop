@@ -1,3 +1,4 @@
+import { resolveJunctions } from './connector-junctions';
 import type { DeskObject } from './model';
 
 export type Point = { x: number; y: number };
@@ -71,7 +72,7 @@ export function snap(point: Point, objects: DeskObject[], threshold: number) {
 export function resolveConnections(objects: DeskObject[], before: DeskObject[] = []): DeskObject[] {
   const map = new Map(objects.map(o => [o.id, o]));
   const previous = new Map(before.map(o => [o.id, o]));
-  return objects.map(object => {
+  const resolved = objects.map(object => {
     if (!isConnector(object)) {
       if (object.x2 !== undefined || object.y2 !== undefined || object.startBinding || object.endBinding) {
         throw new Error('Endpoints and bindings are only supported on lines and arrows');
@@ -98,4 +99,5 @@ export function resolveConnections(objects: DeskObject[], before: DeskObject[] =
     }
     return withEndpoints(next, points.start, points.end);
   });
+  return resolveJunctions(resolved, before);
 }

@@ -6,6 +6,7 @@ export function deskContextSnapshot(desk: Desk) {
   const connections = objects.filter(object => object.type === 'line').map(object => ({
     id: object.id, type: object.type,
     startMarker: object.startMarker, endMarker: object.endMarker,
+    startJunction: object.startJunction ?? null, endJunction: object.endJunction ?? null,
     start: { x: object.x, y: object.y, binding: object.startBinding ?? null },
     end: { x: object.x2, y: object.y2, binding: object.endBinding ?? null },
   }));

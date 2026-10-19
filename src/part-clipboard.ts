@@ -56,6 +56,7 @@ export class PartClipboard {
     const step = desk.settingsSnapshot().grid.enabled ? desk.settingsSnapshot().grid.interval : 24;
     const offset = step * (pasted + 1);
     const operations: Operation[] = [];
+    const junctions = new Map<string, string>();
     for (const object of objects) {
       const id = ids.get(object.id)!;
       if (object.type === 'label') {
@@ -67,6 +68,13 @@ export class PartClipboard {
         if (isConnector(object)) {
           const points = endpoints(object);
           Object.assign(copy, { x: points.start.x + offset, y: points.start.y + offset, x2: points.end.x + offset, y2: points.end.y + offset });
+          for (const field of ['startJunction', 'endJunction'] as const) {
+            const junction = object[field];
+            if (junction) {
+              if (!junctions.has(junction)) junctions.set(junction, 'junction-' + randomUuid());
+              copy[field] = junctions.get(junction)!;
+            }
+          }
           for (const field of ['startBinding', 'endBinding'] as const) {
             const binding = object[field], target = binding && ids.get(binding.objectId);
             copy[field] = binding && target ? { ...binding, objectId: target } : null;
