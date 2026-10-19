@@ -18,6 +18,17 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 #authoring-tools, #default-colors { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 #authoring-tools label { display: flex; align-items: center; gap: 4px; }
 #default-width, #default-opacity { width: 58px; }
+.number-presets { display: flex; align-items: center; gap: 3px; min-width: 0; }
+.number-presets > input { width: 0; flex: 1 1 auto; min-width: 0; }
+.number-presets > .number-preset-menu { flex: 0 0 42px; width: 42px; min-width: 0; padding: 5px 3px; font-size: 10px; color: #64748b; background: #f8fafc; }
+.number-preset-palette { position: fixed; inset: auto; margin: 0; padding: 12px; max-width: calc(100vw - 16px); border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; color: #64748b; box-shadow: 0 4px 18px #0003; }
+.number-preset-heading { margin-bottom: 10px; font-size: 11px; }
+.number-preset-choices { display: flex; flex-wrap: wrap; gap: 7px; }
+.number-preset-choices button { min-width: 34px; padding: 7px 6px; font-size: 12px; color: #475569; background: #f8fafc; }
+.number-preset-choices button[aria-pressed="true"] { border-color: #2563eb; background: #eff6ff; }
+#series-panel select { font: inherit; font-size: 11px; color: #64748b; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 5px; }
+#series-panel select:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+#authoring-tools .number-presets > input { flex: 0 0 48px; width: 48px; }
 #default-colors .color-control { display: flex; gap: 4px; align-items: center; }
 #default-colors .color-trigger { min-width: 40px; }
 #default-colors .color-value { display: none; }
