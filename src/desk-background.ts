@@ -1,4 +1,4 @@
-import floorSource from '../wood_floor.svg?raw';
+import floorSource from '../public/wallpapers/wood_floor.svg?raw';
 import type { Settings } from './settings';
 import { element } from './diagram-drawing';
 
