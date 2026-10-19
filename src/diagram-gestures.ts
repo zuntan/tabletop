@@ -1,3 +1,4 @@
+import { snapPinAttachment } from './pin-attachments';
 import { randomUuid } from './portable-crypto';
 import { junctionMembers, junctionField, bindingField, snapConnectorEndpoint } from './connector-junctions';
 import { pinScreenObject } from './pin-series';
@@ -82,6 +83,17 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
       patch = { x: start.x + dx, y: start.y + dy, x2: end.x + dx, y2: end.y + dy, startBinding: object.startBinding && selected.has(object.startBinding.objectId) ? object.startBinding : null,
         endBinding: object.endBinding && selected.has(object.endBinding.objectId) ? object.endBinding : null };
       for (const side of ['start', 'end'] as const) if (object[junctionField(side)]) movingJunctions.add(object[junctionField(side)]!);
+    } else if (object.type === 'label') {
+      const next = { x: object.x + object.width / 2 + dx, y: object.y + object.height + dy };
+      if (object.attachment && selected.has(object.attachment.objectId)) {
+        patch = { x: object.x + dx, y: object.y + dy };
+      } else {
+        const candidate = movable.length === 1 && !gesture.detach
+          ? snapPinAttachment(next, (gesture.snapScene ?? gesture.scene).filter(o => !selected.has(o.id)), 18 / zoom) : null;
+        const position = candidate?.point ?? next;
+        patch = { x: position.x - object.width / 2, y: position.y - object.height,
+          ...(candidate || object.attachment ? { attachment: candidate?.binding ?? null } : {}) };
+      }
     } else {
       patch = { x: object.x + dx, y: object.y + dy };
     }

@@ -63,6 +63,8 @@ export class PartClipboard {
         operations.push({ kind: 'label_add', id, seriesId: object.seriesId!, x: object.x + offset, y: object.y + offset, description: object.description });
         if (object.locked || object.reactions?.length) operations.push({ kind: 'update', id,
           patch: { locked: !!object.locked, reactions: [...object.reactions ?? []] } });
+        if (object.attachment && ids.has(object.attachment.objectId)) operations.push({ kind: 'update', id,
+          patch: { attachment: { ...object.attachment, objectId: ids.get(object.attachment.objectId)! } } });
       } else {
         const copy = { ...object, id, x: object.x + offset, y: object.y + offset };
         if (isConnector(object)) {
