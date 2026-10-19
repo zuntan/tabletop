@@ -3,8 +3,9 @@ import type { Desk } from './model';
 /** One browser-side snapshot, without embedded asset payloads. */
 export function deskContextSnapshot(desk: Desk) {
   const objects = desk.list();
-  const connections = objects.filter(object => object.type === 'line' || object.type === 'arrow').map(object => ({
+  const connections = objects.filter(object => object.type === 'line').map(object => ({
     id: object.id, type: object.type,
+    startMarker: object.startMarker, endMarker: object.endMarker,
     start: { x: object.x, y: object.y, binding: object.startBinding ?? null },
     end: { x: object.x2, y: object.y2, binding: object.endBinding ?? null },
   }));

@@ -38,6 +38,8 @@ import './desk-identity.css';
 import { createThinkingMode } from './thinking-mode';
 import { headerIcon } from './header-icon';
 import { addFormNumberPresets } from './number-presets';
+import { createLineStylePicker } from './line-style-picker';
+import { createEndpointPicker } from './endpoint-picker';
 import { parseConnectionUrl } from './connection-url';
 import { randomUuid } from './portable-crypto';
 import { connectionControls } from './connection-controls';
@@ -89,6 +91,9 @@ app.innerHTML = `
           <label hidden>塗り<input name="fill" type="text"></label><label hidden>線<input name="stroke" type="text"></label>
           <label>塗り透過（%）<input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
           <label>線幅<input name="strokeWidth" type="number" min="0" step="any"></label><label>文字サイズ<input name="fontSize" type="number" min="1"></label>
+          <label hidden>線種<select name="dash" disabled><option value="solid">実線</option><option value="dashed">破線</option><option value="dotted">点線</option></select></label>
+          <label hidden>始点形状<select name="startMarker" disabled><option value="none">なし</option><option value="arrow">矢印</option><option value="circle">丸</option><option value="diamond">ひし形</option></select></label>
+          <label hidden>終点形状<select name="endMarker" disabled><option value="none">なし</option><option value="arrow">矢印</option><option value="circle">丸</option><option value="diamond">ひし形</option></select></label>
           <label hidden>角丸<input name="cornerRadius" type="number" min="0" step="any"></label>
           <label hidden>内側の余白<input name="padding" type="number" min="0" step="any"></label>
           <label class="wide">テキスト<textarea name="text" rows="3"></textarea></label>
@@ -135,6 +140,9 @@ const pinSeriesMap = new Map<string, Series>();
 const renderedById = new Map<string, DeskObject>();
 const form = $<HTMLFormElement>('#properties');
 addFormNumberPresets(form);
+const updateConnectorLineStyle = createLineStylePicker(form.elements.namedItem('dash') as HTMLSelectElement);
+const updateStartMarker = createEndpointPicker(form.elements.namedItem('startMarker') as HTMLSelectElement, '始点形状', 'start');
+const updateEndMarker = createEndpointPicker(form.elements.namedItem('endMarker') as HTMLSelectElement, '終点形状', 'end');
 const camera = { x: 60, y: 50, zoom: 1 };
 const humanScroll = new HumanScrollGuard();
 const cameraAnimator = new CameraAnimator();
@@ -214,12 +222,12 @@ const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
 createDeskFileControls($('header'), desk, () => { partClipboard.clear(); render(); fitView(desk.selected()); },
   () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing());
-const labels: Record<DeskObject['type'], string> = { rect: '矩形', roundedRect: '角丸矩形', label: 'ピン', ellipse: '楕円', line: '線', arrow: '矢印', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
+const labels: Record<DeskObject['type'], string> = { rect: '矩形', roundedRect: '角丸矩形', label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
   const category = object.type === 'label' ? 'pins' : object.type === 'text' ? 'text'
     : ['rect', 'roundedRect', 'ellipse'].includes(object.type) ? 'shapes'
-      : ['line', 'arrow'].includes(object.type) ? 'lines'
+      : object.type === 'line' ? 'lines'
         : ['image', 'svg'].includes(object.type) ? 'images' : 'other';
   return $(`#object-filter-${category}`).getAttribute('aria-pressed') === 'true';
 }
@@ -421,6 +429,8 @@ function render(rebuild = true) {
   if (ids.length === 1) {
     const object = desk.get(ids[0]);
     syncProperties(form, object);
+    updateConnectorLineStyle();
+    updateStartMarker(); updateEndMarker();
     if (object.url) { link.href = object.url; link.hidden = false; }
   }
   lockControls.update(ids.map(id => desk.get(id)));
@@ -496,8 +506,9 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
   execute([{ kind: 'add', object }], 'desk'); desk.select([object.id]);
 }
 app.querySelectorAll<HTMLButtonElement>('[data-add]').forEach(button => button.onclick = () => {
-  const type = button.dataset.add as DeskObject['type'];
-  if (!busy && !editor.isActive()) attempt(() => newObject(type));
+  const kind = button.dataset.add!;
+  const type = (kind === 'arrow' ? 'line' : kind) as DeskObject['type'];
+  if (!busy && !editor.isActive()) attempt(() => newObject(type, kind === 'arrow' ? { endMarker: 'arrow' } : {}));
 });
 $('#undo').onclick = () => attempt(() => { desk.undo(); });
 $('#clear-ai-pointing').onclick = () => { desk.point([]); drawSelection(); };
@@ -527,6 +538,11 @@ form.onsubmit = event => {
     const patch = propertyPatch(form, object);
     execute([{ kind: 'update', id: object.id, patch }]);
   });
+};
+form.onchange = event => {
+  const input = event.target;
+  if ((input instanceof HTMLInputElement || input instanceof HTMLSelectElement) && ['strokeWidth', 'dash', 'startMarker', 'endMarker'].includes(input.name) && desk.selected().length === 1
+    && isConnector(desk.get(desk.selected()[0]))) form.requestSubmit();
 };
 $('#zoom-in').onclick = () => zoom(1.25);
 $('#zoom-out').onclick = () => zoom(0.8);

@@ -32,9 +32,10 @@ const bindingSchema = z.object({
   anchor: z.enum(anchorNames),
 }).strict();
 
-export const objectSchema = z.object({
+export const endpointShapeSchema = z.enum(['none', 'arrow', 'circle', 'diamond']);
+const objectFields = z.object({
   id: z.string().min(1).max(100),
-  type: z.enum(['rect', 'roundedRect', 'ellipse', 'line', 'arrow', 'text', 'image', 'svg', 'web', 'link', 'label']),
+  type: z.enum(['rect', 'roundedRect', 'ellipse', 'line', 'text', 'image', 'svg', 'web', 'link', 'label']),
   cornerRadius: z.number().finite().min(0).max(100_000).default(16),
   padding: z.number().finite().min(0).max(100_000).optional(),
   locked: z.boolean().optional(), // Mouse geometry protection only; not an authorization boundary.
@@ -55,6 +56,9 @@ export const objectSchema = z.object({
   fillOpacity: z.number().finite().min(0).max(1).default(1),
   stroke: color.default('#334155'),
   strokeWidth: z.number().finite().min(0).max(100).default(2),
+  dash: z.enum(['solid', 'dashed', 'dotted']).optional(),
+  startMarker: endpointShapeSchema.optional(),
+  endMarker: endpointShapeSchema.optional(),
   text: z.string().max(100_000).default(''),
   textColor: color.default('#0f172a'),
   fontSize: z.number().finite().min(1).max(1000).default(24),
@@ -62,10 +66,22 @@ export const objectSchema = z.object({
   url: z.string().max(4096).refine(value => value === '' || safeUrl(value), 'Expected an HTTP(S) URL').optional(),
 }).strict();
 
-export const patchSchema = objectSchema.omit({ id: true, type: true }).partial();
+/** Legacy arrow is accepted only at entry, then everything uses a line. */
+function normalizeLegacyConnector(input: unknown): unknown {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return input;
+  const object = input as Record<string, unknown>;
+  if (object.type !== 'line' && object.type !== 'arrow') return input;
+  return { ...object, type: 'line', startMarker: object.startMarker === undefined ? 'none' : object.startMarker,
+    endMarker: object.endMarker === undefined ? (object.type === 'arrow' ? 'arrow' : 'none') : object.endMarker };
+}
+export const objectSchema = z.preprocess(normalizeLegacyConnector, objectFields);
+export const patchSchema = objectFields.omit({ id: true, type: true }).partial();
+const addObjectFields = objectFields.partial().required({ id: true, type: true });
+const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'line', 'arrow', 'text', 'image', 'svg', 'web', 'link', 'label']) })
+  .transform(object => normalizeLegacyConnector(object) as z.input<typeof addObjectFields>);
 export const operationSchema = z.discriminatedUnion('kind', [
   ...settingsOperations,
-  z.object({ kind: z.literal('add'), object: objectSchema.partial().required({ id: true, type: true }) }).strict(),
+  z.object({ kind: z.literal('add'), object: addObjectSchema }).strict(),
   z.object({ kind: z.literal('update'), id: z.string(), patch: patchSchema }).strict(),
   z.object({ kind: z.literal('delete'), id: z.string() }).strict(),
   z.object({ kind: z.literal('reorder'), id: z.string(), index: z.number().int().min(0) }).strict(),

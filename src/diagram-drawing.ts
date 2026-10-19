@@ -1,6 +1,7 @@
 import type { DeskObject } from './model';
 import { anchorsFor, anchorPoint, endpoints, isConnector, isShape, isConnectable, snap, type Point } from './geometry';
 import { numberCenterY } from './pin-shape';
+import { drawConnectorMarker } from './connector-markers';
 
 export function element<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}): SVGElementTagNameMap[K] {
   const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -10,18 +11,27 @@ export function element<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Rec
 export function drawConnector(group: SVGGElement, object: DeskObject, zoom: number) {
   const { start, end } = endpoints(object);
   const dx = end.x - start.x, dy = end.y - start.y;
+  const length = Math.hypot(dx, dy);
   const attrs = { x1: 0, y1: 0, x2: dx, y2: dy };
   // Only a narrow strip around the visible line is interactive, even when invisible.
   group.append(element('line', { ...attrs, stroke: 'transparent', 'stroke-width': 14,
     'vector-effect': 'non-scaling-stroke', 'pointer-events': 'stroke', class: 'connector-hit' }));
-  group.append(element('line', { ...attrs, stroke: object.stroke, 'stroke-width': object.strokeWidth,
-    'stroke-linecap': 'round', 'pointer-events': 'none', class: 'connector-line' }));
+  const size = Math.min(Math.max(15, object.strokeWidth * 3.75), length / 3);
+  const inset = (shape: DeskObject['startMarker']) => !shape || shape === 'none' ? 0 : size * (shape === 'circle' ? .4 : .5);
+  const ux = length ? dx / length : 0, uy = length ? dy / length : 0;
+  // Tuck the visible shaft inside each filled marker; logical endpoints and hit targets stay fixed.
+  const from = inset(object.startMarker), to = inset(object.endMarker);
+  const line = element('line', { x1: ux * from, y1: uy * from, x2: dx - ux * to, y2: dy - uy * to,
+    stroke: object.stroke, 'stroke-width': object.strokeWidth,
+    'stroke-linecap': 'round', 'pointer-events': 'none', class: 'connector-line' });
+  if (object.dash && object.dash !== 'solid') line.setAttribute('stroke-dasharray', object.dash === 'dashed'
+    ? `${object.strokeWidth * 4} ${object.strokeWidth * 3}` : `${object.strokeWidth} ${object.strokeWidth * 2}`);
+  group.append(line);
   if (Math.hypot(dx, dy) < 1) group.append(element('circle', { cx: 0, cy: 0, r: 7 / zoom, fill: 'transparent' }));
-  if (object.type === 'arrow') {
-    const size = Math.min(Math.max(12, object.strokeWidth * 3), Math.hypot(dx, dy) / 3);
-    const angle = Math.atan2(dy, dx), a = angle + 2.6, b = angle - 2.6;
-    group.append(element('polygon', { points: `${dx},${dy} ${dx + size * Math.cos(a)},${dy + size * Math.sin(a)} ${dx + size * Math.cos(b)},${dy + size * Math.sin(b)}`,
-      fill: object.stroke, 'pointer-events': 'none', class: 'arrow-head' }));
+  if (length >= 1) {
+    const angle = Math.atan2(dy, dx);
+    drawConnectorMarker(group, object.startMarker ?? 'none', 0, 0, angle + Math.PI, size, object.stroke, 'start');
+    drawConnectorMarker(group, object.endMarker ?? 'none', dx, dy, angle, size, object.stroke, 'end');
   }
 }
 export function drawShapeText(group: SVGGElement, object: DeskObject) {

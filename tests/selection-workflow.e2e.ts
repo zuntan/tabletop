@@ -34,7 +34,7 @@ test('selected frames create bound connectors and Markdown frames accept endpoin
     assert.deepEqual((await call('desk_get', { id: freeId })).endBinding, { objectId: 'memo', anchor: 'top' });
     await call('desk_select', { ids: ['shape', 'pin'] }); await page.locator('[data-add="line"]').click();
     const vertical = await call('desk_get', { id: (await call('desk_selection')).ids[0] });
-    assert.equal(vertical.startBinding.anchor, 'bottom'); assert.equal(vertical.endBinding.anchor, 'top');
+    assert.equal(vertical.startBinding.anchor, 'bottom'); assert.equal(vertical.endBinding.anchor, 'center');
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });

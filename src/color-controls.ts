@@ -14,7 +14,7 @@ const families = [
   ['#f3e8ff', '#d8b4fe', '#c084fc', '#a855f7', '#7e22ce', '#581c87'],
 ];
 export const swatches = Array.from({ length: 6 }, (_, shade) => families.map(family => family[shade])).flat();
-const names = { fill: '塗り', stroke: '輪郭・矢印', text: '文字' };
+const names = { fill: '塗り', stroke: '輪郭', text: '文字' };
 function field(object: DeskObject, role: Role): 'fill' | 'stroke' | 'textColor' | null {
   if (object.type === 'label') return role === 'text' ? 'textColor' : role;
   if (role === 'fill') return isShape(object) || object.type === 'text' ? 'fill' : null;

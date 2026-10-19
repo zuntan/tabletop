@@ -60,6 +60,22 @@ test('numeric preset menus preserve direct input, property drafts, pin series an
       assert.equal(await trigger.getAttribute('aria-expanded'), 'false');
       assert.equal(await dialog.isVisible(), false);
     }
+    await page.setViewportSize({ width: 1400, height: 1000 });
+    for (const type of ['line', 'arrow']) {
+      await call('desk_execute', { operations: [{ kind: 'add', object: { id: type, type, x: 100, y: 100, x2: 300, y2: 200 } }] });
+      await call('desk_select', { ids: [type] });
+      assert.equal(await properties.locator('[name="fillOpacity"]').isVisible(), false);
+      assert.equal(await properties.locator('[name="fontSize"]').isVisible(), false);
+      await choose(properties, '線幅の候補', '8');
+      assert.equal((await call('desk_get', { id: type })).strokeWidth, 8);
+      assert.equal(await page.locator(`[data-id="${type}"] .connector-line`).getAttribute('stroke-width'), '8');
+      await properties.locator('[name="strokeWidth"]').fill('16');
+      await properties.locator('[name="strokeWidth"]').press('Tab');
+      assert.equal((await call('desk_get', { id: type })).strokeWidth, 16);
+    }
+    await call('desk_select', { ids: ['card'] });
+    assert.equal(await properties.locator('[name="fontSize"]').isVisible(), true);
+    assert.equal(await properties.locator('[name="fillOpacity"]').isVisible(), true);
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });

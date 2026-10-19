@@ -8,7 +8,7 @@ export const anchors: readonly Anchor[] = anchorNames.slice(0, 8);
 export function anchorsFor(object: DeskObject): readonly Anchor[] {
   return object.type === 'label' ? ['center'] : anchors;
 }
-export const isConnector = (object: DeskObject) => object.type === 'line' || object.type === 'arrow';
+export const isConnector = (object: DeskObject) => object.type === 'line';
 export const isShape = (object: DeskObject) => object.type === 'rect' || object.type === 'roundedRect'
   || object.type === 'ellipse' || (object.type === 'label' && object.labelShape !== 'text');
 export const isConnectable = (object: DeskObject) => isShape(object) || object.type === 'label' || object.type === 'text';

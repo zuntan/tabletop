@@ -18,7 +18,7 @@ const copy = (clipboard: PartClipboard, ...objects: DeskObject[]) => {
 test('copy and repeated paste assign fresh IDs, rebind internal connectors, and leave the source unchanged', () => {
   const source = [
     part({ id: 'box', type: 'rect', x: 10, y: 20, width: 100, height: 60 }),
-    part({ id: 'edge', type: 'arrow', x: 110, y: 50, x2: 200, y2: 50,
+    part({ id: 'edge', type: 'line', endMarker: 'arrow', x: 110, y: 50, x2: 200, y2: 50,
       startBinding: { objectId: 'box', anchor: 'right' }, endBinding: { objectId: 'outside', anchor: 'left' } }),
   ];
   const original = structuredClone(source);
@@ -85,7 +85,7 @@ test('external clipboard text includes text and SVG source while omitting images
   assert.equal(partClipboardText([
     part({ id: 'shape', type: 'rect', text: '図形の文字' }),
     part({ id: 'pin', type: 'label', text: 'ピン文字' }),
-    part({ id: 'arrow', type: 'arrow', text: '除外' }),
+    part({ id: 'arrow', type: 'line', endMarker: 'arrow', text: '除外' }),
     part({ id: 'svg', type: 'svg', src: svgData }),
     part({ id: 'web', type: 'web', text: 'カード', url: 'https://example.test' }),
     part({ id: 'image', type: 'image', src: 'https://example.test/a.png' }),
