@@ -44,6 +44,7 @@ const objectFields = z.object({
   number: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).optional(),
   labelShape: z.enum(['text', 'rect', 'ellipse', 'roundedRect', 'pin']).optional(),
   description: z.string().max(20_000).optional(),
+  stamp: z.object({ designId: z.string().min(1).max(200), text: z.string().max(10000), angle: z.number().finite().min(-360).max(360) }).strict().nullable().optional(),
   reactions: z.array(z.enum(reactions)).max(reactionChoices.length).refine(values => new Set(values.map(canonicalReaction)).size === values.length, 'Duplicate reactions are not allowed').optional(),
   x: coordinate.default(0),
   y: coordinate.default(0),
@@ -124,6 +125,7 @@ function validateObject(object: unknown): DeskObject {
   if (parsed.type === 'mermaid' && parsed.mermaidSource === undefined) throw new Error('Mermaid source required');
   if (['image', 'svg'].includes(parsed.type) && !parsed.src) throw new Error('Image source required');
   if (['web', 'link'].includes(parsed.type) && !parsed.url) throw new Error('URL required');
+  if (parsed.stamp && parsed.type !== 'text') throw new Error('Stamps are supported on text parts only');
   return parsed;
 }
 

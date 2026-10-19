@@ -1,0 +1,44 @@
+import type { DeskObject, Operation } from './model';
+import { createStamp, stampPatterns } from './stamp-values';
+import { stampArtwork } from './stamps';
+
+export function createStampControls(container: HTMLElement, selected: () => DeskObject[], apply: (ops: Operation[]) => void) {
+  const trigger = document.createElement('button'); trigger.id = 'stamp-open'; trigger.textContent = 'ハンコ ▾';
+  trigger.type = 'button'; trigger.setAttribute('aria-label', 'ハンコ一覧');
+  const panel = document.createElement('div'); panel.id = 'stamp-palette'; panel.popover = 'auto';
+  panel.setAttribute('aria-label', 'ハンコ一覧');
+  trigger.popoverTargetElement = panel;
+  const dated = document.createElement('input'); dated.type = 'checkbox'; dated.id = 'stamp-dated';
+  const label = document.createElement('label'); label.append(dated, ' 日付付き');
+  const choices = document.createElement('div'); choices.className = 'stamp-choices';
+  const buttons = stampPatterns.map(pattern => {
+    const button = document.createElement('button'); button.type = 'button'; button.dataset.stampDesign = pattern.id;
+    button.title = pattern.caption; button.setAttribute('aria-label', `${pattern.caption}を押す`);
+    const preview = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    preview.setAttribute('viewBox', '-110 -55 220 110'); preview.setAttribute('aria-hidden', 'true');
+    preview.append(stampArtwork({ designId: pattern.id, text: '', angle: -6 }));
+    const caption = document.createElement('span'); caption.textContent = pattern.caption;
+    button.append(preview, caption); choices.append(button);
+    button.onclick = () => {
+      const stamp = createStamp(pattern.id, dated.checked);
+      apply(selected().filter(o => o.type === 'text').map(o => ({ kind: 'update', id: o.id, patch: { stamp } })));
+    };
+    return button;
+  });
+  const clear = document.createElement('button'); clear.id = 'stamp-clear'; clear.type = 'button'; clear.textContent = 'ハン解除';
+  clear.onclick = () => apply(selected().filter(o => o.type === 'text' && o.stamp).map(o => ({ kind: 'update', id: o.id, patch: { stamp: null } })));
+  panel.append(label, choices, clear); container.append(trigger, panel);
+  const position = () => {
+    const rect = trigger.getBoundingClientRect();
+    panel.style.left = `${Math.max(8, Math.min(rect.left, innerWidth - panel.offsetWidth - 8))}px`;
+    panel.style.top = `${Math.max(8, Math.min(rect.bottom + 6, innerHeight - panel.offsetHeight - 8))}px`;
+  };
+  panel.addEventListener('toggle', () => { const open = panel.matches(':popover-open'); trigger.setAttribute('aria-expanded', String(open)); if (open) position(); });
+  window.addEventListener('resize', position);
+  container.addEventListener('keydown', event => { if (event.code === 'Space') event.stopPropagation(); });
+  return { update(objects: DeskObject[]) {
+    const texts = objects.filter(o => o.type === 'text');
+    buttons.forEach(button => { button.disabled = !texts.length; });
+    clear.disabled = !texts.some(o => o.stamp);
+  } };
+}

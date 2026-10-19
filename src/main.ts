@@ -1,3 +1,5 @@
+import { drawStamp } from './stamps';
+import { createStampControls } from './stamp-controls';
 import { createShapePicker, createTextFitPicker } from './shape-picker';
 import { shapeNames, isShapeType, shapePaths } from './shape-definitions';
 import { createCalloutPicker } from './callout-picker';
@@ -237,6 +239,10 @@ const activityLed = createActivityLed($('footer'));
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });
+const stampContainer = document.createElement('div'); stampContainer.id = 'stamp-controls'; editActions.append(stampContainer);
+const stampControls = createStampControls(stampContainer, () => desk.selected().map(id => desk.get(id)), operations => {
+  if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
+});
 const thinkingMode = createThinkingMode($('header'), () => { cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
@@ -395,6 +401,7 @@ function drawObject(object: DeskObject) {
       : svg('rect', { width: w, height: h, rx: Math.min(object.cornerRadius, w / 2, h / 2), ...style }));
     if (object.callout) drawCalloutLeader(group, object);
     drawMarkdown(group, object);
+    drawStamp(group, object, desk.selected().includes(object.id));
   }
   if (['link', 'web', 'image', 'svg', 'mermaid'].includes(object.type)) {
     group.append(svg('rect', { width: w, height: h, rx: 6, fill: '#ffffff', stroke: '#94a3b8' }));
@@ -419,6 +426,11 @@ function drawObject(object: DeskObject) {
   objectsLayer.append(group);
 }
 function drawSelection(preview?: DeskObject[], scene = preview) {
+  const stampSelection = new Set(desk.selected());
+  for (const object of scene ?? renderedScene) {
+    const node = drawnNodes.get(object.id);
+    if (node && object.type === 'text' && (object.stamp || node.querySelector('[data-stamp]'))) drawStamp(node, object, stampSelection.has(object.id));
+  }
   const colors = frameColors(desk.settingsSnapshot().background);
   $<HTMLButtonElement>('#clear-ai-pointing').disabled = desk.pointed().length === 0;
   const fit = $('#fit'), hasSelection = desk.selected().length > 0;
@@ -475,6 +487,7 @@ function render(rebuild = true) {
   const ids = desk.selected();
   colorControls.update(ids.map(id => desk.get(id)));
   reactionControls.update(ids.map(id => desk.get(id)));
+  stampControls.update(ids.map(id => desk.get(id)));
   authoring.update();
   $('#selected-label').textContent = ids.length ? `${ids.length} 個選択 · ${ids.join(', ')}` : '未選択';
   form.hidden = ids.length !== 1;
