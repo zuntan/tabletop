@@ -245,3 +245,6 @@ textは `cornerRadius` と上下左右共通の `padding`（省略時6）で一�
 下地は `background.underlayBrightness`（0=黒、1=白、既定0.5）でグレースケール指定できる。
 「下地の明るさ」スライダーは左が白、右が黒。プレビュー・確定・保存・Undoは不透明度と同じ。
 従来の固定グレーは初期値として維持し、壁紙・UIテーマの切替ではこの値を変えない。
+
+## 線同士の接合（開発ブランチ）
+線のstartJunction/endJunctionで端点グループを共有。保存・Undoに含む。図形へのstartBinding/endBindingとは別。詳しくは[接合仕様](docs/connector-junctions.md)。

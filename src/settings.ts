@@ -28,12 +28,18 @@ export const pinThreadSchema = z.object({
   enabled: z.boolean().default(true), visible: z.boolean().default(false),
   color: colorSchema.default('#64748b'), width: z.number().finite().min(0).max(100).default(2),
   opacity: z.number().finite().min(0).max(1).default(1),
-  underlayBrightness: z.number().finite().min(0).max(1).default(0.5),
   dash: z.enum(['solid', 'dashed', 'dotted']).default('solid'),
 }).strict();
 export const seriesSchema = appearanceSchema.extend({
   visibility: pinVisibilitySchema.default('all'),
-  thread: pinThreadSchema.default({}),
+  thread: z.preprocess(value => {
+    // Early wallpaper builds accidentally wrote this background-only key into threads.
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const { underlayBrightness: _unused, ...thread } = value as Record<string, unknown>;
+      return thread;
+    }
+    return value;
+  }, pinThreadSchema).default({}),
   id: z.string().min(1).max(100),
   name: z.string().trim().min(1).max(100),
   format: formatSchema.default('decimal'),

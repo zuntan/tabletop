@@ -124,3 +124,12 @@ test('empty desks round-trip', async () => {
   const result = await decodeDeskFile(await encodeDeskFile(desk));
   assert.deepEqual(result.objects, []); assert.deepEqual(result.settings, desk.settingsSnapshot());
 });
+
+
+test('early underlay field in pin threads is discarded when reading saved documents', () => {
+  const desk = new Desk(), settings = desk.settingsSnapshot();
+  const legacy = structuredClone(settings) as any;
+  legacy.series[0].thread.underlayBrightness = 0.5;
+  desk.replaceDocument({ objects: [], settings: legacy });
+  assert.equal(Object.hasOwn(desk.settingsSnapshot().series[0].thread, 'underlayBrightness'), false);
+});
