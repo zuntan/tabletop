@@ -57,6 +57,7 @@ test('pins and descriptions keep screen size, connector anchors and selection fo
 
 test('global and series visibility compose in all nine combinations; thread properties and layer ordering work', { timeout: 30_000 }, async () => {
   const { page, call, close, errors } = await openTestDesk('pin-series-modes');
+  page.setDefaultTimeout(5000);
   try {
     await call('desk_execute', { operations: [
       { kind: 'series_update', id: 'series-1', patch: { thread: { enabled: true, visible: true } } },
@@ -83,8 +84,9 @@ test('global and series visibility compose in all nine combinations; thread prop
     await page.locator('[data-color-role="thread-stroke"]').click();
     await page.locator('.palette-thread-stroke button[aria-label="色 #ef4444"]').click();
     await page.locator('[name="thread.width"]').fill('4');
-    await page.locator('[name="thread.width"]').dispatchEvent('change');
-    await page.locator('[name="thread.dash"]').selectOption('dashed');
+    await page.locator('[name="thread.width"]').press('Tab');
+    await page.getByRole('button', { name: '線種の候補', exact: true }).click();
+    await page.getByRole('dialog', { name: '線種の候補', exact: true }).getByRole('button', { name: '破線', exact: true }).click();
     const thread = page.locator('[data-pin-thread]');
     assert.equal(await thread.getAttribute('stroke'), '#ef4444'); assert.equal(await thread.getAttribute('stroke-width'), '4');
     assert.equal(await thread.getAttribute('stroke-dasharray'), '16 12');

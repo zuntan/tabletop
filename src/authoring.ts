@@ -8,6 +8,7 @@ import { iconButton } from './toolbar';
 import { randomUuid } from './portable-crypto';
 import { pinVisibilityNames } from './pin-series';
 import { addNumberPresets, addFormNumberPresets, numberPresets } from './number-presets';
+import { createLineStylePicker } from './line-style-picker';
 
 export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLElement, button: HTMLButtonElement,
   selectButton: HTMLButtonElement, apply: (operations: Operation[]) => void) {
@@ -63,6 +64,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     </fieldset></form>`;
   const choice = panel.querySelector<HTMLSelectElement>('#series-choice')!;
   const form = panel.querySelector<HTMLFormElement>('#series-settings')!;
+  const updateLineStyle = createLineStylePicker(form.elements.namedItem('thread.dash') as HTMLSelectElement);
   addFormNumberPresets(form);
   addNumberPresets(form.elements.namedItem('thread.width') as HTMLInputElement, numberPresets.strokeWidth, '線幅');
   addNumberPresets(form.elements.namedItem('thread.opacity') as HTMLInputElement, numberPresets.fillOpacity, '塗り透過（%）');
@@ -148,6 +150,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
         ? String(transparencyPercent(current.fillOpacity)) : String(current[input.name as keyof Series]);
     }
     const { name: _name, format: _format, shape: _shape, visibility: _visibility, thread: _thread, ...appearance } = current;
+    updateLineStyle();
     colors.update([objectSchema.parse({ ...appearance, type: 'rect' })]);
     const info = desk.listSettings().series.find(item => item.id === chosen)!;
     panel.querySelector('#series-info')!.textContent = `次：${info.nextText} · ${info.count} 個 · Escで配置終了（色・形はシリーズ全体に適用）`;

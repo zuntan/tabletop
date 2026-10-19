@@ -4,6 +4,7 @@ import { openTestDesk } from './desk-browser';
 
 test('numeric preset menus preserve direct input, property drafts, pin series and undo', { timeout: 30_000 }, async () => {
   const { page, call, close, errors } = await openTestDesk('number-presets');
+  page.setDefaultTimeout(5000);
   async function choose(scope: ReturnType<typeof page.locator>, name: string, value: string) {
     await scope.getByRole('button', { name, exact: true }).click();
     await page.getByRole('dialog', { name, exact: true }).getByRole('button', { name: value, exact: true }).click();
@@ -33,11 +34,18 @@ test('numeric preset menus preserve direct input, property drafts, pin series an
     await call('desk_select', { ids: ['pin'] });
     assert.equal(await properties.getByRole('button', { name: '線幅の候補', exact: true }).isDisabled(), true);
     const series = page.locator('#series-settings');
-    await choose(series, '線幅の候補', '4');
+    await choose(series.locator('label').filter({ has: page.locator('[name="strokeWidth"]') }), '線幅の候補', '4');
     await choose(series.locator('fieldset'), '塗り透過（%）の候補', '70');
     const settings = await call('desk_settings');
     assert.equal(settings.series[0].strokeWidth, 4);
     assert.ok(Math.abs(settings.series[0].thread.opacity - 0.3) < 1e-9);
+    await choose(series, '線種の候補', '破線');
+    assert.equal((await call('desk_settings')).series[0].thread.dash, 'dashed');
+    const lineStyle = series.getByRole('button', { name: '線種の候補', exact: true });
+    assert.match(await lineStyle.innerText(), /破線/);
+    assert.equal(await lineStyle.locator('line').getAttribute('stroke-dasharray'), '8 5');
+    await call('desk_undo');
+    assert.match(await lineStyle.innerText(), /実線/);
     for (const width of [1400, 390]) {
       await page.setViewportSize({ width, height: 1000 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
