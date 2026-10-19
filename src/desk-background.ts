@@ -1,17 +1,23 @@
+import floorSource from '../wood_floor.svg?raw';
 import type { Settings } from './settings';
 import { element } from './diagram-drawing';
 
 export const wallpaperUnderlayColor = '#808080';
 
 export const wallpaperColors = {
-  none: '#f8fafc', wood: '#dfc49e', 'cutting-mat': '#315e50', 'pink-notebook': '#fff0f4', charcoal: '#252b33',
+  none: '#f8fafc', 'wood-1': '#8a735e', 'wood-2': '#88512f', wood: '#dfc49e', 'cutting-mat': '#315e50', 'pink-notebook': '#fff0f4', charcoal: '#252b33',
 } as const;
 
-/** Built-in SVG textures only; no assets, requests, UI theme or document objects. */
+/** Built-in SVG patterns and same-origin raster tiles; independent of UI theme and parts. */
 export function createDeskBackground(canvas: SVGSVGElement) {
   const defs = canvas.querySelector('defs')!;
   const pattern = element('pattern', { id: 'desk-surface-pattern', patternUnits: 'userSpaceOnUse' });
   defs.append(pattern);
+  const floorDocument = new DOMParser().parseFromString(floorSource, 'image/svg+xml');
+  const grain = document.importNode(floorDocument.querySelector('#grain')!, true);
+  grain.id = 'desk-floor-grain'; defs.append(grain);
+  const floor = floorDocument.querySelector('#floor')!;
+
   const base = canvas.querySelector<SVGRectElement>('#desk-background')!;
   const texture = canvas.querySelector<SVGRectElement>('#desk-wallpaper')!;
   const grid = canvas.querySelector<SVGRectElement>('#desk-grid')!;
@@ -26,15 +32,18 @@ export function createDeskBackground(canvas: SVGSVGElement) {
     pattern.replaceChildren();
     const path = (d: string, stroke: string, opacity: number, width = 1) =>
       pattern.append(element('path', { d, fill: 'none', stroke, 'stroke-opacity': opacity, 'stroke-width': width }));
-    if (wallpaper === 'wood') {
-      pattern.setAttribute('width', '768'); pattern.setAttribute('height', '192');
-      pattern.append(element('rect', { x: 0, y: 0, width: 768, height: 96, fill: '#fff', opacity: 0.06 }));
-      path('M 0 0 H 768 M 0 96 H 768 M 384 0 V 96', '#6f4829', 0.2, 1.4);
-      for (const y of [18, 38, 62, 82, 116, 142, 168, 184]) {
-        path(`M -40 ${y} C 90 ${y - 10} 210 ${y + 12} 360 ${y} S 650 ${y - 9} 808 ${y}`, '#805e3d', 0.11);
+    if (wallpaper === 'wood-1' || wallpaper === 'wood-2') {
+      // Keep supplied image pixels and aspect ratio; seams are accepted for this trial.
+      pattern.setAttribute('width', '1672'); pattern.setAttribute('height', '941');
+      pattern.append(element('image', { href: '/wallpapers/' + wallpaper + '.png', x: 0, y: 0, width: 1672, height: 941, preserveAspectRatio: 'none' }));
+    } else if (wallpaper === 'wood') {
+      pattern.setAttribute('width', floor.getAttribute('width')!);
+      pattern.setAttribute('height', floor.getAttribute('height')!);
+      for (const child of floor.children) {
+        const node = document.importNode(child, true);
+        if (node.getAttribute('fill') === 'url(#grain)') node.setAttribute('fill', 'url(#desk-floor-grain)');
+        pattern.append(node);
       }
-      for (const [rx, ry] of [[36, 10], [55, 17]])
-        pattern.append(element('ellipse', { cx: 182, cy: 137, rx, ry, fill: 'none', stroke: '#805e3d', 'stroke-opacity': 0.1 }));
     } else if (wallpaper === 'cutting-mat') {
       pattern.setAttribute('width', '384'); pattern.setAttribute('height', '384');
       const minor: string[] = [], major: string[] = [];

@@ -22,6 +22,20 @@ test('AI switches three built-in wallpapers without changing parts, snapping or 
       assert.deepEqual(state.settings.grid, before.settings.grid); assert.deepEqual(await call('desk_camera_get'), camera);
     }
     assert.equal(colors.size, 3);
+    for (const wallpaper of ['wood-1', 'wood-2']) {
+      await call('desk_execute', { operations: [{ kind: 'background_update', patch: { wallpaper } }] });
+      const image = page.locator('#desk-surface-pattern > image');
+      assert.equal(await image.getAttribute('href'), '/wallpapers/' + wallpaper + '.png');
+      assert.equal(await page.locator('#desk-surface-pattern').getAttribute('width'), '1672');
+      assert.equal(await page.locator('#desk-surface-pattern').getAttribute('height'), '941');
+      const size = await page.evaluate(async (url) => {
+        const image = new Image(); image.src = url; await image.decode(); return [image.naturalWidth, image.naturalHeight];
+      }, '/wallpapers/' + wallpaper + '.png');
+      assert.deepEqual(size, [1672, 941]);
+      assert.deepEqual((await call('desk_state')).objects, before.objects);
+    }
+    await call('desk_execute', { operations: [{ kind: 'background_update', patch: { wallpaper: 'pink-notebook' } }] });
+
     await call('desk_camera_move', { center: { x: 400, y: 200 }, zoom: 2, durationMs: 0 });
     assert.equal(await page.locator('#desk-surface-pattern').getAttribute('patternTransform'), await page.locator('#viewport').getAttribute('transform'));
     await call('desk_execute', { operations: [{ kind: 'background_update', patch: { color: '#ffeedd', showGrid: true } }] });

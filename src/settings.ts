@@ -6,7 +6,7 @@ import { deskNameSchema } from './desk-identity';
 
 export const colorSchema = z.string().regex(/^(#[0-9a-fA-F]{3,8}|transparent|[a-zA-Z]{1,20})$/);
 export const backgroundSchema = z.object({
-  wallpaper: z.enum(['none', 'wood', 'cutting-mat', 'pink-notebook', 'charcoal']).default('none'),
+  wallpaper: z.enum(['none', 'wood-1', 'wood-2', 'wood', 'cutting-mat', 'pink-notebook', 'charcoal']).default('none'),
   color: colorSchema.nullable().default(null),
   opacity: z.number().finite().min(0).max(1).default(1),
   underlayBrightness: z.number().finite().min(0).max(1).default(0.5),

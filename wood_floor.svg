@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <title>Wood floor tabletop wallpaper</title>
+  <desc>Vector wood plank pattern with staggered joints and subtle grain.</desc>
+  <defs>
+    <pattern id="grain" width="640" height="150" patternUnits="userSpaceOnUse">
+      <path d="M0 15 Q120 3 245 15 T640 17 M0 30 Q145 39 300 29 T640 31 M0 54 Q140 43 240 55 T640 52 M0 82 Q155 75 270 83 T640 80 M0 106 Q120 115 280 105 T640 107 M0 135 Q170 124 310 135 T640 133" stroke="#654732" opacity=".20" stroke-width="2" fill="none"/>
+      <path d="M0 22 Q160 18 300 21 T640 20 M0 63 Q125 68 240 62 T640 61 M0 118 Q180 111 340 119 T640 117" stroke="#f1ce9d" opacity=".22" fill="none" stroke-width="3"/>
+      <path d="M180 65 C220 43 300 47 320 67 C300 86 220 88 180 65 Z M196 65 C235 53 282 55 305 67 C270 77 225 78 196 65Z" stroke="#654732" opacity=".15" fill="none" stroke-width="1.5"/>
+    </pattern>
+    <pattern id="floor" width="960" height="450" patternUnits="userSpaceOnUse">
+      <rect width="960" height="450" fill="#b88b60"/>
+      <g stroke="#66482f" stroke-width="2.5">
+        <path d="M0 0H960 M0 150H960 M0 300H960"/>
+        <path d="M340 0V150 M760 0V150 M100 150V300 M540 150V300 M290 300V450 M740 300V450"/>
+      </g>
+      <path d="M0 3H960 M0 153H960 M0 303H960 M343 0V150 M763 0V150 M103 150V300 M543 150V300 M293 300V450 M743 300V450" stroke="#e8be8e" stroke-width="2" opacity=".55" fill="none"/>
+      <rect width="960" height="450" fill="url(#grain)" opacity=".73"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="900" fill="#b88b60"/>
+  <rect width="1600" height="900" fill="url(#floor)"/>
+</svg>

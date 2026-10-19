@@ -21,7 +21,7 @@ test('wallpaper changes are atomic settings edits, preserve parts and grid, and 
 });
 
 test('wallpaper presets and overrides round-trip; older files get the unchanged plain desk', async () => {
-  for (const wallpaper of ['wood', 'cutting-mat', 'pink-notebook'] as const) {
+  for (const wallpaper of ['wood-1', 'wood-2', 'wood', 'cutting-mat', 'pink-notebook'] as const) {
     const desk = new Desk();
     desk.execute({ operations: [{ kind: 'background_update', patch: { wallpaper, color: '#ffeedd', showGrid: true } }] });
     const restored = await decodeDeskFile(await encodeDeskFile(desk));

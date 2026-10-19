@@ -45,7 +45,7 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
       const caption = document.createElement('span'); caption.textContent = text; node.append(caption, control); panel.append(node);
     };
     const wallpaper = document.createElement('select'); wallpaper.setAttribute('aria-label', '壁紙');
-    for (const [value, text] of [['none', '無地'], ['wood', '木目'], ['cutting-mat', 'カッターマット'], ['pink-notebook', 'ピンクのノート'], ['charcoal', 'チャコール']]) {
+    for (const [value, text] of [['none', '無地'], ['wood-1', '木目1'], ['wood-2', '木目2'], ['wood', 'フローリング'], ['cutting-mat', 'カッターマット'], ['pink-notebook', 'ピンクのノート'], ['charcoal', 'チャコール']]) {
       const option = document.createElement('option'); option.value = value; option.textContent = text; wallpaper.append(option);
     }
     wallpaper.onchange = () => change({ wallpaper: wallpaper.value as Settings['background']['wallpaper'] });
