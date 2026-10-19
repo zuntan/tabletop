@@ -32,8 +32,8 @@ test('live text measurement is read-only, padding-aware and zoom independent; pl
     await call('desk_undo'); assert.deepEqual((await call('desk_get', { id: 'md' })).height, 50);
     await page.locator('#thinking-mode').click();
     assert.equal((await call('desk_text_measure', { ids: ['md'] })).measurements[0].status, 'measured');
-    await page.locator('#text-measure').click();
-    assert.match(await page.locator('#text-measure-result').textContent() ?? '', /縦にはみ出し/);
+    assert.equal(await page.locator('#text-measure').isVisible(), false);
+    assert.equal(await page.locator('#text-measure-result').isVisible(), false);
     const bad = await client.callTool({ name: 'desk_text_measure', arguments: { ids: ['missing'] } });
     assert.equal(bad.isError, true);
     const view = await page.locator('[data-id="md"]').evaluate(g => ({

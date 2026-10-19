@@ -22,7 +22,7 @@ import { drawMarkdown } from './markdown';
 import { createActivityLed } from './activity-led';
 import { createDeskBackground } from './desk-background';
 import './activity-led.css';
-import { measureDeskText, supportsTextMeasure } from './text-measure';
+import { measureDeskText } from './text-measure';
 import './markdown.css';
 import { createSidebar } from './sidebar';
 import './sidebar.css';
@@ -95,7 +95,7 @@ app.innerHTML = `
           <button type="submit" class="wide">変更を適用</button>
         </form>
         <button id="text-measure" type="button" hidden>文章の収まりを確認</button>
-        <small id="text-measure-result" role="status"></small>
+        <small id="text-measure-result" role="status" hidden></small>
         <div id="color-controls" hidden></div>
         <div id="reaction-controls" hidden></div>
         <small>図形のダブルクリックで文字編集。矢印の両端をドラッグして接続できます。</small>
@@ -412,7 +412,8 @@ function render(rebuild = true) {
   authoring.update();
   $('#selected-label').textContent = ids.length ? `${ids.length} 個選択 · ${ids.join(', ')}` : '未選択';
   form.hidden = ids.length !== 1;
-  $<HTMLButtonElement>('#text-measure').hidden = !ids.length || !ids.some(id => supportsTextMeasure(desk.get(id)));
+  // Human measurement UI is paused; the read-only MCP tool remains available.
+  $<HTMLButtonElement>('#text-measure').hidden = true;
   $('#text-measure-result').textContent = '';
   const link = $<HTMLAnchorElement>('#open-url'); link.hidden = true;
   if (ids.length === 1) {

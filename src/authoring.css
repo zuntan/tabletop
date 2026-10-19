@@ -46,3 +46,4 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 
 #text-measure { font-size: 11px; }
 #text-measure-result { display: block; white-space: pre-line; }
+#text-measure-result[hidden] { display: none; }
