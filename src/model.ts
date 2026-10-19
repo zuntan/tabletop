@@ -1,3 +1,4 @@
+import { publishObject } from './object-properties';
 import { groupPinLayers } from './pin-series';
 import { z } from 'zod';
 import { resolveConnections, anchorNames } from './geometry';
@@ -170,11 +171,13 @@ export class Desk {
       types, canUndo: this.undoStack.length > 0, canRedo: this.redoStack.length > 0 };
   }
   list() {
-    return this.objects.map(({ src, ...object }, zIndex) => ({
-      ...structuredClone(object), zIndex, ...this.imageGeometry.describe({ ...object, src }),
-      ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}),
-    }));
+    return this.objects.map((object, zIndex) => {
+      const { src, ...published } = publishObject(object);
+      return { ...published, zIndex, ...this.imageGeometry.describe(object),
+        ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}) };
+    });
   }
+
   get(id: string) {
     const object = this.objects.find(o => o.id === id);
     if (!object) throw new Error(`Unknown object: ${id}`);
@@ -191,8 +194,8 @@ export class Desk {
       })) })) };
   }
   private metadata(object: DeskObject) {
-    const { src, ...rest } = object;
-    return { ...structuredClone(rest), ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}) };
+    const { src, ...rest } = publishObject(object);
+    return { ...rest, ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}) };
   }
   replaceDocument(input: unknown, actor = 'human') {
     const document = z.object({ objects: z.array(objectSchema).max(2000), settings: settingsSchema }).strict().parse(input);
@@ -341,9 +344,9 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, text
     case 'list': return { ...desk.summary(), objects: desk.list() };
     case 'get': {
       const object = desk.get(request.id);
-      return { ...object, ...desk.imageGeometry.describe(object) };
+      return { ...publishObject(object), ...desk.imageGeometry.describe(object) };
     }
-    case 'state': return { ...desk.summary(), objects: desk.snapshot(), selection: desk.selected(), aiPointing: desk.pointed(), settings: desk.settingsSnapshot() };
+    case 'state': return { ...desk.summary(), objects: desk.snapshot().map(publishObject), selection: desk.selected(), aiPointing: desk.pointed(), settings: desk.settingsSnapshot() };
     case 'file_snapshot': {
       const snapshot = { sessionId: desk.sessionId, revision: desk.revision, objects: desk.snapshot(), settings: desk.settingsSnapshot() };
       checkDeskBridgeSize(snapshot);

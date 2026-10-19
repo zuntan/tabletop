@@ -1,3 +1,4 @@
+import { publishObject } from '../src/object-properties';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { zipSync, unzipSync, strToU8, strFromU8 } from 'fflate';
@@ -35,7 +36,7 @@ test('ZIP round-trip retains ordered objects, embedded assets, settings, binding
   assert.equal(Object.keys(files).filter(name => name.startsWith('assets/')).length, 1);
   assert.ok(!strFromU8(files['manifest.json']).includes(image));
   const result = await decodeDeskFile(bytes);
-  assert.deepEqual(result.objects, desk.snapshot());
+  assert.deepEqual(result.objects.map(publishObject), desk.snapshot().map(publishObject));
   assert.deepEqual(result.settings, desk.settingsSnapshot());
   assert.deepEqual(result.warnings, []);
 });

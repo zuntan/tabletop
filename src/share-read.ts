@@ -1,3 +1,4 @@
+import { publishObject } from './object-properties';
 import type { Desk } from './model';
 import { deskContextSnapshot } from './desk-context';
 
@@ -12,9 +13,9 @@ export function shareRead(desk: Desk, tool: ShareTool, expectedSessionId: string
   const object = desk.get(id);
   if (tool === 'desk_asset_read') {
     if (!['image', 'svg'].includes(object.type)) throw new Error('Object is not an image/SVG');
-    return { ...stamp, object };
+    return { ...stamp, object: publishObject(object) };
   }
-  const { src, ...metadata } = object;
+  const { src, ...metadata } = publishObject(object);
   return { ...metadata, ...desk.imageGeometry.describe(object),
     ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}), ...stamp };
 }

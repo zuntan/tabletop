@@ -1,3 +1,4 @@
+import { publishObject } from '../src/object-properties';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createHmac, webcrypto } from 'node:crypto';
@@ -30,7 +31,7 @@ test('HTTP-compatible crypto preserves UUID, SHA-256, pairing proofs and desk ar
     const desk = new Desk();
     desk.execute({ operations: [{ kind: 'add', object: { id: 'asset', type: 'svg', src: 'data:image/svg+xml;base64,PHN2Zy8+' } }] });
     const decoded = await decodeDeskFile(await encodeDeskFile(desk));
-    assert.deepEqual(decoded.objects, desk.snapshot());
+    assert.deepEqual(decoded.objects.map(publishObject), desk.snapshot().map(publishObject));
     assert.deepEqual(decoded.settings, desk.settingsSnapshot());
   } finally { Object.defineProperty(globalThis, 'crypto', original); }
 });

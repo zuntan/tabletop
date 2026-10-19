@@ -1,3 +1,4 @@
+import { objectPropertyNames } from './object-properties';
 import { isShapeType } from './shape-definitions';
 import type { DeskObject } from './model';
 import { isConnector } from './geometry';
@@ -7,6 +8,7 @@ const fields = ['x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 
 const numeric = new Set(['x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'fontSize', 'cornerRadius', 'padding']);
 export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   const connector = isConnector(object);
+  const meaningful = new Set<string>(objectPropertyNames(object));
   for (const name of fields) {
     const input = form.elements.namedItem(name) as HTMLInputElement;
     if (!input) continue;
@@ -23,6 +25,7 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
       input.value = name === 'dash' ? object.dash ?? 'solid' : object[name] ?? 'none';
       continue;
     }
+    if (!meaningful.has(name)) { input.disabled = true; input.closest('label')!.hidden = true; continue; }
     if (name === 'padding' || name === 'cornerRadius') {
       const applicable = object.type === 'text' || name === 'cornerRadius' && object.type === 'roundedRect';
       input.disabled = !applicable; input.closest('label')!.hidden = !applicable;

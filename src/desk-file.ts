@@ -1,3 +1,4 @@
+import { publishObject } from './object-properties';
 import { zipSync, unzipSync, strToU8, strFromU8 } from 'fflate';
 import { z } from 'zod';
 import { Desk } from './model';
@@ -39,7 +40,7 @@ export async function encodeDeskFile(desk: Desk): Promise<Uint8Array> {
   let total = 0;
   const objects: Record<string, unknown>[] = [];
   for (const object of document.objects) {
-    const copy: Record<string, unknown> = { ...object };
+    const copy: Record<string, unknown> = { ...publishObject(object) };
     if (object.src?.startsWith('data:')) {
       const match = /^data:(image\/(?:png|jpeg|gif|webp|svg\+xml));base64,([A-Za-z0-9+/=\s]+)$/.exec(object.src);
       if (!match) throw new Error('Invalid embedded image');
