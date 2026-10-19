@@ -17,6 +17,12 @@ test('toolbar captions stay visible and flexible groups keep editing actions tog
     assert.equal(await page.locator('[data-add="rect"] .tool-caption').innerText(), '矩形');
     assert.equal(await page.locator('[data-add="web"] .tool-caption').innerText(), 'Web資料');
     assert.equal(await page.locator('#numbering-settings .tool-caption').innerText(), 'ピン設定');
+    for (const selector of ['#numbering', '#numbering-settings']) {
+      const icon = page.locator(`${selector} .tool-icon svg`);
+      assert.equal(await icon.getAttribute('data-icon'), 'map-pin');
+      assert.equal(await icon.getAttribute('stroke-width'), '1');
+      assert.equal(await icon.getAttribute('width'), '18');
+    }
     const rows = await page.locator('.toolbar-parts .tool-button').evaluateAll(elements => elements.map(element => element.getBoundingClientRect().top));
     assert.equal(new Set(rows).size, 1);
     const centerRows = await page.locator('#authoring-tools > *').evaluateAll(elements => elements.map(element => Math.round(element.getBoundingClientRect().top + element.getBoundingClientRect().height / 2)));

@@ -9,11 +9,12 @@ test('header actions use monochrome accessible icons with tooltips and keep thei
       const button = page.getByRole('button', { name: label, exact: true });
       assert.equal(await button.getAttribute('id'), id);
       assert.equal(await button.getAttribute('title'), label);
-      assert.equal(await button.textContent(), '');
+      assert.equal((await button.textContent())?.trim(), '');
       const icon = button.locator('svg');
       assert.equal(await icon.getAttribute('aria-hidden'), 'true');
       assert.equal(await icon.getAttribute('stroke'), 'currentColor');
       assert.equal(await icon.getAttribute('fill'), 'none');
+      assert.equal(await icon.getAttribute('stroke-width'), '1');
       const frame = (await button.boundingBox())!;
       assert.equal(frame.width, 36); assert.equal(frame.height, 36);
       // Inherited CSS color, rather than an emoji palette or hard-coded light/dark stroke.

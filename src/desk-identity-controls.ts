@@ -1,4 +1,5 @@
 import type { Desk } from './model';
+import { createIcon } from './icons';
 
 /** Name drafts stay local until submitted; unrelated refreshes never replace the input. */
 export function createDeskIdentityControls(header: HTMLElement, desk: Desk, canEdit: () => boolean, refresh: () => void, report: (text: string, error?: boolean) => void) {
@@ -6,7 +7,7 @@ export function createDeskIdentityControls(header: HTMLElement, desk: Desk, canE
   const name = document.createElement('span'); name.id = 'desk-name';
   const id = document.createElement('code'); id.id = 'desk-id'; id.textContent = desk.deskId; id.title = '今開いている棚の目印（保存ファイルには含みません）';
   id.setAttribute('aria-label', `棚ID ${desk.deskId}`);
-  const edit = document.createElement('button'); edit.id = 'edit-desk-name'; edit.type = 'button'; edit.textContent = '✎';
+  const edit = document.createElement('button'); edit.id = 'edit-desk-name'; edit.type = 'button'; edit.append(createIcon('pencil', 16));
   edit.title = '棚の名前を編集'; edit.setAttribute('aria-label', '棚の名前を編集');
   const form = document.createElement('form'); form.id = 'desk-name-form'; form.hidden = true;
   const input = document.createElement('input'); input.id = 'desk-name-input'; input.maxLength = 100; input.placeholder = '無題'; input.setAttribute('aria-label', '棚の名前');

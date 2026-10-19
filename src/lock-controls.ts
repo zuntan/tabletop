@@ -3,16 +3,9 @@ import { lockSelectionState } from './object-lock';
 import { iconButton } from './toolbar';
 
 export const lockBodyPath = 'M5 9h14v12H5z M8 9V6a4 4 0 0 1 8 0v3';
-function icon() {
-  const node = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  for (const [key, value] of Object.entries({ viewBox: '0 0 24 24', width: '18', height: '18', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'aria-hidden': 'true' })) node.setAttribute(key, value);
-  const path = document.createElementNS(node.namespaceURI, 'path'); path.setAttribute('d', lockBodyPath); node.append(path);
-  return node;
-}
 export function createLockControls(snap: HTMLElement, form: HTMLFormElement, toggle: () => void) {
   const toolbar = document.createElement('button'); toolbar.type = 'button'; toolbar.id = 'mouse-lock';
   iconButton(toolbar, '', 'マウス操作をロック');
-  toolbar.querySelector('.tool-icon')!.append(icon());
   toolbar.querySelector('.tool-caption')!.textContent = 'ロック';
   snap.after(toolbar);
   const propertyControl = document.createElement('div'); propertyControl.className = 'property-lock-control';
