@@ -37,15 +37,19 @@ export function createReactionControls(container: HTMLElement, selected: () => D
 }
 
 /** Badges are inert and sit below the object, away from media open controls. */
-export function drawReactions(group: SVGGElement, object: DeskObject, descriptionsVisible: boolean) {
+export function drawReactions(group: SVGGElement, object: DeskObject, descriptionsVisible: boolean, zoom = 1) {
+  group.querySelector('[data-reactions]')?.remove();
   const active = reactionChoices.filter(reaction => hasReaction(object.reactions, reaction));
   if (!active.length) return;
   const visual = isConnector(object) ? bounds(object) : labelVisualBounds(object, descriptionsVisible);
-  const x = visual.x - object.x + Math.max(0, visual.width - Math.min(active.length, 7) * 28);
-  const y = visual.y - object.y + visual.height + 8;
-  const badges = element('g', { 'data-reactions': object.id, 'pointer-events': 'none', 'aria-hidden': 'true' });
+  // Pin groups already cancel camera zoom; other parts need an inverse scale here.
+  const scale = object.type === 'label' ? 1 : 1 / zoom;
+  const x = visual.x - object.x + Math.max(0, visual.width - Math.min(active.length, 7) * 28 * scale);
+  const y = visual.y - object.y + visual.height + 8 * scale;
+  const badges = element('g', { 'data-reactions': object.id, 'pointer-events': 'none', 'aria-hidden': 'true',
+    transform: `translate(${x} ${y}) scale(${scale})` });
   active.forEach((reaction, index) => {
-    const bx = x + index % 7 * 28, by = y + Math.floor(index / 7) * 28;
+    const bx = index % 7 * 28, by = Math.floor(index / 7) * 28;
     badges.append(element('rect', { x: bx, y: by, width: 24, height: 24, rx: 8,
       fill: '#ffffff', stroke: '#cbd5e1', 'stroke-width': 1 }));
     const text = element('text', { x: bx + 12, y: by + 17, 'font-size': 16,

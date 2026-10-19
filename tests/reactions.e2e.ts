@@ -63,3 +63,28 @@ test('human and AI attach eighteen reactions to objects and pins with shared Und
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });
+
+test('reaction badge sizes and bottom gaps stay fixed at different zooms, including pins', {timeout:30000},async()=>{
+  const {page,call,close,errors}=await openTestDesk('reaction-scale');
+  try{
+    await call('desk_execute',{operations:[
+      {kind:'add',object:{id:'memo',type:'text',x:100,y:100,width:300,height:180,reactions:['👍','💡']}},
+      {kind:'add',object:{id:'edge',type:'line',x:100,y:400,x2:400,y2:400,reactions:['👍']}},
+      {kind:'label_add',id:'pin',seriesId:'series-1',x:500,y:100,description:'ピンの説明'} ,
+      {kind:'update',id:'pin',patch:{reactions:['👍']}}
+    ]});
+    for(const zoom of [.25,1,3]){
+      await call('desk_camera_move',{zoom,durationMs:0});
+      for(const id of ['memo','edge','pin']){
+        const box=await page.locator(`[data-reactions="${id}"] rect`).first().evaluate(el=>{const r=el.getBoundingClientRect();return {width:r.width,height:r.height};});
+        assert.ok(Math.abs(box.width-24)<.1,`${id} at ${zoom}: width ${box.width}`);
+        assert.ok(Math.abs(box.height-24)<.1,`${id} at ${zoom}: height ${box.height}`);
+      }
+      const body=await page.locator('[data-id="memo"] > rect').evaluate(el=>{const r=el.getBoundingClientRect();return {y:r.y,height:r.height};});
+      const badge=await page.locator('[data-reactions="memo"] rect').first().evaluate(el=>({y:el.getBoundingClientRect().y}));
+      assert.ok(Math.abs(badge.y-(body.y+body.height)-8)<.1);
+    }
+    assert.equal(await page.locator('[data-reactions="memo"]').count(),1);
+    assert.deepEqual(errors,[]);
+  }finally{await close();}
+});

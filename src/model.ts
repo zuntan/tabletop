@@ -36,7 +36,7 @@ const bindingSchema = z.object({
 export const endpointShapeSchema = z.enum(['none', 'arrow', 'circle', 'diamond']);
 const objectFields = z.object({
   id: z.string().min(1).max(100),
-  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'web', 'link', 'label']),
+  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'mermaid', 'web', 'link', 'label']),
   cornerRadius: z.number().finite().min(0).max(100_000).default(16),
   padding: z.number().finite().min(0).max(100_000).optional(),
   locked: z.boolean().optional(), // Mouse geometry protection only; not an authorization boundary.
@@ -69,6 +69,7 @@ const objectFields = z.object({
   textColor: color.default('#0f172a'),
   textFit: z.enum(['auto', 'shrink']).optional(),
   fontSize: z.number().finite().min(1).max(1000).default(24),
+  mermaidSource: z.string().max(100_000).optional(),
   src: source.optional(),
   url: z.string().max(4096).refine(value => value === '' || safeUrl(value), 'Expected an HTTP(S) URL').optional(),
 }).strict();
@@ -84,7 +85,7 @@ function normalizeLegacyConnector(input: unknown): unknown {
 export const objectSchema = z.preprocess(normalizeLegacyConnector, objectFields);
 export const patchSchema = objectFields.omit({ id: true, type: true }).partial();
 const addObjectFields = objectFields.partial().required({ id: true, type: true });
-const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'web', 'link', 'label']) })
+const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'web', 'link', 'label']) })
   .transform(object => normalizeLegacyConnector(object) as z.input<typeof addObjectFields>);
 export const operationSchema = z.discriminatedUnion('kind', [
   ...settingsOperations,
@@ -120,6 +121,7 @@ type Entry = { before: Snapshot; after: Snapshot; beforeSettings: Settings; afte
 
 function validateObject(object: unknown): DeskObject {
   const parsed = objectSchema.parse(object);
+  if (parsed.type === 'mermaid' && parsed.mermaidSource === undefined) throw new Error('Mermaid source required');
   if (['image', 'svg'].includes(parsed.type) && !parsed.src) throw new Error('Image source required');
   if (['web', 'link'].includes(parsed.type) && !parsed.url) throw new Error('URL required');
   return parsed;
@@ -305,6 +307,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('list') }),
   z.object({ method: z.literal('get'), id: z.string() }),
   z.object({ method: z.literal('state') }),
+  z.object({ method: z.literal('mermaid_render'), id: z.string() }).strict(),
   z.object({ method: z.literal('file_snapshot') }).strict(),
   z.object({ method: z.literal('load_document'), document: z.unknown(), confirm: z.literal(true),
     expectedSessionId: z.string().uuid(), expectedRevision: z.number().int().nonnegative(),
@@ -327,10 +330,16 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('redo'), actor: z.string().min(1).max(100).default('agent-01') }),
 ]);
 export type Request = z.input<typeof requestSchema>;
-export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge, ui?: { get(): { theme: 'light' | 'dark' }; set(theme: 'light' | 'dark'): { theme: 'light' | 'dark' } }): unknown {
+export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge, ui?: { get(): { theme: 'light' | 'dark' }; set(theme: 'light' | 'dark'): { theme: 'light' | 'dark' } }, mermaid?: (source: string) => Promise<{ svg: string }>): unknown {
   const request = requestSchema.parse(input);
   switch (request.method) {
     case 'share_read': return shareRead(desk, request.tool, request.expectedSessionId, request.id);
+    case 'mermaid_render': {
+      const object = desk.get(request.id);
+      if (object.type !== 'mermaid' || !mermaid) throw new Error('Mermaid rendering requires a compatible browser and Mermaid object');
+      const stamp = { id: object.id, revision: desk.revision, mermaidSource: object.mermaidSource };
+      return mermaid(object.mermaidSource ?? '').then(({ svg }) => ({ ...stamp, svg }));
+    }
     case 'summary': return desk.summary();
     case 'ui_get':
       if (!ui) throw new Error('UI controls require a compatible browser');

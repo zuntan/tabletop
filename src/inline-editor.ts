@@ -1,11 +1,11 @@
 import { shapeTypes } from './shape-definitions';
 import { pinScreenObject } from './pin-series';
 import type { DeskObject } from './model';
-type EditorPatch = { text?: string; description?: string; url?: string };
+type EditorPatch = { text?: string; description?: string; url?: string; mermaidSource?: string };
 
 export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement,
   save: (object: DeskObject, patch: EditorPatch, fresh: boolean) => void) {
-  let active: { object: DeskObject; fresh: boolean; panel: HTMLDivElement; text: HTMLTextAreaElement; url?: HTMLInputElement; error: HTMLElement; resizeObserver?: ResizeObserver } | null = null;
+  let active: { object: DeskObject; fresh: boolean; panel: HTMLDivElement; text: HTMLTextAreaElement; url?: HTMLInputElement; source?: HTMLTextAreaElement; error: HTMLElement; resizeObserver?: ResizeObserver } | null = null;
   let composing = false;
   const textFrameTypes = new Set(['text', ...shapeTypes]);
   let submitMode: 'enter' | 'mod-enter' = 'enter';
@@ -23,9 +23,10 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
   }
   function commit() {
     if (!active) return true;
-    const { object, text, url, fresh, error } = active;
+    const { object, text, url, source, fresh, error } = active;
     try {
       const patch: EditorPatch = object.type === 'label' ? { description: text.value } : { text: text.value };
+      if (source) patch.mermaidSource = source.value;
       if (url && ['image', 'svg'].includes(object.type) && !url.value.trim()) patch.url = '';
       else if (url) {
         const value = new URL(url.value);
@@ -48,10 +49,16 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       if (active && !commit()) return;
       const panel = document.createElement('div'); panel.className = 'inline-editor';
       const text = document.createElement('textarea'); text.dataset.inlineText = ''; text.rows = 3;
-      text.setAttribute('aria-label', object.type === 'label' ? 'ピンの説明文' : ['image', 'svg'].includes(object.type) ? 'タイトル' : ['link', 'web'].includes(object.type) ? '表示名' : 'テキスト');
+      text.setAttribute('aria-label', object.type === 'label' ? 'ピンの説明文' : ['image', 'svg', 'mermaid'].includes(object.type) ? 'タイトル' : ['link', 'web'].includes(object.type) ? '表示名' : 'テキスト');
       if (['image', 'svg'].includes(object.type)) text.placeholder = 'タイトル';
       text.value = object.type === 'label' ? object.description ?? '' : object.text;
       panel.append(text);
+      let source: HTMLTextAreaElement | undefined;
+      if (object.type === 'mermaid') {
+        source = document.createElement('textarea'); source.rows = 10; source.spellcheck = false;
+        source.dataset.inlineMermaid = ''; source.setAttribute('aria-label', 'Mermaidソース');
+        source.value = object.mermaidSource ?? ''; panel.append(source);
+      }
       let url: HTMLInputElement | undefined;
       if (['link', 'web', 'image', 'svg'].includes(object.type)) {
         url = document.createElement('input'); url.type = 'url'; url.dataset.inlineUrl = '';
@@ -65,7 +72,7 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       const mode = document.createElement('button'); mode.type = 'button'; mode.textContent = '⇄';
       mode.className = 'editor-mode-toggle'; mode.setAttribute('aria-label', 'Enter改行モード');
       const updateHint = () => {
-        hint.textContent = submitMode === 'enter'
+        hint.textContent = !source && submitMode === 'enter'
           ? 'Enter：確定 · Shift＋Enter：改行 · Esc：取消' : 'Enter：改行 · Ctrl/⌘＋Enter：確定 · Esc：取消';
         mode.setAttribute('aria-pressed', String(submitMode === 'mod-enter'));
         mode.title = submitMode === 'enter' ? 'Enterで改行する方式へ切替' : 'Enterで確定する方式へ切替';
@@ -77,17 +84,17 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
         text.focus();
       };
       mode.setAttribute('aria-describedby', hint.id);
-      actions.append(hint, mode); panel.append(actions); updateHint();
+      actions.append(hint); if (!source) actions.append(mode); panel.append(actions); updateHint();
       const error = document.createElement('div'); error.className = 'editor-error'; error.setAttribute('role', 'alert'); panel.append(error);
       const matrix = viewport.getScreenCTM();
       const width = object.type === 'label' ? object.width : object.width * (matrix?.a ?? 1);
       const matchesTextPart = textFrameTypes.has(object.type);
-      panel.style.width = `${matchesTextPart ? width + 20 : Math.max(220, width)}px`;
+      panel.style.width = `${matchesTextPart ? width + 20 : Math.max(object.type === 'mermaid' ? 360 : 220, width)}px`;
       if (matchesTextPart && matrix) text.style.height = `${object.height * matrix.d}px`;
       const resizeObserver = matchesTextPart ? new ResizeObserver(() => {
         if (active?.text === text) panel.style.width = `${text.offsetWidth + 20}px`;
       }) : undefined;
-      active = { object, fresh, panel, text, url, error, resizeObserver }; workspace.append(panel);
+      active = { object, fresh, panel, text, url, source, error, resizeObserver }; workspace.append(panel);
       resizeObserver?.observe(text); reposition();
       panel.addEventListener('compositionstart', () => { composing = true; });
       panel.addEventListener('compositionend', () => { composing = false; });
@@ -96,11 +103,11 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
         if (event.isComposing || composing || event.keyCode === 229) return;
         if (event.key === 'Escape') { event.preventDefault(); close(); }
         if ((event.target as Element).closest('select,button')) return;
-        if (event.key === 'Enter' && !event.shiftKey && (submitMode === 'enter' || event.ctrlKey || event.metaKey)) {
+        if (event.key === 'Enter' && !event.shiftKey && (!source && submitMode === 'enter' || event.ctrlKey || event.metaKey)) {
           event.preventDefault(); commit();
         }
       });
-      text.focus(); text.select();
+      (source ?? text).focus(); (source ?? text).select();
     },
   };
 }

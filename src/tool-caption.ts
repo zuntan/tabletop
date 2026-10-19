@@ -3,7 +3,7 @@ import { createIcon, type IconName } from './icons';
 const buttonIcons: Record<string, IconName> = {
   'selection-mode': 'pointer', 'clear-ai-pointing': 'pointer-x',
   rect: 'rectangle', roundedRect: 'square-rounded', ellipse: 'circle', line: 'line', arrow: 'arrow-up-right',
-  text: 'typography', image: 'photo', web: 'world', link: 'link', numbering: 'map-pin',
+  text: 'typography', image: 'photo', mermaid: 'rectangle', web: 'world', link: 'link', numbering: 'map-pin',
   'numbering-settings': 'map-pin', clipboard: 'clipboard', 'zoom-out': 'minus', 'zoom-in': 'plus',
   fit: 'maximize', 'grid-snap': 'grid-dots', 'label-descriptions': 'list-numbers',
   front: 'arrow-bar-to-up', back: 'arrow-bar-to-down', 'mouse-lock': 'lock',
@@ -12,7 +12,7 @@ const buttonIcons: Record<string, IconName> = {
 const shortCaptions: Record<string, string> = {
   'clear-ai-pointing': 'AI選択解除',
   'selection-mode': '選択', rect: '矩形', roundedRect: '角丸', ellipse: '楕円', line: '線', arrow: '矢印', text: 'テキスト',
-  image: '画像', web: 'Web資料', link: 'リンク', numbering: 'ピン', clipboard: '貼り付け',
+  image: '画像', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク', numbering: 'ピン', clipboard: '貼り付け',
   'zoom-out': '縮小', 'zoom-reset': '100%へ', 'zoom-in': '拡大', fit: '全体',
   'grid-snap': 'スナップ', 'label-descriptions': 'ピンとテキスト', 'numbering-settings': 'ピン設定',
 };

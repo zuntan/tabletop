@@ -15,6 +15,12 @@ export function registerAssetTools(mcp: McpServer, request: (payload: Request) =
   }, async ({ id, exportFile }): Promise<CallToolResult> => {
     try {
       const object = await request({ method: 'get', id }) as DeskObject;
+      if (object.type === 'mermaid') {
+        const rendered = await request({ method: 'mermaid_render', id }) as { svg: string; revision: number; mermaidSource: string };
+        const asset = assetFromBytes(Buffer.from(rendered.svg, 'utf8'));
+        return json({ id, mimeType: 'image/svg+xml', byteLength: asset.bytes.length, ...rendered,
+          ...(exportFile ? { path: await exportAsset(asset) } : {}) });
+      }
       if (!['image', 'svg'].includes(object.type) || !object.src) throw new Error('Object is not an image/SVG');
       const asset = embeddedAsset(object.src);
       const path = exportFile ? await exportAsset(asset) : undefined;
