@@ -79,7 +79,7 @@ app.innerHTML = `
         <g id="viewport"><g id="objects"></g><g id="overlays"></g></g>
       </svg>
       <div id="empty">ここに資料を広げて、いっしょに考える。<small>上のツールから追加 · 画像をドロップ · AIからMCPで操作</small></div>
-      <div class="hint">Shift＋クリック：複数選択 · Space＋ドラッグ / 中ボタン：パン · ホイール：ズーム · Delete：削除</div>
+      <div class="hint">Shift / Ctrl＋クリック・範囲選択：追加選択 · Space＋ドラッグ / 中ボタン：パン · ホイール：ズーム · Delete：削除</div>
     </section>
     <aside>
       <section id="series-panel" hidden></section>
@@ -449,7 +449,7 @@ function render(rebuild = true) {
     button.textContent = `${typeLabel} · ${object.text.slice(0, 22) || object.id}`;
     button.onclick = event => attempt(() => {
       const current = desk.selected();
-      desk.select(event.shiftKey ? current.includes(object.id) ? current.filter(id => id !== object.id) : [...current, object.id] : [object.id]);
+      desk.select(event.shiftKey || event.ctrlKey ? current.includes(object.id) ? current.filter(id => id !== object.id) : [...current, object.id] : [object.id]);
       // Let the list's selection scroll settle before starting the camera flight.
       requestAnimationFrame(focusHumanSelection);
     });
@@ -591,19 +591,20 @@ canvas.addEventListener('pointerdown', event => {
   const id = target.closest('[data-id]')?.getAttribute('data-id');
   const p = world(event);
   let mode: Gesture['mode'];
-  const additive = event.shiftKey ? desk.selected() : [];
+  const extendSelection = event.shiftKey || event.ctrlKey;
+  const additive = extendSelection ? desk.selected() : [];
   if (space || event.button === 1) mode = 'pan';
   else if (resize) mode = 'resize';
   else if (endpoint === 'start' || endpoint === 'end') mode = endpoint;
   else if (id) {
     const ids = desk.selected();
-    if (event.shiftKey) {
+    if (extendSelection) {
       desk.select(ids.includes(id) ? ids.filter(v => v !== id) : [...ids, id]);
       render(false); if (!desk.selected().includes(id)) return;
     } else if (!ids.includes(id)) { desk.select([id]); render(false); }
     if (desk.get(id).locked) { event.preventDefault(); canvas.focus(); return; }
     mode = 'move';
-  } else { if (!event.shiftKey) desk.select([]); render(); mode = 'marquee'; }
+  } else { if (!extendSelection) desk.select([]); render(); mode = 'marquee'; }
   const scene = desk.snapshot();
   gesture = { mode, start: p, screen: screen(event), originals: desk.selected().map(id => desk.get(id)), scene, snapScene: scene.filter(pinIsVisible), preview: scene, revision: desk.revision, camera: { x: camera.x, y: camera.y }, additive, grid: gridEnabled, gridSettings: desk.settingsSnapshot().grid, anchorId: id ?? resize ?? undefined };
   busy = true; canvas.setPointerCapture(event.pointerId); event.preventDefault(); canvas.focus();
