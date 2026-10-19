@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { mcpBatchSchema as batchSchema, type Request } from './model.js';
 import { gridSettingsSchema } from './grid-settings.js';
 import { textMeasureFields } from './text-measure.js';
+import { registerBrowserTools } from './browser-tools.js';
 import { registerHelpTools } from './help-tools.js';
 import { registerAssetTools } from './asset-tools.js';
 import { registerDeskFileTools } from './desk-file-tools.js';
@@ -205,6 +206,8 @@ for (const [name, description, inputSchema] of tools) {
     }
   });
 }
+registerBrowserTools(mcp, () => ({ url: `${baseUrl}#token=${encodeURIComponent(token)}&port=${port}`,
+  listening: network.info().listening, accepting: gate.canBootstrap && !releasing && !network.isChanging, connected: browser?.readyState === WebSocket.OPEN }));
 registerHelpTools(mcp);
 registerAssetTools(mcp, compatibleRequest);
 registerDeskFileTools(mcp, request);
@@ -228,7 +231,7 @@ function connectionStatus() {
   return { browserConnected, pairingState, ...guidance, message: `${guidance.message} ${tokenMessage}` };
 }
 mcp.registerTool('desk_connection_info', {
-  description: 'Get bootstrap URL, network status (including listening), and enabled LAN URLs without changing pairing or network access. Follow state-specific nextAction (ask-user, browser-connect, wait-for-browser, call-tool). waiting-for-AI requires choosing new/manual pairing versus recovery before presenting a URL; a URL alone cannot open acceptance. bootstrapReady means acceptance is open, not connected. paired means credentials are registered, not necessarily connected; only browserConnected:true confirms a connected browser. Only explicit human authorization allows desk_network_set to open LAN. For a device handoff explicitly desk_release the old desk first; content is never automatically saved, copied or loaded. If a nonempty original desk has unspecified content disposition, consider asking once whether to transfer it; this is advisory, not mandatory. For NEW/manual pairing first call desk_pairing_open with user approval unless release already opened acceptance. After pairing immediately retain desk_pairing_info privately for recovery. After process restart restore authorized LAN intent if needed, then desk_pairing_restore with the exact record, never a new URL or browser automation. If credentials are lost, ask the human to save or manually reconnect without reload. Only generated tokens are included; configured TABLETOP_TOKEN is never disclosed and must be manually URL-encoded in #token= by the user. No HTTP token endpoint.',
+  description: 'Get bootstrap URL, network status (including listening), and enabled LAN URLs without changing pairing or network access. Follow state-specific nextAction (ask-user, browser-connect, wait-for-browser, call-tool). waiting-for-AI requires choosing new/manual pairing versus recovery before using desk_browser_open (OS default browser) or presenting a URL; a URL alone cannot open acceptance. bootstrapReady means acceptance is open, not connected. paired means credentials are registered, not necessarily connected; only browserConnected:true confirms a connected browser. Only explicit human authorization allows desk_network_set to open LAN. For a device handoff explicitly desk_release the old desk first; content is never automatically saved, copied or loaded. If a nonempty original desk has unspecified content disposition, consider asking once whether to transfer it; this is advisory, not mandatory. For NEW/manual pairing first call desk_pairing_open with user approval unless release already opened acceptance. After pairing immediately retain desk_pairing_info privately for recovery. After process restart restore authorized LAN intent if needed, then desk_pairing_restore with the exact record, never a new URL or browser automation. If credentials are lost, ask the human to save or manually reconnect without reload. Only generated tokens are included; configured TABLETOP_TOKEN is never disclosed and must be manually URL-encoded in #token= by the user. No HTTP token endpoint.',
   inputSchema: {}, annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 }, async () => ({ content: [{ type: 'text', text: JSON.stringify({
   url: connectionUrl, port, tokenSource: tokenFromEnv ? 'environment' : 'generated', tokenIncluded: !tokenFromEnv,

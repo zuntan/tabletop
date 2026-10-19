@@ -11,7 +11,7 @@ export function connectionGuidance(browserConnected: boolean, pairingState: Pair
   if (bootstrapReady) return {
     bootstrapReady,
     nextAction: { kind: 'browser-connect', verifyWith: 'desk_connection_info' },
-    message: 'New/manual pairing acceptance is open, but no browser is connected yet. Present the connection URL and ask the user to connect. Confirm browserConnected:true afterward; opening acceptance or a URL alone is not connection success. Do not reload an existing unsaved tab.',
+    message: 'New/manual pairing acceptance is open, but no browser is connected yet. For an approved local browser launch, call desk_browser_open; otherwise present the connection URL for manual opening. Confirm browserConnected:true afterward; opening acceptance or a URL alone is not connection success. Do not reload an existing unsaved tab.',
   };
   if (pairingState === 'paired') return {
     bootstrapReady,
@@ -21,6 +21,6 @@ export function connectionGuidance(browserConnected: boolean, pairingState: Pair
   return {
     bootstrapReady,
     nextAction: { kind: 'ask-user', topic: 'new-or-manual-pairing-vs-recovery' },
-    message: 'Acceptance is closed and no recovery pairing is registered. Do not present the URL as ready to connect: opening it alone cannot connect. Determine whether this is new/manual pairing or recovery. For new/manual pairing, obtain user approval, call desk_pairing_open({confirm:true}), then get desk_connection_info and present its URL. For recovery, restore the exact privately retained record with desk_pairing_restore instead; never open acceptance as a recovery shortcut. If the record is lost, ask the user to save or manually reconnect the existing tab without reload and obtain approval before replacement.',
+    message: 'Acceptance is closed and no recovery pairing is registered. Do not present the URL as ready to connect: opening it alone cannot connect. Determine whether this is new/manual pairing or recovery. For new/manual pairing, obtain user approval, call desk_pairing_open({confirm:true}), then get desk_connection_info and use desk_browser_open for local launch or present its URL for manual opening. For recovery, restore the exact privately retained record with desk_pairing_restore instead; never open acceptance as a recovery shortcut. If the record is lost, ask the user to save or manually reconnect the existing tab without reload and obtain approval before replacement.',
   };
 }

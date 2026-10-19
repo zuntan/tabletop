@@ -18,7 +18,7 @@ npm run build
 npm start
 ```
 
-AIがMCPで初回受付を開いた後、案内された `http://127.0.0.1:4317/#token=...&port=4317` をブラウザで開きます。URLのトークンは画面起動時に除去されます。上部の「保存」で机を画像込みの `.tabletop`（ZIP）に保存し、「読込」で再開できます。自動保存はなく、Undo履歴はタブ内のみです。対象・制限は [保存・読込](./docs/save-load.md) を参照してください。
+AIがMCPで初回受付を開いた後、`desk_browser_open`でOS標準ブラウザを起動できます（[手順と制限](./docs/default-browser.md)）。手動の場合は、案内された `http://127.0.0.1:4317/#token=...&port=4317` をブラウザで開きます。URLのトークンは画面起動時に除去されます。上部の「保存」で机を画像込みの `.tabletop`（ZIP）に保存し、「読込」で再開できます。自動保存はなく、Undo履歴はタブ内のみです。対象・制限は [保存・読込](./docs/save-load.md) を参照してください。
 
 `npm start` は開発用の手動起動手順です。通常は下記のMCP設定でエージェントにサーバーを起動させ、初回ペアリングを行います。URLだけでは共有の受付は開きません。AIなしの単独起動の整備は今回の対象外です。手動起動したサーバーは先にCtrl+Cで停止します。同じポートで二重起動はできません。
 
@@ -43,7 +43,7 @@ Windows＋GitHub Copilot CLIの導入・MCP設定は [Windows向け手順](./doc
 }
 ```
 
-MCPの `desk_connection_info` を呼ぶとブラウザ未接続でも現在の接続先を取得できます。ただしURL取得だけでは受付は開きません。状態別の `nextAction` に従い、`waiting-for-AI` なら新規・手動接続か復旧かを確認します。新規・手動接続は了承 → `desk_pairing_open` → URL案内の順です。`bootstrapReady` は受付準備、`paired` はペア情報の登録を示し、接続成立は `browserConnected: true` で確認します。トークン未指定なら、起動時に生成したトークン付きURLを返します。`env.TABLETOP_TOKEN` を指定した場合は固定トークンを返しません。利用者がURL末尾に `#token=URLエンコードした設定済みトークン` を手動で付けて使用します。
+MCPの `desk_connection_info` を呼ぶとブラウザ未接続でも現在の接続先を取得できます。ただしURL取得だけでは受付は開きません。状態別の `nextAction` に従い、`waiting-for-AI` なら新規・手動接続か復旧かを確認します。新規・手動接続は了承 → `desk_pairing_open` → `desk_browser_open`またはURL案内の順です。`bootstrapReady` は受付準備、`paired` はペア情報の登録を示し、接続成立は `browserConnected: true` で確認します。トークン未指定なら、起動時に生成したトークン付きURLを返します。`env.TABLETOP_TOKEN` を指定した場合は固定トークンを返しません。手動接続では利用者がURL末尾に `#token=URLエンコードした設定済みトークン` を付けて使用します。`desk_browser_open`はサーバー内で設定済みトークンを付与して開くため、利用者の追記は不要です。
 
 「接続」タブはURL入力だけです。トークンを含むURLを丸ごと貼り「接続」を押します。ページ移動・再読込はしません。URLは伏せ字表示でタブ内に保持し、解放後の手動再接続にも使えます。トークンなしURLやポート不一致は拒否します。LAN接続はAIが明示許可した場合のみ可能です。[HTTP LAN試用](./docs/http-lan.md) を参照してください。
 
