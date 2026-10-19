@@ -1,4 +1,5 @@
 export const numberPresets = {
+  junctionRounding: [0, 48, 96, 192, 384],
   strokeWidth: [1, 2, 4, 8, 16],
   fontSize: [12, 16, 24, 32, 48],
   fillOpacity: [100, 90, 70, 50, 30],
@@ -25,7 +26,7 @@ export function addPresetPalette(input: HTMLInputElement | HTMLSelectElement, va
   let anchorTop = 0, anchorLeft = 0;
   const hide = () => { if (popup.matches(':popover-open')) popup.hidePopover(); menu.setAttribute('aria-expanded', 'false'); };
   for (const value of values) {
-    const choice = document.createElement('button'); choice.type = 'button'; choice.textContent = String(value);
+    const choice = document.createElement('button'); choice.type = 'button'; choice.textContent = label === '接合部の丸め' ? ({ '0': 'なし (0)', '48': '小 (48)', '96': '中 (96)', '192': '大 (192)', '384': '特大 (384)' }[value] ?? value) : String(value);
     choice.dataset.value = String(value);
     choice.onclick = () => {
       if (input.disabled) { hide(); return; }

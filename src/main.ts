@@ -8,6 +8,7 @@ import './style.css';
 import { Desk, dispatch, objectSchema, type DeskObject, type Operation } from './model';
 import { anchorPoint, bounds, endpoints, isConnector, isShape } from './geometry';
 import { createColorControls } from './color-controls';
+import { buildJunctionRounding } from './junction-rounding';
 import { drawConnector, drawShapeText, drawEndpointHandles, drawSnapTargets, updateScenePreview } from './diagram-drawing';
 import { gestureOperations, gesturePreview, endpointDragPoint, type Gesture } from './diagram-gestures';
 import { createPropertyEditor } from './property-editor';
@@ -100,6 +101,7 @@ app.innerHTML = `
           <label hidden>塗り<input name="fill" type="text"></label><label hidden>線<input name="stroke" type="text"></label>
           <label>塗り透過（%）<input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
           <label>線幅<input name="strokeWidth" type="number" min="0" step="any"></label><label>文字サイズ<input name="fontSize" type="number" min="1"></label>
+          <label hidden>接合部の丸め<input name="junctionRounding" type="number" min="0" max="100000" step="any" disabled></label>
           <label hidden>線種<select name="dash" disabled><option value="solid">実線</option><option value="dashed">破線</option><option value="dotted">点線</option></select></label>
           <label hidden>始点形状<select name="startMarker" disabled><option value="none">なし</option><option value="arrow">矢印</option><option value="circle">丸</option><option value="diamond">ひし形</option></select></label>
           <label hidden>終点形状<select name="endMarker" disabled><option value="none">なし</option><option value="arrow">矢印</option><option value="circle">丸</option><option value="diamond">ひし形</option></select></label>
@@ -147,6 +149,7 @@ const overlays = app.querySelector<SVGGElement>('#overlays')!;
 const drawnNodes = new Map<string, SVGGElement>();
 let renderedScene: DeskObject[] = [];
 const pinSeriesMap = new Map<string, Series>();
+let renderedRounding = buildJunctionRounding([]);
 const renderedById = new Map<string, DeskObject>();
 const form = $<HTMLFormElement>('#properties');
 const propertyEditor = createPropertyEditor(form, desk, (id, patch) => {
@@ -316,6 +319,8 @@ function connectorForView(object: DeskObject): DeskObject {
   return { ...object, x: points.start.x, y: points.start.y, x2: points.end.x, y2: points.end.y };
 }
 function refreshPinPresentation() {
+  const previousRounding = renderedRounding;
+  renderedRounding = buildJunctionRounding(renderedScene.map(connectorForView));
   for (const object of renderedScene) {
     const node = drawnNodes.get(object.id);
     if (!node) continue;
@@ -325,10 +330,10 @@ function refreshPinPresentation() {
       path?.setAttribute('d', calloutPath(visual)); drawCalloutLeader(node, visual);
     }
     if (object.type === 'label') node.setAttribute('transform', pinTransform(object, camera.zoom));
-    else if (isConnector(object) && (object.startBinding || object.endBinding)) {
+    else if (isConnector(object) && (object.startBinding || object.endBinding || renderedRounding.has(object.id) || previousRounding.has(object.id))) {
       const visual = connectorForView(object);
       node.setAttribute('transform', `translate(${visual.x} ${visual.y})`);
-      node.replaceChildren(); drawConnector(node, visual, camera.zoom); drawReactions(node, visual, true);
+      node.replaceChildren(); drawConnector(node, visual, camera.zoom, renderedRounding.get(object.id)); drawReactions(node, visual, true);
     }
   }
 }
@@ -359,7 +364,7 @@ function drawObject(object: DeskObject) {
     'data-id': object.id, 'data-locked': String(!!object.locked) });
   drawnNodes.set(object.id, group);
   if (isConnector(object)) {
-    drawConnector(group, object, camera.zoom); drawReactions(group, object, pinDescriptionVisible(object));
+    drawConnector(group, object, camera.zoom, renderedRounding.get(object.id)); drawReactions(group, object, pinDescriptionVisible(object));
     objectsLayer.append(group); return;
   }
   const style = { fill: object.fill, 'fill-opacity': object.fillOpacity, stroke: object.stroke, 'stroke-width': object.strokeWidth };
@@ -451,6 +456,7 @@ function render(rebuild = true) {
     objectsLayer.replaceChildren(); drawnNodes.clear();
     const objects = desk.snapshot(); renderedScene = objects;
     renderedById.clear(); for (const object of objects) renderedById.set(object.id, object);
+    renderedRounding = buildJunctionRounding(objects.map(connectorForView));
     desk.imageGeometry.observe(objects);
     objects.forEach(drawObject);
     drawPinThreads(objects);
@@ -664,7 +670,9 @@ canvas.addEventListener('pointerdown', event => {
 function previewGesture(current: Gesture, point: { x: number; y: number }) {
   const scene = gesturePreview(current, point, camera.zoom); renderedScene = scene;
   renderedById.clear(); for (const object of scene) renderedById.set(object.id, object);
-  updateScenePreview(objectsLayer, scene, current.preview, drawObject); current.preview = scene;
+  const hadRounding = renderedRounding.size > 0;
+  renderedRounding = buildJunctionRounding(scene.map(connectorForView));
+  updateScenePreview(objectsLayer, scene, current.preview, drawObject, hadRounding || renderedRounding.size > 0); current.preview = scene;
   refreshPinPresentation(); drawPinThreads(scene);
   drawSelection(scene.filter(o => desk.selected().includes(o.id)), scene);
   if (current.mode === 'move') for (const object of scene.filter(o => o.type === 'label' && desk.selected().includes(o.id))) {

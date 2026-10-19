@@ -4,14 +4,18 @@ import type { DeskObject } from './model';
 import { isConnector } from './geometry';
 import { supportsFill, transparencyPercent, opacityFromPercent } from './fill-opacity';
 
-const fields = ['x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'url'] as const;
-const numeric = new Set(['x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'fontSize', 'cornerRadius', 'padding']);
+const fields = ['x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'url'] as const;
+const numeric = new Set(['x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'junctionRounding', 'fontSize', 'cornerRadius', 'padding']);
 export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   const connector = isConnector(object);
   const meaningful = new Set<string>(objectPropertyNames(object));
   for (const name of fields) {
     const input = form.elements.namedItem(name) as HTMLInputElement;
     if (!input) continue;
+    if (name === 'junctionRounding') {
+      input.disabled = !connector; input.closest('label')!.hidden = !connector;
+      input.value = String(object.junctionRounding ?? 0); continue;
+    }
     if (name === 'textFit') {
       input.disabled = !isShapeType(object.type); input.closest('label')!.hidden = !isShapeType(object.type);
       input.value = object.textFit ?? 'fixed'; continue;
@@ -51,6 +55,7 @@ export function propertyValue(object: DeskObject, key: string): string {
   if (key === 'calloutMode') return object.callout ? object.callout.style ?? 'speech' : 'none';
   if (key === 'text' && object.type === 'label') return object.description ?? '';
   if (key === 'fillOpacity') return String(transparencyPercent(object.fillOpacity));
+  if (key === 'junctionRounding') return String(object.junctionRounding ?? 0);
   if (key === 'padding') return String(object.padding ?? 6);
   if (key === 'dash') return object.dash ?? 'solid';
   if (key === 'startMarker' || key === 'endMarker') return object[key] ?? 'none';

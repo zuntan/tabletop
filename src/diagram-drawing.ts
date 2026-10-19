@@ -1,3 +1,4 @@
+import type { LineRounding } from './junction-rounding';
 import { fittedShapeFont } from './shape-definitions';
 import { snapConnectorEndpoint } from './connector-junctions';
 import type { DeskObject } from './model';
@@ -10,7 +11,7 @@ export function element<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Rec
   for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, String(value));
   return node;
 }
-export function drawConnector(group: SVGGElement, object: DeskObject, zoom: number) {
+export function drawConnector(group: SVGGElement, object: DeskObject, zoom: number, rounding?: LineRounding) {
   const { start, end } = endpoints(object);
   const dx = end.x - start.x, dy = end.y - start.y;
   const length = Math.hypot(dx, dy);
@@ -22,13 +23,23 @@ export function drawConnector(group: SVGGElement, object: DeskObject, zoom: numb
   const inset = (shape: DeskObject['startMarker']) => !shape || shape === 'none' ? 0 : size * (shape === 'circle' ? .4 : .5);
   const ux = length ? dx / length : 0, uy = length ? dy / length : 0;
   // Tuck the visible shaft inside each filled marker; logical endpoints and hit targets stay fixed.
-  const from = inset(object.startMarker), to = inset(object.endMarker);
+  const from = rounding?.start || inset(object.startMarker), to = rounding?.end || inset(object.endMarker);
   const line = element('line', { x1: ux * from, y1: uy * from, x2: dx - ux * to, y2: dy - uy * to,
     stroke: object.stroke, 'stroke-width': object.strokeWidth,
     'stroke-linecap': 'round', 'pointer-events': 'none', class: 'connector-line' });
   if (object.dash && object.dash !== 'solid') line.setAttribute('stroke-dasharray', object.dash === 'dashed'
     ? `${object.strokeWidth * 4} ${object.strokeWidth * 3}` : `${object.strokeWidth} ${object.strokeWidth * 2}`);
   group.append(line);
+  for (const curve of rounding?.curves ?? []) {
+    const local = (p: Point) => `${p.x - object.x} ${p.y - object.y}`;
+    const d = `M ${local(curve.from)} Q ${local(curve.control)} ${local(curve.to)}`;
+    group.append(element('path', { d, fill: 'none', stroke: 'transparent', 'stroke-width': 14,
+      'vector-effect': 'non-scaling-stroke', 'pointer-events': 'stroke', class: 'junction-hit' }));
+    const path = element('path', { d, fill: 'none', stroke: object.stroke, 'stroke-width': object.strokeWidth,
+      'stroke-linecap': 'round', 'pointer-events': 'none', class: 'junction-curve', 'data-junction-rounding': curve.id });
+    if (line.hasAttribute('stroke-dasharray')) path.setAttribute('stroke-dasharray', line.getAttribute('stroke-dasharray')!);
+    group.append(path);
+  }
   if (Math.hypot(dx, dy) < 1) group.append(element('circle', { cx: 0, cy: 0, r: 7 / zoom, fill: 'transparent' }));
   if (length >= 1) {
     const angle = Math.atan2(dy, dx);
@@ -87,11 +98,11 @@ export function drawSnapTargets(layer: SVGGElement, objects: DeskObject[], point
     }
   }
 }
-export function updateScenePreview(layer: SVGGElement, scene: DeskObject[], original: DeskObject[], draw: (object: DeskObject) => void) {
+export function updateScenePreview(layer: SVGGElement, scene: DeskObject[], original: DeskObject[], draw: (object: DeskObject) => void, forceLines = false) {
   const previous = new Map(original.map(o => [o.id, o]));
   for (const object of scene) {
     const old = previous.get(object.id)!;
-    if (JSON.stringify(object) === JSON.stringify(old)) continue;
+    if (!(forceLines && isConnector(object)) && JSON.stringify(object) === JSON.stringify(old)) continue;
     const node = [...layer.children].find(el => el.getAttribute('data-id') === object.id);
     if (!node) continue;
     if (['web', 'image', 'svg'].includes(object.type)) {
