@@ -221,3 +221,7 @@ UIの開発時はサーバーと別ターミナルで `npm run dev` を起動し
 - [SVG image](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/image)
 - [iframe sandbox](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe#sandbox)
 - [Playwright](https://playwright.dev/docs/intro)
+
+実行中の待受ポートは `desk_port_set` で変更できます。接続中の机は保存・解放してから切り替え、新URLで復元します。MCP本体は再起動しません。[手順と制限](./docs/runtime-port.md)。
+
+開発で次回復元する作業机の指定は [現在の机](./docs/current-desk.md) に記録しています。

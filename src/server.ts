@@ -20,6 +20,7 @@ import { connectionGuidance } from './connection-guidance.js';
 import { registerPairingTools } from './pairing-tools.js';
 import { acknowledgeRelease } from './desk-release.js';
 import { NetworkAccess } from './network-access.js';
+import { registerPortTools } from './port-tools.js';
 import { registerNetworkTools } from './network-tools.js';
 import { HandoffTicket } from './handoff-ticket.js';
 import { cameraAnimationFields, cameraMoveFields, cameraMoveSchema } from './camera-control.js';
@@ -30,12 +31,12 @@ import { registerShareTools } from './share-tools.js';
 
 const handoffTicket = new HandoffTicket();
 
-const port = Number(process.env.TABLETOP_PORT ?? 4317);
+let port = Number(process.env.TABLETOP_PORT ?? 4317);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid TABLETOP_PORT');
 const tokenFromEnv = process.env.TABLETOP_TOKEN !== undefined;
 const token = process.env.TABLETOP_TOKEN ?? randomBytes(16).toString('base64url');
-const baseUrl = `http://127.0.0.1:${port}/`;
-const connectionUrl = tokenFromEnv ? baseUrl : `${baseUrl}#token=${encodeURIComponent(token)}&port=${port}`;
+let baseUrl = `http://127.0.0.1:${port}/`;
+let connectionUrl = tokenFromEnv ? baseUrl : `${baseUrl}#token=${encodeURIComponent(token)}&port=${port}`;
 if (token.length < 22) throw new Error('TABLETOP_TOKEN must be at least 22 characters');
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
 const mime: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png' };
@@ -208,6 +209,18 @@ for (const [name, description, inputSchema] of tools) {
 }
 registerBrowserTools(mcp, () => ({ url: `${baseUrl}#token=${encodeURIComponent(token)}&port=${port}`,
   listening: network.info().listening, accepting: gate.canBootstrap && !releasing && !network.isChanging, connected: browser?.readyState === WebSocket.OPEN }));
+registerPortTools(mcp, async target => {
+  if (browser || gate.info()) throw new Error('Release the connected desk first. Preserve its contents with desk_save before an approved port handoff. For a disconnected registered pairing, resolve recovery versus manual replacement first.');
+  if (releasing || pending.size || gate.pendingCount || network.isChanging) throw new Error('Connection activity is in progress; no port change was started.');
+  const previousPort = port;
+  const changed = await network.setPort(target);
+  port = changed.port;
+  baseUrl = `http://127.0.0.1:${port}/`;
+  connectionUrl = tokenFromEnv ? baseUrl : `${baseUrl}#token=${encodeURIComponent(token)}&port=${port}`;
+  if (port !== previousPort) { handoffTicket.clear(); sharing.revoke(); }
+  return { previousPort, ...changed, changed: port !== previousPort,
+    message: 'Runtime port updated; TABLETOP_PORT startup configuration is unchanged. Follow desk_connection_info, open the browser, then explicitly restore the saved desk if requested.' };
+});
 registerHelpTools(mcp);
 registerAssetTools(mcp, compatibleRequest);
 registerDeskFileTools(mcp, request);

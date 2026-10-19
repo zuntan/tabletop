@@ -18,8 +18,9 @@ export function isPrivateIpv4(host: string): boolean {
 export class NetworkAccess {
   private enabled = false;
   private changing = false;
-  constructor(private server: Server, readonly port: number, private addresses = lanAddresses,
+  constructor(private server: Server, private currentPort: number, private addresses = lanAddresses,
     private bindHost: (host: string) => string = host => host) {}
+  get port() { return this.currentPort; }
   get isChanging() { return this.changing; }
   allowsPeer(address: string | undefined) {
     return this.enabled || ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(address ?? '');
@@ -51,6 +52,26 @@ export class NetworkAccess {
         reject(error);
       }
     });
+  }
+  async setPort(port: number) {
+    if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid port');
+    if (this.changing) throw new Error('Network listener change already in progress; inspect status before retrying.');
+    if (port === this.port && this.server.listening) return this.info();
+    this.changing = true;
+    const previous = this.port;
+    try {
+      this.server.close();
+      this.currentPort = port;
+      await this.bind(this.enabled ? '0.0.0.0' : '127.0.0.1');
+      return this.info();
+    } catch (error) {
+      this.currentPort = previous;
+      try { await this.bind(this.enabled ? '0.0.0.0' : '127.0.0.1'); }
+      catch (rollbackError) {
+        throw new AggregateError([error, rollbackError], 'Port change and rollback failed; inspect network status before recovery.');
+      }
+      throw error;
+    } finally { this.changing = false; }
   }
   async setLan(enabled: boolean) {
     if (this.changing) throw new Error('Network listener change already in progress; inspect status before retrying.');

@@ -53,3 +53,23 @@ test('same-port listener changes preserve upgraded browser sockets; tests never 
     wss.close(); await new Promise<void>(resolve => server.close(() => resolve()));
   }
 });
+
+test('runtime port changes update policy, preserve LAN intent and roll back on occupied ports',async()=>{
+  const freePort=async()=>{const s=createServer();s.listen(0,'127.0.0.1');await once(s,'listening');const p=(s.address() as {port:number}).port;await new Promise<void>(r=>s.close(()=>r()));return p;};
+  const initial=await freePort(),next=await freePort();
+  const server=createServer((_req,res)=>res.end('desk'));
+  const network=new NetworkAccess(server,initial,()=>['192.168.1.2'],()=> '127.0.0.1');await network.listen();
+  const occupied=createServer();occupied.listen(0,'127.0.0.1');await once(occupied,'listening');
+  try{
+    await network.setLan(true);
+    const result=await network.setPort(next);assert.equal(result.port,next);assert.equal(result.lanEnabled,true);
+    assert.equal(network.allowsHost(`127.0.0.1:${initial}`),false);
+    assert.equal(network.allowsOrigin(`http://127.0.0.1:${next}`),true);
+    assert.equal(await (await fetch(`http://127.0.0.1:${next}`,{headers:{Connection:'close'}})).text(),'desk');
+    const busy=(occupied.address() as {port:number}).port;
+    await assert.rejects(network.setPort(busy));assert.equal(network.port,next);assert.equal(network.info().listening,true);assert.equal(network.info().lanEnabled,true);
+    assert.equal(await (await fetch(`http://127.0.0.1:${next}`,{headers:{Connection:'close'}})).text(),'desk');
+    await assert.rejects(network.setPort(0),/Invalid port/);
+    await network.setLan(false);assert.equal(network.info().port,next);assert.equal(network.info().lanEnabled,false);
+  }finally{await new Promise<void>(r=>occupied.close(()=>r()));await new Promise<void>(r=>server.close(()=>r()));}
+});
