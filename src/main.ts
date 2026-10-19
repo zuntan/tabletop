@@ -1,3 +1,5 @@
+import { createCalloutPicker } from './callout-picker';
+import { calloutPath, drawCalloutLeader } from './text-callouts';
 import { isPinAttachmentTarget } from './pin-attachments';
 import { createDeskMenu } from './desk-menu';
 import './style.css';
@@ -101,6 +103,7 @@ app.innerHTML = `
           <label hidden>終点形状<select name="endMarker" disabled><option value="none">なし</option><option value="arrow">矢印</option><option value="circle">丸</option><option value="diamond">ひし形</option></select></label>
           <label hidden>角丸<input name="cornerRadius" type="number" min="0" step="any"></label>
           <label hidden>内側の余白<input name="padding" type="number" min="0" step="any"></label>
+          <label hidden>吹き出し<select name="calloutMode" disabled><option value="none">なし</option><option value="speech">三角</option><option value="thought">考え事</option><option value="leader">引き出し線</option></select></label>
           <label class="wide">テキスト<textarea name="text" rows="3"></textarea></label>
           <label class="wide">URL<input name="url" type="url"></label>
         </form>
@@ -149,6 +152,7 @@ const propertyEditor = createPropertyEditor(form, desk, (id, patch) => {
 addFormNumberPresets(form);
 const updateConnectorLineStyle = createLineStylePicker(form.elements.namedItem('dash') as HTMLSelectElement);
 const updateStartMarker = createEndpointPicker(form.elements.namedItem('startMarker') as HTMLSelectElement, '始点形状', 'start');
+const updateCallout = createCalloutPicker(form.elements.namedItem('calloutMode') as HTMLSelectElement);
 const updateEndMarker = createEndpointPicker(form.elements.namedItem('endMarker') as HTMLSelectElement, '終点形状', 'end');
 const camera = { x: 60, y: 50, zoom: 1 };
 const humanScroll = new HumanScrollGuard();
@@ -295,7 +299,10 @@ function pinMode(object: DeskObject): PinVisibility {
 function pinIsVisible(object: DeskObject) { return pinMode(object) !== 'hidden'; }
 function pinDescriptionVisible(object: DeskObject) { return pinMode(object) === 'all'; }
 function connectorForView(object: DeskObject): DeskObject {
-  if (!isConnector(object)) return object;
+  if (!isConnector(object)) {
+    const binding = object.callout?.binding, target = binding && renderedById.get(binding.objectId);
+    return target?.type === 'label' ? { ...object, callout: { ...object.callout!, ...anchorPoint(pinScreenObject(target, camera.zoom), binding!.anchor) } } : object;
+  }
   const points = endpoints(object);
   for (const side of ['start', 'end'] as const) {
     const binding = object[side === 'start' ? 'startBinding' : 'endBinding'];
@@ -308,6 +315,11 @@ function refreshPinPresentation() {
   for (const object of renderedScene) {
     const node = drawnNodes.get(object.id);
     if (!node) continue;
+    if (object.callout?.binding && renderedById.get(object.callout.binding.objectId)?.type === 'label') {
+      const path = node.querySelector('.text-callout');
+      const visual = connectorForView(object);
+      path?.setAttribute('d', calloutPath(visual)); drawCalloutLeader(node, visual);
+    }
     if (object.type === 'label') node.setAttribute('transform', pinTransform(object, camera.zoom));
     else if (isConnector(object) && (object.startBinding || object.endBinding)) {
       const visual = connectorForView(object);
@@ -361,7 +373,10 @@ function drawObject(object: DeskObject) {
   drawShapeText(group, object);
   drawLabelDescription(group, object, pinDescriptionVisible(object));
   if (object.type === 'text') {
-    group.append(svg('rect', { width: w, height: h, rx: Math.min(object.cornerRadius, w / 2, h / 2), ...style }));
+    group.append(object.callout
+      ? svg('path', { d: calloutPath(object), ...style, class: 'text-callout' })
+      : svg('rect', { width: w, height: h, rx: Math.min(object.cornerRadius, w / 2, h / 2), ...style }));
+    if (object.callout) drawCalloutLeader(group, object);
     drawMarkdown(group, object);
   }
   if (['link', 'web', 'image', 'svg'].includes(object.type)) {
@@ -404,6 +419,11 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
     overlays.append(svg('rect', { x: visual.x - 3 / camera.zoom, y: visual.y - 3 / camera.zoom,
       width: visual.width + 6 / camera.zoom, height: visual.height + 6 / camera.zoom,
       fill: 'none', stroke: colors.selection, 'stroke-width': 1.5 / camera.zoom, 'stroke-dasharray': `${5 / camera.zoom} ${3 / camera.zoom}`, 'pointer-events': 'none', 'data-human-selection': object.id }));
+    if (selected.length === 1 && object.callout) overlays.append(svg('circle', {
+      cx: object.callout.x, cy: object.callout.y, r: 6 / camera.zoom,
+      fill: object.callout.binding ? '#16a34a' : colors.selection, stroke: '#fff', 'stroke-width': 1.5 / camera.zoom,
+      'data-callout-tip': object.id, class: 'endpoint-handle',
+    }));
     if (selected.length === 1 && object.type !== 'label') overlays.append(svg('rect', {
       x: object.x + object.width - 5 / camera.zoom, y: object.y + object.height - 5 / camera.zoom,
       width: 10 / camera.zoom, height: 10 / camera.zoom, fill: colors.selection, stroke: '#fff',
@@ -448,7 +468,7 @@ function render(rebuild = true) {
     const object = desk.get(ids[0]);
     propertyEditor.sync(object);
     updateConnectorLineStyle();
-    updateStartMarker(); updateEndMarker();
+    updateStartMarker(); updateEndMarker(); updateCallout();
     if (object.url) { link.href = object.url; link.hidden = false; }
   }
   lockControls.update(ids.map(id => desk.get(id)));
@@ -602,6 +622,7 @@ canvas.addEventListener('pointerdown', event => {
   if (event.button === 0 && !space && authoring.place(gridPosition(world(event)), camera.zoom)) { event.preventDefault(); return; }
   const target = event.target as Element;
   const resize = target.closest('[data-resize]')?.getAttribute('data-resize');
+  const calloutTip = target.closest('[data-callout-tip]')?.getAttribute('data-callout-tip');
   const endpoint = target.closest('[data-endpoint]')?.getAttribute('data-endpoint');
   const id = target.closest('[data-id]')?.getAttribute('data-id');
   const p = world(event);
@@ -609,6 +630,7 @@ canvas.addEventListener('pointerdown', event => {
   const extendSelection = event.shiftKey || event.ctrlKey;
   const additive = extendSelection ? desk.selected() : [];
   if (space || event.button === 1) mode = 'pan';
+  else if (calloutTip) mode = 'callout';
   else if (resize) mode = 'resize';
   else if (endpoint === 'start' || endpoint === 'end') mode = endpoint;
   else if (id) {
@@ -621,7 +643,7 @@ canvas.addEventListener('pointerdown', event => {
     mode = 'move';
   } else { if (!extendSelection) desk.select([]); render(); mode = 'marquee'; }
   const scene = desk.snapshot();
-  gesture = { mode, start: p, screen: screen(event), originals: desk.selected().map(id => desk.get(id)), scene, snapScene: scene.filter(pinIsVisible), preview: scene, revision: desk.revision, camera: { x: camera.x, y: camera.y }, additive, grid: gridEnabled, gridSettings: desk.settingsSnapshot().grid, anchorId: id ?? resize ?? undefined, detach: event.altKey };
+  gesture = { mode, start: p, screen: screen(event), originals: desk.selected().map(id => mode === 'callout' ? connectorForView(desk.get(id)) : desk.get(id)), scene, snapScene: scene.filter(pinIsVisible), preview: scene, revision: desk.revision, camera: { x: camera.x, y: camera.y }, additive, grid: gridEnabled, gridSettings: desk.settingsSnapshot().grid, anchorId: id ?? resize ?? calloutTip ?? undefined, detach: event.altKey };
   busy = true; canvas.setPointerCapture(event.pointerId); event.preventDefault(); canvas.focus();
 });
 function previewGesture(current: Gesture, point: { x: number; y: number }) {
@@ -637,6 +659,9 @@ function previewGesture(current: Gesture, point: { x: number; y: number }) {
     overlays.append(svg('path', { d: `M ${origin.x - size} ${origin.y - size * 1.5} L ${origin.x + size} ${origin.y - size * 1.5} L ${origin.x} ${origin.y} Z`,
       fill: '#2563eb', opacity: 0.3, 'pointer-events': 'none', 'data-grid-origin': object.id }));
   }
+  if (!current.detach && current.mode === 'callout') drawSnapTargets(overlays,
+    scene.filter(pinIsVisible).filter(o => !isConnector(o) && o.id !== current.originals[0].id).map(o => pinScreenObject(o, camera.zoom)),
+    { x: current.originals[0].callout!.x + point.x - current.start.x, y: current.originals[0].callout!.y + point.y - current.start.y }, camera.zoom);
   if (!current.detach && current.mode === 'move' && current.originals.length === 1 && current.originals[0].type === 'label') {
     const pin = scene.find(o => o.id === current.originals[0].id)!;
     drawSnapTargets(overlays, scene.filter(isPinAttachmentTarget).filter(pinIsVisible),

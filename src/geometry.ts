@@ -1,3 +1,4 @@
+import { resolveTextCallouts } from './text-callouts';
 import { resolvePinAttachments } from './pin-attachments';
 import { resolveJunctions } from './connector-junctions';
 import type { DeskObject } from './model';
@@ -27,7 +28,12 @@ export function withEndpoints(object: DeskObject, start: Point, end: Point): Des
     width: Math.max(1, Math.abs(end.x - start.x)), height: Math.max(1, Math.abs(end.y - start.y)) };
 }
 export function bounds(object: DeskObject) {
-  if (!isConnector(object)) return { x: object.x, y: object.y, width: object.width, height: object.height };
+  if (!isConnector(object)) {
+    const tip = object.callout;
+    const x = Math.min(object.x, tip?.x ?? object.x), y = Math.min(object.y, tip?.y ?? object.y);
+    return { x, y, width: Math.max(object.x + object.width, tip?.x ?? object.x) - x,
+      height: Math.max(object.y + object.height, tip?.y ?? object.y) - y };
+  }
   const { start, end } = endpoints(object);
   return { x: Math.min(start.x, end.x), y: Math.min(start.y, end.y),
     width: Math.abs(end.x - start.x), height: Math.abs(end.y - start.y) };
@@ -72,6 +78,7 @@ export function snap(point: Point, objects: DeskObject[], threshold: number) {
 /** Resolve after the entire atomic batch, allowing forward references inside it. */
 export function resolveConnections(objects: DeskObject[], before: DeskObject[] = []): DeskObject[] {
   objects = resolvePinAttachments(objects, before);
+  objects = resolveTextCallouts(objects, before);
   const map = new Map(objects.map(o => [o.id, o]));
   const previous = new Map(before.map(o => [o.id, o]));
   const resolved = objects.map(object => {

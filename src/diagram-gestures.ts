@@ -8,7 +8,7 @@ import { gridPoint, gridMoveDelta } from './grid';
 import type { GridSettings } from './grid-settings';
 
 export type Gesture = {
-  mode: 'move' | 'resize' | 'start' | 'end' | 'pan' | 'marquee';
+  mode: 'move' | 'resize' | 'callout' | 'start' | 'end' | 'pan' | 'marquee';
   start: Point;
   screen: Point;
   originals: DeskObject[];
@@ -39,7 +39,13 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
   const movingJunctions = new Set<string>();
   movable.forEach(object => {
     let patch: Partial<DeskObject>;
-    if (gesture.mode === 'start' || gesture.mode === 'end') {
+    if (gesture.mode === 'callout' && object.callout) {
+      const next = { x: object.callout.x + dx, y: object.callout.y + dy };
+      const candidate = gesture.detach ? null : snap(next, (gesture.snapScene ?? gesture.scene)
+        .filter(o => o.id !== object.id).map(o => pinScreenObject(o, zoom)), 18 / zoom);
+      const position = candidate?.point ?? (gesture.grid ? gridPoint(next, gesture.gridSettings) : next);
+      patch = { callout: { ...object.callout, ...position, binding: candidate?.binding ?? null } };
+    } else if (gesture.mode === 'start' || gesture.mode === 'end') {
       const points = endpoints(object), side = gesture.mode;
       const next = { x: points[side].x + dx, y: points[side].y + dy };
       const jf = junctionField(side), bf = bindingField(side);
@@ -95,7 +101,8 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
           ...(candidate || object.attachment ? { attachment: candidate?.binding ?? null } : {}) };
       }
     } else {
-      patch = { x: object.x + dx, y: object.y + dy };
+      patch = { x: object.x + dx, y: object.y + dy,
+        ...(object.callout && !object.callout.binding ? { callout: { ...object.callout, x: object.callout.x + dx, y: object.callout.y + dy } } : {}) };
     }
     put(object.id, patch);
     return object;
