@@ -8,7 +8,7 @@ const escapeHtml = (text: string) => text.replace(/[&<>"']/g, char => ({ '&': '&
 /** External applications receive text only. Part identity never comes from plain text. */
 export function partClipboardText(objects: DeskObject[]): string {
   return objects.flatMap(object => {
-    if (object.type === 'image' || isConnector(object)) return [];
+    if (object.type === 'image' || object.type === 'clip' || isConnector(object)) return [];
     if (object.type === 'mermaid') return [object.mermaidSource ?? ''];
     if ((object.type === 'svg' || object.type === 'prop')) {
       const match = /^data:image\/svg\+xml;base64,([A-Za-z0-9+/=\s]+)$/.exec(object.src ?? '');
@@ -68,6 +68,7 @@ export class PartClipboard {
           patch: { attachment: { ...object.attachment, objectId: ids.get(object.attachment.objectId)! } } });
       } else {
         const copy = { ...object, id, x: object.x + offset, y: object.y + offset };
+        if (object.type === 'clip') copy.clipMembers = object.clipMembers?.filter(id=>ids.has(id)).map(id=>ids.get(id)!);
         if (object.callout) {
           const binding = object.callout.binding, target = binding && ids.get(binding.objectId);
           copy.callout = { ...object.callout, x: object.callout.x + offset, y: object.callout.y + offset,

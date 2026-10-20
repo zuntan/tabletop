@@ -1,3 +1,5 @@
+import { drawClip } from './clip-drawing';
+import { bundleOperations, unbundleOperations, clipFor, clipGroup, clipFollower, clipDropTarget, clipTarget } from './clip-bundles';
 import { createPropControls } from './prop-controls';
 import { drawStamp } from './stamps';
 import { createStampControls } from './stamp-controls';
@@ -51,7 +53,7 @@ import { createDeskIdentityControls } from './desk-identity-controls';
 import './desk-identity.css';
 import { createThinkingMode } from './thinking-mode';
 import { headerIcon } from './header-icon';
-import { addFormNumberPresets } from './number-presets';
+import { addFormNumberPresets, addPresetPalette } from './number-presets';
 import { createLineStylePicker } from './line-style-picker';
 import { createEndpointPicker } from './endpoint-picker';
 import { parseConnectionUrl } from './connection-url';
@@ -113,6 +115,10 @@ app.innerHTML = `
           <label hidden>内側の余白<input name="padding" type="number" min="0" step="any"></label>
           <label hidden>文字サイズ調整<select name="textFit" disabled><option value="fixed" hidden>指定サイズ（既存）</option><option value="auto">完全自動</option><option value="shrink">縮小のみ</option></select></label>
           <label hidden>吹き出し<select name="calloutMode" disabled><option value="none">なし</option><option value="speech">三角</option><option value="thought">考え事</option><option value="leader">引き出し線</option></select></label>
+          <label hidden>クリップの間隔<input name="clipOffset" type="number" min="0" step="any"></label>
+          <label hidden>クリップのサイズ<input name="clipSize" type="number" min="1" max="100000" step="any"></label>
+          <label hidden>留め位置<select name="clipAnchor"><option value="top-left">左上</option><option value="top">上</option><option value="top-right">右上</option><option value="right">右</option><option value="bottom-right">右下</option><option value="bottom">下</option><option value="bottom-left">左下</option><option value="left">左</option></select></label>
+          <label hidden>クリップの形<select name="clipStyle"><option value="binder">ダブルクリップ</option><option value="wire">ゼムクリップ</option></select></label>
           <label class="wide">テキスト<textarea name="text" rows="3"></textarea></label>
           <label class="wide" hidden>Mermaidソース<textarea name="mermaidSource" rows="8" spellcheck="false" disabled></textarea></label>
           <label class="wide">URL<input name="url" type="url"></label>
@@ -161,6 +167,15 @@ const propertyEditor = createPropertyEditor(form, desk, (id, patch) => {
   execute([{ kind: 'update', id, patch }]); render(); notify(`revision ${desk.revision} · ${desk.summary().count} オブジェクト`);
 }, message => notify(message, true));
 addFormNumberPresets(form);
+const clipMenuUpdates = ([
+  ['clipStyle','クリップの形',{binder:'ダブルクリップ',wire:'ゼムクリップ'}],
+  ['clipAnchor','留め位置',{'top-left':'左上',top:'上','top-right':'右上',right:'右','bottom-right':'右下',bottom:'下','bottom-left':'左下',left:'左'}],
+] as const).map(([name,label,labels])=>{
+  const input=form.elements.namedItem(name) as HTMLSelectElement;
+  const {menu,choices,wrapper}=addPresetPalette(input,Object.keys(labels),label);input.hidden=true;wrapper.classList.add('line-style-picker');
+  for(const button of choices.querySelectorAll<HTMLButtonElement>('button')) {button.textContent=(labels as Record<string,string>)[button.dataset.value!];button.setAttribute('aria-label',button.textContent);}
+  return ()=>{menu.textContent=(labels as Record<string,string>)[input.value]??'';};
+});
 const updateConnectorLineStyle = createLineStylePicker(form.elements.namedItem('dash') as HTMLSelectElement);
 const updateStartMarker = createEndpointPicker(form.elements.namedItem('startMarker') as HTMLSelectElement, '始点形状', 'start');
 const updateTextFit = createTextFitPicker(form.elements.namedItem('textFit') as HTMLSelectElement);
@@ -249,6 +264,14 @@ createPropControls(propContainer, (preset, src) => {
   if (busy || editor.isActive()) throw new Error('編集を終えてから小物を置いてください');
   attempt(() => newObject('prop', { src, text: preset.name, width: preset.width, height: preset.height }));
 }, notify);
+const clipControls=document.createElement('div');clipControls.className='clip-toolbar';
+const clipCreate=document.createElement('button');clipCreate.id='clip-create';clipCreate.textContent='クリップ';clipCreate.title='選択を束ねる（Ctrl/⌘＋G）。未選択ならクリップを置く';
+clipCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{
+  const operations=bundleOperations(desk.snapshot(),desk.selected());
+  if(operations.length){execute(operations);const last=operations[0];if(last.kind==='add')desk.select([last.object.id]);}
+  else if(!desk.selected().length)newObject('clip',{clipMembers:[],clipSize:64,clipOffset:32,clipStyle:'binder',fill:'#26313d'});
+});};
+clipControls.append(clipCreate);$('#prop-controls').after(clipControls);
 const thinkingMode = createThinkingMode($('header'), () => { cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
@@ -262,10 +285,11 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
   const background = desk.settingsSnapshot().background;
   deskBackground.update({ ...background, ...preview }, camera);
 });
-const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', prop: '小物', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
+const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
-  const category = object.type === 'label' ? 'pins' : object.type === 'text' ? 'text'
+  if ($('#object-filter-clips').getAttribute('aria-pressed')==='true' && clipFor(renderedScene,object.id)) return true;
+  const category = object.type === 'clip' ? 'clips' : object.type === 'label' ? 'pins' : object.type === 'text' ? 'text'
     : isShapeType(object.type) ? 'shapes'
       : object.type === 'line' ? 'lines'
         : ['image', 'svg', 'mermaid', 'prop'].includes(object.type) ? 'images' : 'other';
@@ -432,6 +456,7 @@ function drawObject(object: DeskObject) {
     if (object.type === 'mermaid') drawMermaidCard(group, object);
     drawOpenLink(group, object);
   }
+  if(object.type==='clip') drawClip(group,object);
   drawReactions(group, object, pinDescriptionVisible(object), camera.zoom);
   objectsLayer.append(group);
 }
@@ -464,7 +489,7 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
       fill: object.callout.binding ? '#16a34a' : colors.selection, stroke: '#fff', 'stroke-width': 1.5 / camera.zoom,
       'data-callout-tip': object.id, class: 'endpoint-handle',
     }));
-    if (selected.length === 1 && object.type !== 'label') overlays.append(svg('rect', {
+    if (selected.length === 1 && object.type !== 'label' && object.type !== 'clip') overlays.append(svg('rect', {
       x: object.x + object.width - 5 / camera.zoom, y: object.y + object.height - 5 / camera.zoom,
       width: 10 / camera.zoom, height: 10 / camera.zoom, fill: colors.selection, stroke: '#fff',
       'stroke-width': 1 / camera.zoom, 'data-resize': object.id, class: 'resize-handle',
@@ -509,6 +534,7 @@ function render(rebuild = true) {
   if (ids.length === 1) {
     const object = desk.get(ids[0]);
     propertyEditor.sync(object);
+    clipMenuUpdates.forEach(update=>update());
     updateConnectorLineStyle();
     updateStartMarker(); updateEndMarker(); updateCallout(); updateTextFit();
     if (object.url) { link.href = object.url; link.hidden = false; }
@@ -582,7 +608,7 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
     ...(isShapeType(type) ? { textFit: 'shrink' } : {}),
     ...(type === 'mermaid' ? { width: 480, height: 354, text: 'Mermaid', mermaidSource: defaultMermaidSource } : {}),
     ...(type === 'text' ? { width: 280, height: 80 } : {}),
-    ...(['line', 'arrow'].includes(type) ? selectedConnection(desk.selected().map(id => desk.get(id))) : {}),
+    ...(['line', 'arrow'].includes(type) ? selectedConnection(desk.selected().map(id => desk.get(id)),desk.snapshot()) : {}),
     ...(['web', 'link'].includes(type) ? { width: type === 'web' ? 480 : 320, height: type === 'web' ? 340 : 60 } : {}), ...extra });
   if (['text', 'web', 'link', 'mermaid'].includes(type)) { editor.open(object, true); return; }
   execute([{ kind: 'add', object }], 'desk'); desk.select([object.id]);
@@ -704,6 +730,12 @@ function previewGesture(current: Gesture, point: { x: number; y: number }) {
   updateScenePreview(objectsLayer, scene, current.preview, drawObject, hadRounding || renderedRounding.size > 0); current.preview = scene;
   refreshPinPresentation(); drawPinThreads(scene);
   drawSelection(scene.filter(o => desk.selected().includes(o.id)), scene);
+  if(current.mode==='move'&&!current.detach&&current.originals.length===1) {
+    const source=current.originals[0];
+    const target=clipTarget(source)&&!clipFor(current.scene,source.id)?clipDropTarget(current.scene,point,camera.zoom,[source.id]):null;
+    if(target){const text=svg('text',{x:target.x,y:target.y-12/camera.zoom,fill:'#15803d','font-size':14/camera.zoom,'pointer-events':'none'});text.textContent='クリップへ追加';overlays.append(text);}
+    if(source.type==='clip'&&!source.clipMembers?.length) drawSnapTargets(overlays,current.scene.filter(o=>clipTarget(o)&&!o.locked&&!clipFor(current.scene,o.id)),{x:source.x+source.width/2+point.x-current.start.x,y:source.y+source.height*.5+point.y-current.start.y},camera.zoom);
+  }
   if (current.mode === 'move') for (const object of scene.filter(o => o.type === 'label' && desk.selected().includes(o.id))) {
     const origin = gridOrigin(object), size = 5 / camera.zoom;
     overlays.append(svg('line', { x1: origin.x, y1: origin.y, x2: origin.x, y2: origin.y + size * 2,
@@ -712,14 +744,14 @@ function previewGesture(current: Gesture, point: { x: number; y: number }) {
       fill: '#2563eb', opacity: 0.3, 'pointer-events': 'none', 'data-grid-origin': object.id }));
   }
   if (!current.detach && current.mode === 'callout') drawSnapTargets(overlays,
-    scene.filter(pinIsVisible).filter(o => !isConnector(o) && o.id !== current.originals[0].id).map(o => pinScreenObject(o, camera.zoom)),
+    scene.filter(o=>!clipFollower(scene,o.id)).filter(pinIsVisible).filter(o => !isConnector(o) && o.id !== current.originals[0].id).map(o => pinScreenObject(o, camera.zoom)),
     { x: current.originals[0].callout!.x + point.x - current.start.x, y: current.originals[0].callout!.y + point.y - current.start.y }, camera.zoom);
   if (!current.detach && current.mode === 'move' && current.originals.length === 1 && current.originals[0].type === 'label') {
     const pin = scene.find(o => o.id === current.originals[0].id)!;
-    drawSnapTargets(overlays, scene.filter(isPinAttachmentTarget).filter(pinIsVisible),
+    drawSnapTargets(overlays, scene.filter(o=>isPinAttachmentTarget(o,scene)).filter(pinIsVisible),
       { x: pin.x + pin.width / 2, y: pin.y + pin.height }, camera.zoom);
   }
-  if (!current.detach && (current.mode === 'start' || current.mode === 'end')) drawSnapTargets(overlays, scene.filter(pinIsVisible).filter(object => !current.originals.some(o => o.id === object.id)).map(object => pinScreenObject(object, camera.zoom)), endpointDragPoint(current, point), camera.zoom);
+  if (!current.detach && (current.mode === 'start' || current.mode === 'end')) drawSnapTargets(overlays, scene.filter(o=>!clipFollower(scene,o.id)).filter(pinIsVisible).filter(object => !current.originals.some(o => o.id === object.id)).map(object => pinScreenObject(object, camera.zoom)), endpointDragPoint(current, point), camera.zoom);
 }
 canvas.addEventListener('pointermove', event => {
   desk.pointer = world(event);
@@ -744,7 +776,9 @@ function endGesture(event: PointerEvent, cancel = false) {
   current.detach = event.altKey;
   const p = world(event);
   if (current.mode !== 'pan' && current.mode !== 'marquee' && !gestureOperations(current, p, camera.zoom).length) {
-    drawSelection(); return;
+    if (JSON.stringify(current.preview) !== JSON.stringify(current.scene)) render();
+    else drawSelection();
+    return;
   }
   attempt(() => {
     if (current.mode !== 'pan' && current.mode !== 'marquee') {
@@ -771,6 +805,11 @@ window.addEventListener('keydown', event => {
   if ((event.target as Element).closest('input,textarea,select') || colorControls.isOpen()) return;
   if (event.code === 'Space') { space = true; event.preventDefault(); }
   if (gesture) return;
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase()==='g') {
+    event.preventDefault();if(busy)return;
+    attempt(()=>{const operations=event.shiftKey?unbundleOperations(desk.snapshot(),desk.selected()):bundleOperations(desk.snapshot(),desk.selected());
+      if(operations.length){execute(operations);if(!event.shiftKey&&operations[0].kind==='add')desk.select([operations[0].object.id]);}});return;
+  }
   if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); deleteSelection(); }
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); attempt(() => { if (event.shiftKey) desk.redo(); else desk.undo(); }); }
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') { event.preventDefault(); attempt(() => { desk.redo(); }); }
@@ -810,8 +849,9 @@ function clipboardTextTarget(target: EventTarget | null) {
 }
 for (const kind of ['copy', 'cut'] as const) window.addEventListener(kind, event => {
   if (clipboardTextTarget(event.target) || !getSelection()?.isCollapsed || busy || gesture || !event.clipboardData) return;
-  const selected = new Set(desk.selected());
-  const objects = desk.snapshot().filter(object => selected.has(object.id));
+  const scene=desk.snapshot();
+  const selected=new Set(desk.selected().flatMap(id=>desk.get(id).type==='clip'?clipGroup(scene,id).map(o=>o.id):[id]));
+  const objects = scene.filter(object => selected.has(object.id));
   if (!objects.length) return;
   event.preventDefault();
   try {
