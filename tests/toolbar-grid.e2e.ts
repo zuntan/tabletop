@@ -28,7 +28,14 @@ test('toolbar, remembered numbering, descriptions and world grid work together',
       return { x: result.x, y: result.y };
     }, { x, y });
   }
-  async function place(x: number, y: number) { const p = await point(x, y); await page.mouse.click(p.x, p.y); }
+  async function place(x: number, y: number) {
+    const id=(await call('desk_selection')).ids[0], object=id?await call('desk_get',{id}):null;
+    if(object?.type==='label') {
+      const start=await point(object.x+object.width/2,object.y+object.height*.35);
+      const end=await point(x,y-object.height*.65);
+      await page.mouse.move(start.x,start.y);await page.mouse.down();await page.mouse.move(end.x,end.y,{steps:5});await page.mouse.up();
+    } else {const p=await point(x,y);await page.mouse.click(p.x,p.y);}
+  }
   try {
     await client.connect(transport); await call('desk_pairing_open', { confirm: true }); await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
@@ -37,8 +44,8 @@ test('toolbar, remembered numbering, descriptions and world grid work together',
     assert.equal(await page.locator('#grid-snap').getAttribute('aria-pressed'), 'true');
     await page.locator('#grid-snap').click();
     assert.equal(await page.locator('#grid-snap').getAttribute('aria-pressed'), 'false');
-    await page.getByRole('button', { name: 'ピンを配置：数字', exact: true }).click();
-    assert.equal(await page.locator('#series-panel').isVisible(), false);
+    await page.getByRole('button', { name: 'ピンを追加：数字', exact: true }).click();
+    assert.equal(await page.locator('#series-panel').isVisible(), true);
     await place(300, 300); await page.keyboard.press('Escape');
     let objects = (await call('desk_list')).objects;
     assert.equal(objects[0].text, '1'); assert.equal(objects[0].x, 282); assert.equal(objects[0].y, 252);
@@ -49,13 +56,13 @@ test('toolbar, remembered numbering, descriptions and world grid work together',
     assert.equal(objects[0].y + objects[0].height, 300);
     await call('desk_select', { ids: [objects[0].id] });
     assert.equal(await page.locator('#series-panel').isVisible(), true);
-    await page.locator('#series-add').click();
+    await page.locator('#pin-series-menu').click(); await page.locator('#pin-series-new').click();
     await page.locator('#series-settings [name="name"]').fill('手順');
     await page.locator('#series-settings [name="name"]').dispatchEvent('change');
     await page.locator('#series-settings [name="shape"]').selectOption('rect');
     await page.locator('#numbering-settings').click();
     await page.locator('#grid-snap').click();
-    await page.getByRole('button', { name: 'ピンを配置：手順', exact: true }).click();
+
     await place(413, 311); await page.keyboard.press('Escape');
     objects = (await call('desk_list')).objects; const label = objects[1];
     assert.equal(label.x + label.width / 2, 408); assert.equal(label.y + label.height, 312);
@@ -93,11 +100,11 @@ test('toolbar, remembered numbering, descriptions and world grid work together',
     const selection = page.getByRole('button', { name: '選択モード（Esc）', exact: true });
     assert.equal(await selection.getAttribute('aria-pressed'), 'true');
     await page.locator('#numbering').click();
-    assert.equal(await selection.getAttribute('aria-pressed'), 'false');
+    assert.equal(await selection.getAttribute('aria-pressed'), 'true');
     const selectRevision = (await call('desk_summary')).revision;
     await selection.click();
     assert.equal(await selection.getAttribute('aria-pressed'), 'true');
-    assert.equal(await page.locator('#numbering').getAttribute('aria-pressed'), 'false');
+    assert.equal(await page.locator('#numbering').getAttribute('aria-pressed'), null);
     assert.equal((await call('desk_summary')).revision, selectRevision);
     const countBeforeSelection = (await call('desk_summary')).count;
     const startMove = await point(moved.x + 24, moved.y + 24);
@@ -112,7 +119,7 @@ test('toolbar, remembered numbering, descriptions and world grid work together',
     await page.getByRole('dialog', { name: '図形の候補', exact: true }).getByRole('button', { name: '矩形', exact: true }).click();
     assert.equal(await selection.getAttribute('aria-pressed'), 'true');
     await place(750, 550);
-    assert.equal((await call('desk_summary')).count, countBeforeSelection + 1);
+    assert.equal((await call('desk_summary')).count, countBeforeSelection + 3);
     await call('desk_execute', { operations: [{ kind: 'series_update', id: label.seriesId, patch: { width: 80, height: 72, shape: 'pin' } }] });
     await call('desk_select', { ids: [label.id] });
     await page.locator('#series-choice').selectOption(label.seriesId);

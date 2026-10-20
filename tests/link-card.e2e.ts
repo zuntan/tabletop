@@ -63,7 +63,7 @@ test('card open controls launch a separate tab without selecting, moving or plac
     assert.deepEqual(await call('desk_state'), beforeKeyboard);
     const [webPopup] = await Promise.all([page.waitForEvent('popup'), page.locator('[data-open-url="web-card"]').click()]);
     await webPopup.waitForURL(destination); await webPopup.close();
-    assert.equal((await call('desk_summary')).count, 2);
+    assert.equal((await call('desk_summary')).count, 3);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); await client.close(); await transport.close(); }
 });

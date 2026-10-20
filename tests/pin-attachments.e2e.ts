@@ -47,7 +47,9 @@ test('pin drag attaches its fixed-size tip, follows a card and Alt peels off at 
       const point = new DOMPoint(500, 275).matrixTransform((el as unknown as SVGGraphicsElement).getScreenCTM()!);
       return { x: point.x, y: point.y };
     });
-    await page.mouse.click(target.x, target.y);
+    const addedId=(await call('desk_selection')).ids[0],added=await call('desk_get',{id:addedId});
+    const start=await page.locator('#viewport').evaluate((el,o)=>{const p=new DOMPoint(o.x+o.width/2,o.y+o.height).matrixTransform((el as unknown as SVGGraphicsElement).getScreenCTM()!);return{x:p.x,y:p.y-o.height*.65};},added);
+    await page.mouse.move(start.x,start.y);await page.mouse.down();await page.mouse.move(target.x,target.y-added.height*.65,{steps:5});await page.mouse.up();
     const placed = (await call('desk_context')).objects.find((o: { type: string; id: string }) => o.type === 'label' && o.id !== 'pin');
     assert.deepEqual(placed.attachment, { objectId: 'card', anchor: 'right' });
     await page.locator('#selection-mode').click();

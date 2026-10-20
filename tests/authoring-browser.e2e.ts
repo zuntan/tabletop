@@ -32,7 +32,14 @@ test('defaults, inline editing and independent numbering systems work through UI
       return { x: result.x, y: result.y };
     }, { x, y });
   }
-  async function place(x: number, y: number) { const p = await point(x, y); await page.mouse.click(p.x, p.y); }
+  async function place(x: number, y: number) {
+    const id=(await call('desk_selection')).ids[0], object=id?await call('desk_get',{id}):null;
+    if(object?.type==='label') {
+      const start=await point(object.x+object.width/2,object.y+object.height*.35);
+      const end=await point(x,y-object.height*.65);
+      await page.mouse.move(start.x,start.y);await page.mouse.down();await page.mouse.move(end.x,end.y,{steps:5});await page.mouse.up();
+    } else {const p=await point(x,y);await page.mouse.click(p.x,p.y);}
+  }
   try {
     await client.connect(transport); await call('desk_pairing_open', { confirm: true }); await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
@@ -76,7 +83,7 @@ test('defaults, inline editing and independent numbering systems work through UI
     await page.locator(`[data-id="${link.id}"] > rect`).dblclick(); await input.fill('表示名変更');
     await page.locator('#revision').click(); assert.equal((await call('desk_get', { id: link.id })).text, '表示名変更');
     await page.locator('#numbering-settings').click(); await page.locator('#numbering').click();
-    await place(350, 360); await place(450, 360); await page.keyboard.press('Escape');
+    await place(350, 360); await page.locator('#numbering').click(); await place(450, 360); await page.keyboard.press('Escape');
     let labels = (await call('desk_list')).objects.filter((object: { type: string }) => object.type === 'label');
     assert.deepEqual(labels.map((object: { text: string }) => object.text), ['1', '2']);
     await call('desk_select', { ids: [labels[0].id] });
@@ -92,9 +99,9 @@ test('defaults, inline editing and independent numbering systems work through UI
     assert.equal(await page.locator('[data-resize]').count(), 0);
     assert.equal(await page.locator('#properties [name="fontSize"]').isDisabled(), true);
     assert.equal(await page.locator('#properties [name="x"]').isDisabled(), false);
-    await page.locator('#series-add').click();
+    await page.locator('#pin-series-menu').click(); await page.locator('#pin-series-new').click();
     await page.locator('#series-settings [name="format"]').selectOption('upper-alpha');
-    await color('series-text', '#1d4ed8'); await page.locator('#numbering').click(); await place(550, 360); await page.keyboard.press('Escape');
+    await color('series-text', '#1d4ed8'); await place(550, 360); await page.keyboard.press('Escape');
     const all = (await call('desk_list')).objects.filter((object: { type: string }) => object.type === 'label');
     assert.equal(all[2].text, 'A'); assert.notEqual(all[0].seriesId, all[2].seriesId);
     assert.equal(all[0].textColor, '#b91c1c'); assert.equal(all[2].textColor, '#1d4ed8');

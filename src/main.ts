@@ -234,9 +234,9 @@ const editor = createInlineEditor($('#workspace'), viewport, (object, patch, fre
   if (fresh) desk.select([object.id]);
   render();
 });
-const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'), $<HTMLButtonElement>('#numbering'), $<HTMLButtonElement>('#selection-mode'), operations => {
-  if (!busy) attempt(() => execute(operations));
-});
+const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'), $<HTMLButtonElement>('#numbering'), $<HTMLButtonElement>('#selection-mode'), (operations, selectId) => {
+  if (!busy && !editor.isActive()) attempt(() => { execute(operations, selectId ? 'desk' : 'exact'); if (selectId) desk.select([selectId]); });
+}, newPartPoint);
 const editActions = document.createElement('div'); editActions.className = 'toolbar-edit-actions';
 editActions.setAttribute('role', 'group'); editActions.setAttribute('aria-label', '重なり順・リアクション');
 for (const [id, icon, label] of [['front', '▣↑', '最前面'], ['back', '▣↓', '最背面']]) {
@@ -611,10 +611,13 @@ app.addEventListener('object-filter-change', event => {
   pendingObjectListSelection = desk.selected().some(id => objectListIncludes(desk.get(id)));
   render(false);
 });
-function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
-  authoring.stopPlacement();
+function newPartPoint() {
   const offset = desk.summary().count % 8 * 22;
   const center = { x: (120 - camera.x) / camera.zoom + offset, y: (100 - camera.y) / camera.zoom + offset };
+  return center;
+}
+function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
+  const center = newPartPoint();
   const object = objectSchema.parse({ id: `${type}-${randomUuid().slice(0, 8)}`, type, ...gridPosition(center),
     ...creationAppearance(type, desk.settingsSnapshot().defaults),
     ...(isShapeType(type) ? { textFit: 'shrink' } : {}),
@@ -707,7 +710,6 @@ canvas.addEventListener('auxclick', event => { if (event.button === 1) event.pre
 canvas.addEventListener('pointerdown', event => {
   if (gesture || editor.isActive() || (event.button !== 0 && event.button !== 1)) return;
   if (!space && (event.target as Element).closest('[data-open-url], [data-open-media], [data-markdown-link]')) return;
-  if (event.button === 0 && !space && authoring.place(gridPosition(world(event)), camera.zoom)) { event.preventDefault(); return; }
   const target = event.target as Element;
   const resize = target.closest('[data-resize]')?.getAttribute('data-resize');
   const calloutTip = target.closest('[data-callout-tip]')?.getAttribute('data-callout-tip');
@@ -813,7 +815,6 @@ canvas.addEventListener('lostpointercapture', event => { if (gesture) endGesture
 window.addEventListener('blur', () => { space = false; if (gesture) { gesture = null; busy = false; render(); } });
 window.addEventListener('keydown', event => {
   if (editor.isActive()) return;
-  if (event.key === 'Escape' && authoring.isPlacing()) { authoring.stopPlacement(); return; }
   if ((event.target as Element).closest('input,textarea,select') || colorControls.isOpen()) return;
   if (event.code === 'Space') { space = true; event.preventDefault(); }
   if (gesture) return;
@@ -831,7 +832,6 @@ window.addEventListener('keydown', event => {
 window.addEventListener('keyup', event => { if (event.code === 'Space') space = false; });
 
 async function addFiles(files: File[]) {
-  authoring.stopPlacement();
   const operations: Operation[] = [];
   busy = true;
   try {
@@ -876,7 +876,6 @@ for (const kind of ['copy', 'cut'] as const) window.addEventListener(kind, event
   } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
 });
 async function pasteClipboard(content: ClipboardContent) {
-  authoring.stopPlacement();
   if (partClipboard.matches(content.token, content.html)) {
     desk.select(partClipboard.paste(desk));
     render(); notify(`${desk.selected().length}パーツを貼り付けました`);
@@ -911,7 +910,7 @@ $('#clipboard').onclick = async () => {
       : error instanceof Error ? error.message : String(error), true);
   } finally { busy = false; }
 };
-$('#image').onclick = () => { authoring.stopPlacement(); $<HTMLInputElement>('#file').click(); };
+$('#image').onclick = () => { $<HTMLInputElement>('#file').click(); };
 $<HTMLInputElement>('#file').onchange = event => { const input = event.target as HTMLInputElement; void addFiles([...input.files ?? []]); input.value = ''; };
 $('#workspace').addEventListener('dragover', event => { event.preventDefault(); });
 $('#workspace').addEventListener('drop', event => { event.preventDefault(); if (!busy) void addFiles([...event.dataTransfer?.files ?? []]); });

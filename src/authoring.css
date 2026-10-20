@@ -72,3 +72,10 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 #prop-palette:popover-open { display: flex; flex-wrap: wrap; gap: 8px; }
 #prop-palette button { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; }
 #prop-palette img { object-fit: contain; }
+
+#pin-series-menu { min-width: 20px; width: 20px; height: 46px; padding: 4px 2px; align-self: center; margin-left: -5px; color: #64748b; }
+#pin-series-palette { min-width: 230px; max-height: min(440px, 70vh); overflow-y: auto; }
+.pin-series-choices { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.pin-series-choices button { text-align: left; font-size: 12px; }
+.pin-series-choices button[aria-pressed="true"] { border-color: #2563eb; }
+#pin-series-new { width: 100%; font-size: 12px; }
