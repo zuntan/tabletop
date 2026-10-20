@@ -24,6 +24,11 @@ test('clip shortcuts, properties, dragging/peeling, appending, filtering, deleti
    const p=await page.locator('#viewport').evaluate((el,{x,y})=>{const p=new DOMPoint(x,y).matrixTransform((el as unknown as SVGGraphicsElement).getScreenCTM()!);return{x:p.x,y:p.y};},{x:o.x+o.width*.6,y:o.y+(top?4:o.height*.6)});
    if(alt)await page.keyboard.down('Alt');await page.mouse.move(p.x,p.y);await page.mouse.down();await page.mouse.move(p.x+dx,p.y+dy,{steps:8});await page.mouse.up();if(alt)await page.keyboard.up('Alt');
   }
+  await page.locator('#mouse-lock').click();
+  assert.ok((await call('desk_state')).objects.filter((o:{id:string})=>['a','b','c',id].includes(o.id)).every((o:{locked:boolean})=>o.locked));
+  const lockedA=await call('desk_get',{id:'a'});await drag('c',40,30);assert.equal((await call('desk_get',{id:'a'})).x,lockedA.x);
+  await call('desk_select',{ids:['b']});await page.locator('#canvas').focus();await page.keyboard.press('Control+Shift+g');assert.ok(await call('desk_get',{id}));
+  await page.locator('#property-lock').click();assert.ok((await call('desk_state')).objects.filter((o:{id:string})=>['a','b','c',id].includes(o.id)).every((o:{locked:boolean})=>!o.locked));
   await page.locator('#canvas').focus();const a=await call('desk_get',{id:'a'});await drag('c',40,30);assert.equal((await call('desk_get',{id:'a'})).x,a.x+40);
   const c=await call('desk_get',{id:'c'});await drag('c',140,100,true);assert.deepEqual((await call('desk_get',{id})).clipMembers,['a','b']);assert.equal((await call('desk_get',{id:'c'})).x,c.x+140);
   const b=await call('desk_get',{id:'b'});await drag('a',-80,70,true,true);assert.deepEqual((await call('desk_get',{id})).clipMembers,['b']);assert.equal((await call('desk_get',{id:'b'})).x,b.x);

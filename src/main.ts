@@ -244,7 +244,8 @@ editActions.append($('#reaction-controls'), $('#grid-snap')); $('.toolbar-parts'
 const lockControls = createLockControls($('#grid-snap'), form, () => {
   if (busy || editor.isActive() || !desk.selected().length) return;
   attempt(() => {
-    const objects = desk.selected().map(id => desk.get(id));
+    const scene = desk.snapshot();
+    const objects = [...new Set(desk.selected().flatMap(id => clipGroup(scene,id).map(object => object.id)))].map(id => desk.get(id));
     const operations = lockOperations(objects, lockSelectionState(objects).nextLocked);
     if (operations.length) execute(operations);
   });
@@ -539,7 +540,7 @@ function render(rebuild = true) {
     updateStartMarker(); updateEndMarker(); updateCallout(); updateTextFit();
     if (object.url) { link.href = object.url; link.hidden = false; }
   }
-  lockControls.update(ids.map(id => desk.get(id)));
+  lockControls.update([...new Set(ids.flatMap(id => clipGroup(renderedScene,id).map(object => object.id)))].map(id => desk.get(id)));
   for (const id of ['#front', '#back', '#delete']) $<HTMLButtonElement>(id).disabled = !ids.length;
   $('#object-list').replaceChildren();
   const listObjects = desk.snapshot().reverse().filter(objectListIncludes);

@@ -38,6 +38,12 @@ export function resolveClips(input: DeskObject[], before: DeskObject[] = []): De
       if(owners.has(id)) throw new Error('A card can belong to only one clip; nesting is not supported');
       owners.set(id,clip.id);
     }
+    // Loaded/mixed legacy states become one lock state; individual states are not retained.
+    const group = [...members.map(id => map.get(id)!), clip];
+    if (group.some(object => object.locked !== undefined)) {
+      const locked = group.some(object => object.locked);
+      for (const object of group) object.locked = locked;
+    }
     const size=clip.clipSize ?? 64;
     const appearance=clipAppearance(clip);
     Object.assign(clip,{clipMembers:[...members],clipAnchor:clip.clipAnchor ?? 'top-left',clipOffset:clip.clipOffset ?? 32,clipSize:size,clipStyle:clip.clipStyle ?? 'binder',width:appearance.boundsWidth,height:appearance.boundsHeight});

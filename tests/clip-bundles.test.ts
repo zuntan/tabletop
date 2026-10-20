@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Desk } from '../src/model';
+import { Desk, dispatch } from '../src/model';
 import { bundleOperations,clipFor,clipFollower,clipMoveOperations,unbundleOperations,clipGroup } from '../src/clip-bundles';
 import { anchorPoint,snap } from '../src/geometry';
 import { gestureOperations,gesturePreview,type Gesture } from '../src/diagram-gestures';
@@ -65,4 +65,23 @@ test('clip art keeps its SVG center on each anchor and rotates in 45 degree step
   assert.ok(Math.abs(clip.y+clip.height/2-point.y-art.insetY)<1e-8);
   assert.equal(clip.width,art.boundsWidth);assert.equal(clip.height,art.boundsHeight);
  }
+});
+
+test('clip locks toggle the whole bundle through patches and AI pointing, persist and block human structural edits',async()=>{
+ const d=fixture(),id=bundle(d),ids=['a','b','c',id];
+ d.execute({actor:'human',operations:[{kind:'update',id:'b',patch:{locked:true}}]});
+ assert.ok(ids.every(id=>d.get(id).locked));
+ const locked=d.snapshot();
+ for(const operation of [
+  {kind:'update',id:'a',patch:{width:500}},
+  {kind:'update',id,patch:{clipOffset:200}},
+  {kind:'update',id,patch:{clipMembers:['a']}},
+  {kind:'delete',id}, {kind:'delete',id:'b'},
+ ] as const) {assert.throws(()=>d.execute({actor:'human',operations:[operation as import('../src/model').Operation]}),/ロック/);assert.deepEqual(d.snapshot(),locked);}
+ d.execute({actor:'human',operations:[{kind:'update',id:'a',patch:{text:'Editable'}}]});
+ const archive=await decodeDeskFile(await encodeDeskFile(d)),restored=new Desk();restored.replaceDocument({objects:archive.objects,settings:archive.settings});assert.ok(ids.every(id=>restored.get(id).locked));
+ d.point(['c']);const result=dispatch(d,{method:'lock',locked:false}) as {ids:string[]};assert.deepEqual(result.ids,ids);assert.ok(ids.every(id=>d.get(id).locked===false));
+ d.undo();assert.ok(ids.every(id=>d.get(id).locked));d.redo();assert.ok(ids.every(id=>!d.get(id).locked));
+ d.execute({operations:[{kind:'update',id,patch:{locked:true}},{kind:'update',id:'a',patch:{x:400}}]});assert.equal(d.get('a').x,400);
+ const mixed=d.snapshot().map(object=>({...object,locked:object.id==='c'}));restored.replaceDocument({objects:mixed,settings:d.settingsSnapshot()});assert.ok(ids.every(id=>restored.get(id).locked));
 });
