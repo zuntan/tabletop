@@ -5,7 +5,7 @@ import { frameColors } from './frame-colors';
 import packageSource from '../package.json?raw';
 import './desk-menu.css';
 
-export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: Partial<Settings['background']>) => void, preview: (patch?: Partial<Settings['background']>) => void) {
+export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: Partial<Settings['background']>) => void, preview: (patch?: Partial<Settings['background']>) => void, bhPreview?: () => void) {
   const button = document.createElement('button');
   button.id = 'desk-menu'; button.type = 'button'; button.className = 'header-icon';
   button.title = 'メニュー'; button.setAttribute('aria-label', 'メニュー');
@@ -102,7 +102,9 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
   }
   button.onclick = () => {
     if (panel.matches(':popover-open')) { panel.hidePopover(); return; }
-    heading('メニュー'); action('机の見た目…', appearance); action('Tabletopについて…', about); panel.showPopover();
+    heading('メニュー'); action('机の見た目…', appearance); action('Tabletopについて…', about);
+    if (bhPreview) action('BH比較（実験）…', () => { panel.hidePopover(); bhPreview(); });
+    panel.showPopover();
   };
   panel.addEventListener('beforetoggle', event => {
     if ((event as ToggleEvent).newState === 'closed') preview();

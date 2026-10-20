@@ -1,3 +1,6 @@
+import { BhDeletion, bhDeleteControls } from './bh-delete';
+import type { BhMode } from './bh-animation';
+import { openBhPreview } from './bh-preview';
 import { rasterPointedCard } from './part-raster';
 import { pointedMove, ObjectMoveAnimator } from './object-move-animation';
 import { drawClip } from './clip-drawing';
@@ -184,6 +187,7 @@ const updateTextFit = createTextFitPicker(form.elements.namedItem('textFit') as 
 const updateCallout = createCalloutPicker(form.elements.namedItem('calloutMode') as HTMLSelectElement);
 const updateEndMarker = createEndpointPicker(form.elements.namedItem('endMarker') as HTMLSelectElement, '終点形状', 'end');
 const camera = { x: 60, y: 50, zoom: 1 };
+const bhDeletion = new BhDeletion();
 const humanScroll = new HumanScrollGuard();
 const cameraAnimator = new CameraAnimator();
 const objectAnimator = new ObjectMoveAnimator();
@@ -243,6 +247,10 @@ editActions.setAttribute('role', 'group'); editActions.setAttribute('aria-label'
 for (const [id, icon, label] of [['front', '▣↑', '最前面'], ['back', '▣↓', '最背面']]) {
   const button = $<HTMLButtonElement>(`#${id}`); iconButton(button, icon, label); editActions.append(button);
 }
+const animatedDeleteButton=document.createElement('button');animatedDeleteButton.id='delete-animated';animatedDeleteButton.type='button';
+iconButton(animatedDeleteButton,'×','アニメ削除（落下／吸引をランダム）');
+animatedDeleteButton.onclick=()=>animateDelete(Math.random()<.5?'fall':'suction');
+editActions.append(animatedDeleteButton);
 editActions.append($('#reaction-controls'), $('#grid-snap')); $('.toolbar-parts').append(editActions);
 const lockControls = createLockControls($('#grid-snap'), form, () => {
   if (busy || editor.isActive() || !desk.selected().length) return;
@@ -287,6 +295,10 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
 }, preview => {
   const background = desk.settingsSnapshot().background;
   deskBackground.update({ ...background, ...preview }, camera);
+}, () => {
+  if (busy || gesture || editor.isActive()) { notify('操作が終わってから実験を開いてください', true); return; }
+  void rasterPointedCard(desk, id => drawnNodes.get(id)).then(raster => openBhPreview(raster.dataUrl))
+    .catch(error => notify(error instanceof Error ? error.message : String(error), true));
 });
 const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
@@ -553,7 +565,8 @@ function render(rebuild = true) {
     if (object.url) { link.href = object.url; link.hidden = false; }
   }
   lockControls.update([...new Set(ids.flatMap(id => clipGroup(renderedScene,id).map(object => object.id)))].map(id => desk.get(id)));
-  for (const id of ['#front', '#back', '#delete']) $<HTMLButtonElement>(id).disabled = !ids.length;
+  for (const id of ['#front', '#back', '#delete', '#delete-animated']) $<HTMLButtonElement>(id).disabled = !ids.length;
+  bhDelete.refresh();
   $('#object-list').replaceChildren();
   const listObjects = desk.snapshot().reverse().filter(objectListIncludes);
   const seriesNames = new Map(desk.settingsSnapshot().series.map(series => [series.id, series.name]));
@@ -645,7 +658,15 @@ $('#redo').onclick = () => attempt(() => { desk.redo(); });
 function deleteSelection() {
   const ids = desk.selected(); if (ids.length) attempt(() => execute(ids.map(id => ({ kind: 'delete', id }))));
 }
-$('#delete').onclick = deleteSelection;
+function animateDelete(mode: BhMode) {
+  if(busy||gesture||editor.isActive()||!desk.selected().length)return;
+  objectAnimator.finish();
+  const ids=desk.selected();
+  void bhDeletion.run(desk,ids,mode,id=>drawnNodes.get(id),canvas,()=>camera,
+    ()=>execute(ids.map(id=>({kind:'delete',id}))),()=>{render();notify(`revision ${desk.revision} · ${desk.summary().count} オブジェクト`);})
+    .catch(error=>notify(error instanceof Error?error.message:String(error),true));
+}
+const bhDelete = bhDeleteControls($<HTMLButtonElement>('#delete'), animateDelete);
 $('#front').onclick = () => attempt(() => execute(desk.selected().map(id => ({ kind: 'reorder', id, index: desk.summary().count - 1 }))));
 $('#back').onclick = () => attempt(() => execute(desk.selected().slice().reverse().map(id => ({ kind: 'reorder', id, index: 0 }))));
 $('#text-measure').onclick = () => {
@@ -940,7 +961,7 @@ const recovery = new BrowserConnection({
   beforeRelease: () => thinkingMode.assertAllowed('release'),
   handoff: url => { void connectionPanel.display(url); },
   handoffError: message => notify(message, true),
-  disconnected: () => { activityLed.clear(); objectAnimator.finish(); cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
+  disconnected: () => { bhDeletion.stop(); activityLed.clear(); objectAnimator.finish(); cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
   status: (state, detail) => {
     if (state === 'connected') connectionPanel.hide();
     const status = $('#connection');
