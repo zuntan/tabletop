@@ -14,7 +14,9 @@ function appearance(object: DeskObject) {
 export type MoveFlight = { ids: string[]; durationMs: number; at: (progress: number) => DeskObject[] };
 /** Animate only a pure, common translation of the AI pointing set. Use resolved
  * final geometry, so snapping, bundles and attached endpoints share one timeline. */
-export function pointedMove(before: DeskObject[], after: DeskObject[], pointed: string[], operations: unknown[]): MoveFlight | null {
+export function pointedMove(before: DeskObject[], after: DeskObject[], pointed: string[], operations: unknown[], durationMs = 350): MoveFlight | null {
+  if (!Number.isFinite(durationMs) || durationMs < 0 || durationMs > 2000) throw new Error('durationMs must be between 0 and 2000');
+  if (!durationMs) return null;
   if (!pointed.length || !operations.length || before.length !== after.length) return null;
   const allowed = new Set(pointed.flatMap(id => clipGroup(before, id).map(object => object.id)));
   const updated = new Set<string>();
@@ -37,7 +39,7 @@ export function pointedMove(before: DeskObject[], after: DeskObject[], pointed: 
     if (old.x2 !== undefined && (!close(next.x2! - old.x2, dx) || !close(next.y2! - old.y2!, dy))) return null;
   }
   return {
-    ids: [...pointed], durationMs: 350,
+    ids: [...pointed], durationMs,
     at(progress) {
       if (progress <= 0) return before;
       if (progress >= 1) return after;

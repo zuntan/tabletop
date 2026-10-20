@@ -981,7 +981,7 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
         result = { ids, scope: ids.length ? 'selection' : 'all', camera: { ...camera } };
       }
       if (beforeMove && message.request.actor !== 'human' && !document.hidden && !reducedMotion.matches) {
-        const flight = pointedMove(beforeMove, desk.snapshot(), desk.pointed(), message.request.operations);
+        const flight = pointedMove(beforeMove, desk.snapshot(), desk.pointed(), message.request.operations, message.request.durationMs);
         if (flight) {
           cameraAnimator.cancel('Object movement started');
           canvas.dataset.objectMoving = 'true';

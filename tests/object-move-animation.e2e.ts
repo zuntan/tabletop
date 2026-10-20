@@ -30,7 +30,8 @@ test('pointed moves ease with connected geometry, one committed revision, interr
   await call('desk_point',{ids:[]});const unpointed=await call('desk_execute',{operations:[{kind:'update',id:'a',patch:{x:540}}]});assert.equal(unpointed.animation,undefined);assert.equal(await x(),540);
   await page.emulateMedia({reducedMotion:'reduce'});await call('desk_point',{ids:['a']});const reduced=await call('desk_execute',{operations:[{kind:'update',id:'a',patch:{x:560}}]});assert.equal(reduced.animation,undefined);assert.equal(await x(),560);
   await page.emulateMedia({reducedMotion:'no-preference'});
-  await call('desk_point',{ids:['a','b']});const together=await call('desk_execute',{operations:[{kind:'update',id:'a',patch:{x:600,y:260}},{kind:'update',id:'b',patch:{x:440,y:140}}]});assert.equal(together.animation.status,'completed');
+  await call('desk_point',{ids:['a','b']});const together=await call('desk_execute',{durationMs:600,operations:[{kind:'update',id:'a',patch:{x:600,y:260}},{kind:'update',id:'b',patch:{x:440,y:140}}]});assert.equal(together.animation.status,'completed');assert.equal(together.animation.durationMs,600);
+  const instant=await call('desk_execute',{durationMs:0,operations:[{kind:'update',id:'a',patch:{x:620,y:260}},{kind:'update',id:'b',patch:{x:460,y:140}}]});assert.equal(instant.animation,undefined);assert.equal(await x(),620);
   await call('desk_execute',{operations:[{kind:'add',object:{id:'clip',type:'clip',clipMembers:['a','b'],clipStyle:'wire'}}]});
   await call('desk_point',{ids:['clip']});const base=await call('desk_get',{id:'a'}),follower=await call('desk_get',{id:'b'});
   const bundle=await call('desk_execute',{operations:[{kind:'update',id:'a',patch:{x:base.x+60,y:base.y+30}}]});assert.equal(bundle.animation.status,'completed');assert.equal((await call('desk_get',{id:'b'})).x,follower.x+60);

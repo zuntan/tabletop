@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Desk } from '../src/model';
+import { Desk, batchSchema } from '../src/model';
 import { pointedMove, ObjectMoveAnimator } from '../src/object-move-animation';
 import type { FrameScheduler } from '../src/camera-animation';
 
@@ -38,4 +38,16 @@ test('completion, interruption and frame deadline settle once, clean up and show
  promise=animator.run(flight,scene=>{shown=scene},finish);c.tick(2000);c.tick(2350);assert.equal(await promise,'completed');assert.deepEqual(shown,after);
  promise=animator.run(flight,scene=>{shown=scene},finish);[...c.timers.values()].forEach(cb=>cb());assert.equal(await promise,'interrupted');assert.deepEqual(shown,after);assert.equal(animator.active,false);assert.equal(c.timers.size,0);
  assert.equal(d.revision,2);
+});
+
+test('per-command duration is validated atomically, defaults to 350, accepts 600 and zero skips easing without persisting',()=>{
+ const d=fixture(),before=d.snapshot(),ops=[move('a',200,100)];
+ for(const value of [-1,2001,Infinity,NaN,'600']) {assert.equal(batchSchema.safeParse({operations:ops,durationMs:value}).success,false);assert.throws(()=>d.execute({operations:ops,durationMs:value as number}));assert.deepEqual(d.snapshot(),before);}
+ d.execute({operations:ops,durationMs:600,snap:'exact'});const after=d.snapshot();
+ assert.equal(pointedMove(before,after,['a'],ops)!.durationMs,350);
+ assert.equal(pointedMove(before,after,['a'],ops,600)!.durationMs,600);
+ assert.equal(pointedMove(before,after,['a'],ops,2000)!.durationMs,2000);
+ assert.equal(pointedMove(before,after,['a'],ops,0),null);
+ assert.ok(after.every(object=>!('durationMs' in object)));assert.equal('durationMs' in d.settingsSnapshot(),false);
+ d.undo();assert.deepEqual(d.snapshot(),before);
 });

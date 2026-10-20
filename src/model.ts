@@ -107,6 +107,7 @@ export const batchSchema = z.object({
   expectedRevision: z.number().int().nonnegative().optional(),
   snap: z.enum(['desk', 'exact']).default('exact'),
   snapAnchorId: z.string().min(1).max(100).optional(),
+  durationMs: z.number().finite().min(0).max(2000).optional(),
 }).strict();
 // The UI commits resolved coordinates; public MCP calls follow the desk unless explicitly exact.
 export const mcpBatchSchema = batchSchema.extend({ snap: batchSchema.shape.snap.default('desk') });
