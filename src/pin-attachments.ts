@@ -1,13 +1,12 @@
-import { isShapeType } from './shape-definitions';
 import type { DeskObject } from './model';
-import { anchorPoint, snap, type Point } from './geometry';
+import { anchorPoint, snap, isConnectable, type Point } from './geometry';
 
 export const isPinAttachmentTarget = (object: DeskObject) =>
-  object.type === 'text' || isShapeType(object.type);
+  object.type !== 'label' && isConnectable(object);
 export function snapPinAttachment(point: Point, objects: DeskObject[], threshold: number) {
   return snap(point, objects.filter(isPinAttachmentTarget), threshold);
 }
-/** Pins follow only a directly attached shape/text; the resulting graph has no chains or cycles. */
+/** Pins follow only a directly attached shape/text/media; the resulting graph has no chains or cycles. */
 export function resolvePinAttachments(objects: DeskObject[], before: DeskObject[]): DeskObject[] {
   const targets = new Map(objects.map(object => [object.id, object]));
   const previous = new Map(before.map(object => [object.id, object]));
@@ -20,7 +19,7 @@ export function resolvePinAttachments(objects: DeskObject[], before: DeskObject[
       const old = previous.get(object.id)?.attachment;
       if (old?.objectId === attachment.objectId && previous.has(attachment.objectId))
         return { ...object, attachment: null };
-      throw new Error('Pins can attach only to text or shapes');
+      throw new Error('Pins can attach only to text, shapes or image/SVG/Mermaid cards');
     }
     const tip = anchorPoint(target, attachment.anchor);
     return { ...object, x: tip.x - object.width / 2, y: tip.y - object.height };

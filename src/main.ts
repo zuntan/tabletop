@@ -240,11 +240,11 @@ const activityLed = createActivityLed($('footer'));
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });
-const stampContainer = document.createElement('div'); stampContainer.id = 'stamp-controls'; editActions.append(stampContainer);
+const stampContainer = document.createElement('div'); stampContainer.id = 'stamp-controls'; editActions.insertBefore(stampContainer, $('#reaction-controls'));
 const stampControls = createStampControls(stampContainer, () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });
-const propContainer = document.createElement('div'); propContainer.id = 'prop-controls'; editActions.append(propContainer);
+const propContainer = document.createElement('div'); propContainer.id = 'prop-controls'; $('#reaction-controls').after(propContainer);
 createPropControls(propContainer, (preset, src) => {
   if (busy || editor.isActive()) throw new Error('編集を終えてから小物を置いてください');
   attempt(() => newObject('prop', { src, text: preset.name, width: preset.width, height: preset.height }));
@@ -410,7 +410,11 @@ function drawObject(object: DeskObject) {
     drawStamp(group, object, desk.selected().includes(object.id));
   }
   if (['link', 'web', 'image', 'svg', 'mermaid', 'prop'].includes(object.type)) {
-    group.append(svg('rect', { width: w, height: h, rx: 6, fill: '#ffffff', stroke: '#94a3b8' }));
+    if (object.type === 'prop') {
+      // Retain the whole card as a hit target while letting the desk show through the artwork.
+      group.append(svg('rect', { width: w, height: h, fill: 'transparent', stroke: 'none', 'pointer-events': 'all', 'data-prop-body': '' }));
+      group.append(svg('rect', { width: w, height: Math.min(IMAGE_TITLE_HEIGHT, h), rx: 6, fill: '#ffffff', stroke: '#94a3b8', 'data-prop-title': '' }));
+    } else group.append(svg('rect', { width: w, height: h, rx: 6, fill: '#ffffff', stroke: '#94a3b8' }));
     const title = svg('text', { x: 12, y: 23, 'font-size': 14, fill: '#1d4ed8' });
     title.textContent = (object.text || object.url || '').slice(0, Math.max(0, Math.floor((w - 52) / 8))); group.append(title);
     if (['image', 'svg', 'prop'].includes(object.type) && h > IMAGE_TITLE_HEIGHT) {
