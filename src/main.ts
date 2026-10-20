@@ -265,14 +265,13 @@ createPropControls(propContainer, (preset, src) => {
   if (busy || editor.isActive()) throw new Error('編集を終えてから小物を置いてください');
   attempt(() => newObject('prop', { src, text: preset.name, width: preset.width, height: preset.height }));
 }, notify);
-const clipControls=document.createElement('div');clipControls.className='clip-toolbar';
-const clipCreate=document.createElement('button');clipCreate.id='clip-create';clipCreate.textContent='クリップ';clipCreate.title='選択を束ねる（Ctrl/⌘＋G）。未選択ならクリップを置く';
+const clipCreate=document.createElement('button');clipCreate.id='clip-create';iconButton(clipCreate, '', 'クリップ');clipCreate.title='選択を束ねる（Ctrl/⌘＋G）。未選択ならクリップを置く';
 clipCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{
   const operations=bundleOperations(desk.snapshot(),desk.selected());
   if(operations.length){execute(operations);const last=operations[0];if(last.kind==='add')desk.select([last.object.id]);}
   else if(!desk.selected().length)newObject('clip',{clipMembers:[],clipSize:64,clipOffset:32,clipStyle:'binder',fill:'#26313d'});
 });};
-clipControls.append(clipCreate);$('#prop-controls').after(clipControls);
+app.querySelector('[data-add="text"]')!.after(clipCreate);
 const thinkingMode = createThinkingMode($('header'), () => { cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);

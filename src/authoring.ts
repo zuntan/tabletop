@@ -41,7 +41,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     for (const object of desk.selected().map(id => desk.get(id))) {
       if (object.type === 'label' && object.seriesId && !seen.has(object.seriesId)) {
         seen.add(object.seriesId); operations.push({ kind: 'series_update', id: object.seriesId, patch: { strokeWidth: value } });
-      } else if (object.type !== 'label' && (isShape(object) || isConnector(object))) operations.push({ kind: 'update', id: object.id, patch: { strokeWidth: value } });
+      } else if (object.type !== 'label' && (isShape(object) || isConnector(object) || object.type === 'text')) operations.push({ kind: 'update', id: object.id, patch: { strokeWidth: value } });
     }
     apply(operations);
   };

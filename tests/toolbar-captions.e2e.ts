@@ -8,7 +8,7 @@ test('toolbar captions stay visible and flexible groups keep editing actions tog
     await page.setViewportSize({ width: 1920, height: 1080 });
     const tools = page.locator('nav .tool-button'); assert.ok(await tools.count() >= 16);
     assert.deepEqual(await page.locator('.toolbar-parts > button').evaluateAll(elements => elements.map(element => element.getAttribute('data-add') || element.id)),
-      ['selection-mode', 'clear-ai-pointing', 'rect', 'line', 'arrow', 'numbering', 'text', 'image', 'web', 'link', 'clipboard']);
+      ['selection-mode', 'clear-ai-pointing', 'rect', 'line', 'arrow', 'numbering', 'text', 'clip-create', 'image', 'mermaid', 'web', 'link', 'clipboard']);
     for (const button of await tools.all()) {
       assert.equal(await button.locator('.tool-caption').isVisible(), true);
       assert.ok((await button.locator('.tool-caption').innerText()).length > 0);
@@ -30,7 +30,8 @@ test('toolbar captions stay visible and flexible groups keep editing actions tog
     const back = (await page.locator('#back').boundingBox())!;
     const reaction = (await page.locator('#reaction-more').boundingBox())!;
     assert.equal(back.y, reaction.y); assert.ok(reaction.x > back.x);
-    assert.ok(reaction.x - back.x - back.width < 10);
+    const stamps = (await page.locator('#stamp-controls').boundingBox())!;
+    assert.ok(reaction.x - stamps.x - stamps.width < 10);
     await page.locator('#zoom-in').click();
     assert.equal(await page.locator('#zoom-reset .tool-icon').innerText(), '125%');
     assert.equal(await page.locator('#zoom-reset .tool-caption').innerText(), '100%へ');
