@@ -1,3 +1,4 @@
+import { pointedMove, ObjectMoveAnimator } from './object-move-animation';
 import { drawClip } from './clip-drawing';
 import { bundleOperations, unbundleOperations, clipFor, clipGroup, clipFollower, clipDropTarget, clipTarget } from './clip-bundles';
 import { createPropControls } from './prop-controls';
@@ -184,8 +185,9 @@ const updateEndMarker = createEndpointPicker(form.elements.namedItem('endMarker'
 const camera = { x: 60, y: 50, zoom: 1 };
 const humanScroll = new HumanScrollGuard();
 const cameraAnimator = new CameraAnimator();
+const objectAnimator = new ObjectMoveAnimator();
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const stopCamera = () => cameraAnimator.cancel('Human interaction or viewport change');
+const stopCamera = () => { cameraAnimator.cancel('Human interaction or viewport change'); objectAnimator.finish(); };
 for (const event of ['pointerdown', 'touchstart', 'keydown', 'click', 'input']) {
   document.addEventListener(event, stopCamera, { capture: true, passive: true });
 }
@@ -272,7 +274,7 @@ clipCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{
   else if(!desk.selected().length)newObject('clip',{clipMembers:[],clipSize:64,clipOffset:32,clipStyle:'binder',fill:'#26313d'});
 });};
 app.querySelector('[data-add="text"]')!.after(clipCreate);
-const thinkingMode = createThinkingMode($('header'), () => { cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
+const thinkingMode = createThinkingMode($('header'), () => { objectAnimator.finish(); cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
 createDeskFileControls($('header'), desk, () => { partClipboard.clear(); render(); fitView(desk.selected()); },
@@ -498,6 +500,16 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
 }
 let previousObjectListSelection = '';
 let pendingObjectListSelection = false;
+function drawMoveFrame(scene: DeskObject[]) {
+  const previous = renderedScene;
+  const hadRounding = renderedRounding.size > 0;
+  renderedScene = scene;
+  renderedById.clear(); for (const object of scene) renderedById.set(object.id, object);
+  renderedRounding = buildJunctionRounding(scene.map(connectorForView));
+  updateScenePreview(objectsLayer, scene, previous, drawObject, hadRounding || renderedRounding.size > 0);
+  refreshPinPresentation(); drawPinThreads(scene);
+  drawSelection(scene.filter(object => desk.selected().includes(object.id)), scene);
+}
 function render(rebuild = true) {
   pinSeriesMap.clear();
   for (const series of desk.settingsSnapshot().series) pinSeriesMap.set(series.id, series);
@@ -928,7 +940,7 @@ const recovery = new BrowserConnection({
   beforeRelease: () => thinkingMode.assertAllowed('release'),
   handoff: url => { void connectionPanel.display(url); },
   handoffError: message => notify(message, true),
-  disconnected: () => { activityLed.clear(); cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
+  disconnected: () => { activityLed.clear(); objectAnimator.finish(); cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
   status: (state, detail) => {
     if (state === 'connected') connectionPanel.hide();
     const status = $('#connection');
@@ -957,6 +969,9 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
       if (['fit', 'camera_move'].includes(message.request.method)) humanScroll.assertIdle();
       if ((busy && message.request.method !== 'camera_get') || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       if (['fit', 'camera_move'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing())) throw new Error('Human editing in progress. No camera change was made.');
+      if (['execute', 'lock', 'undo', 'redo', 'select', 'point', 'load_document', 'fit', 'camera_move', 'ui_set'].includes(message.request.method)) objectAnimator.finish();
+      const beforeMove = message.request.method === 'execute' ? desk.snapshot() : null;
+      let animatedMove = false;
       if (message.request.method === 'load_document') cameraAnimator.cancel('Desk contents replaced');
       let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid);
       if (['camera_move', 'mermaid_render'].includes(message.request.method)) result = await result;
@@ -965,10 +980,20 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
         await fitView(ids, { durationMs: message.request.durationMs });
         result = { ids, scope: ids.length ? 'selection' : 'all', camera: { ...camera } };
       }
+      if (beforeMove && message.request.actor !== 'human' && !document.hidden && !reducedMotion.matches) {
+        const flight = pointedMove(beforeMove, desk.snapshot(), desk.pointed(), message.request.operations);
+        if (flight) {
+          cameraAnimator.cancel('Object movement started');
+          canvas.dataset.objectMoving = 'true';
+          const status = await objectAnimator.run(flight, drawMoveFrame, () => { delete canvas.dataset.objectMoving; render(); });
+          animatedMove = true;
+          result = { ...(result as Record<string, unknown>), animation: { status, durationMs: flight.durationMs, ids: flight.ids } };
+        }
+      }
       ws.send(JSON.stringify({ id, result }));
       // Read-only requests must not rebuild iframes or steal form edits.
       if (message.request.method === 'point') drawSelection();
-      if (['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method)) render();
+      if (!animatedMove && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method)) render();
       if (message.request.method === 'load_document') { partClipboard.clear(); fitView(desk.selected()); }
     } catch (error) { ws.send(JSON.stringify({ id, error: error instanceof Error ? error.message : String(error) })); }
   }, manual, host);
