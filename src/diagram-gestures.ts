@@ -1,3 +1,4 @@
+import { clipMoveOperations, clipFor, clipDropTarget, clipTarget, clipGroup } from './clip-bundles';
 import { snapPinAttachment } from './pin-attachments';
 import { randomUuid } from './portable-crypto';
 import { junctionMembers, junctionField, bindingField, snapConnectorEndpoint } from './connector-junctions';
@@ -33,6 +34,21 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
     const delta = gridMoveDelta(anchor, { x: dx, y: dy }, gesture.gridSettings); dx = delta.x; dy = delta.y;
     if (dx === 0 && dy === 0) return [];
   }
+  if (gesture.mode === 'move') {
+    const bundled=clipMoveOperations(gesture.scene,gesture.detach&&gesture.anchorId?[gesture.anchorId]:movable.map(o=>o.id),dx,dy,!!gesture.detach);
+    if(bundled) return bundled;
+    if(movable.length===1 && !gesture.detach) {
+      const object=movable[0];
+      if(object.type==='clip' && !object.clipMembers?.length) {
+        const next={x:object.x+object.width/2+dx,y:object.y+object.height*.5+dy};
+        const target=snap(next,gesture.scene.filter(o=>clipTarget(o)&&!o.locked&&!clipFor(gesture.scene,o.id)),24/zoom);
+        if(target) return [{kind:'update',id:object.id,patch:{clipMembers:[target.binding.objectId],clipAnchor:target.binding.anchor as Exclude<typeof target.binding.anchor,'center'>}}];
+      } else if(clipTarget(object) && !clipFor(gesture.scene,object.id)) {
+        const clip=clipDropTarget(gesture.scene,point,zoom,[object.id]);
+        if(clip) return [{kind:'update',id:clip.id,patch:{clipMembers:[...clip.clipMembers!,object.id]}}];
+      }
+    }
+  }
   const patches = new Map<string, Partial<DeskObject>>();
   const put = (id: string, patch: Partial<DeskObject>) => patches.set(id, { ...patches.get(id), ...patch });
   const selected = new Set(movable.map(o => o.id));
@@ -42,7 +58,7 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
     if (gesture.mode === 'callout' && object.callout) {
       const next = { x: object.callout.x + dx, y: object.callout.y + dy };
       const candidate = gesture.detach ? null : snap(next, (gesture.snapScene ?? gesture.scene)
-        .filter(o => o.id !== object.id).map(o => pinScreenObject(o, zoom)), 18 / zoom);
+        .filter(o => o.id !== object.id && !clipFor(gesture.scene,o.id)?.clipMembers?.slice(1).includes(o.id)).map(o => pinScreenObject(o, zoom)), 18 / zoom);
       const position = candidate?.point ?? (gesture.grid ? gridPoint(next, gesture.gridSettings) : next);
       patch = { callout: { ...object.callout, ...position, binding: candidate?.binding ?? null } };
     } else if (gesture.mode === 'start' || gesture.mode === 'end') {
@@ -50,7 +66,7 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
       const next = { x: points[side].x + dx, y: points[side].y + dy };
       const jf = junctionField(side), bf = bindingField(side);
       const sourceGroup = object[jf];
-      const candidates = (gesture.snapScene ?? gesture.scene).filter(o => o.id !== object.id).map(o => pinScreenObject(o, zoom));
+      const candidates = (gesture.snapScene ?? gesture.scene).filter(o => o.id !== object.id && !clipFor(gesture.scene,o.id)?.clipMembers?.slice(1).includes(o.id)).map(o => pinScreenObject(o, zoom));
       const shape = gesture.detach ? null : snap(next, candidates, 18 / zoom);
       const line = gesture.detach ? null : snapConnectorEndpoint(next, candidates, 18 / zoom, object.id, sourceGroup ?? undefined);
       // Prefer the closest anchor; shapes win an exact tie.
@@ -95,7 +111,7 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
         patch = { x: object.x + dx, y: object.y + dy };
       } else {
         const candidate = movable.length === 1 && !gesture.detach
-          ? snapPinAttachment(next, (gesture.snapScene ?? gesture.scene).filter(o => !selected.has(o.id)), 18 / zoom) : null;
+          ? snapPinAttachment(next, (gesture.snapScene ?? gesture.scene).filter(o => !selected.has(o.id) && !clipFor(gesture.scene,o.id)?.clipMembers?.slice(1).includes(o.id)), 18 / zoom) : null;
         const position = candidate?.point ?? next;
         patch = { x: position.x - object.width / 2, y: position.y - object.height,
           ...(candidate || object.attachment ? { attachment: candidate?.binding ?? null } : {}) };

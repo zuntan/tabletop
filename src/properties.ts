@@ -4,14 +4,15 @@ import type { DeskObject } from './model';
 import { isConnector } from './geometry';
 import { supportsFill, transparencyPercent, opacityFromPercent } from './fill-opacity';
 
-const fields = ['x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'url'] as const;
-const numeric = new Set(['x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'junctionRounding', 'fontSize', 'cornerRadius', 'padding']);
+const fields = ['x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'url','clipOffset','clipSize','clipAnchor','clipStyle'] as const;
+const numeric = new Set(['x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'junctionRounding', 'fontSize', 'cornerRadius', 'padding','clipOffset','clipSize']);
 export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   const connector = isConnector(object);
   const meaningful = new Set<string>(objectPropertyNames(object));
   for (const name of fields) {
     const input = form.elements.namedItem(name) as HTMLInputElement;
     if (!input) continue;
+    if(name.startsWith('clip')) { input.disabled=object.type!=='clip'; input.closest('label')!.hidden=object.type!=='clip'; input.value=String(object[name as 'clipSize'|'clipOffset'|'clipAnchor'|'clipStyle']??''); continue; }
     if (name === 'mermaidSource') {
       input.disabled = object.type !== 'mermaid'; input.closest('label')!.hidden = object.type !== 'mermaid';
       input.value = object.mermaidSource ?? ''; continue;
@@ -33,7 +34,7 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
       input.value = name === 'dash' ? object.dash ?? 'solid' : object[name] ?? 'none';
       continue;
     }
-    if (!meaningful.has(name)) { input.disabled = true; input.closest('label')!.hidden = true; continue; }
+    if (!meaningful.has(name) || object.type==='clip' && (name==='width'||name==='height')) { input.disabled = true; input.closest('label')!.hidden = true; continue; }
     if (name === 'padding' || name === 'cornerRadius') {
       const applicable = object.type === 'text' || name === 'cornerRadius' && object.type === 'roundedRect';
       input.disabled = !applicable; input.closest('label')!.hidden = !applicable;

@@ -1,10 +1,10 @@
 import type { DeskObject } from './model';
 import { anchorPoint, snap, isConnectable, type Point } from './geometry';
 
-export const isPinAttachmentTarget = (object: DeskObject) =>
-  object.type !== 'label' && isConnectable(object);
+export const isPinAttachmentTarget = (object: DeskObject, scene: DeskObject[] = []) =>
+  object.type !== 'label' && isConnectable(object,scene);
 export function snapPinAttachment(point: Point, objects: DeskObject[], threshold: number) {
-  return snap(point, objects.filter(isPinAttachmentTarget), threshold);
+  return snap(point, objects.filter(o=>isPinAttachmentTarget(o,objects)), threshold);
 }
 /** Pins follow only a directly attached shape/text/media; the resulting graph has no chains or cycles. */
 export function resolvePinAttachments(objects: DeskObject[], before: DeskObject[]): DeskObject[] {
@@ -15,7 +15,7 @@ export function resolvePinAttachments(objects: DeskObject[], before: DeskObject[
     if (!attachment) return object;
     if (object.type !== 'label') throw new Error('Only pins can have attachments');
     const target = targets.get(attachment.objectId);
-    if (!target || !isPinAttachmentTarget(target)) {
+    if (!target || !isPinAttachmentTarget(target,objects)) {
       const old = previous.get(object.id)?.attachment;
       if (old?.objectId === attachment.objectId && previous.has(attachment.objectId))
         return { ...object, attachment: null };

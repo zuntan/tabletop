@@ -1,3 +1,4 @@
+import { resolveClips, clipFollower } from './clip-bundles';
 import { isShapeType, isNewShape } from './shape-definitions';
 import { resolveTextCallouts } from './text-callouts';
 import { resolvePinAttachments } from './pin-attachments';
@@ -9,13 +10,14 @@ export const anchorNames = ['top', 'right', 'bottom', 'left', 'top-left', 'top-r
 export type Anchor = typeof anchorNames[number];
 export type Binding = { objectId: string; anchor: Anchor };
 export const anchors: readonly Anchor[] = anchorNames.slice(0, 8);
-export function anchorsFor(object: DeskObject): readonly Anchor[] {
+export function anchorsFor(object: DeskObject, scene: DeskObject[] = []): readonly Anchor[] {
+  if (object.type === 'clip' || clipFollower(scene,object.id)) return [];
   if (object.type === 'prop') return [];
   return object.type === 'label' ? ['center'] : isNewShape(object.type) ? ['top', 'right', 'bottom', 'left'] : anchors;
 }
 export const isConnector = (object: DeskObject) => object.type === 'line';
 export const isShape = (object: DeskObject) => isShapeType(object.type) || (object.type === 'label' && object.labelShape !== 'text');
-export const isConnectable = (object: DeskObject) => isShape(object) || object.type === 'label' || object.type === 'text' || ['image', 'svg', 'mermaid'].includes(object.type);
+export const isConnectable = (object: DeskObject, scene: DeskObject[] = []) => !clipFollower(scene,object.id) && (isShape(object) || object.type === 'label' || object.type === 'text' || ['image', 'svg', 'mermaid','web','link'].includes(object.type));
 
 export function endpoints(object: DeskObject): { start: Point; end: Point } {
   if (object.x2 !== undefined && object.y2 !== undefined) {
@@ -40,7 +42,7 @@ export function bounds(object: DeskObject) {
     width: Math.abs(end.x - start.x), height: Math.abs(end.y - start.y) };
 }
 export function anchorPoint(object: DeskObject, anchor: Anchor): Point {
-  if (object.type === 'prop') throw new Error('Props have no anchors');
+  if (object.type === 'prop' || object.type === 'clip') throw new Error('Props and clips have no anchors');
   if (isNewShape(object.type) && !['top', 'right', 'bottom', 'left'].includes(anchor))
     throw new Error('This shape supports only top/right/bottom/left anchors');
   switch (anchor) {
@@ -67,8 +69,8 @@ export function snap(point: Point, objects: DeskObject[], threshold: number) {
   let distance = threshold;
   // Favor the frontmost object when two anchors coincide.
   for (const object of objects.slice().reverse()) {
-    if (!isConnectable(object)) continue;
-    for (const anchor of anchorsFor(object)) {
+    if (!isConnectable(object,objects)) continue;
+    for (const anchor of anchorsFor(object,objects)) {
       const candidate = anchorPoint(object, anchor);
       const d = Math.hypot(candidate.x - point.x, candidate.y - point.y);
       if (d <= distance && (!closest || d < distance)) {
@@ -81,6 +83,7 @@ export function snap(point: Point, objects: DeskObject[], threshold: number) {
 
 /** Resolve after the entire atomic batch, allowing forward references inside it. */
 export function resolveConnections(objects: DeskObject[], before: DeskObject[] = []): DeskObject[] {
+  objects = resolveClips(objects,before);
   objects = resolvePinAttachments(objects, before);
   objects = resolveTextCallouts(objects, before);
   const map = new Map(objects.map(o => [o.id, o]));
@@ -99,14 +102,14 @@ export function resolveConnections(objects: DeskObject[], before: DeskObject[] =
       const binding = object[field];
       if (!binding) continue;
       const target = map.get(binding.objectId);
-      if (!target || (!isConnectable(target) && isConnectable(previous.get(binding.objectId) ?? target))) {
+      if (!target || (!isConnectable(target,objects) && isConnectable(previous.get(binding.objectId) ?? target,before))) {
         const oldBinding = previous.get(object.id)?.[field];
         if (oldBinding?.objectId !== binding.objectId || oldBinding.anchor !== binding.anchor || !previous.has(binding.objectId)) {
           throw new Error(`Unknown connection target: ${binding.objectId}`);
         }
         next[field] = null; // Target removed or no longer a shape: keep the cached endpoint.
       } else {
-        if (!isConnectable(target)) throw new Error('Connections require a connectable shape');
+        if (!isConnectable(target,objects)) throw new Error('Connections require a connectable shape');
         points[side] = anchorPoint(target, binding.anchor);
       }
     }

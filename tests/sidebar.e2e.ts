@@ -50,8 +50,8 @@ test('sidebar tabs use full height, preserve tab/scroll and hide without changin
     assert.equal(await page.locator('#object-filter').isVisible(), true);
     assert.equal(await page.locator('#object-filter-apply').getAttribute('aria-checked'), 'false');
     assert.equal(await page.locator('#object-filter-apply .thinking-switch-state').textContent(), 'OFF');
-    assert.deepEqual(await page.locator('.object-filter-categories button').allTextContents(), ['ピン', 'テキスト', '図形', '線', '画像', 'その他']);
-    assert.deepEqual(await page.locator('.object-filter-categories button').evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-pressed'))), ['true', 'false', 'false', 'false', 'false', 'false']);
+    assert.deepEqual(await page.locator('.object-filter-categories button').allTextContents(), ['クリップ', 'ピン', 'テキスト', '図形', '線', '画像', 'その他']);
+    assert.deepEqual(await page.locator('.object-filter-categories button').evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-pressed'))), ['false', 'true', 'false', 'false', 'false', 'false', 'false']);
     const categoryBounds = await page.locator('.object-filter-categories button').evaluateAll(buttons => buttons.map(button => button.getBoundingClientRect().toJSON()));
     assert.ok(categoryBounds.every(bounds => Math.abs(bounds.y - categoryBounds[0].y) < 1));
     const applyBounds = (await page.locator('#object-filter-apply').boundingBox())!;

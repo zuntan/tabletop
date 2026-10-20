@@ -1,3 +1,4 @@
+import { clipGroup, clipFor } from './clip-bundles';
 import { publishObject } from './object-properties';
 import { groupPinLayers } from './pin-series';
 import { z } from 'zod';
@@ -36,9 +37,14 @@ const bindingSchema = z.object({
 export const endpointShapeSchema = z.enum(['none', 'arrow', 'circle', 'diamond']);
 const objectFields = z.object({
   id: z.string().min(1).max(100),
-  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'mermaid', 'prop', 'web', 'link', 'label']),
+  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'web', 'link', 'label']),
   cornerRadius: z.number().finite().min(0).max(100_000).default(16),
   padding: z.number().finite().min(0).max(100_000).optional(),
+  clipMembers: z.array(z.string().min(1).max(100)).optional(),
+  clipAnchor: z.enum(['top','right','bottom','left','top-left','top-right','bottom-left','bottom-right']).optional(),
+  clipOffset: z.number().finite().min(0).optional(),
+  clipSize: z.number().finite().min(1).max(100000).optional(),
+  clipStyle: z.enum(['binder','wire']).optional(),
   locked: z.boolean().optional(), // Mouse geometry protection only; not an authorization boundary.
   seriesId: z.string().min(1).max(100).optional(),
   number: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).optional(),
@@ -86,7 +92,7 @@ function normalizeLegacyConnector(input: unknown): unknown {
 export const objectSchema = z.preprocess(normalizeLegacyConnector, objectFields);
 export const patchSchema = objectFields.omit({ id: true, type: true }).partial();
 const addObjectFields = objectFields.partial().required({ id: true, type: true });
-const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'prop', 'web', 'link', 'label']) })
+const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'web', 'link', 'label']) })
   .transform(object => normalizeLegacyConnector(object) as z.input<typeof addObjectFields>);
 export const operationSchema = z.discriminatedUnion('kind', [
   ...settingsOperations,
@@ -122,6 +128,7 @@ type Entry = { before: Snapshot; after: Snapshot; beforeSettings: Settings; afte
 
 function validateObject(object: unknown): DeskObject {
   const parsed = objectSchema.parse(object);
+  if(parsed.type!=='clip' && ['clipMembers','clipAnchor','clipOffset','clipSize','clipStyle'].some(key=>(parsed as Record<string,unknown>)[key]!==undefined)) throw new Error('Clip fields belong only to clips');
   if (parsed.type === 'mermaid' && parsed.mermaidSource === undefined) throw new Error('Mermaid source required');
   if (['image', 'svg', 'prop'].includes(parsed.type) && !parsed.src) throw new Error('Image source required');
   if (['web', 'link'].includes(parsed.type) && !parsed.url) throw new Error('URL required');
@@ -235,21 +242,37 @@ export class Desk {
         if (after.some(o => o.id === operation.object.id)) throw new Error(`Duplicate ID: ${operation.object.id}`);
         if (after.length >= 2000) throw new Error('Object limit reached');
         if (operation.object.type === 'label') throw new Error('Use label_add to create a series label');
-        after.push(validateObject({ ...creationAppearance(operation.object.type, afterSettings.defaults), ...operation.object }));
+        if (batch.actor === 'human' && operation.object.type === 'clip' && operation.object.clipMembers?.some(id => after.find(object => object.id === id)?.locked))
+          throw new Error('ロック中の紙はクリップへ追加できません');
+        after.push(validateObject({ ...creationAppearance(operation.object.type, afterSettings.defaults), ...(operation.object.type === 'clip' ? {fill:'#26313d'} : {}), ...operation.object }));
         continue;
       }
       const index = after.findIndex(o => o.id === operation.id);
       if (index < 0) throw new Error(`Unknown object: ${operation.id}`);
+      const bundle = clipFor(after, operation.id);
+      if (batch.actor === 'human') {
+        const structural = operation.kind === 'delete' || operation.kind === 'update' && Object.keys(operation.patch).some(key =>
+          ['x', 'y', 'width', 'height', 'clipMembers', 'clipAnchor', 'clipOffset', 'clipSize'].includes(key));
+        if (bundle && structural && clipGroup(after, operation.id).some(object => object.locked))
+          throw new Error('クリップの束をロック解除してから操作してください');
+        if (operation.kind === 'update' && operation.patch.clipMembers?.some(id =>
+          !bundle?.clipMembers?.includes(id) && after.find(object => object.id === id)?.locked))
+          throw new Error('ロック中の紙はクリップへ追加できません');
+      }
       if (operation.kind === 'update') {
         if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'attachment', 'description', 'reactions', 'locked'].includes(key))) {
           throw new Error('Labels allow only position, attachment, description, reaction and mouse lock updates; use series_update for shared appearance');
         }
         after[index] = validateObject({ ...after[index], ...operation.patch });
+        if (operation.patch.locked !== undefined) {
+          const ids = new Set(clipGroup(after, operation.id).map(object => object.id));
+          after = after.map(object => ids.has(object.id) ? { ...object, locked: operation.patch.locked } : object);
+        }
       }
       if (operation.kind === 'delete') after.splice(index, 1);
       if (operation.kind === 'reorder') {
         const object = after[index];
-        const group = object.type === 'label' ? after.filter(item => item.type === 'label' && item.seriesId === object.seriesId) : [object];
+        const group = object.type === 'label' ? after.filter(item => item.type === 'label' && item.seriesId === object.seriesId) : clipGroup(after,object.id);
         const members = new Set(group.map(item => item.id));
         after = after.filter(item => !members.has(item.id));
         after.splice(Math.min(operation.index, after.length), 0, ...group);
@@ -377,7 +400,9 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, text
     case 'point': return desk.point(request.ids);
     case 'lock': {
       if (request.expectedRevision !== undefined && request.expectedRevision !== desk.revision) throw new Error('Revision conflict: refresh before editing');
-      const ids = desk.pointed(), operations = lockOperations(ids.map(id => desk.get(id)), request.locked);
+      const scene = desk.snapshot();
+      const ids = [...new Set(desk.pointed().flatMap(id => clipGroup(scene, id).map(object => object.id)))];
+      const operations = lockOperations(ids.map(id => desk.get(id)), request.locked);
       const result = operations.length ? desk.execute({ operations, actor: request.actor, expectedRevision: request.expectedRevision }) : desk.summary();
       return { ...result, ids, locked: request.locked };
     }

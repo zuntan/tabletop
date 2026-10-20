@@ -12,8 +12,8 @@ export function facingAnchor(object: DeskObject, toward: Point, fallback: Anchor
   return directions[(sector + 8) % 8];
 }
 
-export function selectedConnection(selected: DeskObject[]): Partial<DeskObject> {
-  const targets = selected.filter(isConnectable);
+export function selectedConnection(selected: DeskObject[], scene: DeskObject[] = selected): Partial<DeskObject> {
+  const targets = selected.filter(o=>isConnectable(o,scene));
   if (targets.length < 1 || targets.length > 2) return {};
   const [source, target] = targets;
   const startAnchor = target ? facingAnchor(source, center(target)) : source.type === 'label' ? 'center' : 'right';

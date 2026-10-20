@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 48" width="64" height="48" fill="none">
+  <style>
+    .body {
+      fill: var(--clip-body, #2F3E52);
+    }
+    .body-edge {
+      stroke: var(--clip-body-edge, #223041);
+      stroke-width: 1.6;
+      stroke-linejoin: round;
+    }
+    .handle {
+      stroke: var(--clip-handle, #C7D0DC);
+      stroke-width: 2.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+    .handle-shadow {
+      stroke: var(--clip-handle-shadow, #8FA0B4);
+      stroke-width: 1.2;
+      stroke-linecap: round;
+      opacity: .85;
+      fill: none;
+    }
+  </style>
+
+  <!-- metal handles -->
+  <g id="handles">
+    <path class="handle" d="M23 12.5v-2.4c0-4.5 3.8-8.1 9-8.1s9 3.6 9 8.1v2.4"/>
+    <path class="handle-shadow" d="M25 12.5v-2.2c0-3.5 2.9-6.1 7-6.1s7 2.6 7 6.1v2.2"/>
+    <path class="handle" d="M23 12.5c0 3.7-1.9 7.2-5.7 10.3"/>
+    <path class="handle" d="M41 12.5c0 3.7 1.9 7.2 5.7 10.3"/>
+  </g>
+
+  <!-- clip body -->
+  <g id="body">
+    <path class="body" d="M18 12h28l-4.8 29H22.8L18 12Z"/>
+    <path class="body-edge" d="M18 12h28l-4.8 29H22.8L18 12Z"/>
+    <path d="M20.5 16h23" stroke="rgba(255,255,255,.18)" stroke-width="1.4" stroke-linecap="round"/>
+  </g>
+</svg>

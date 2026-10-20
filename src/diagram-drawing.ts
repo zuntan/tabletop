@@ -88,8 +88,8 @@ export function drawSnapTargets(layer: SVGGElement, objects: DeskObject[], point
     }
   }
   for (const object of objects) {
-    if (!isConnectable(object)) continue;
-    for (const anchor of anchorsFor(object)) {
+    if (!isConnectable(object,objects)) continue;
+    for (const anchor of anchorsFor(object,objects)) {
       const p = anchorPoint(object, anchor);
       const active = candidate?.binding.objectId === object.id && candidate.binding.anchor === anchor;
       layer.append(element('circle', { cx: p.x, cy: p.y, r: (active ? 8 : 4) / zoom,
@@ -100,6 +100,8 @@ export function drawSnapTargets(layer: SVGGElement, objects: DeskObject[], point
 }
 export function updateScenePreview(layer: SVGGElement, scene: DeskObject[], original: DeskObject[], draw: (object: DeskObject) => void, forceLines = false) {
   const previous = new Map(original.map(o => [o.id, o]));
+  const present = new Set(scene.map(o=>o.id));
+  for(const node of [...layer.children]) if(node.hasAttribute('data-id') && !present.has(node.getAttribute('data-id')!)) node.remove();
   for (const object of scene) {
     const old = previous.get(object.id)!;
     if (!(forceLines && isConnector(object)) && JSON.stringify(object) === JSON.stringify(old)) continue;
@@ -112,5 +114,8 @@ export function updateScenePreview(layer: SVGGElement, scene: DeskObject[], orig
       draw(object);
       node.replaceWith(layer.lastElementChild!);
     }
+  }
+  if (scene.map(o=>o.id).join('|') !== original.map(o=>o.id).join('|')) for(const object of scene) {
+    const node=[...layer.children].find(node=>node.getAttribute('data-id')===object.id); if(node) layer.append(node);
   }
 }

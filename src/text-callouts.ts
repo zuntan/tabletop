@@ -9,7 +9,7 @@ export function resolveTextCallouts(objects: DeskObject[], before: DeskObject[])
     const binding = object.callout.binding;
     if (!binding) return object;
     const target = map.get(binding.objectId);
-    if (!target || !isConnectable(target)) {
+    if (!target || !isConnectable(target,objects)) {
       if (old.get(object.id)?.callout?.binding?.objectId === binding.objectId && old.has(binding.objectId))
         return { ...object, callout: { ...object.callout, binding: null } };
       throw new Error('Unknown callout target');

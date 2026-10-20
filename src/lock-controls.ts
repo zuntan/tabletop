@@ -34,6 +34,10 @@ export function createLockControls(snap: HTMLElement, form: HTMLFormElement, tog
       propertyState.textContent = state.pressed === 'true' ? 'ON' : 'OFF';
       propertyMixedAction.hidden = state.pressed !== 'mixed'; propertyMixedAction.disabled = state.disabled;
       propertyMixedAction.title = title;
+      if (objects.some(object => object.type === 'clip')) {
+        const bundleTitle = 'クリップの束全体をロック／解除します。ロック中は移動・サイズ変更・追加・抜き取り・解除・削除を防ぎます。文章・色の編集とAI操作は可能です。';
+        toolbar.title = property.title = propertyMixedAction.title = bundleTitle;
+      }
     },
   };
 }

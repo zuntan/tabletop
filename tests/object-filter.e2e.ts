@@ -36,7 +36,7 @@ test('object filters categorize rows and scroll only when the applied result con
     await page.locator('#object-filter-all-off').click();
     assert.equal(await page.locator('#object-filter-apply').getAttribute('aria-checked'), 'true');
     assert.equal(await rowCount(), 0);
-    assert.deepEqual(await page.locator('.object-filter-categories button').evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-pressed'))), Array(6).fill('false'));
+    assert.deepEqual(await page.locator('.object-filter-categories button').evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-pressed'))), Array(7).fill('false'));
     for (let index = 0; index < categories.length; index++) {
       await page.locator(`#object-filter-${categories[index]}`).click();
       assert.equal(await rowCount(), expectedCounts[index], `unexpected count for ${categories[index]}`);
