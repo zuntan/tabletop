@@ -9,7 +9,7 @@ export class ImageGeometry {
   private entries = new Map<string, Entry>();
 
   observe(objects: DeskObject[], createImage: () => HTMLImageElement = () => new Image()) {
-    const ids = new Set(objects.filter(o => o.type === 'image' || o.type === 'svg').map(o => o.id));
+    const ids = new Set(objects.filter(o => o.type === 'image' || o.type === 'svg' || o.type === 'prop').map(o => o.id));
     for (const id of this.entries.keys()) if (!ids.has(id)) this.entries.delete(id);
     for (const object of objects) {
       if (!ids.has(object.id) || !object.src || object.height <= IMAGE_TITLE_HEIGHT) continue;
@@ -28,7 +28,7 @@ export class ImageGeometry {
   }
 
   describe(object: DeskObject) {
-    if (object.type !== 'image' && object.type !== 'svg') return {};
+    if (object.type !== 'image' && object.type !== 'svg' && object.type !== 'prop') return {};
     const cardRect = { x: object.x, y: object.y, width: object.width, height: object.height };
     const viewportRect = object.height > IMAGE_TITLE_HEIGHT
       ? { x: object.x, y: object.y + IMAGE_TITLE_HEIGHT, width: object.width, height: object.height - IMAGE_TITLE_HEIGHT } : null;
@@ -36,7 +36,7 @@ export class ImageGeometry {
     const entry = cached?.src === object.src ? cached : undefined;
     const natural = entry?.natural ? { ...entry.natural } : null;
     // SVG may have only a viewBox, or its own internal fitting. Do not infer a pixel rectangle.
-    const isSvg = object.type === 'svg' || object.src?.startsWith('data:image/svg+xml;');
+    const isSvg = object.type === 'svg' || object.type === 'prop' || object.src?.startsWith('data:image/svg+xml;');
     const isRemote = /^https?:/.test(object.src ?? '');
     const status = !viewportRect ? 'not-displayed' : isSvg ? 'svg-unresolved'
       : isRemote ? 'remote-unverified' : entry?.status ?? 'unobserved';

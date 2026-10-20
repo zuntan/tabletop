@@ -35,7 +35,7 @@ test('real stdio MCP server relays tools to a browser state and rejects unauthor
   let ws: WebSocket | undefined;
   try {
     await client.connect(transport);
-    const tools = await client.listTools(); assert.equal(tools.tools.length, 36);
+    const tools = await client.listTools(); assert.equal(tools.tools.length, 38);
     assert.equal(tools.tools.find(tool => tool.name === 'desk_lock')?.annotations?.readOnlyHint, false);
     assert.equal(tools.tools.find(tool => tool.name === 'desk_fit')?.annotations?.readOnlyHint, false);
     assert.equal(tools.tools.find(tool => tool.name === 'desk_camera_get')?.annotations?.readOnlyHint, true);

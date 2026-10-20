@@ -10,6 +10,7 @@ export type Anchor = typeof anchorNames[number];
 export type Binding = { objectId: string; anchor: Anchor };
 export const anchors: readonly Anchor[] = anchorNames.slice(0, 8);
 export function anchorsFor(object: DeskObject): readonly Anchor[] {
+  if (object.type === 'prop') return [];
   return object.type === 'label' ? ['center'] : isNewShape(object.type) ? ['top', 'right', 'bottom', 'left'] : anchors;
 }
 export const isConnector = (object: DeskObject) => object.type === 'line';
@@ -39,6 +40,7 @@ export function bounds(object: DeskObject) {
     width: Math.abs(end.x - start.x), height: Math.abs(end.y - start.y) };
 }
 export function anchorPoint(object: DeskObject, anchor: Anchor): Point {
+  if (object.type === 'prop') throw new Error('Props have no anchors');
   if (isNewShape(object.type) && !['top', 'right', 'bottom', 'left'].includes(anchor))
     throw new Error('This shape supports only top/right/bottom/left anchors');
   switch (anchor) {

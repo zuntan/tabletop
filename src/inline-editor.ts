@@ -50,7 +50,7 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       if (active && !commit()) return;
       const panel = document.createElement('div'); panel.className = 'inline-editor';
       const text = document.createElement('textarea'); text.dataset.inlineText = ''; text.rows = 3;
-      text.setAttribute('aria-label', object.type === 'label' ? 'ピンの説明文' : ['image', 'svg', 'mermaid'].includes(object.type) ? 'タイトル' : ['link', 'web'].includes(object.type) ? '表示名' : 'テキスト');
+      text.setAttribute('aria-label', object.type === 'label' ? 'ピンの説明文' : ['image', 'svg', 'mermaid', 'prop'].includes(object.type) ? 'タイトル' : ['link', 'web'].includes(object.type) ? '表示名' : 'テキスト');
       if (['image', 'svg'].includes(object.type)) text.placeholder = 'タイトル';
       text.value = object.type === 'label' ? object.description ?? '' : object.text;
       panel.append(text);

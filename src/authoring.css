@@ -67,3 +67,8 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 #text-measure-result[hidden] { display: none; }
 .inline-editor .editor-markdown-preview { position: absolute; overflow: hidden; pointer-events: none; user-select: none; }
 .inline-editor-actions .editor-preview-toggle { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 28px; padding: 4px; }
+#prop-controls { display: flex; align-items: center; }
+#prop-palette { margin: 0; position: fixed; max-width: calc(100vw - 16px); padding: 10px; border: 1px solid var(--ui-border, #94a3b8); border-radius: 10px; background: var(--ui-panel, #f8fafc); color: var(--ui-text, #334155); }
+#prop-palette:popover-open { display: flex; flex-wrap: wrap; gap: 8px; }
+#prop-palette button { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; }
+#prop-palette img { object-fit: contain; }

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="480" viewBox="0 0 420 480">
+<title>ひと息のコーヒー</title>
+<defs><linearGradient id="cup" x2="1" y2=".2"><stop stop-color="#f3dba9"/><stop offset=".5" stop-color="#fff0d2"/><stop offset="1" stop-color="#e4bd80"/></linearGradient><linearGradient id="coffee" x2="0" y2="1"><stop stop-color="#8f6041"/><stop offset="1" stop-color="#5e3e2d"/></linearGradient></defs>
+<ellipse cx="210" cy="425" rx="149" ry="16" fill="#665141" opacity=".12"/>
+<ellipse cx="210" cy="400" rx="146" ry="28" fill="#e7d2b1" stroke="#8b7056" stroke-width="5"/>
+<ellipse cx="210" cy="394" rx="118" ry="19" fill="#fff0d2"/>
+<g fill="none" stroke="#b9aaa0" stroke-width="7" stroke-linecap="round" opacity=".8"><path d="M147 132 C126 103 173 85 151 58"/><path d="M204 118 C181 87 230 71 209 40"/><path d="M258 133 C238 108 280 89 262 66"/></g>
+<path d="M297 216 C380 196 387 318 309 328 L296 301 C346 297 352 238 303 244" fill="#edcea0" stroke="#8b7056" stroke-width="6" stroke-linejoin="round"/>
+<path d="M92 192 L105 326 C109 374 136 392 203 392 C270 392 297 374 301 326 L314 192Z" fill="url(#cup)" stroke="#8b7056" stroke-width="5"/>
+<path d="M114 234 L123 316" stroke="#fff9e6" stroke-width="10" stroke-linecap="round" opacity=".7"/>
+<ellipse cx="203" cy="192" rx="111" ry="35" fill="#fff4db" stroke="#8b7056" stroke-width="5"/>
+<ellipse cx="203" cy="194" rx="96" ry="25" fill="url(#coffee)"/>
+<path d="M140 188 Q175 170 215 177" fill="none" stroke="#d4a16f" stroke-width="5" stroke-linecap="round"/>
+<path d="M228 185 C219 174 204 184 228 199 C253 184 237 174 228 185Z" fill="#edd2ac"/>
+<g fill="none" stroke="#725441" stroke-width="6" stroke-linecap="round"><path d="M153 289 Q165 274 177 289"/><path d="M227 281 L247 289 L227 295"/><path d="M179 315 Q202 336 225 315"/></g>
+<g fill="#d99a7c" opacity=".6"><ellipse cx="147" cy="308" rx="13" ry="7"/><ellipse cx="256" cy="309" rx="13" ry="7"/></g>
+</svg>

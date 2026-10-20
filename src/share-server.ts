@@ -170,7 +170,7 @@ export class DeskShareServer {
       if (stamp.sessionId !== grant.sessionId) { this.revoke(); throw new HttpError(410, 'Shared desk changed'); }
       if (tool === 'desk_asset_read') {
         const object = (result as { object: DeskObject }).object;
-        if (!object?.src || !['image', 'svg'].includes(object.type)) throw new HttpError(422, 'Not an embedded image/SVG');
+        if (!object?.src || !['image', 'svg', 'prop'].includes(object.type)) throw new HttpError(422, 'Not an embedded image/SVG');
         let asset;
         try { asset = embeddedAsset(object.src); } catch { throw new HttpError(422, 'Only valid embedded images/SVG can be read; remote URLs are never fetched'); }
         res.setHeader('X-Tabletop-Session-Id', stamp.sessionId);
@@ -189,7 +189,7 @@ export class DeskShareServer {
       const read = randomBytes(12).toString('base64url');
       const links = Object.fromEntries(objects.map(object => [object.id, {
         desk_get: `${base}/desk_get?id=${encodeURIComponent(object.id)}&read=${read}`,
-        ...(['image', 'svg'].includes(object.type) ? { desk_asset_read: `${base}/desk_asset_read?id=${encodeURIComponent(object.id)}&read=${read}` } : {}),
+        ...(['image', 'svg', 'prop'].includes(object.type) ? { desk_asset_read: `${base}/desk_asset_read?id=${encodeURIComponent(object.id)}&read=${read}` } : {}),
       }]));
       const html = entry && url.searchParams.get('format') === 'html';
       const refresh = entry ? `${base}?${html ? 'format=html&' : ''}read=${read}`

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="360" viewBox="0 0 420 360">
+<title>まるっと消しゴム</title>
+<ellipse cx="212" cy="299" rx="143" ry="16" fill="#394b64" opacity=".12"/>
+<g stroke="#526777" stroke-width="5" stroke-linejoin="round">
+<path d="M61 144 L132 89 Q140 83 150 88 L344 156 Q354 160 354 172 L354 240 L276 294 L70 221 Q61 218 61 206Z" fill="#e4e7df"/>
+<path d="M61 144 L276 219 L354 163 L143 88Z" fill="#fff9ed"/>
+<path d="M276 219 L354 163 L354 240 L276 294Z" fill="#c3d1d3"/>
+<path d="M61 144 L118 164 L118 240 L70 223 Q61 220 61 208Z" fill="#eaa8aa"/>
+<path d="M61 144 L118 164 L194 107 L143 88Z" fill="#f4c2bf"/>
+<path d="M118 164 L276 219 L354 163 L194 107Z" fill="#a5c9df"/>
+<path d="M118 164 L276 219 L276 294 L118 240Z" fill="#76a9c6"/>
+</g>
+<path d="M135 174 L260 218" stroke="#d9edf3" stroke-width="7" opacity=".8"/>
+<g fill="none" stroke="#35556c" stroke-width="5" stroke-linecap="round"><path d="M165 215 Q174 206 182 220"/><path d="M221 235 Q230 226 238 240"/><path d="M189 240 Q201 254 214 247"/></g>
+<g fill="#fff8e8" opacity=".7"><circle cx="143" cy="211" r="4"/><circle cx="253" cy="250" r="4"/></g>
+<path d="M83 283 l17 7 M105 300 l12 4 M333 284 l15 -7" stroke="#cfb5a5" stroke-width="7" stroke-linecap="round"/>
+</svg>

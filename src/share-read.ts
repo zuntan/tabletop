@@ -12,7 +12,7 @@ export function shareRead(desk: Desk, tool: ShareTool, expectedSessionId: string
   if (!id) throw new Error('id is required');
   const object = desk.get(id);
   if (tool === 'desk_asset_read') {
-    if (!['image', 'svg'].includes(object.type)) throw new Error('Object is not an image/SVG');
+    if (!['image', 'svg', 'prop'].includes(object.type)) throw new Error('Object is not an image/SVG');
     return { ...stamp, object: publishObject(object) };
   }
   const { src, ...metadata } = publishObject(object);

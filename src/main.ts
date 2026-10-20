@@ -1,3 +1,4 @@
+import { createPropControls } from './prop-controls';
 import { drawStamp } from './stamps';
 import { createStampControls } from './stamp-controls';
 import { createShapePicker, createTextFitPicker } from './shape-picker';
@@ -243,6 +244,11 @@ const stampContainer = document.createElement('div'); stampContainer.id = 'stamp
 const stampControls = createStampControls(stampContainer, () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });
+const propContainer = document.createElement('div'); propContainer.id = 'prop-controls'; editActions.append(propContainer);
+createPropControls(propContainer, (preset, src) => {
+  if (busy || editor.isActive()) throw new Error('編集を終えてから小物を置いてください');
+  attempt(() => newObject('prop', { src, text: preset.name, width: preset.width, height: preset.height }));
+}, notify);
 const thinkingMode = createThinkingMode($('header'), () => { cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
@@ -256,13 +262,13 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
   const background = desk.settingsSnapshot().background;
   deskBackground.update({ ...background, ...preview }, camera);
 });
-const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
+const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', prop: '小物', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
   const category = object.type === 'label' ? 'pins' : object.type === 'text' ? 'text'
     : isShapeType(object.type) ? 'shapes'
       : object.type === 'line' ? 'lines'
-        : ['image', 'svg', 'mermaid'].includes(object.type) ? 'images' : 'other';
+        : ['image', 'svg', 'mermaid', 'prop'].includes(object.type) ? 'images' : 'other';
   return $(`#object-filter-${category}`).getAttribute('aria-pressed') === 'true';
 }
 
@@ -403,11 +409,11 @@ function drawObject(object: DeskObject) {
     drawMarkdown(group, object);
     drawStamp(group, object, desk.selected().includes(object.id));
   }
-  if (['link', 'web', 'image', 'svg', 'mermaid'].includes(object.type)) {
+  if (['link', 'web', 'image', 'svg', 'mermaid', 'prop'].includes(object.type)) {
     group.append(svg('rect', { width: w, height: h, rx: 6, fill: '#ffffff', stroke: '#94a3b8' }));
     const title = svg('text', { x: 12, y: 23, 'font-size': 14, fill: '#1d4ed8' });
     title.textContent = (object.text || object.url || '').slice(0, Math.max(0, Math.floor((w - 52) / 8))); group.append(title);
-    if (['image', 'svg'].includes(object.type) && h > IMAGE_TITLE_HEIGHT) {
+    if (['image', 'svg', 'prop'].includes(object.type) && h > IMAGE_TITLE_HEIGHT) {
       // SVG stays in an image context, never inserted as executable markup.
       group.append(svg('image', { y: IMAGE_TITLE_HEIGHT, width: w, height: h - IMAGE_TITLE_HEIGHT, href: object.src!, preserveAspectRatio: 'xMidYMid meet' }));
     }
@@ -651,7 +657,7 @@ canvas.addEventListener('dblclick', event => {
   const id = target.closest('[data-id]')?.getAttribute('data-id');
   if (!id || busy || editor.isActive()) return;
   const object = desk.get(id);
-  if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg', 'mermaid'].includes(object.type)) editor.open(object);
+  if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg', 'mermaid', 'prop'].includes(object.type)) editor.open(object);
 });
 canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture) zoom(Math.exp(-event.deltaY * 0.001), screen(event)); }, { passive: false });
 // Middle-button release can paste the Linux primary selection after the pan ends.

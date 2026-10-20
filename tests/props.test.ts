@@ -1,0 +1,27 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { Desk } from '../src/model';
+import { anchorsFor, isConnectable, anchorPoint, snap } from '../src/geometry';
+import { snapPinAttachment } from '../src/pin-attachments';
+import { encodeDeskFile, decodeDeskFile } from '../src/desk-file';
+import { PartClipboard } from '../src/part-clipboard';
+const src = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="40"/></svg>').toString('base64');
+test('props retain embedded SVG through copy/save/Undo, expose no links or anchors and reject all bindings', async () => {
+  const desk = new Desk();
+  desk.execute({ operations: [{ kind: 'add', object: { id: 'cup', type: 'prop', src, x: 100, y: 100, text: 'cup' } }] });
+  const prop = desk.get('cup');
+  assert.equal(isConnectable(prop), false); assert.deepEqual(anchorsFor(prop), []);
+  assert.equal(snap({ x: 100, y: 100 }, [prop], 20), null); assert.equal(snapPinAttachment({ x: 100, y: 100 }, [prop], 20), null);
+  assert.throws(() => anchorPoint(prop, 'top'), /no anchors/);
+  assert.equal(Object.hasOwn(desk.list()[0], 'url'), false);
+  assert.throws(() => desk.execute({ operations: [{ kind: 'update', id: 'cup', patch: { url: 'https://example.com' } }] }), /cannot have links/);
+  assert.throws(() => desk.execute({ operations: [{ kind: 'add', object: { id: 'line', type: 'line', endBinding: { objectId: 'cup', anchor: 'top' } } }] }));
+  assert.throws(() => desk.execute({ operations: [{ kind: 'add', object: { id: 'text', type: 'text', callout: { x: 0, y: 0, binding: { objectId: 'cup', anchor: 'top' } } } }] }));
+  const copy = new PartClipboard(), data = new Map<string,string>();
+  copy.write({ setData: (key,value) => { data.set(key,value); }, getData: key => data.get(key) ?? '' }, [prop]);
+  const ids = copy.paste(desk); assert.equal(desk.get(ids[0]).type, 'prop'); assert.equal(desk.get(ids[0]).src, src);
+  const restored = new Desk(); const saved = await decodeDeskFile(await encodeDeskFile(desk)); restored.replaceDocument({ objects: saved.objects, settings: saved.settings });
+  assert.deepEqual(restored.list(), desk.list());
+  desk.execute({ operations: [{ kind: 'update', id: 'cup', patch: { x: 500, locked: true } }] });
+  desk.undo(); assert.equal(desk.get('cup').x, 100);
+});

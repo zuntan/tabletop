@@ -105,7 +105,7 @@ export function updateScenePreview(layer: SVGGElement, scene: DeskObject[], orig
     if (!(forceLines && isConnector(object)) && JSON.stringify(object) === JSON.stringify(old)) continue;
     const node = [...layer.children].find(el => el.getAttribute('data-id') === object.id);
     if (!node) continue;
-    if (['web', 'image', 'svg', 'mermaid'].includes(object.type)) {
+    if (['web', 'image', 'svg', 'mermaid', 'prop'].includes(object.type)) {
       // Avoid reloading external media while moving. Resize is committed on release.
       node.setAttribute('transform', `translate(${object.x} ${object.y})`);
     } else {

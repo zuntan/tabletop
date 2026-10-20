@@ -91,7 +91,7 @@ export async function decodeDeskFile(bytes: Uint8Array) {
   }
   const objects = manifest.objects.map(object => {
     const src = sources.get(String(object.id));
-    if (src && (object.src !== undefined || !['image', 'svg'].includes(String(object.type)))) throw new Error('Conflicting asset reference');
+    if (src && (object.src !== undefined || !['image', 'svg', 'prop'].includes(String(object.type)))) throw new Error('Conflicting asset reference');
     return src ? { ...object, src } : object;
   });
   return { ...validateDocument({ objects, settings: manifest.settings }), warnings };
