@@ -334,6 +334,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('list') }),
   z.object({ method: z.literal('get'), id: z.string() }),
   z.object({ method: z.literal('state') }),
+  z.object({ method: z.literal('raster'), scale: z.number().finite().min(.1).max(3).default(1) }).strict(),
   z.object({ method: z.literal('mermaid_render'), id: z.string() }).strict(),
   z.object({ method: z.literal('file_snapshot') }).strict(),
   z.object({ method: z.literal('load_document'), document: z.unknown(), confirm: z.literal(true),
@@ -357,9 +358,13 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('redo'), actor: z.string().min(1).max(100).default('agent-01') }),
 ]);
 export type Request = z.input<typeof requestSchema>;
-export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge, ui?: { get(): { theme: 'light' | 'dark' }; set(theme: 'light' | 'dark'): { theme: 'light' | 'dark' } }, mermaid?: (source: string) => Promise<{ svg: string }>): unknown {
+export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge, ui?: { get(): { theme: 'light' | 'dark' }; set(theme: 'light' | 'dark'): { theme: 'light' | 'dark' } }, mermaid?: (source: string) => Promise<{ svg: string }>, raster?: (scale: number) => Promise<unknown>): unknown {
   const request = requestSchema.parse(input);
   switch (request.method) {
+    case 'raster': {
+      if (!raster) throw new Error('Raster capture requires a compatible browser');
+      return raster(request.scale);
+    }
     case 'share_read': return shareRead(desk, request.tool, request.expectedSessionId, request.id);
     case 'mermaid_render': {
       const object = desk.get(request.id);

@@ -8,6 +8,21 @@ import { assetFromBytes, importAssetFile, embeddedAsset, exportAsset } from './a
 const json = (value: unknown): CallToolResult => ({ content: [{ type: 'text', text: JSON.stringify(value) }] });
 const failure = (error: unknown): CallToolResult => ({ isError: true, content: [{ type: 'text', text: error instanceof Error ? error.message : String(error) }] });
 export function registerAssetTools(mcp: McpServer, request: (payload: Request) => Promise<unknown>) {
+  mcp.registerTool('desk_raster', {
+    description: 'Experimental browser-side transparent PNG capture of exactly one AI-pointed text card. Read-only; no deletion, camera or selection change. Includes current rendered Markdown, frame, stamp and reactions; excludes attached parts, wallpaper and pointing frames. Returns image and exported local path for desk_asset_import, dimensions, world bounds, revision and browser raster/PNG timings. Approximate system-font rendering; max 4096 per side and 8M pixels. Point at one card first. Multiple cards and other types are not yet supported.',
+    inputSchema: { scale: z.number().finite().min(.1).max(3).default(1) },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  }, async ({ scale }): Promise<CallToolResult> => {
+    try {
+      const rendered = await request({ method: 'raster', scale }) as { dataUrl: string; [key: string]: unknown };
+      const { dataUrl, ...metadata } = rendered;
+      const asset = embeddedAsset(dataUrl);
+      const path = await exportAsset(asset);
+      const result = json({ ...metadata, mimeType: asset.mimeType, byteLength: asset.bytes.length, path });
+      result.content.push({ type: 'image', mimeType: asset.mimeType, data: asset.bytes.toString('base64') });
+      return result;
+    } catch (error) { return failure(error); }
+  });
   mcp.registerTool('desk_asset_read', {
     description: sharedReadDescriptions.desk_asset_read,
     inputSchema: { id: z.string(), exportFile: z.boolean().default(false) },

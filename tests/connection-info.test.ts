@@ -86,7 +86,7 @@ for (const configured of [false, true]) {
       const tools = await client.listTools();
       const tool = tools.tools.find(tool => tool.name === 'desk_connection_info');
       assert.equal(tool?.annotations?.readOnlyHint, true);
-      assert.equal(tools.tools.length, 38);
+      assert.equal(tools.tools.length, 39);
       browser.close(); await once(browser, 'close');
       let disconnected = await info();
       for (let attempt = 0; disconnected.browserConnected && attempt < 20; attempt++) {

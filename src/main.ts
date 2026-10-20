@@ -1,3 +1,4 @@
+import { rasterPointedCard } from './part-raster';
 import { pointedMove, ObjectMoveAnimator } from './object-move-animation';
 import { drawClip } from './clip-drawing';
 import { bundleOperations, unbundleOperations, clipFor, clipGroup, clipFollower, clipDropTarget, clipTarget } from './clip-bundles';
@@ -972,8 +973,8 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
       const beforeMove = message.request.method === 'execute' ? desk.snapshot() : null;
       let animatedMove = false;
       if (message.request.method === 'load_document') cameraAnimator.cancel('Desk contents replaced');
-      let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid);
-      if (['camera_move', 'mermaid_render'].includes(message.request.method)) result = await result;
+      let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid, scale => rasterPointedCard(desk, id => drawnNodes.get(id), scale));
+      if (['camera_move', 'mermaid_render', 'raster'].includes(message.request.method)) result = await result;
       if (message.request.method === 'fit') {
         const ids = desk.pointed();
         await fitView(ids, { durationMs: message.request.durationMs });
