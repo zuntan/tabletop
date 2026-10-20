@@ -647,7 +647,7 @@ function focusHumanSelection() { focusObjects(desk.selected()); }
 $('#fit').onclick = () => focusObjects(desk.selected().length ? desk.selected() : desk.pointed());
 canvas.addEventListener('dblclick', event => {
   const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
-  if (target.closest('[data-open-url], [data-markdown-link]')) return;
+  if (target.closest('[data-open-url], [data-open-media], [data-markdown-link]')) return;
   const id = target.closest('[data-id]')?.getAttribute('data-id');
   if (!id || busy || editor.isActive()) return;
   const object = desk.get(id);
@@ -658,7 +658,7 @@ canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture
 canvas.addEventListener('auxclick', event => { if (event.button === 1) event.preventDefault(); });
 canvas.addEventListener('pointerdown', event => {
   if (gesture || editor.isActive() || (event.button !== 0 && event.button !== 1)) return;
-  if (!space && (event.target as Element).closest('[data-open-url], [data-markdown-link]')) return;
+  if (!space && (event.target as Element).closest('[data-open-url], [data-open-media], [data-markdown-link]')) return;
   if (event.button === 0 && !space && authoring.place(gridPosition(world(event)), camera.zoom)) { event.preventDefault(); return; }
   const target = event.target as Element;
   const resize = target.closest('[data-resize]')?.getAttribute('data-resize');
