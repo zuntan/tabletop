@@ -11,10 +11,11 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
   const dated = document.createElement('input'); dated.type = 'checkbox'; dated.id = 'stamp-dated';
   const label = document.createElement('label'); label.append(dated, ' 日付付き');
   const choices = document.createElement('div'); choices.className = 'stamp-choices';
-  const palettePatterns = [...stampPatterns];
-  const doneIndex = palettePatterns.findIndex(pattern => pattern.id === 'done_en');
-  const sealedIndex = palettePatterns.findIndex(pattern => pattern.id === 'sealed_ja');
-  [palettePatterns[doneIndex], palettePatterns[sealedIndex]] = [palettePatterns[sealedIndex], palettePatterns[doneIndex]];
+  const paletteOrder = ['done_ja', 'sealed_ja', 'rejected_ja', 'done_en', 'sealed_en', 'rejected_en'];
+  const palettePatterns = [
+    ...paletteOrder.map(id => stampPatterns.find(pattern => pattern.id === id)!),
+    ...stampPatterns.filter(pattern => !paletteOrder.includes(pattern.id)),
+  ];
   const buttons = palettePatterns.map(pattern => {
     const button = document.createElement('button'); button.type = 'button'; button.dataset.stampDesign = pattern.id;
     button.title = pattern.caption; button.setAttribute('aria-label', `${pattern.caption}を押す`);
