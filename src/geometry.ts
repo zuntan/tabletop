@@ -32,7 +32,7 @@ export function withEndpoints(object: DeskObject, start: Point, end: Point): Des
 }
 export function bounds(object: DeskObject) {
   if (!isConnector(object)) {
-    const tip = object.callout;
+    const tip = object.cutout?.enabled ? undefined : object.callout;
     const x = Math.min(object.x, tip?.x ?? object.x), y = Math.min(object.y, tip?.y ?? object.y);
     return { x, y, width: Math.max(object.x + object.width, tip?.x ?? object.x) - x,
       height: Math.max(object.y + object.height, tip?.y ?? object.y) - y };

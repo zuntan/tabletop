@@ -11,15 +11,15 @@ export function objectPropertyNames(object: DeskObject): readonly (keyof DeskObj
     'startMarker', 'endMarker', 'startBinding', 'endBinding', 'startJunction', 'endJunction', 'junctionRounding'];
   if (object.type === 'clip') return [...common,...box,'fill','clipMembers','clipAnchor','clipOffset','clipSize','clipStyle'];
   if (object.type === 'prop') return [...common, ...box, 'text', 'src'];
-  if (object.type === 'mermaid') return [...common, ...box, 'text', 'mermaidSource'];
-  if (object.type === 'text') return [...common, ...box, ...paint, ...text, 'cornerRadius', 'padding', 'callout', 'stamp'];
+  if (object.type === 'mermaid') return [...common, ...box, 'text', 'mermaidSource', 'cutout'];
+  if (object.type === 'text') return [...common, ...box, ...paint, ...text, 'cornerRadius', 'padding', 'callout', 'stamp', 'cutout'];
   if (isShapeType(object.type)) return [...common, ...box, ...paint, ...text, 'textFit',
     ...(object.type === 'roundedRect' ? ['cornerRadius' as const] : [])];
   if (object.type === 'label') return [...common, ...box, ...text, 'seriesId', 'number', 'labelShape', 'description', 'attachment',
     ...(object.labelShape === 'text' ? [] : paint),
     ...(object.labelShape === 'roundedRect' ? ['cornerRadius' as const] : [])];
   // Media/link cards currently use fixed decoration; only their content and geometry are configurable.
-  return [...common, ...box, 'text', 'url', ...(['image', 'svg'].includes(object.type) ? ['src' as const] : [])];
+  return [...common, ...box, 'text', 'url', ...(['image','svg','web'].includes(object.type)?['cutout' as const]:[]), ...(['image', 'svg'].includes(object.type) ? ['src' as const] : [])];
 }
 /** Publish meaningful fields, including explicit zero/default values. Never mutate runtime state. */
 export function publishObject(object: DeskObject): PublishedObject {

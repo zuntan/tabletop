@@ -47,7 +47,7 @@ export class ImageGeometry {
       renderedRect = { x: viewportRect.x + (viewportRect.width - width) / 2,
         y: viewportRect.y + (viewportRect.height - height) / 2, width, height };
     }
-    return { imageGeometry: { status, coordinateSpace: 'world', fit: 'xMidYMid meet',
-      naturalUnit: 'intrinsic-css-px', natural, cardRect, viewportRect, renderedRect } };
+    return { imageGeometry: { status:object.cutout?.enabled?'clipped':status, coordinateSpace: 'world', fit: 'xMidYMid meet',
+      naturalUnit: 'intrinsic-css-px', natural, cardRect, viewportRect, renderedRect:object.cutout?.enabled?null:renderedRect } };
   }
 }

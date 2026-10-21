@@ -1,3 +1,4 @@
+import { cutoutSchema, cutoutTarget, applyCutoutPatch, normalizeCutoutPatch } from './logical-cutout';
 import { clipGroup, clipFor } from './clip-bundles';
 import { publishObject } from './object-properties';
 import { groupPinLayers } from './pin-series';
@@ -50,6 +51,7 @@ const objectFields = z.object({
   number: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).optional(),
   labelShape: z.enum(['text', 'rect', 'ellipse', 'roundedRect', 'pin']).optional(),
   description: z.string().max(20_000).optional(),
+  cutout: cutoutSchema.nullable().optional(),
   stamp: z.object({ designId: z.string().min(1).max(200), text: z.string().max(10000), angle: z.number().finite().min(-360).max(360) }).strict().nullable().optional(),
   reactions: z.array(z.enum(reactions)).max(reactionChoices.length).refine(values => new Set(values.map(canonicalReaction)).size === values.length, 'Duplicate reactions are not allowed').optional(),
   x: coordinate.default(0),
@@ -98,6 +100,7 @@ export const operationSchema = z.discriminatedUnion('kind', [
   ...settingsOperations,
   z.object({ kind: z.literal('add'), object: addObjectSchema }).strict(),
   z.object({ kind: z.literal('update'), id: z.string(), patch: patchSchema }).strict(),
+  z.object({ kind: z.literal('cutout'), id: z.string(), moldId: z.string() }).strict(),
   z.object({ kind: z.literal('delete'), id: z.string() }).strict(),
   z.object({ kind: z.literal('reorder'), id: z.string(), index: z.number().int().min(0) }).strict(),
 ]);
@@ -134,6 +137,7 @@ function validateObject(object: unknown): DeskObject {
   if (['image', 'svg', 'prop'].includes(parsed.type) && !parsed.src) throw new Error('Image source required');
   if (['web', 'link'].includes(parsed.type) && !parsed.url) throw new Error('URL required');
   if (parsed.type === 'prop' && (!parsed.src?.startsWith('data:image/svg+xml;base64,') || parsed.url)) throw new Error('Props require embedded SVG and cannot have links');
+  if (parsed.cutout && (!cutoutTarget(parsed)||parsed.height<=(parsed.type==='text'?0:34))) throw new Error('Invalid cutout target or content size');
   if (parsed.stamp && parsed.type !== 'text') throw new Error('Stamps are supported on text parts only');
   return parsed;
 }
@@ -233,7 +237,12 @@ export class Desk {
     let after = this.snapshot();
     const placement = createGridPlacement(batch, before, value => objectSchema.parse(value));
     for (const inputOperation of batch.operations) {
-      const operation = placement.normalize(inputOperation, materializeLabels(after, afterSettings), afterSettings);
+      const normalized = placement.normalize(inputOperation, materializeLabels(after, afterSettings), afterSettings);
+      const operation = normalized.kind==='cutout' ? (()=>{
+        const target=after.find(o=>o.id===normalized.id),mold=after.find(o=>o.id===normalized.moldId);
+        if(!target||!mold||target.id===mold.id)throw new Error('型と対象を一つずつ選んでください');
+        return {kind:'update' as const,id:target.id,patch:applyCutoutPatch(target,mold)};
+      })() : normalized;
       if (operation.kind === 'desk_rename' || operation.kind === 'grid_update' || operation.kind === 'background_update' || operation.kind === 'defaults_update' || operation.kind === 'series_add'
         || operation.kind === 'series_update' || operation.kind === 'label_add') {
         applySettingsOperation(operation, after, afterSettings);
@@ -264,7 +273,7 @@ export class Desk {
         if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'attachment', 'description', 'reactions', 'locked'].includes(key))) {
           throw new Error('Labels allow only position, attachment, description, reaction and mouse lock updates; use series_update for shared appearance');
         }
-        after[index] = validateObject({ ...after[index], ...operation.patch });
+        after[index] = validateObject({ ...after[index], ...normalizeCutoutPatch(after[index],operation.patch) });
         if (operation.patch.locked !== undefined) {
           const ids = new Set(clipGroup(after, operation.id).map(object => object.id));
           after = after.map(object => ids.has(object.id) ? { ...object, locked: operation.patch.locked } : object);

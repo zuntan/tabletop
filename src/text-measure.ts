@@ -23,6 +23,7 @@ export function measureDeskText(desk: Desk, ids: string[], node: (id: string) =>
   const objects = [...new Set(textMeasureFields.ids.parse(ids))].map(id => desk.get(id));
   const measurements = objects.map<TextMeasurement>(object => {
     const base = { id: object.id, frame: { width: object.width, height: object.height } };
+    if(object.cutout) return {...base,status:'unsupported',reason:'型抜きは元レイアウトを変形表示します。通常の矩形収まり判定の対象外です'};
     if (!supportsTextMeasure(object)) return { ...base, status: 'unsupported' };
     const layout = object.type === 'text' ? 'markdown' : 'plain';
     if (document.fonts.status !== 'loaded') return { ...base, layout, status: 'pending-fonts' };

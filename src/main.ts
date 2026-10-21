@@ -1,3 +1,6 @@
+import { createCutoutControls } from './cutout-controls';
+import { drawCutout } from './cutout-drawing';
+import { cutoutTarget, cutoutSourceObject } from './logical-cutout';
 import { BhDeletion, bhDeleteControls } from './bh-delete';
 import type { BhMode } from './bh-animation';
 import { openBhPreview } from './bh-preview';
@@ -411,6 +414,14 @@ function drawPinThreads(scene: DeskObject[]) {
   }
 }
 function drawObject(object: DeskObject) {
+  if(!object.cutout){drawObjectRaw(object);return;}
+  const group=svg('g',{transform:`translate(${object.x} ${object.y})`,'data-id':object.id,'data-locked':String(!!object.locked)});
+  drawCutout(group,object,source=>{drawObjectRaw(source);return objectsLayer.lastElementChild as SVGGElement;});
+  if(object.type!=='text')drawOpenLink(group,object);
+  drawReactions(group,object,pinDescriptionVisible(object),camera.zoom);
+  drawnNodes.set(object.id,group);objectsLayer.append(group);
+}
+function drawObjectRaw(object: DeskObject) {
   if (!pinIsVisible(object)) return;
   object = connectorForView(object);
   const { width: w, height: h } = object;
@@ -479,7 +490,10 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
   const stampSelection = new Set(desk.selected());
   for (const object of scene ?? renderedScene) {
     const node = drawnNodes.get(object.id);
-    if (node && object.type === 'text' && (object.stamp || node.querySelector('[data-stamp]'))) drawStamp(node, object, stampSelection.has(object.id));
+    if (node && object.type === 'text' && (object.stamp || node.querySelector('[data-stamp]'))) {
+      const source=object.cutout?node.querySelector<SVGGElement>('[data-cutout-source]'):node;
+      if(source)drawStamp(source,object.cutout?cutoutSourceObject(object):object,stampSelection.has(object.id));
+    }
   }
   const colors = frameColors(desk.settingsSnapshot().background);
   $<HTMLButtonElement>('#clear-ai-pointing').disabled = desk.pointed().length === 0;
@@ -566,7 +580,7 @@ function render(rebuild = true) {
   }
   lockControls.update([...new Set(ids.flatMap(id => clipGroup(renderedScene,id).map(object => object.id)))].map(id => desk.get(id)));
   for (const id of ['#front', '#back', '#delete', '#delete-animated']) $<HTMLButtonElement>(id).disabled = !ids.length;
-  bhDelete.refresh();
+  bhDelete.refresh();cutoutControls.update();
   $('#object-list').replaceChildren();
   const listObjects = desk.snapshot().reverse().filter(objectListIncludes);
   const seriesNames = new Map(desk.settingsSnapshot().series.map(series => [series.id, series.name]));
@@ -667,6 +681,10 @@ function animateDelete(mode: BhMode) {
     .catch(error=>notify(error instanceof Error?error.message:String(error),true));
 }
 const bhDelete = bhDeleteControls($<HTMLButtonElement>('#delete'), animateDelete);
+const cutoutControls=createCutoutControls($('#image'),form,()=>desk.selected().map(id=>desk.get(id)),operations=>{
+  if(busy||gesture||editor.isActive())return;
+  attempt(()=>execute(operations));
+},id=>drawnNodes.get(id),notify);
 $('#front').onclick = () => attempt(() => execute(desk.selected().map(id => ({ kind: 'reorder', id, index: desk.summary().count - 1 }))));
 $('#back').onclick = () => attempt(() => execute(desk.selected().slice().reverse().map(id => ({ kind: 'reorder', id, index: 0 }))));
 $('#text-measure').onclick = () => {

@@ -1,4 +1,5 @@
 import type { Desk, DeskObject } from './model';
+import { cutoutTitle } from './logical-cutout';
 
 /** Experimental single-card capture. No screen capture, edits, or selection changes. */
 export async function rasterPointedCard(desk: Desk, node: (id: string) => SVGGElement | undefined, scale = 1) {
@@ -13,7 +14,7 @@ export async function rasterPointedCard(desk: Desk, node: (id: string) => SVGGEl
 }
 
 /** Freeze one rendered part. Web page bodies use a labelled placeholder; no iframe capture. */
-export async function rasterRenderedPart(object: DeskObject, source: SVGGElement, scale = 1) {
+export async function rasterRenderedPart(object: DeskObject, source: SVGGElement, scale = 1, contentOnly = false) {
   const started = performance.now();
   const clone = source.cloneNode(true) as SVGGElement;
 
@@ -27,7 +28,7 @@ export async function rasterRenderedPart(object: DeskObject, source: SVGGElement
     }
     if (element instanceof SVGTextElement) copy.setAttribute('font-family', getComputedStyle(element).fontFamily);
   });
-  if(source.dataset.mermaidStatus === 'loading') throw new Error('Mermaidを描画中です。表示されてから削除してください');
+  if(source.dataset.mermaidStatus === 'loading'||source.querySelector('[data-mermaid-status="loading"]')) throw new Error('Mermaidを描画中です。表示されてから削除してください');
   // Embedded media must be self-contained before SVG is decoded as an image.
   for (const media of clone.querySelectorAll('image')) {
     const href=media.getAttribute('href') ?? media.getAttributeNS('http://www.w3.org/1999/xlink','href');
@@ -44,13 +45,30 @@ export async function rasterRenderedPart(object: DeskObject, source: SVGGElement
     const placeholder=document.createElement('div');placeholder.style.cssText='padding:18px;color:#64748b;font:14px sans-serif';
     placeholder.textContent='Web資料（ページ内容の画像化は対象外）';iframe.replaceWith(placeholder);
   }
-  const bbox = source.getBBox();
+  let bbox: {x:number;y:number;width:number;height:number} = source.getBBox();
+  if(object.cutout){
+    // getBBox includes unclipped source geometry; only capture the visible window.
+    bbox={x:0,y:0,width:object.width,height:object.height};
+    const badges=source.querySelector<SVGGElement>(':scope > [data-reactions]');
+    if(badges){
+      const b=badges.getBBox(),m=badges.transform.baseVal.consolidate()?.matrix??new DOMMatrix();
+      const points=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(([x,y])=>new DOMPoint(x,y).matrixTransform(m));
+      const x=Math.min(0,...points.map(p=>p.x)),y=Math.min(0,...points.map(p=>p.y));
+      bbox={x,y,width:Math.max(object.width,...points.map(p=>p.x))-x,height:Math.max(object.height,...points.map(p=>p.y))-y};
+    }
+  }
+  if(contentOnly){
+    if(!object.cutout?.enabled)throw new Error('型抜きがONのパーツを選んでください');
+    if(object.type==='web')throw new Error('Web資料のページ内容は画像コピーに対応していません');
+    for(const child of [...clone.children])if(child.tagName!=='defs'&&!child.hasAttribute('data-cutout-content'))child.remove();
+    bbox={x:0,y:cutoutTitle(object),width:object.width,height:object.height-cutoutTitle(object)};
+  }
   const matrix=source.transform.baseVal.consolidate()?.matrix ?? new DOMMatrix();
   const corners=[[bbox.x,bbox.y],[bbox.x+bbox.width,bbox.y],[bbox.x,bbox.y+bbox.height],[bbox.x+bbox.width,bbox.y+bbox.height]]
     .map(([x,y])=>new DOMPoint(x,y).matrixTransform(matrix));
   const minX=Math.min(...corners.map(p=>p.x)), minY=Math.min(...corners.map(p=>p.y));
   const maxX=Math.max(...corners.map(p=>p.x)), maxY=Math.max(...corners.map(p=>p.y));
-  const margin = Math.max(2, object.strokeWidth / 2 + 1);
+  const margin = contentOnly ? 0 : Math.max(2, object.strokeWidth / 2 + 1);
   const bounds = { x: minX-margin, y:minY-margin, width:maxX-minX+2*margin,height:maxY-minY+2*margin };
   const width = Math.ceil(bounds.width * scale), height = Math.ceil(bounds.height * scale);
   if (width > 4096 || height > 4096 || width * height > 8_000_000) throw new Error('Raster exceeds experimental size limit; use a smaller scale');
