@@ -1,4 +1,5 @@
 import { reactionChoices, reactionNames, type Reaction } from './reaction-values';
+import { stationeryButton } from './stationery-button';
 
 /** Stay open while selecting targets; close explicitly with the trigger or Escape. */
 export function createReactionButtons(container: HTMLElement, toggle: (reaction: Reaction) => void) {
@@ -8,6 +9,7 @@ export function createReactionButtons(container: HTMLElement, toggle: (reaction:
   palette.setAttribute('role', 'group'); palette.setAttribute('aria-label', 'すべてのリアクション');
   const more = document.createElement('button'); more.type = 'button'; more.id = 'reaction-more'; more.textContent = 'リアクション ▾';
   more.setAttribute('aria-label', 'リアクション一覧'); more.title = 'リアクション一覧';
+  stationeryButton(more, 'reaction', 'リアクション一覧');
   more.setAttribute('aria-expanded', 'false'); more.setAttribute('aria-controls', palette.id);
   more.popoverTargetElement = palette; more.popoverTargetAction = 'toggle';
   const makeButton = (reaction: Reaction) => {

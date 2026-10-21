@@ -1,5 +1,6 @@
 #reaction-controls { flex: 0 0 auto; }
-#reaction-controls #reaction-more, #stamp-open, #prop-open { width: auto; height: 46px; padding: 4px 8px; font-size: 11px; white-space: nowrap; }
+#reaction-controls #reaction-more, #stamp-open, #prop-open { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 38px; min-width: 38px; width: 38px; height: 46px; padding: 4px; }
+.stationery-button > svg { opacity: 0.8; }
 .reaction-quick { display: flex; gap: 4px; }
 #reaction-controls button { min-width: 28px; width: 28px; height: 28px; padding: 1px; margin: 0; font-size: 18px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; }
 #reaction-controls button:disabled { opacity: 0.4; cursor: default; }

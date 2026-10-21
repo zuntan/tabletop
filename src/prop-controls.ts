@@ -1,7 +1,9 @@
 import { propPresets } from './prop-presets';
+import { stationeryButton } from './stationery-button';
 export function createPropControls(container: HTMLElement, place: (preset: typeof propPresets[number], src: string) => void, report: (message: string, error?: boolean) => void) {
   const trigger = document.createElement('button'); trigger.type = 'button'; trigger.id = 'prop-open'; trigger.textContent = '小物 ▾';
   trigger.setAttribute('aria-label', '小物一覧');
+  stationeryButton(trigger, 'prop', '小物一覧');
   const panel = document.createElement('div'); panel.id = 'prop-palette'; panel.popover = 'auto'; panel.setAttribute('aria-label', '小物一覧');
   trigger.popoverTargetElement = panel;
   for (const preset of propPresets) {

@@ -1,10 +1,12 @@
 import type { DeskObject, Operation } from './model';
 import { createStamp, stampPatterns } from './stamp-values';
 import { stampArtwork } from './stamps';
+import { stationeryButton } from './stationery-button';
 
 export function createStampControls(container: HTMLElement, selected: () => DeskObject[], apply: (ops: Operation[]) => void) {
   const trigger = document.createElement('button'); trigger.id = 'stamp-open'; trigger.textContent = 'ハンコ ▾';
   trigger.type = 'button'; trigger.setAttribute('aria-label', 'ハンコ一覧');
+  stationeryButton(trigger, 'stamp', 'ハンコ一覧');
   const panel = document.createElement('div'); panel.id = 'stamp-palette'; panel.popover = 'auto';
   panel.setAttribute('aria-label', 'ハンコ一覧');
   trigger.popoverTargetElement = panel;
