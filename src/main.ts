@@ -34,7 +34,8 @@ import './diagram.css';
 import './authoring.css';
 import { createInlineEditor } from './inline-editor';
 import { createAuthoring } from './authoring';
-import { creationAppearance, type Series } from './settings';
+import { type Series } from './settings';
+import { createFormatControls } from './format-controls';
 import { groupToolbar, iconButton } from './toolbar';
 import { drawLabelDescription, labelVisualBounds } from './label-description';
 import { gridPoint, gridOrigin } from './grid';
@@ -246,6 +247,10 @@ const editor = createInlineEditor($('#workspace'), viewport, (object, patch, fre
 const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'), $<HTMLButtonElement>('#numbering'), $<HTMLButtonElement>('#selection-mode'), (operations, selectId) => {
   if (!busy && !editor.isActive()) attempt(() => { execute(operations, selectId ? 'desk' : 'exact'); if (selectId) desk.select([selectId]); });
 }, newPartPoint);
+const formatControls = createFormatControls(desk, $('#authoring-tools'), operations => {
+  if (busy || editor.isActive()) throw new Error('編集中の操作を終えてから書式を使ってください');
+  execute(operations); render();
+}, notify);
 const editActions = document.createElement('div'); editActions.className = 'toolbar-edit-actions';
 editActions.setAttribute('role', 'group'); editActions.setAttribute('aria-label', '重なり順・リアクション');
 for (const [id, icon, label] of [['front', '▣↑', '最前面'], ['back', '▣↓', '最背面']]) {
@@ -565,6 +570,7 @@ function render(rebuild = true) {
   reactionControls.update(ids.map(id => desk.get(id)));
   stampControls.update(ids.map(id => desk.get(id)));
   authoring.update();
+  formatControls.update();
   $('#selected-label').textContent = ids.length ? `${ids.length} 個選択 · ${ids.join(', ')}` : '未選択';
   form.hidden = ids.length !== 1;
   if (ids.length !== 1) propertyEditor.clear();
@@ -649,8 +655,8 @@ function newPartPoint() {
 function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
   const center = newPartPoint();
   const object = objectSchema.parse({ id: `${type}-${randomUuid().slice(0, 8)}`, type, ...gridPosition(center),
-    ...creationAppearance(type, desk.settingsSnapshot().defaults),
     ...(isShapeType(type) ? { textFit: 'shrink' } : {}),
+    ...formatControls.appearance(type, desk.settingsSnapshot().defaults),
     ...(type === 'mermaid' ? { width: 480, height: 354, text: 'Mermaid', mermaidSource: defaultMermaidSource } : {}),
     ...(type === 'text' ? { width: 280, height: 80 } : {}),
     ...(['line', 'arrow'].includes(type) ? selectedConnection(desk.selected().map(id => desk.get(id)),desk.snapshot()) : {}),
@@ -933,7 +939,7 @@ async function pasteClipboard(content: ClipboardContent) {
   const width = url ? 320 : 360;
   const lines = content.text.split('\n').reduce((count, line) => count + Math.max(1, Math.ceil(line.length / 24)), 0);
   const height = url ? 60 : Math.min(1200, Math.max(120, (lines + 1) * desk.settingsSnapshot().defaults.fontSize * 1.5));
-  execute([{ kind: 'add', object: { ...creationAppearance(url ? 'link' : 'text', desk.settingsSnapshot().defaults),
+  execute([{ kind: 'add', object: { ...formatControls.appearance(url ? 'link' : 'text', desk.settingsSnapshot().defaults),
     id, type: url ? 'link' : 'text', ...gridPosition({ x: (120 - camera.x) / camera.zoom, y: (100 - camera.y) / camera.zoom }),
     width, height, text: url ?? content.text, ...(url ? { url } : {}) } }]);
   desk.select([id]); render(); notify(url ? 'リンクを貼り付けました' : 'テキストを貼り付けました');

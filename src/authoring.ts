@@ -127,7 +127,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     const open = popup.matches(':popover-open'); trigger.setAttribute('aria-expanded', String(open));
     if (open) {
       const rect = trigger.getBoundingClientRect();
-      popup.style.left = `${Math.max(8, Math.min(rect.left, innerWidth-popup.offsetWidth-8))}px`;
+      popup.style.left = `${Math.max(8, Math.min(button.getBoundingClientRect().left, innerWidth-popup.offsetWidth-8))}px`;
       popup.style.top = `${Math.max(8, Math.min(rect.bottom+6, innerHeight-popup.offsetHeight-8))}px`;
     }
   });
