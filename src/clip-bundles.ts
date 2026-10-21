@@ -17,7 +17,7 @@ export function clipGroup(objects: DeskObject[], id: string): DeskObject[] {
 export function bundleOperations(objects: DeskObject[], ids: string[]): Operation[] {
   const members = ids.filter(id => { const o=objects.find(o=>o.id===id);return o && clipTarget(o) && !o.locked && !clipFor(objects,id); });
   if (!members.length) return [];
-  return [{kind:'add',object:{id:'clip-'+randomUuid(),type:'clip',clipMembers:members,clipAnchor:'top-left',clipOffset:32,clipSize:64,clipStyle:'binder',fill:'#26313d'}}];
+  return [{kind:'add',object:{id:'clip-'+randomUuid(),type:'clip',clipMembers:members,clipAnchor:'top-left',clipOffset:32,clipSize:64,clipAutoSize:true,clipStyle:'binder',fill:'#26313d'}}];
 }
 export function unbundleOperations(objects: DeskObject[], ids: string[]): Operation[] {
   return [...new Set(ids.map(id=>clipFor(objects,id)?.id).filter((id):id is string=>!!id))]
@@ -45,7 +45,7 @@ export function resolveClips(input: DeskObject[], before: DeskObject[] = []): De
       for (const object of group) object.locked = locked;
     }
     const size=clip.clipSize ?? 64;
-    const appearance=clipAppearance(clip);
+    const appearance=clipAppearance(clip, members.length ? map.get(members[0]) : undefined);
     Object.assign(clip,{clipMembers:[...members],clipAnchor:clip.clipAnchor ?? 'top-left',clipOffset:clip.clipOffset ?? 32,clipSize:size,clipStyle:clip.clipStyle ?? 'binder',width:appearance.boundsWidth,height:appearance.boundsHeight});
     if(!members.length) continue;
     const base=map.get(members[0])!, oldBase=previous.get(base.id);

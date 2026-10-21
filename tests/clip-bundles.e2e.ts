@@ -18,6 +18,9 @@ test('clip shortcuts, properties, dragging/peeling, appending, filtering, deleti
   await page.locator('[name="clipOffset"]').fill('0');await page.locator('[name="clipOffset"]').press('Enter');
   assert.equal((await call('desk_get',{id:'b'})).x,(await call('desk_get',{id:'a'})).x);
   await page.locator('[name="clipOffset"]').fill('80');await page.locator('[name="clipOffset"]').press('Enter');
+  assert.equal((await call('desk_get',{id})).clipAutoSize,true);
+  await page.getByRole('button',{name:'サイズ指定の候補',exact:true}).click();
+  await page.getByRole('dialog',{name:'サイズ指定の候補',exact:true}).getByRole('button',{name:'数値指定',exact:true}).click();
   const offsetInput=page.locator('[name="clipSize"]');await offsetInput.fill('96');await offsetInput.press('Enter');assert.equal((await call('desk_get',{id})).clipSize,96);
   async function drag(objectId:string,dx:number,dy:number,alt=false,top=false){
    const o=await call('desk_get',{id:objectId});
@@ -42,6 +45,29 @@ test('clip shortcuts, properties, dragging/peeling, appending, filtering, deleti
   await call('desk_select',{ids:['d']});await page.locator('#canvas').focus();await page.keyboard.press('Delete');assert.equal((await call('desk_state')).objects.some((o:{id:string})=>o.id===id),false);
   await call('desk_undo');assert.deepEqual((await call('desk_get',{id})).clipMembers,['b','d']);
   await call('desk_select',{ids:['b']});await page.locator('#canvas').focus();await page.keyboard.press('Control+Shift+g');assert.equal((await call('desk_state')).objects.some((o:{id:string})=>o.id===id),false);
+  assert.deepEqual(errors,[]);
+ } finally {await close();}
+});
+
+test('automatic clip sizing switches from properties and redraws on first-paper resize without changing manual fallback', {timeout:30000},async()=>{
+ const {page,call,close,errors}=await openTestDesk('clip-auto-size');
+ try {
+  await call('desk_execute',{operations:[
+   {kind:'add',object:{id:'paper',type:'text',x:150,y:150,width:800,height:600,text:'Auto clip'}},
+   {kind:'add',object:{id:'clip',type:'clip',clipMembers:['paper'],clipAnchor:'top',clipSize:96}},
+  ]});
+  await call('desk_select',{ids:['clip']});
+  await page.getByRole('button',{name:'サイズ指定の候補',exact:true}).click();
+  await page.getByRole('dialog',{name:'サイズ指定の候補',exact:true}).getByRole('button',{name:'自動（1枚目に合わせる）',exact:true}).click();
+  let clip=await call('desk_get',{id:'clip'});assert.equal(clip.clipAutoSize,true);assert.equal(clip.clipSize,96);assert.equal(clip.width,90);assert.equal(clip.height,67.5);
+  assert.equal(await page.locator('[name="clipSize"]').isDisabled(),true);
+  const image=page.locator('[data-id="clip"] svg');assert.equal(await image.getAttribute('width'),'90');
+  await call('desk_execute',{operations:[{kind:'update',id:'paper',patch:{width:2000,height:1000}}]});
+  clip=await call('desk_get',{id:'clip'});assert.equal(clip.width,150);assert.equal(await image.getAttribute('width'),'150');
+  await page.getByRole('button',{name:'サイズ指定の候補',exact:true}).click();
+  await page.getByRole('dialog',{name:'サイズ指定の候補',exact:true}).getByRole('button',{name:'数値指定',exact:true}).click();
+  clip=await call('desk_get',{id:'clip'});assert.equal(clip.clipSize,96);assert.equal(clip.width,96);assert.equal(await page.locator('[name="clipSize"]').isDisabled(),false);
+  await call('desk_undo');assert.equal((await call('desk_get',{id:'clip'})).clipAutoSize,true);
   assert.deepEqual(errors,[]);
  } finally {await close();}
 });

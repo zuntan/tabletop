@@ -4,8 +4,8 @@ import { clipAppearance } from './clip-appearance';
 import binderSource from './assets/clips/binder.svg?raw';
 import wireSource from './assets/clips/zem.svg?raw';
 
-export function drawClip(group: SVGGElement, object: DeskObject) {
-  const appearance = clipAppearance(object), wire = object.clipStyle === 'wire';
+export function drawClip(group: SVGGElement, object: DeskObject, base?: DeskObject) {
+  const appearance = clipAppearance(object, base), wire = object.clipStyle === 'wire';
   // These bundled assets are trusted. Prefix their classes and omit IDs to avoid
   // collisions with the application and other copies of the same illustration.
   const prefix = wire ? 'tabletop-wire-' : 'tabletop-binder-';

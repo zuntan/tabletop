@@ -127,6 +127,7 @@ app.innerHTML = `
           <label hidden>吹き出し<select name="calloutMode" disabled><option value="none">なし</option><option value="speech">三角</option><option value="thought">考え事</option><option value="leader">引き出し線</option></select></label>
           <label hidden>クリップの間隔<input name="clipOffset" type="number" min="0" step="any"></label>
           <label hidden>クリップのサイズ<input name="clipSize" type="number" min="1" max="100000" step="any"></label>
+          <label hidden>サイズ指定<select name="clipAutoSize"><option value="false">数値指定</option><option value="true">自動（1枚目に合わせる）</option></select></label>
           <label hidden>留め位置<select name="clipAnchor"><option value="top-left">左上</option><option value="top">上</option><option value="top-right">右上</option><option value="right">右</option><option value="bottom-right">右下</option><option value="bottom">下</option><option value="bottom-left">左下</option><option value="left">左</option></select></label>
           <label hidden>クリップの形<select name="clipStyle"><option value="binder">ダブルクリップ</option><option value="wire">ゼムクリップ</option></select></label>
           <label class="wide">テキスト<textarea name="text" rows="3"></textarea></label>
@@ -178,6 +179,7 @@ const propertyEditor = createPropertyEditor(form, desk, (id, patch) => {
 }, message => notify(message, true));
 addFormNumberPresets(form);
 const clipMenuUpdates = ([
+  ['clipAutoSize','サイズ指定',{'false':'数値指定','true':'自動（1枚目に合わせる）'}],
   ['clipStyle','クリップの形',{binder:'ダブルクリップ',wire:'ゼムクリップ'}],
   ['clipAnchor','留め位置',{'top-left':'左上',top:'上','top-right':'右上',right:'右','bottom-right':'右下',bottom:'下','bottom-left':'左下',left:'左'}],
 ] as const).map(([name,label,labels])=>{
@@ -289,7 +291,7 @@ const clipCreate=document.createElement('button');clipCreate.id='clip-create';ic
 clipCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{
   const operations=bundleOperations(desk.snapshot(),desk.selected());
   if(operations.length){execute(operations);const last=operations[0];if(last.kind==='add')desk.select([last.object.id]);}
-  else if(!desk.selected().length)newObject('clip',{clipMembers:[],clipSize:64,clipOffset:32,clipStyle:'binder',fill:'#26313d'});
+  else if(!desk.selected().length)newObject('clip',{clipMembers:[],clipSize:64,clipAutoSize:true,clipOffset:32,clipStyle:'binder',fill:'#26313d'});
 });};
 app.querySelector('[data-add="text"]')!.after(clipCreate);
 const thinkingMode = createThinkingMode($('header'), () => { objectAnimator.finish(); cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
@@ -489,7 +491,7 @@ function drawObjectRaw(object: DeskObject) {
     if (object.type === 'mermaid') drawMermaidCard(group, object);
     drawOpenLink(group, object);
   }
-  if(object.type==='clip') drawClip(group,object);
+  if(object.type==='clip') drawClip(group,object,renderedById.get(object.clipMembers?.[0] ?? ''));
   drawReactions(group, object, pinDescriptionVisible(object), camera.zoom);
   objectsLayer.append(group);
 }

@@ -16,7 +16,7 @@ function fixture() {
   {kind:'add',object:{id:'comment',type:'text',x:900,y:300,callout:{x:0,y:0,binding:{objectId:'b',anchor:'right'}}}},
  ]});return d;
 }
-function bundle(d:Desk,ids=['a','b','c']) {const ops=bundleOperations(d.snapshot(),ids);d.execute({operations:ops});return clipFor(d.snapshot(),ids[0])!.id;}
+function bundle(d:Desk,ids=['a','b','c']) {const ops=bundleOperations(d.snapshot(),ids);d.execute({operations:[...ops,{kind:'update',id:(ops[0] as {object:{id:string}}).object.id,patch:{clipAutoSize:false}}]});return clipFor(d.snapshot(),ids[0])!.id;}
 function drag(d:Desk,id:string,dx:number,dy:number,detach=false) {
  const scene=d.snapshot();const g:Gesture={mode:'move',start:{x:0,y:0},screen:{x:0,y:0},originals:[d.get(id)],scene,preview:scene,revision:d.revision,camera:{x:0,y:0},additive:[],anchorId:id,detach};
  const preview=gesturePreview(g,{x:dx,y:dy},1);d.execute({operations:gestureOperations(g,{x:dx,y:dy},1),snap:'exact'});assert.deepEqual(d.snapshot(),preview);
@@ -84,4 +84,36 @@ test('clip locks toggle the whole bundle through patches and AI pointing, persis
  d.undo();assert.ok(ids.every(id=>d.get(id).locked));d.redo();assert.ok(ids.every(id=>!d.get(id).locked));
  d.execute({operations:[{kind:'update',id,patch:{locked:true}},{kind:'update',id:'a',patch:{x:400}}]});assert.equal(d.get('a').x,400);
  const mixed=d.snapshot().map(object=>({...object,locked:object.id==='c'}));restored.replaceDocument({objects:mixed,settings:d.settingsSnapshot()});assert.ok(ids.every(id=>restored.get(id).locked));
+});
+
+test('automatic clip size follows first paper, preserves manual size and respects all rotated anchors', async()=>{
+ const {clipAppearance}=await import('../src/clip-appearance');
+ const d=fixture(),id=bundle(d),original=d.get(id);
+ assert.equal(original.clipAutoSize,false);assert.equal(clipAppearance(original).size,64);
+ d.execute({operations:[{kind:'update',id,patch:{clipAutoSize:true,clipSize:96}}]});
+ assert.equal(clipAppearance(d.get(id),d.get('a')).size,48);assert.equal(d.get(id).clipSize,96);
+ d.execute({operations:[{kind:'update',id:'a',patch:{width:2000,height:1000}}]});
+ assert.equal(clipAppearance(d.get(id),d.get('a')).size,150);
+ for(const style of ['binder','wire'] as const)for(const anchor of ['top','top-right','right','bottom-right','bottom','bottom-left','left','top-left'] as const){
+  d.execute({operations:[{kind:'update',id,patch:{clipStyle:style,clipAnchor:anchor}}]});
+  const clip=d.get(id),art=clipAppearance(clip,d.get('a')),point=anchorPoint(d.get('a'),anchor);
+  assert.equal(art.size,150);assert.equal(clip.width,art.boundsWidth);assert.equal(clip.height,art.boundsHeight);
+  assert.ok(Math.abs(clip.x+clip.width/2-point.x-art.insetX)<1e-8);assert.ok(Math.abs(clip.y+clip.height/2-point.y-art.insetY)<1e-8);
+ }
+ d.execute({operations:[{kind:'update',id:'a',patch:{width:10000,height:10000}}]});assert.equal(clipAppearance(d.get(id),d.get('a')).size,384);
+ d.execute({operations:[{kind:'update',id,patch:{clipAutoSize:false}}]});assert.equal(clipAppearance(d.get(id),d.get('a')).size,96);
+ d.undo();assert.equal(d.get(id).clipAutoSize,true);d.redo();assert.equal(d.get(id).clipAutoSize,false);
+ d.execute({operations:[{kind:'update',id,patch:{clipAutoSize:true,clipMembers:['b','c']}}]});assert.equal(clipAppearance(d.get(id),d.get('b')).size,48);
+ const archive=await decodeDeskFile(await encodeDeskFile(d));const restored=new Desk();restored.replaceDocument({objects:archive.objects,settings:archive.settings});assert.deepEqual(restored.list(),d.list());
+ const cb=new PartClipboard(),data=new Map<string,string>();cb.write({setData:(k,v)=>{data.set(k,v)},getData:k=>data.get(k)??''},clipGroup(d.snapshot(),id));cb.paste(d);const copy=d.list().find(o=>o.type==='clip'&&o.id!==id)!;assert.equal(copy.clipAutoSize,true);assert.equal(copy.clipSize,96);
+ const free=new Desk();free.execute({operations:[{kind:'add',object:{id:'free',type:'clip',clipAutoSize:true,clipSize:80}}]});assert.equal(clipAppearance(free.get('free')).size,80);
+ assert.throws(()=>d.execute({operations:[{kind:'update',id:'c',patch:{clipAutoSize:true}}]}),/Clip fields/);
+ d.execute({operations:[{kind:'update',id,patch:{locked:true}}]});assert.throws(()=>d.execute({actor:'human',operations:[{kind:'update',id,patch:{clipAutoSize:false}}]}),/ロック/);
+});
+
+test('new clips default to automatic while legacy loaded clips remain manual',()=>{
+ const d=fixture();d.execute({operations:bundleOperations(d.snapshot(),['a','b'])});assert.equal(clipFor(d.snapshot(),'a')!.clipAutoSize,true);
+ const fresh=new Desk();fresh.execute({operations:[{kind:'add',object:{id:'new',type:'clip'}}]});assert.equal(fresh.get('new').clipAutoSize,true);
+ const legacy={...fresh.get('new')};delete legacy.clipAutoSize;
+ const loaded=new Desk();loaded.replaceDocument({objects:[legacy],settings:fresh.settingsSnapshot()});assert.equal(loaded.get('new').clipAutoSize,undefined);assert.equal(loaded.get('new').width,fresh.get('new').width);
 });
