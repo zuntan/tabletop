@@ -12,14 +12,14 @@ export function facingAnchor(object: DeskObject, toward: Point, fallback: Anchor
   return directions[(sector + 8) % 8];
 }
 
-export function selectedConnection(selected: DeskObject[], scene: DeskObject[] = selected): Partial<DeskObject> {
+export function selectedConnection(selected: DeskObject[], scene: DeskObject[] = selected, freeEndDelta:Point={x:120,y:0}): Partial<DeskObject> {
   const targets = selected.filter(o=>isConnectable(o,scene));
   if (targets.length < 1 || targets.length > 2) return {};
   const [source, target] = targets;
   const startAnchor = target ? facingAnchor(source, center(target)) : source.type === 'label' ? 'center' : 'right';
   const endAnchor = target ? facingAnchor(target, center(source), 'left') : undefined;
   const start = anchorPoint(source, startAnchor);
-  const end = target && endAnchor ? anchorPoint(target, endAnchor) : { x: start.x + 120, y: start.y };
+  const end = target && endAnchor ? anchorPoint(target, endAnchor) : { x: start.x + freeEndDelta.x, y: start.y + freeEndDelta.y };
   return { x: start.x, y: start.y, x2: end.x, y2: end.y,
     startBinding: { objectId: source.id, anchor: startAnchor },
     endBinding: target && endAnchor ? { objectId: target.id, anchor: endAnchor } : null };

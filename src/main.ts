@@ -1,3 +1,4 @@
+import { initialPartSize, initialImageSize, centeredPartPoint, initialLinePoints, initialLineDelta } from './initial-part-layout';
 import { deskPdf } from './desk-pdf';
 import { createCutoutControls } from './cutout-controls';
 import { drawCutout } from './cutout-drawing';
@@ -660,7 +661,7 @@ app.addEventListener('object-filter-change', event => {
 });
 function newPartPoint() {
   const offset = desk.summary().count % 8 * 22;
-  const center = { x: (120 - camera.x) / camera.zoom + offset, y: (100 - camera.y) / camera.zoom + offset };
+  const center = centeredPartPoint(camera,cameraSize(),{width:0,height:0},offset);
   return center;
 }
 function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
@@ -668,10 +669,11 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
   const object = objectSchema.parse({ id: `${type}-${randomUuid().slice(0, 8)}`, type, ...gridPosition(center),
     ...(isShapeType(type) ? { textFit: 'shrink' } : {}),
     ...formatControls.appearance(type, desk.settingsSnapshot().defaults),
-    ...(type === 'mermaid' ? { width: 480, height: 354, text: 'Mermaid', mermaidSource: defaultMermaidSource } : {}),
-    ...(type === 'text' ? { width: 280, height: 80 } : {}),
-    ...(['line', 'arrow'].includes(type) ? selectedConnection(desk.selected().map(id => desk.get(id)),desk.snapshot()) : {}),
-    ...(['web', 'link'].includes(type) ? { width: type === 'web' ? 480 : 320, height: type === 'web' ? 340 : 60 } : {}), ...extra });
+    ...initialPartSize(type),
+    ...(type === 'mermaid' ? { text: 'Mermaid', mermaidSource: defaultMermaidSource } : {}),
+    ...(['line', 'arrow'].includes(type) ? {...initialLinePoints(center),...selectedConnection(desk.selected().map(id => desk.get(id)),desk.snapshot(),initialLineDelta)} : {}),
+    ...extra });
+  if(!isConnector(object))Object.assign(object,gridPosition({x:center.x-object.width/2,y:center.y-object.height/2}));
   if (['text', 'web', 'link', 'mermaid'].includes(type)) { editor.open(object, true); return; }
   execute([{ kind: 'add', object }], 'desk'); desk.select([object.id]);
 }
@@ -906,12 +908,10 @@ async function addFiles(files: File[]) {
       });
       const image = new Image(); image.src = src;
       await image.decode();
-      const ratio = Math.min(1, 480 / image.naturalWidth, 360 / image.naturalHeight);
+      const size=initialImageSize(image.naturalWidth,image.naturalHeight);
       operations.push({ kind: 'add', object: objectSchema.parse({
         id: `image-${randomUuid().slice(0, 8)}`, type: file.type === 'image/svg+xml' ? 'svg' : 'image', src,
-        ...gridPosition({ x: (120 - camera.x) / camera.zoom + operations.length * 24,
-          y: (100 - camera.y) / camera.zoom + operations.length * 24 }),
-        width: Math.max(180, image.naturalWidth * ratio), height: Math.max(1, image.naturalHeight * ratio) + 34, text: file.name,
+        ...size,...gridPosition(centeredPartPoint(camera,cameraSize(),size,operations.length*24)),text:file.name,
       }) });
     }
     if (operations.length) attempt(() => { execute(operations); desk.select(operations.map(op => op.kind === 'add' ? op.object.id : '')); });
@@ -951,12 +951,12 @@ async function pasteClipboard(content: ClipboardContent) {
   if (content.text.length > 100_000) throw new Error('貼り付ける文字列は10万文字以下にしてください');
   const url = singleClipboardUrl(content.text);
   const id = `${url ? 'link' : 'text'}-${randomUuid()}`;
-  const width = url ? 320 : 360;
-  const lines = content.text.split('\n').reduce((count, line) => count + Math.max(1, Math.ceil(line.length / 24)), 0);
-  const height = url ? 60 : Math.min(1200, Math.max(120, (lines + 1) * desk.settingsSnapshot().defaults.fontSize * 1.5));
-  execute([{ kind: 'add', object: { ...formatControls.appearance(url ? 'link' : 'text', desk.settingsSnapshot().defaults),
-    id, type: url ? 'link' : 'text', ...gridPosition({ x: (120 - camera.x) / camera.zoom, y: (100 - camera.y) / camera.zoom }),
-    width, height, text: url ?? content.text, ...(url ? { url } : {}) } }]);
+  const type=url?'link':'text';
+  const appearance=formatControls.appearance(type,desk.settingsSnapshot().defaults);
+  const size=initialPartSize(type) as {width:number;height:number};
+  execute([{ kind: 'add', object: { ...appearance,
+    id, type, ...size,...gridPosition(centeredPartPoint(camera,cameraSize(),size)),
+    text: url ?? content.text, ...(url ? { url } : {}) } }]);
   desk.select([id]); render(); notify(url ? 'リンクを貼り付けました' : 'テキストを貼り付けました');
 }
 $('#clipboard').onclick = async () => {
