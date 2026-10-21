@@ -55,5 +55,5 @@
 :root[data-theme="dark"] .number-preset-choices button[aria-pressed="true"],
 :root[data-theme="dark"] .pcr-app.tabletop-palette .transparent-choice[aria-pressed="true"] { background: var(--ui-active); border-color: #60a5fa; }
 :root[data-theme="dark"] .pcr-app.tabletop-palette .pcr-swatches > button[aria-pressed="true"] { outline-color: #e2e8f0; }
-:root[data-theme="dark"] #ai-activity-led { box-shadow: 0 0 0 4px #171e28e6, 0 1px 5px #0007; }
-:root[data-theme="dark"] #ai-activity-led[data-lit="true"] { box-shadow: 0 0 0 4px #171e28e6, 0 0 8px 2px var(--activity-color); }
+:root[data-theme="dark"] #ai-activity-led, :root[data-theme="dark"] #bell-led { box-shadow: 0 0 0 4px #171e28e6, 0 1px 5px #0007; }
+:root[data-theme="dark"] #ai-activity-led[data-lit="true"], :root[data-theme="dark"] #bell-led[data-lit="true"] { box-shadow: 0 0 0 4px #171e28e6, 0 0 8px 2px var(--activity-color); }

@@ -1,0 +1,7 @@
+#desk-toast { position:fixed; margin:0; padding:12px; box-sizing:border-box; border:1px solid #94a3b8; border-radius:8px; background:#fff; color:#243247; box-shadow:0 4px 18px #0f172a30; max-height:calc(100vh - 16px); overflow:auto; }
+#desk-toast:popover-open { display:flex; gap:10px; align-items:flex-start; }
+.desk-toast-icon { flex:none; width:24px; height:24px; }
+.desk-toast-icon svg { width:24px; height:24px; }
+.desk-toast-text { flex:1; min-width:0; font:14px/1.5 sans-serif; white-space:pre-wrap; overflow-wrap:anywhere; }
+#desk-toast button { flex:none; width:24px; height:24px; padding:0; font-size:18px; }
+:root[data-theme="dark"] #desk-toast { background:#202936; color:#dbeafe; }

@@ -1,3 +1,5 @@
+import {createDeskToast} from './desk-toast';
+import { createBellControls } from './bell-controls';
 import { initialPartSize, initialImageSize, centeredPartPoint, initialLinePoints, initialLineDelta } from './initial-part-layout';
 import { deskPdf } from './desk-pdf';
 import { createCutoutControls } from './cutout-controls';
@@ -280,6 +282,7 @@ const lockControls = createLockControls($('#grid-snap'), form, () => {
 $('#numbering-settings').after($('#label-descriptions'));
 $('main').append($('.toolbar-view'));
 const activityLed = createActivityLed($('footer'));
+const bellControls=createBellControls($('#fit'),$('footer'),note=>recovery.ringBell(desk.selected(),note),notify);
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });
@@ -1004,6 +1007,7 @@ const recovery = new BrowserConnection({
   handoffError: message => notify(message, true),
   disconnected: () => { bhDeletion.stop(); activityLed.clear(); objectAnimator.finish(); cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
   status: (state, detail) => {
+    bellControls.connected(state==='connected');
     if (state === 'connected') connectionPanel.hide();
     const status = $('#connection');
     status.textContent = state === 'connected' ? 'MCP接続済み' : state === 'released' ? 'AI接続解放済み' : state === 'blocked' ? '接続確認が必要' : 'AI再接続待ち';
@@ -1015,6 +1019,7 @@ const recovery = new BrowserConnection({
     $('#message').dataset.connection = state === 'blocked' ? 'true' : 'false';
   },
 });
+const deskToast=createDeskToast();
 const connectionPanel = connectionControls(app, () => recovery.requestHandoff(), message => notify(message, true));
 function connect(token: string, port: string, manual = false, host = '127.0.0.1') {
   if (manual && (recovery.hasPairing() || desk.summary().count > 0) && !confirm('机の内容を保持したまま、接続先のペアリングを置き換えますか？')) return;
@@ -1024,7 +1029,12 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
   recovery.connect(token, port, async (ws, event) => {
     let id: string | undefined;
     try {
-      const message = JSON.parse(String(event.data)); id = message.id;
+      const message = JSON.parse(String(event.data));
+      if(message.type==='desk_toast'){deskToast.show(message);return;}
+      if(message.type==='bell_state'){bellControls.update(message);return;}
+      if(message.type==='bell_collected'){bellControls.collected(message);return;}
+      if(message.type==='ai_activity'){activityLed.pulse('tool');return;}
+      id = message.id;
       if (typeof id !== 'string') throw new Error('Invalid request ID');
       if (typeof message.request?.method === 'string') activityLed.pulse(message.request.method);
       thinkingMode.assertAllowed(message.request?.method);

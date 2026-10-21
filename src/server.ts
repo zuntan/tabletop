@@ -1,3 +1,4 @@
+import { BellWait, bellWaitFields, bellPressSchema } from './bell-wait.js';
 import { registerPropTools } from './prop-tools.js';
 import { registerStampTools } from './stamp-tools.js';
 import { createServer } from 'node:http';
@@ -68,6 +69,11 @@ const wss = new WebSocketServer({ noServer: true, maxPayload: 24_000_000 });
 const remotePeers = new WeakSet<WebSocket>();
 let browser: WebSocket | null = null;
 let releasing = false;
+const bellCapable=new WeakSet<WebSocket>();
+const toastCapable=new WeakSet<WebSocket>();
+const sendBellState=()=>{if(browser?.readyState===WebSocket.OPEN&&bellCapable.has(browser))browser.send(JSON.stringify({type:'bell_state',...bell.state()}));};
+const sendBellCollected=(note:{text:string;draftVersion:number})=>{if(browser?.readyState===WebSocket.OPEN)browser.send(JSON.stringify({type:'bell_collected',...note}));};
+let bell=new BellWait(sendBellState,sendBellCollected);
 const releaseCapable = new WeakSet<WebSocket>();
 const gate = new PairingGate(() => browser !== null || releasing);
 const pending = new Map<string, { resolve: (value: unknown) => void; reject: (error: Error) => void; timer: NodeJS.Timeout }>();
@@ -88,6 +94,7 @@ http.on('upgrade', (req, socket, head) => {
 });
 function attachBrowser(ws: WebSocket) {
   browser = ws;
+  bell.disconnect();bell=new BellWait(sendBellState,sendBellCollected);
   handoffTicket.clear();
 
   ws.on('message', data => {
@@ -100,7 +107,8 @@ function attachBrowser(ws: WebSocket) {
         });
         return;
       }
-      if (message.type === 'capabilities' && message.release === true) { releaseCapable.add(ws); return; }
+      if(message.type==='bell_press'){const press=bellPressSchema.parse(message);bell.ring(press.ids,press.text,press.draftVersion);return;}
+      if (message.type === 'capabilities' && message.release === true) { releaseCapable.add(ws);if(message.toast===true)toastCapable.add(ws);if(message.bell===true){bellCapable.add(ws);sendBellState();} return; }
       const item = pending.get(message.id);
       if (!item) return;
       clearTimeout(item.timer); pending.delete(message.id);
@@ -113,6 +121,7 @@ function attachBrowser(ws: WebSocket) {
     console.error(`[Tabletop] ${new Date().toISOString()} Browser closed code=${code} pending=${pending.size}`);
     if (browser !== ws) return;
     sharing.revoke();
+    bell.disconnect();
     browser = null;
     for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error('Browser disconnected; operation outcome may be unknown. Inspect revision before retrying.')); }
     pending.clear();
@@ -127,6 +136,7 @@ function request(payload: Request): Promise<unknown> {
     if (releasing) { reject(new Error('Desk release in progress; no request was sent.')); return; }
     if (network.isChanging) { reject(new Error('Network listener change in progress; no request was sent.')); return; }
     if (!browser || browser.readyState !== WebSocket.OPEN) { reject(new Error('No browser connected. Call desk_connection_info and follow its state-specific nextAction. A URL alone does not open pairing acceptance; do not automatically call desk_pairing_open for recovery.')); return; }
+    if(payload.method!=='share_read')bell.acknowledge();
     const id = randomUUID();
     const timer = setTimeout(() => {
       pending.delete(id);
@@ -154,6 +164,7 @@ async function releaseDesk(handoff = false) {
     const handoffUrl = handoff ? `http://${network.authority(lanHost!)}/#token=${handoffTicket.issue(gate.acceptanceEpoch + 1)}` : undefined;
     await acknowledgeRelease(peer, 3000, handoffUrl);
     sharing.revoke();
+    bell.disconnect();
     browser = null;
     peer.close(4003, 'Desk released');
     releasing = false;
@@ -176,6 +187,26 @@ async function compatibleRequest(payload: Request): Promise<unknown> {
   return request(payload);
 }
 const mcp = new McpServer({ name: 'tabletop', version: '0.1.0' });
+mcp.registerTool('desk_message',{
+ description:'Show a brief plain-text AI message above the bell in the connected browser, avoiding the open bell note. Icons: info, success, warning, question, hint. Replaces the previous message. durationMs defaults to 8000; 0 stays until dismissed or replaced. This is a temporary best-effort notice, not a document edit or guaranteed human receipt. Does not move the camera or focus. Optional experimental desk-side conversation aid, useful for brief acknowledgements after human operations, especially on a shared tablet. Keep substantive discussion in chat. See desk_help topic bell-conversation.',
+ inputSchema:{text:z.string().trim().min(1).max(2000),icon:z.enum(['info','success','warning','question','hint']).default('info'),durationMs:z.number().int().min(0).max(60000).default(8000)},
+ annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:true,openWorldHint:false},
+},async(args)=>{
+ if(!browser||browser.readyState!==WebSocket.OPEN||!toastCapable.has(browser))return {isError:true,content:[{type:'text' as const,text:'No compatible browser connected. Save the desk before restarting to upgrade.'}]};
+ browser.send(JSON.stringify({type:'desk_toast',...args}));
+ return {content:[{type:'text' as const,text:JSON.stringify({status:'sent'})}]};
+});
+mcp.registerTool('desk_bell_wait',{
+ description:'Experimental bounded wait for a human bell press. Requires a connected compatible browser. timeoutMs defaults to1000, max60000; choose less than your client tool timeout. afterSequence defaults0; supply epoch and last sequence returned to avoid missed presses. A newer press returns immediately with status bell and the human selection IDs and optional text captured at press time. Retrieving status bell clears the matching browser draft; edits made after the press are retained. timeout is normal. reset means a new connection/server epoch; disconnected ends the wait. No background agent, infinite polling, automatic action or guaranteed wakeup is created. Optional experimental aid for human-operation handoffs and short desk-side exchanges, especially on tablets. When appropriate, invite the human to select a card and press the bell, announce one bounded wait (for example 30 seconds), retrieve the selection/text, and acknowledge with desk_message before continuing authorized work. Use within an agreed interaction; honor human time/call limits, stop on timeout and never automatically repeat waits. See desk_help topic bell-conversation. Waiting never clears the bell lamp; the next non-wait Tabletop MCP tool call clears its lamp, even a server-only help/list call; this indicates traffic, not guaranteed receipt or action. No document revision or saved state changes.',
+ inputSchema:bellWaitFields,annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false},
+},async({afterSequence,timeoutMs,epoch},extra)=>{
+ try{
+  if(!browser||browser.readyState!==WebSocket.OPEN)throw new Error('No browser connected');
+  if(!bellCapable.has(browser))throw new Error('Browser has no bell support. Save the desk before upgrading.');
+  const result=await bell.wait(afterSequence,timeoutMs,epoch,extra.signal);
+  return {content:[{type:'text' as const,text:JSON.stringify(result)}]};
+ }catch(error){return {isError:true,content:[{type:'text' as const,text:error instanceof Error?error.message:String(error)}]};}
+});
 const tools = [
   ['desk_summary', 'Get name (empty means untitled), public per-tab deskId, sessionId, revision, counts and undo/redo availability. Use the name normally and deskId only to distinguish same-named open desks. deskId is not a credential, is not saved, and is stable across load/reconnection; sessionId remains the revision/load guard.', {}],
   ['desk_list', 'List objects in back-to-front order, excluding embedded image payloads and properties irrelevant to each type.', {}],
@@ -265,12 +296,27 @@ http.on('error', error => {
 });
 await network.listen();
 console.error(`[Tabletop] Open ${connectionUrl}${tokenFromEnv ? ' (manually append #token=<URL-encoded configured TABLETOP_TOKEN> in the Connection tab)' : ''}`);
-await mcp.connect(new StdioServerTransport());
+const stdio=new StdioServerTransport();
+await mcp.connect(stdio);
+// Observe public transport traffic without changing the SDK's dispatch/validation.
+// Server-only tools also count; waiting and protocol housekeeping do not.
+const receiveMcp=stdio.onmessage;
+stdio.onmessage=message=>{
+  if('method' in message&&message.method==='tools/call'){
+    const name=message.params?.name;
+    if(typeof name==='string'&&name!=='desk_bell_wait'){
+      bell.acknowledge();
+      if(browser?.readyState===WebSocket.OPEN&&bellCapable.has(browser))browser.send(JSON.stringify({type:'ai_activity'}));
+    }
+  }
+  receiveMcp?.(message);
+};
 let closing = false;
 async function shutdown(reason: string) {
   if (closing) return;
   closing = true;
   sharing.revoke();
+  bell.disconnect();
   console.error(`[Tabletop] ${new Date().toISOString()} Server stopping: ${reason}`);
   for (const ws of wss.clients) ws.close(1001, 'Server stopping');
   for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error('Server closing')); }

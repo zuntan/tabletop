@@ -1,0 +1,10 @@
+#bell-note-panel { position:fixed; margin:0; padding:12px; border:1px solid #94a3b8; border-radius:8px; background:var(--ui-panel,#fff); color:var(--ui-text,#243247); box-shadow:0 4px 18px #0f172a30; box-sizing:border-box; overflow:hidden; }
+#bell-note-panel:popover-open { display:flex; flex-direction:column; gap:8px; }
+.bell-note-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; padding-left:12px; font-size:12px; }
+#bell-note-panel button { font-size:11px; }
+#bell-note-text { width:100%; flex:1; min-height:30px; margin:0; resize:none; box-sizing:border-box; font:14px/1.4 sans-serif; }
+#bell-note-panel .inline-editor-actions { flex:none; margin:0; }
+#bell-note-panel small { font-size:10px; }
+#bell-note-panel .bell-note-resize { position:absolute; top:0; left:0; width:20px; height:20px; padding:0; border:0; background:transparent; cursor:nwse-resize; color:#64748b; touch-action:none; }
+#bell-note-panel .editor-markdown-preview { position:absolute; overflow:hidden; pointer-events:none; }
+:root[data-theme="dark"] #bell-note-panel { background:#202936; color:#dbeafe; }

@@ -17,6 +17,10 @@ export class BrowserConnection {
   private handoffRequested = false;
   constructor(private callbacks: Callbacks) {}
   hasPairing() { return this.pair !== null; }
+  ringBell(ids:string[],note:{text:string;draftVersion:number}) {
+    if(!this.pair||this.socket?.readyState!==WebSocket.OPEN)throw new Error('AIとの接続が必要です');
+    this.socket.send(JSON.stringify({type:'bell_press',ids:ids.slice(0,200),...note}));
+  }
   requestHandoff() {
     if (this.handoffRequested) return;
     if (!this.pair || this.socket?.readyState !== WebSocket.OPEN) throw new Error('AIとの接続が必要です。');
@@ -85,7 +89,7 @@ export class BrowserConnection {
           if (!candidate || !serverNonce || !await verifyPair(candidate, 'ready', clientNonce, serverNonce, ready.proof)) { block(); return; }
           if (!current() || ws.readyState !== WebSocket.OPEN) return;
           this.pair = candidate; authenticated = true; this.attempt = 0;
-          ws.send(JSON.stringify({ type: 'capabilities', release: true }));
+          ws.send(JSON.stringify({ type: 'capabilities', release: true, bell:true, toast:true }));
           clearTimeout(deadline); this.callbacks.status('connected', '');
         }
       }).catch(block);

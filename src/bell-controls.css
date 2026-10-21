@@ -1,0 +1,4 @@
+#desk-bell.tool-button { min-width:40px; height:46px; padding:4px 6px; }
+#desk-bell-options.tool-button { min-width:24px; width:24px; height:46px; padding:4px 2px; }
+#desk-bell[data-waiting="true"] { border-color:#d97706; }
+#bell-led { --activity-color:#ffff00; }
