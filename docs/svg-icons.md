@@ -7,3 +7,5 @@
 素材と版情報：src/vendor/tabler/README.md。MITライセンス：src/vendor/tabler/LICENSE。配布用コピー：public/licenses/tabler-icons.txt。外部通信や追加の実行時依存は不要。
 
 表示はsrc/icons.tsに集約する。信頼できる同梱SVGだけを解析し、ユーザー入力や外部SVGを渡さない。ボタンへの割り当てはsrc/tool-caption.ts、ヘッダーはsrc/header-icon.ts。
+
+2026-10-21：論理型抜きはTablerのscissors（ハサミ）を使用。大きさ18px・線幅1は他の操作アイコンと共通。
