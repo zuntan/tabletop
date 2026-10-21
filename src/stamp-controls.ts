@@ -13,7 +13,9 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
   const dated = document.createElement('input'); dated.type = 'checkbox'; dated.id = 'stamp-dated';
   const label = document.createElement('label'); label.append(dated, ' 日付付き');
   const choices = document.createElement('div'); choices.className = 'stamp-choices';
-  const paletteOrder = ['done_ja', 'sealed_ja', 'rejected_ja', 'done_en', 'sealed_en', 'rejected_en'];
+  const paletteOrder = ['done_ja', 'sealed_ja', 'rejected_ja', 'on_hold_ja', 'handle_with_care_ja',
+    'done_en', 'sealed_en', 'rejected_en', 'on_hold_en', 'handle_with_care_en',
+    'hanamaru_ja', 'smile_ja', 'well_done_ja', 'nandeyanen_ja', 'shirangana_ja'];
   const palettePatterns = [
     ...paletteOrder.map(id => stampPatterns.find(pattern => pattern.id === id)!),
     ...stampPatterns.filter(pattern => !paletteOrder.includes(pattern.id)),

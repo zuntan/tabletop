@@ -1,6 +1,7 @@
 import type { DeskObject } from './model';
 import { element as svg } from './diagram-drawing';
 import { stampPattern, type Stamp } from './stamp-values';
+let stampMaskSerial = 0;
 
 /** Body-relative geometry. Decoration never changes object bounds or hit targets. */
 export function stampLayout(width: number, height: number, compact: boolean, shape: string) {
@@ -24,7 +25,35 @@ export function stampArtwork(stamp: Stamp) {
     }
     g.append(node);
   };
-  if (rectangular) {
+  if (pattern.shape === 'care') {
+    g.append(svg('rect', { x: -46, y: -46, width: 92, height: 92, rx: 4 }),
+      svg('rect', { x: -41, y: -41, width: 82, height: 82, rx: 1, 'stroke-width': 1 }));
+    if (stamp.designId.endsWith('_en')) { text('HANDLE', -32, 12, 70, 'sans-serif'); text('WITH CARE', -20, 11, 72, 'sans-serif'); }
+    else text(pattern.title, -29, 17, 74);
+    // Original silhouette based on the familiar handling-mark vocabulary, not a traced label.
+    const mark = svg('g', { transform: `translate(0 ${stamp.text ? 4 : 8}) scale(.68)`, fill: pattern.color, stroke: 'none' });
+    const hand = 'M-40 -7Q-40 -12 -36 -12Q-32 -12 -32 -7V10Q-32 13 -29 16L-23 22Q-21 24 -19 22Q-17 20 -20 17L-26 11Q-29 8 -26 5Q-23 3 -20 6L-12 15Q-7 21 -7 28V35H-23V30L-36 18Q-40 14 -40 8Z';
+    // Knock the hand outline out of the box; the gap reveals the actual card underneath.
+    const maskId = `stamp-care-hands-${++stampMaskSerial}`;
+    const defs = svg('defs', {}), mask = svg('mask', { id: maskId, maskUnits: 'userSpaceOnUse', x: -50, y: -40, width: 100, height: 90, 'mask-type': 'luminance' });
+    mask.append(svg('rect', { x: -50, y: -40, width: 100, height: 90, fill: 'white' }),
+      svg('path', { d: hand, fill: 'black', stroke: 'black', 'stroke-width': 3 }),
+      svg('path', { d: hand, transform: 'scale(-1 1)', fill: 'black', stroke: 'black', 'stroke-width': 3 }));
+    defs.append(mask); mark.append(defs,
+      svg('path', { d: 'M0 -26 22 -13 0 0 -22 -13ZM-22 -10-2 3V23L-22 10ZM2 3 22 -10V10L2 23Z', mask: `url(#${maskId})` }));
+    mark.append(svg('path', { d: hand }), svg('path', { d: hand, transform: 'scale(-1 1)' })); g.append(mark);
+    if (stamp.text) text(stamp.text, 36, 8, 56, 'monospace');
+  } else if (stamp.designId === 'shirangana_ja' || stamp.designId === 'nandeyanen_ja') {
+    const squareBadge = pattern.shape === 'squareBadge';
+    if (squareBadge) g.append(svg('rect', { x: -46, y: -46, width: 92, height: 92, rx: 4 }), svg('rect', { x: -41, y: -41, width: 82, height: 82, rx: 1, 'stroke-width': 1 }));
+    else g.append(svg('circle', { r: 46 }), svg('circle', { r: 41, 'stroke-width': 1 }));
+    text(squareBadge ? '!' : '?', 2, squareBadge ? 76 : 83, 65, 'serif');
+    const symbol = g.lastElementChild!; symbol.setAttribute('opacity', '.48');
+    symbol.setAttribute('transform', squareBadge ? 'scale(1.25 1)' : 'scale(1 .94)');
+    text(pattern.title, 3, squareBadge ? 17 : 15, squareBadge ? 78 : 77, 'sans-serif');
+    const title = g.lastElementChild!; title.setAttribute('stroke', 'white'); title.setAttribute('stroke-width', '3'); title.setAttribute('paint-order', 'stroke fill');
+    if (stamp.text) text(stamp.text, 31, 8, squareBadge ? 70 : 56, 'monospace');
+  } else if (rectangular) {
     g.append(svg('rect', { x: -99, y: -44, width: 198, height: 88, rx: 5 }),
       svg('rect', { x: -94, y: -39, width: 188, height: 78, rx: 2, 'stroke-width': 1 }));
     text(pattern.title, stamp.text ? -10 : 2, 33, 176, 'sans-serif');
@@ -74,6 +103,10 @@ export function stampArtwork(stamp: Stamp) {
       text(pattern.title, stamp.text ? -9 : 2, pattern.title.length === 1 ? 49 : 32, 74);
       if (stamp.text) { g.append(svg('path', { d: 'M -37 13 H 37', 'stroke-width': 1 })); text(stamp.text, 26, 11, 65, 'monospace'); }
     }
+  }
+  if (pattern.shape === 'care' || stamp.designId === 'shirangana_ja' || stamp.designId === 'nandeyanen_ja') {
+    // Small, transparent interruptions in the new outlines suggest a lightly inked stamp.
+    for (const border of g.querySelectorAll(':scope > circle, :scope > rect')) border.setAttribute('stroke-dasharray', '31 .7 19 .5 43 1');
   }
   return g;
 }
