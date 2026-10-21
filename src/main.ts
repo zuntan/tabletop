@@ -1,3 +1,4 @@
+import { deskPdf } from './desk-pdf';
 import { createCutoutControls } from './cutout-controls';
 import { drawCutout } from './cutout-drawing';
 import { cutoutTarget, cutoutSourceObject } from './logical-cutout';
@@ -290,7 +291,8 @@ const thinkingMode = createThinkingMode($('header'), () => { objectAnimator.fini
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
 createDeskFileControls($('header'), desk, () => { partClipboard.clear(); render(); fitView(desk.selected()); },
-  () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing());
+  () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing(),
+  () => {objectAnimator.finish();return deskPdf(desk,canvas,id=>pinDescriptionVisible(desk.get(id)));});
 createUiThemeButton($('header'));
 const deskMenu = createDeskMenu($('header'), desk, patch => {
   if (busy || gesture || editor.isActive()) { notify('操作が終わってから設定を変更してください', true); deskMenu.refresh(); return; }

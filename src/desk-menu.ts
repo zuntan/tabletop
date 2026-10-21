@@ -13,7 +13,7 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
   const icon = createIcon('minus', 20);
   icon.querySelector('path')!.setAttribute('d', 'M4 6h16 M4 12h16 M4 18h16');
   icon.setAttribute('data-icon', 'menu'); button.append(icon);
-  header.querySelector('#load-desk')!.after(button);
+  (header.querySelector('#file-menu') ?? header.querySelector('#load-desk'))!.after(button);
   const panel = document.createElement('section'); panel.id = 'desk-menu-panel'; panel.popover = 'auto';
   panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'メニュー');
   document.querySelector('#app')!.append(panel);

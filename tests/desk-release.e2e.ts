@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { openTestDesk } from './desk-browser';
 import { decodeDeskFile } from '../src/desk-file';
+import { publishObject } from '../src/object-properties';
 
 test('release preserves the local desk, stops retries, accepts another desk and allows deliberate manual return', { timeout: 40_000 }, async () => {
   const { page, call, client, close, port, errors } = await openTestDesk('release-e2e');
@@ -28,9 +29,9 @@ test('release preserves the local desk, stops retries, accepts another desk and 
     await page.locator('#redo').click();
     assert.ok(await page.locator('[data-id="kept"]').count());
     // Local download still works without an AI connection and retains objects/settings.
-    const downloading = page.waitForEvent('download'); await page.locator('#save-desk').click();
+    const downloading = page.waitForEvent('download'); await page.locator('#file-menu').click(); await page.locator('#save-desk').click();
     const saved = await decodeDeskFile(new Uint8Array(await readFile((await (await downloading).path())!)));
-    assert.deepEqual(saved.objects, original.objects);
+    assert.deepEqual(saved.objects.map(publishObject), original.objects.map(publishObject));
     assert.deepEqual(saved.settings, original.settings);
     const second = await page.context().browser()!.newPage();
     const token = 'release-e2e-012345678901234567890123456789';

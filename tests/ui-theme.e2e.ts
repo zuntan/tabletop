@@ -28,7 +28,7 @@ test('wallpaper frames persist independently of local UI theme; dark controls ke
     assert.equal(await button.locator('svg').getAttribute('data-icon'), 'moon');
     assert.equal((await button.boundingBox())!.width, 36);
     const order = await page.locator('header > button').evaluateAll(els => els.map(el => el.id));
-    assert.ok(order.indexOf('thinking-mode') < order.indexOf('ui-theme') && order.indexOf('ui-theme') < order.indexOf('save-desk'));
+    assert.ok(order.indexOf('thinking-mode') < order.indexOf('ui-theme') && order.indexOf('ui-theme') < order.indexOf('file-menu'));
     const cardColor = await page.locator('[data-id="note"] .markdown-text').evaluate(el => getComputedStyle(el).color);
     await button.click();
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');

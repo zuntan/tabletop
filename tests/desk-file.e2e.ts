@@ -18,7 +18,7 @@ test('save/download, load/upload, shared Undo, rejected file, and cancel work in
     ] });
     const original = await call('desk_state');
     const downloadPromise = page.waitForEvent('download');
-    await page.locator('#save-desk').click();
+    await page.locator('#file-menu').click(); await page.locator('#save-desk').click();
     const download = await downloadPromise;
     assert.match(download.suggestedFilename(), /\.tabletop$/);
     const bytes = await readFile((await download.path())!);

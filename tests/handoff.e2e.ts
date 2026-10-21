@@ -65,7 +65,7 @@ test('authenticated human handoff renders a private QR and pairs a second empty 
     });
     assert.deepEqual(pixels, { width: 256, black: true, white: true });
     const downloadPromise = page.waitForEvent('download');
-    await page.locator('#save-desk').click();
+    await page.locator('#file-menu').click(); await page.locator('#save-desk').click();
     const downloaded = await downloadPromise;
     const saved = await decodeDeskFile(await readFile((await downloaded.path())!));
     assert.deepEqual(saved.objects, before.objects);

@@ -19,7 +19,8 @@ test('shared snap defaults, public MCP placement, exact numeric editing and save
     assert.equal(placed.placement.mode, 'desk'); assert.equal(placed.placement.results[0].applied.x, 24);
     assert.equal(placed.placement.results[0].snapped, true);
     assert.equal(await page.locator('[data-id="r"]').getAttribute('transform'), 'translate(24 -24)');
-    await page.getByRole('button', { name: '矩形', exact: true }).click();
+    await page.getByRole('button', { name: '図形の候補', exact: true }).click();
+    await page.getByRole('dialog', { name: '図形の候補', exact: true }).getByRole('button', { name: '矩形', exact: true }).click();
     const created = (await call('desk_list')).objects.at(-1);
     assert.equal(created.x % 24, 0); assert.equal(created.y % 24, 0);
     await call('desk_select', { ids: [] });
@@ -48,7 +49,7 @@ test('shared snap defaults, public MCP placement, exact numeric editing and save
     await page.mouse.move(box.x + 41, box.y + 41, { steps: 3 }); await page.mouse.up();
     const dragged = await call('desk_get', { id: 'r' });
     assert.deepEqual({ x: dragged.x, y: dragged.y }, { x: 43, y: -4 });
-    const downloadPromise = page.waitForEvent('download'); await page.locator('#save-desk').click();
+    const downloadPromise = page.waitForEvent('download'); await page.locator('#file-menu').click(); await page.locator('#save-desk').click();
     const bytes = await readFile((await (await downloadPromise).path())!);
     assert.deepEqual((await decodeDeskFile(bytes)).settings.grid, { enabled: true, interval: 10, origin: { x: 3, y: -4 } });
     await execute([{ kind: 'grid_update', patch: { enabled: false, interval: 24, origin: { x: 0, y: 0 } } }]);

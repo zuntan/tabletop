@@ -30,5 +30,5 @@ export function createUiThemeButton(header: HTMLElement) {
   }
   button.onclick = () => setUiTheme(getUiTheme() === 'dark' ? 'light' : 'dark');
   document.addEventListener('ui-theme-change', update);
-  header.insertBefore(button, header.querySelector('#save-desk')); update();
+  header.insertBefore(button, header.querySelector('#file-menu') ?? header.querySelector('#save-desk')); update();
 }

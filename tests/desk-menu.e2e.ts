@@ -6,7 +6,7 @@ test('desk menu edits shared appearance, previews opacity once per gesture, foll
   const { page, call, close, errors } = await openTestDesk('desk-menu');
   try {
     const menu = page.getByRole('button', { name: 'メニュー', exact: true });
-    assert.equal(await page.locator('#load-desk + #desk-menu').count(), 1);
+    assert.equal(await page.locator('#file-menu + #desk-menu').count(), 1);
     await menu.click();
     await page.getByRole('button', { name: '机の見た目…' }).click();
     await page.getByRole('combobox', { name: '壁紙', exact: true }).selectOption('cutting-mat');

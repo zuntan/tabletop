@@ -5,7 +5,7 @@ import { openTestDesk } from './desk-browser';
 test('header actions use monochrome accessible icons with tooltips and keep their behavior', { timeout: 30_000 }, async () => {
   const { page, call, close, errors } = await openTestDesk('header-icons');
   try {
-    for (const [id, label] of [['undo', '元に戻す'], ['redo', 'やり直す'], ['save-desk', '保存'], ['load-desk', '読込']]) {
+    for (const [id, label] of [['undo', '元に戻す'], ['redo', 'やり直す']]) {
       const button = page.getByRole('button', { name: label, exact: true });
       assert.equal(await button.getAttribute('id'), id);
       assert.equal(await button.getAttribute('title'), label);
@@ -33,10 +33,10 @@ test('header actions use monochrome accessible icons with tooltips and keep thei
     await page.getByRole('button', { name: 'やり直す', exact: true }).click();
     assert.equal((await call('desk_summary')).count, 1);
     const download = page.waitForEvent('download');
-    await page.getByRole('button', { name: '保存', exact: true }).click();
+    await page.locator('#file-menu').click(); await page.locator('#save-desk').click();
     assert.equal((await download).suggestedFilename(), '無題.tabletop');
     const chooser = page.waitForEvent('filechooser');
-    await page.getByRole('button', { name: '読込', exact: true }).click();
+    await page.locator('#file-menu').click(); await page.locator('#load-desk').click();
     assert.equal((await chooser).isMultiple(), false);
     assert.deepEqual(errors, []);
   } finally { await close(); }

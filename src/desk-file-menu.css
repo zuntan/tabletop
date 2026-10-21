@@ -1,0 +1,4 @@
+header .file-menu-trigger { display:inline-flex;align-items:center;justify-content:center;gap:5px;height:36px;padding:6px 9px;font-size:12px;white-space:nowrap; }
+#file-menu-panel { position:fixed;inset:auto;margin:0;width:198px;padding:6px;border:1px solid var(--ui-border,#cbd5e1);border-radius:8px;background:var(--ui-panel,#fff);color:var(--ui-text,#334155);box-shadow:0 5px 24px #0003; }
+#file-menu-panel .file-menu-item { display:flex;align-items:center;gap:8px;min-height:36px;width:100%;padding:7px 9px;font-size:12px;text-align:left;background:transparent;color:inherit;border-color:transparent; }
+#file-menu-panel .file-menu-item:hover:not(:disabled) { background:var(--ui-input,#eff6ff);border-color:var(--ui-border,#cbd5e1); }
