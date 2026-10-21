@@ -8,6 +8,7 @@ import { openBhPreview } from './bh-preview';
 import { rasterPointedCard } from './part-raster';
 import { pointedMove, ObjectMoveAnimator } from './object-move-animation';
 import { drawClip } from './clip-drawing';
+import { drawClipMembershipGuides } from './clip-membership';
 import { bundleOperations, unbundleOperations, clipFor, clipGroup, clipFollower, clipDropTarget, clipTarget } from './clip-bundles';
 import { createPropControls } from './prop-controls';
 import { drawStamp } from './stamps';
@@ -512,6 +513,7 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
   fit.querySelector('.tool-caption')!.textContent = hasSelection ? '選択範囲' : hasPointing ? 'AI指差し' : '全体';
   overlays.replaceChildren();
   const selected = preview ?? desk.selected().map(id => desk.get(id));
+  drawClipMembershipGuides(overlays, scene ?? renderedScene, selected.map(object => object.id), camera.zoom, colors.selection);
   for (const object of desk.pointed().map(id => scene?.find(object => object.id === id) ?? desk.get(id)).filter(pinIsVisible))
     drawAiPointing(overlays, [connectorForView(object)], camera.zoom, pinDescriptionVisible(object), colors.pointing);
   for (const source of selected.filter(pinIsVisible)) {
