@@ -16,6 +16,7 @@ import { randomUuid } from './portable-crypto';
 import { cameraAnimationFields, cameraMoveFields, cameraMoveSchema, type CameraBridge } from './camera-control';
 import { lockFields, lockOperations } from './object-lock';
 import { shareRead } from './share-read';
+import { stickerSchema, stickerTarget } from './sticker-values';
 import { textMeasureFields, type TextMeasureBridge } from './text-measure';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
@@ -55,6 +56,7 @@ const objectFields = z.object({
   cutout: cutoutSchema.nullable().optional(),
   stamp: z.object({ designId: z.string().min(1).max(200), text: z.string().max(10000), angle: z.number().finite().min(-360).max(360) }).strict().nullable().optional(),
   reactions: z.array(z.enum(reactions)).max(reactionChoices.length).refine(values => new Set(values.map(canonicalReaction)).size === values.length, 'Duplicate reactions are not allowed').optional(),
+  stickers: stickerSchema.nullable().optional(),
   x: coordinate.default(0),
   y: coordinate.default(0),
   x2: coordinate.optional(),
@@ -134,6 +136,7 @@ type Entry = { before: Snapshot; after: Snapshot; beforeSettings: Settings; afte
 function validateObject(object: unknown): DeskObject {
   const parsed = objectSchema.parse(object);
   if(parsed.type!=='clip' && ['clipMembers','clipAnchor','clipOffset','clipSize','clipAutoSize','clipStyle'].some(key=>(parsed as Record<string,unknown>)[key]!==undefined)) throw new Error('Clip fields belong only to clips');
+  if(parsed.stickers && !stickerTarget(parsed)) throw new Error('Stickers require text, shape or media cards');
   if (parsed.type === 'mermaid' && parsed.mermaidSource === undefined) throw new Error('Mermaid source required');
   if (['image', 'svg', 'prop'].includes(parsed.type) && !parsed.src) throw new Error('Image source required');
   if (['web', 'link'].includes(parsed.type) && !parsed.url) throw new Error('URL required');

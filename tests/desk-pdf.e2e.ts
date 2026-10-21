@@ -11,7 +11,7 @@ test('file menu exports a single all-desk PDF independent of zoom/selection with
   await call('desk_execute',{operations:[
    {kind:'desk_rename',name:'PDF export test 日本語'},
    {kind:'background_update',patch:{wallpaper:'cutting-mat'}},
-   {kind:'add',object:{id:'note',type:'text',x:-550,y:-160,width:600,height:360,text:'## 日本語の机\n\n**画面の外もPDFへ。**\n\n- 型抜きと画像\n- ハンコ・ピン・図形\n- 位置と重なり順',fill:'#fff7ed',fillOpacity:1,fontSize:28,padding:24,stamp:{designId:'done_ja',text:'2026.10.21',angle:-5},reactions:['👍']}},
+   {kind:'add',object:{id:'note',type:'text',x:-550,y:-160,width:600,height:360,text:'## 日本語の机\n\n**画面の外もPDFへ。**\n\n- 型抜きと画像\n- ハンコ・ピン・図形\n- 位置と重なり順',fill:'#fff7ed',fillOpacity:1,fontSize:28,padding:24,stamp:{designId:'done_ja',text:'2026.10.21',angle:-5},reactions:['👍'],stickers:{colors:['#ef4444','#3b82f6','#ef4444'],origin:'bottom-left',diameter:36,fixed:true}}},
    {kind:'add',object:{id:'mold',type:'ellipse',x:300,y:160,width:250,height:200}},
    {kind:'cutout',id:'picture',moldId:'mold'},
    {kind:'update',id:'mold',patch:{x:1000,y:450}},

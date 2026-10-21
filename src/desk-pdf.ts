@@ -4,6 +4,7 @@ import { jpegPagePdf, pdfRasterSize } from './pdf-document';
 import { drawStamp } from './stamps';
 import { cutoutSourceObject } from './logical-cutout';
 import { drawReactions } from './reactions';
+import { drawStickers } from './stickers';
 import { pinTransform } from './pin-series';
 import { drawConnector } from './diagram-drawing';
 import { buildJunctionRounding } from './junction-rounding';
@@ -52,6 +53,7 @@ export async function deskPdf(desk:Desk,canvas:SVGSVGElement,descriptions:(id:st
     if(!object.cutout&&object.callout){group.querySelector('.text-callout')?.setAttribute('d',calloutPath(object));drawCalloutLeader(group,object);}
   }
   drawReactions(group,object,descriptions(object.id),1);
+  drawStickers(group,object,1);
  }
  root.querySelectorAll('.open-link,.connector-hit').forEach(n=>n.remove());
  root.querySelectorAll('[vector-effect]').forEach(n=>n.removeAttribute('vector-effect'));
@@ -65,7 +67,7 @@ export async function deskPdf(desk:Desk,canvas:SVGSVGElement,descriptions:(id:st
    let b:Rect=group.getBBox();
    if(object.cutout){
     const parts:Rect[]=[{x:0,y:0,width:object.width,height:object.height}];
-    const badges=group.querySelector<SVGGElement>(':scope > [data-reactions]');if(badges)parts.push(transformedBox(badges,badges.getBBox()));
+    for(const badges of group.querySelectorAll<SVGGElement>(':scope > [data-reactions], :scope > [data-stickers]'))parts.push(transformedBox(badges,badges.getBBox()));
     b=union(parts);
    }
    const world=transformedBox(group,b),pad=Math.max(2,object.strokeWidth/2);

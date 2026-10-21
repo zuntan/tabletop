@@ -35,7 +35,7 @@ export function colorOperations(objects: DeskObject[], role: Role, color: string
 }
 
 /** A thin adapter around Pickr's existing swatch picker, shared by all object types. */
-export function createColorControls(container: HTMLElement, apply: (operations: Operation[]) => void, prefix = '', options: { roles?: Role[]; names?: Partial<Record<Role, string>> } = {}) {
+export function createColorControls(container: HTMLElement, apply: (operations: Operation[]) => void, prefix = '', options: { roles?: Role[]; names?: Partial<Record<Role, string>>; allowTransparent?: boolean } = {}) {
   let objects: DeskObject[] = [];
   let selection = '';
   const compact = !!container.closest('nav');
@@ -85,7 +85,7 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
       const popup = document.querySelector<HTMLElement>(`.palette-${prefix}${role}`)!;
       const transparent = document.createElement('button'); transparent.type = 'button';
       transparent.className = 'transparent-choice'; transparent.textContent = '透明（なし）';
-      transparent.onclick = () => change('transparent'); popup.prepend(transparent);
+      transparent.onclick = () => change('transparent'); if(options.allowTransparent !== false) popup.prepend(transparent);
       popup.querySelectorAll<HTMLButtonElement>('.pcr-swatches button').forEach((swatch, i) => {
         swatch.title = swatches[i]; swatch.setAttribute('aria-label', `${captions[role]} ${swatches[i]}`);
       });

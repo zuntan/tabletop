@@ -21,12 +21,11 @@ export async function rasterRenderedPart(object: DeskObject, source: SVGGElement
   if(object.cutout){
     // getBBox includes unclipped source geometry; only capture the visible window.
     bbox={x:0,y:0,width:object.width,height:object.height};
-    const badges=source.querySelector<SVGGElement>(':scope > [data-reactions]');
-    if(badges){
+    for(const badges of source.querySelectorAll<SVGGElement>(':scope > [data-reactions], :scope > [data-stickers]')){
       const b=badges.getBBox(),m=badges.transform.baseVal.consolidate()?.matrix??new DOMMatrix();
       const points=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(([x,y])=>new DOMPoint(x,y).matrixTransform(m));
-      const x=Math.min(0,...points.map(p=>p.x)),y=Math.min(0,...points.map(p=>p.y));
-      bbox={x,y,width:Math.max(object.width,...points.map(p=>p.x))-x,height:Math.max(object.height,...points.map(p=>p.y))-y};
+      const x=Math.min(bbox.x,...points.map(p=>p.x)),y=Math.min(bbox.y,...points.map(p=>p.y));
+      bbox={x,y,width:Math.max(bbox.x+bbox.width,...points.map(p=>p.x))-x,height:Math.max(bbox.y+bbox.height,...points.map(p=>p.y))-y};
     }
   }
   if(contentOnly){

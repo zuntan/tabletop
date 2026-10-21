@@ -49,5 +49,5 @@ export function applyCutoutPatch(target:DeskObject,mold:DeskObject):Partial<Desk
 }
 /** Frozen layout dimensions prevent reflow just because the viewing window changed. */
 export function cutoutSourceObject(object:DeskObject):DeskObject{
- const c=object.cutout!;return{...object,cutout:undefined,width:c.layout.width,height:c.layout.height+cutoutTitle(object),reactions:undefined};
+ const c=object.cutout!;return{...object,cutout:undefined,width:c.layout.width,height:c.layout.height+cutoutTitle(object),reactions:undefined,stickers:undefined};
 }

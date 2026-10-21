@@ -9,6 +9,9 @@ import { rasterPointedCard } from './part-raster';
 import { pointedMove, ObjectMoveAnimator } from './object-move-animation';
 import { drawClip } from './clip-drawing';
 import { drawClipMembershipGuides } from './clip-membership';
+import { drawStickers } from './stickers';
+import { createStickerControls } from './sticker-controls';
+import './stickers.css';
 import { bundleOperations, unbundleOperations, clipFor, clipGroup, clipFollower, clipDropTarget, clipTarget } from './clip-bundles';
 import { createPropControls } from './prop-controls';
 import { drawStamp } from './stamps';
@@ -402,6 +405,7 @@ function refreshPinPresentation() {
       node.replaceChildren(); drawConnector(node, visual, camera.zoom, renderedRounding.get(object.id));
     }
     drawReactions(node, connectorForView(object), pinDescriptionVisible(object), camera.zoom);
+    drawStickers(node, object, camera.zoom);
   }
 }
 function drawPinThreads(scene: DeskObject[]) {
@@ -429,6 +433,7 @@ function drawObject(object: DeskObject) {
   drawCutout(group,object,source=>{drawObjectRaw(source);return objectsLayer.lastElementChild as SVGGElement;});
   if(object.type!=='text')drawOpenLink(group,object);
   drawReactions(group,object,pinDescriptionVisible(object),camera.zoom);
+  drawStickers(group,object,camera.zoom);
   drawnNodes.set(object.id,group);objectsLayer.append(group);
 }
 function drawObjectRaw(object: DeskObject) {
@@ -494,6 +499,7 @@ function drawObjectRaw(object: DeskObject) {
   }
   if(object.type==='clip') drawClip(group,object,renderedById.get(object.clipMembers?.[0] ?? ''));
   drawReactions(group, object, pinDescriptionVisible(object), camera.zoom);
+  drawStickers(group, object, camera.zoom);
   objectsLayer.append(group);
 }
 function drawSelection(preview?: DeskObject[], scene = preview) {
@@ -593,6 +599,7 @@ function render(rebuild = true) {
   lockControls.update([...new Set(ids.flatMap(id => clipGroup(renderedScene,id).map(object => object.id)))].map(id => desk.get(id)));
   for (const id of ['#front', '#back', '#delete', '#delete-animated']) $<HTMLButtonElement>(id).disabled = !ids.length;
   bhDelete.refresh();cutoutControls.update();
+  stickerControls.update();
   $('#object-list').replaceChildren();
   const listObjects = desk.snapshot().reverse().filter(objectListIncludes);
   const seriesNames = new Map(desk.settingsSnapshot().series.map(series => [series.id, series.name]));
@@ -697,6 +704,10 @@ const cutoutControls=createCutoutControls($('#image'),form,()=>desk.selected().m
   if(busy||gesture||editor.isActive())return;
   attempt(()=>execute(operations));
 },id=>drawnNodes.get(id),notify);
+const stickerControls=createStickerControls(form,()=>desk.selected().map(id=>desk.get(id)),operations=>{
+  if(busy||gesture||editor.isActive())throw new Error('編集中の操作を終えてからシールを使ってください');
+  execute(operations);render();notify('シールを更新しました');
+},notify);
 $('#front').onclick = () => attempt(() => execute(desk.selected().map(id => ({ kind: 'reorder', id, index: desk.summary().count - 1 }))));
 $('#back').onclick = () => attempt(() => execute(desk.selected().slice().reverse().map(id => ({ kind: 'reorder', id, index: 0 }))));
 $('#text-measure').onclick = () => {

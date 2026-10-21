@@ -1,0 +1,29 @@
+#sticker-controls { margin: 10px 0; padding: 10px; border: 1px solid #cbd5e1; border-radius: 7px; }
+#sticker-controls:not([hidden]) { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#sticker-controls legend { padding: 0 4px; font-size: 12px; }
+#sticker-controls label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; min-width: 0; }
+#sticker-controls .sticker-actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; }
+#sticker-controls .sticker-colors { flex: 1; min-width: 0; }
+#sticker-controls .color-control > span { display: none; }
+#sticker-controls .color-trigger { min-width: 0; width: 100%; }
+#sticker-controls .color-value { display: none; }
+#sticker-controls .sticker-fixed { flex-direction: row; align-items: center; grid-column: 1 / -1; }
+#sticker-controls button { font-size: 11px; }
+#sticker-controls input[type=number] { min-width: 0; width: 100%; }
+#sticker-controls input[type=checkbox] { width: auto; }
+
+#sticker-controls .sticker-appearance { display:flex; flex:1; min-width:0; gap:4px; }
+#sticker-controls .sticker-appearance > * { flex:1; width:50%; min-width:0; }
+
+#sticker-controls .sticker-appearance > .sticker-shape-picker { flex:0 0 28px; width:28px; }
+#sticker-controls .sticker-shape-picker button { flex:0 0 28px; width:28px; min-width:0; padding:0; }
+#sticker-controls .sticker-colors .color-dot { display:none; }
+#sticker-controls .color-trigger svg { width:22px; height:22px; }
+.sticker-shape-palette .number-preset-choices { display:grid; grid-template-columns:repeat(5,40px); gap:6px; }
+.sticker-shape-palette .number-preset-choices button { width:40px; height:40px; padding:8px; }
+.sticker-shape-palette svg { width:24px; height:24px; display:block; }
+
+#sticker-controls .sticker-actions button { height:28px; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; padding-top:0; padding-bottom:0; }
+#sticker-controls .sticker-actions > button { flex:0 0 auto; white-space:nowrap; }
+#sticker-controls .sticker-appearance { align-items:center; }
+#sticker-controls .color-trigger svg { display:block; }
