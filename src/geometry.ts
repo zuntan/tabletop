@@ -1,3 +1,4 @@
+import {resolveFiles,freezeFileGeometry} from './clear-files';
 import { resolveClips, clipFollower } from './clip-bundles';
 import { isShapeType, isNewShape } from './shape-definitions';
 import { resolveTextCallouts } from './text-callouts';
@@ -11,7 +12,7 @@ export type Anchor = typeof anchorNames[number];
 export type Binding = { objectId: string; anchor: Anchor };
 export const anchors: readonly Anchor[] = anchorNames.slice(0, 8);
 export function anchorsFor(object: DeskObject, scene: DeskObject[] = []): readonly Anchor[] {
-  if (object.type === 'clip' || clipFollower(scene,object.id)) return [];
+  if (['clip','file'].includes(object.type) || clipFollower(scene,object.id)) return [];
   if (object.type === 'prop') return [];
   return object.type === 'label' ? ['center'] : isNewShape(object.type) ? ['top', 'right', 'bottom', 'left'] : anchors;
 }
@@ -42,7 +43,7 @@ export function bounds(object: DeskObject) {
     width: Math.abs(end.x - start.x), height: Math.abs(end.y - start.y) };
 }
 export function anchorPoint(object: DeskObject, anchor: Anchor): Point {
-  if (object.type === 'prop' || object.type === 'clip') throw new Error('Props and clips have no anchors');
+  if (['prop','clip','file'].includes(object.type)) throw new Error('Props and clips have no anchors');
   if (isNewShape(object.type) && !['top', 'right', 'bottom', 'left'].includes(anchor))
     throw new Error('This shape supports only top/right/bottom/left anchors');
   switch (anchor) {
@@ -82,7 +83,9 @@ export function snap(point: Point, objects: DeskObject[], threshold: number) {
 }
 
 /** Resolve after the entire atomic batch, allowing forward references inside it. */
-export function resolveConnections(objects: DeskObject[], before: DeskObject[] = []): DeskObject[] {
+export function resolveConnections(objects: DeskObject[], before: DeskObject[] = [], freeze=true): DeskObject[] {
+  objects = resolveFiles(objects,before);
+  const fixed=objects;
   objects = resolveClips(objects,before);
   objects = resolvePinAttachments(objects, before);
   objects = resolveTextCallouts(objects, before);
@@ -115,5 +118,7 @@ export function resolveConnections(objects: DeskObject[], before: DeskObject[] =
     }
     return withEndpoints(next, points.start, points.end);
   });
-  return resolveJunctions(resolved, before);
+  const joined=resolveJunctions(resolved,before);
+  if(freeze){const frozen=freezeFileGeometry(joined,fixed);if(frozen.changed)return resolveConnections(frozen.objects,before,false);}
+  return resolveFiles(joined,before);
 }

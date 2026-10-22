@@ -17,9 +17,9 @@ export const swatches = Array.from({ length: 6 }, (_, shade) => families.map(fam
 const names = { fill: '塗り', stroke: '輪郭', text: '文字' };
 function field(object: DeskObject, role: Role): 'fill' | 'stroke' | 'textColor' | null {
   if (object.type === 'label') return role === 'text' ? 'textColor' : role;
-  if (role === 'fill') return object.type === 'clip' || isShape(object) || object.type === 'text' ? 'fill' : null;
-  if (role === 'stroke') return isShape(object) || isConnector(object) || object.type === 'text' ? 'stroke' : null;
-  return isShape(object) || object.type === 'text' ? 'textColor' : null;
+  if (role === 'fill') return object.type === 'clip' || isShape(object) || ['text','file'].includes(object.type) ? 'fill' : null;
+  if (role === 'stroke') return isShape(object) || isConnector(object) || ['text','file'].includes(object.type) ? 'stroke' : null;
+  return isShape(object) || ['text','file'].includes(object.type) ? 'textColor' : null;
 }
 export function colorOperations(objects: DeskObject[], role: Role, color: string): Operation[] {
   const seen = new Set<string>();
@@ -100,7 +100,7 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
       const key = selected.map(o => o.id).join('|');
       if (key !== selection) controls.forEach(control => control.hide());
       objects = selected; selection = key;
-      container.hidden = !objects.some(o => isShape(o) || isConnector(o) || o.type === 'text' || o.type === 'label');
+      container.hidden = !objects.some(o => isShape(o) || isConnector(o) || o.type === 'text' || o.type === 'file' || o.type === 'label');
       controls.forEach(control => control.sync());
     },
     isOpen: () => !!document.querySelector('.tabletop-palette.visible'),

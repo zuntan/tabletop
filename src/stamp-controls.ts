@@ -29,12 +29,12 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
     button.append(preview, caption); choices.append(button);
     button.onclick = () => {
       const stamp = createStamp(pattern.id, dated.checked);
-      apply(selected().filter(o => o.type === 'text').map(o => ({ kind: 'update', id: o.id, patch: { stamp } })));
+      apply(selected().filter(o => ['text','file'].includes(o.type)).map(o => ({ kind: 'update', id: o.id, patch: { stamp } })));
     };
     return button;
   });
   const clear = document.createElement('button'); clear.id = 'stamp-clear'; clear.type = 'button'; clear.textContent = '取り消し';
-  clear.onclick = () => apply(selected().filter(o => o.type === 'text' && o.stamp).map(o => ({ kind: 'update', id: o.id, patch: { stamp: null } })));
+  clear.onclick = () => apply(selected().filter(o => ['text','file'].includes(o.type) && o.stamp).map(o => ({ kind: 'update', id: o.id, patch: { stamp: null } })));
   choices.append(clear); panel.append(label, choices); container.append(trigger, panel);
   const position = () => {
     const rect = trigger.getBoundingClientRect();
@@ -45,7 +45,7 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
   window.addEventListener('resize', position);
   container.addEventListener('keydown', event => { if (event.code === 'Space') event.stopPropagation(); });
   return { update(objects: DeskObject[]) {
-    const texts = objects.filter(o => o.type === 'text');
+    const texts = objects.filter(o => ['text','file'].includes(o.type));
     buttons.forEach(button => { button.disabled = !texts.length; });
     clear.disabled = !texts.some(o => o.stamp);
   } };

@@ -1,3 +1,4 @@
+import {assertFileOperation,fileGroup,fileFor} from './clear-files';
 import { cutoutSchema, cutoutTarget, applyCutoutPatch, normalizeCutoutPatch } from './logical-cutout';
 import { clipGroup, clipFor } from './clip-bundles';
 import { publishObject } from './object-properties';
@@ -39,9 +40,10 @@ const bindingSchema = z.object({
 export const endpointShapeSchema = z.enum(['none', 'arrow', 'circle', 'diamond']);
 const objectFields = z.object({
   id: z.string().min(1).max(100),
-  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'web', 'link', 'label']),
+  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'file', 'web', 'link', 'label']),
   cornerRadius: z.number().finite().min(0).max(100_000).default(16),
   padding: z.number().finite().min(0).max(100_000).optional(),
+  fileMembers: z.array(z.string().min(1).max(100)).max(1999).optional(),
   clipMembers: z.array(z.string().min(1).max(100)).optional(),
   clipAnchor: z.enum(['top','right','bottom','left','top-left','top-right','bottom-left','bottom-right']).optional(),
   clipOffset: z.number().finite().min(0).optional(),
@@ -99,7 +101,7 @@ function normalizeLegacyConnector(input: unknown): unknown {
 export const objectSchema = z.preprocess(normalizeLegacyConnector, objectFields);
 export const patchSchema = objectFields.omit({ id: true, type: true }).partial();
 const addObjectFields = objectFields.partial().required({ id: true, type: true });
-const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'web', 'link', 'label']) })
+const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'file', 'web', 'link', 'label']) })
   .transform(object => normalizeLegacyConnector(object) as z.input<typeof addObjectFields>);
 export const operationSchema = z.discriminatedUnion('kind', [
   ...settingsOperations,
@@ -137,6 +139,7 @@ type Entry = { before: Snapshot; after: Snapshot; beforeSettings: Settings; afte
 
 function validateObject(object: unknown): DeskObject {
   const parsed = objectSchema.parse(object);
+  if(parsed.type!=='file'&&parsed.fileMembers!==undefined)throw new Error('File members belong only to files');
   if(parsed.type!=='clip' && ['clipMembers','clipAnchor','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipStyle'].some(key=>(parsed as Record<string,unknown>)[key]!==undefined)) throw new Error('Clip fields belong only to clips');
   if(parsed.stickers && !stickerTarget(parsed)) throw new Error('Stickers require text, shape or media cards');
   if (parsed.type === 'mermaid' && parsed.mermaidSource === undefined) throw new Error('Mermaid source required');
@@ -144,7 +147,7 @@ function validateObject(object: unknown): DeskObject {
   if (['web', 'link'].includes(parsed.type) && !parsed.url) throw new Error('URL required');
   if (parsed.type === 'prop' && (!parsed.src?.startsWith('data:image/svg+xml;base64,') || parsed.url)) throw new Error('Props require embedded SVG and cannot have links');
   if (parsed.cutout && (!cutoutTarget(parsed)||parsed.height<=(parsed.type==='text'?0:34))) throw new Error('Invalid cutout target or content size');
-  if (parsed.stamp && parsed.type !== 'text') throw new Error('Stamps are supported on text parts only');
+  if (parsed.stamp && !['text','file'].includes(parsed.type)) throw new Error('Stamps are supported on text parts only and clear files');
   return parsed;
 }
 
@@ -255,6 +258,7 @@ export class Desk {
         continue;
       }
       if (operation.kind === 'add') {
+        if(operation.object.type==='clip'&&operation.object.clipMembers?.some(id=>{const owner=fileFor(after,id);return owner&&before.some(o=>o.id===owner.id);}))throw new Error('ファイル内ではクリップの追加・組み替えはできません');
         if (after.some(o => o.id === operation.object.id)) throw new Error(`Duplicate ID: ${operation.object.id}`);
         if (after.length >= 2000) throw new Error('Object limit reached');
         if (operation.object.type === 'label') throw new Error('Use label_add to create a series label');
@@ -275,20 +279,21 @@ export class Desk {
           !bundle?.clipMembers?.includes(id) && after.find(object => object.id === id)?.locked))
           throw new Error('ロック中の紙はクリップへ追加できません');
       }
+      assertFileOperation(after,operation);
       if (operation.kind === 'update') {
         if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'attachment', 'description', 'reactions', 'locked'].includes(key))) {
           throw new Error('Labels allow only position, attachment, description, reaction and mouse lock updates; use series_update for shared appearance');
         }
         after[index] = validateObject({ ...after[index], ...normalizeCutoutPatch(after[index],operation.patch) });
         if (operation.patch.locked !== undefined) {
-          const ids = new Set(clipGroup(after, operation.id).map(object => object.id));
+          const ids = new Set(fileGroup(after, operation.id).map(object => object.id));
           after = after.map(object => ids.has(object.id) ? { ...object, locked: operation.patch.locked } : object);
         }
       }
       if (operation.kind === 'delete') after.splice(index, 1);
       if (operation.kind === 'reorder') {
         const object = after[index];
-        const group = object.type === 'label' ? after.filter(item => item.type === 'label' && item.seriesId === object.seriesId) : clipGroup(after,object.id);
+        const group = object.type === 'label' ? after.filter(item => item.type === 'label' && item.seriesId === object.seriesId) : fileGroup(after,object.id);
         const members = new Set(group.map(item => item.id));
         after = after.filter(item => !members.has(item.id));
         after.splice(Math.min(operation.index, after.length), 0, ...group);

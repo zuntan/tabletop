@@ -1,3 +1,4 @@
+import {fileFor} from './clear-files';
 import { clipAppearance } from './clip-appearance';
 import type { DeskObject, Operation } from './model';
 import { anchorPoint, type Anchor, type Point } from './geometry';
@@ -116,5 +117,5 @@ export function clipMoveOperations(scene: DeskObject[], ids: string[], dx:number
   return operations;
 }
 export function clipDropTarget(scene:DeskObject[],point:Point,zoom:number,excluded:string[]) {
-  return scene.slice().reverse().find(o=>o.type==='clip' && o.clipMembers?.length && !clipGroup(scene,o.id).some(m=>m.locked || excluded.includes(m.id)) && Math.hypot(point.x-(o.x+o.width/2),point.y-(o.y+o.height/2))<=Math.max(24/zoom,o.width*.65));
+  return scene.slice().reverse().find(o=>o.type==='clip' && !fileFor(scene,o.id) && o.clipMembers?.length && !clipGroup(scene,o.id).some(m=>m.locked || excluded.includes(m.id)) && Math.hypot(point.x-(o.x+o.width/2),point.y-(o.y+o.height/2))<=Math.max(24/zoom,o.width*.65));
 }

@@ -48,7 +48,7 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
       input.value = String(name === 'padding' ? object.padding ?? 6 : object.cornerRadius);
       continue;
     }
-    if (name === 'text') input.closest('label')!.firstChild!.textContent = object.type === 'label' ? '説明文' : ['image', 'svg', 'mermaid', 'prop'].includes(object.type) ? 'タイトル' : 'テキスト';
+    if (name === 'text') input.closest('label')!.firstChild!.textContent = object.type === 'label' ? '説明文' : ['image', 'svg', 'mermaid', 'prop','file'].includes(object.type) ? 'タイトル' : 'テキスト';
     if (name === 'url') input.closest('label')!.firstChild!.textContent = ['image', 'svg'].includes(object.type) ? 'URL（任意）' : 'URL';
     input.value = name === 'fillOpacity' ? String(transparencyPercent(object.fillOpacity))
       : String(object.type === 'label' && name === 'text' ? object.description ?? '' : object[name] ?? '');

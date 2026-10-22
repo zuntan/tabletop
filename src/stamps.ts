@@ -117,7 +117,7 @@ export function stampArtwork(stamp: Stamp) {
 }
 export function drawStamp(group: SVGGElement, object: DeskObject, compact: boolean) {
   group.querySelector('[data-stamp]')?.remove();
-  if (object.type !== 'text' || !object.stamp) return;
+  if (!['text','file'].includes(object.type) || !object.stamp) return;
   const pattern = stampPattern(object.stamp.designId);
   const layout = stampLayout(object.width, object.height, compact, pattern.shape);
   const layer = svg('g', { 'data-stamp': object.stamp.designId, 'data-compact': String(compact),

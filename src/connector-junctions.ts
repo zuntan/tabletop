@@ -1,3 +1,4 @@
+import {fileFor} from './clear-files';
 import type { DeskObject } from './model';
 import { endpoints, isConnector, withEndpoints, type Point } from './geometry';
 
@@ -42,10 +43,11 @@ export function resolveJunctions(objects: DeskObject[], before: DeskObject[] = [
       return p.x !== q.x || p.y !== q.y;
     });
     const bound = members.filter(m => m.object[bindingField(m.side)]);
-    const leader = bound.find(m => moved.includes(m)) ?? bound[0] ?? moved[0] ?? members[0];
+    const fixed=members.filter(m=>fileFor(objects,m.object.id));
+    const leader = fixed.find(m=>moved.includes(m)) ?? fixed[0] ?? bound.find(m => moved.includes(m)) ?? bound[0] ?? moved[0] ?? members[0];
     const position = endpoints(leader.object)[leader.side];
     // Conflicting explicitly moved endpoints cannot be satisfied by a single point.
-    if (!bound.length && moved.some(m => {
+    if (!fixed.length && !bound.length && moved.some(m => {
       const p = endpoints(m.object)[m.side]; return p.x !== position.x || p.y !== position.y;
     })) throw new Error('Conflicting junction positions in one batch');
     for (const { object, side } of members) {

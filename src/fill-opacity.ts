@@ -1,7 +1,7 @@
 import type { DeskObject, Operation } from './model';
 import { isShape } from './geometry';
 
-export const supportsFill = (object: DeskObject) => isShape(object) || object.type === 'text' || object.type === 'label';
+export const supportsFill = (object: DeskObject) => isShape(object) || ['text','file'].includes(object.type) || object.type === 'label';
 export const transparencyPercent = (opacity: number) => Math.round((1 - opacity) * 100);
 export const opacityFromPercent = (value: string) => (100 - Number(value)) / 100;
 

@@ -1,3 +1,4 @@
+import {fileFor,fileMoveOperations} from './clear-files';
 import { clipMoveOperations, clipFor, clipDropTarget, clipTarget, clipGroup } from './clip-bundles';
 import { snapPinAttachment } from './pin-attachments';
 import { randomUuid } from './portable-crypto';
@@ -29,12 +30,15 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
   let dx = point.x - gesture.start.x, dy = point.y - gesture.start.y;
   if (dx === 0 && dy === 0) return []; // Selecting a connected line must not detach it.
   const movable = gesture.originals.filter(object => !object.locked);
-  const anchor = movable.find(object => object.id === gesture.anchorId) ?? movable[0];
+  const selectedAnchor = movable.find(object => object.id === gesture.anchorId) ?? movable[0];
+  const anchor=selectedAnchor?(fileFor(gesture.scene,selectedAnchor.id)??selectedAnchor):undefined;
   if (gesture.grid && gesture.mode === 'move' && anchor) {
     const delta = gridMoveDelta(anchor, { x: dx, y: dy }, gesture.gridSettings); dx = delta.x; dy = delta.y;
     if (dx === 0 && dy === 0) return [];
   }
+  if(gesture.mode!=='move'&&gesture.originals.some(o=>fileFor(gesture.scene,o.id)))return [];
   if (gesture.mode === 'move') {
+    const filed=fileMoveOperations(gesture.scene,movable.map(o=>o.id),dx,dy);if(filed)return filed;
     const bundled=clipMoveOperations(gesture.scene,gesture.detach&&gesture.anchorId?[gesture.anchorId]:movable.map(o=>o.id),dx,dy,!!gesture.detach);
     if(bundled) return bundled;
     if(movable.length===1 && !gesture.detach) {

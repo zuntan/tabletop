@@ -68,6 +68,7 @@ export class PartClipboard {
           patch: { attachment: { ...object.attachment, objectId: ids.get(object.attachment.objectId)! } } });
       } else {
         const copy = { ...object, id, x: object.x + offset, y: object.y + offset };
+        if (object.type === 'file') copy.fileMembers=object.fileMembers?.filter(id=>ids.has(id)).map(id=>ids.get(id)!);
         if (object.type === 'clip') copy.clipMembers = object.clipMembers?.filter(id=>ids.has(id)).map(id=>ids.get(id)!);
         if (object.callout) {
           const binding = object.callout.binding, target = binding && ids.get(binding.objectId);

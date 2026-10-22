@@ -1,3 +1,5 @@
+import {fileCreateOperations,fileFor,fileGroup} from './clear-files';
+import {drawClearFile} from './clear-file-drawing';
 import {createDeskToast} from './desk-toast';
 import { createBellControls } from './bell-controls';
 import { initialPartSize, initialImageSize, centeredPartPoint, initialLinePoints, initialLineDelta } from './initial-part-layout';
@@ -277,7 +279,7 @@ const lockControls = createLockControls($('#grid-snap'), form, () => {
   if (busy || editor.isActive() || !desk.selected().length) return;
   attempt(() => {
     const scene = desk.snapshot();
-    const objects = [...new Set(desk.selected().flatMap(id => clipGroup(scene,id).map(object => object.id)))].map(id => desk.get(id));
+    const objects = [...new Set(desk.selected().flatMap(id => fileGroup(scene,id).map(object => object.id)))].map(id => desk.get(id));
     const operations = lockOperations(objects, lockSelectionState(objects).nextLocked);
     if (operations.length) execute(operations);
   });
@@ -305,6 +307,8 @@ clipCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{
   else if(!desk.selected().length)newObject('clip',{clipMembers:[],clipSize:64,clipAutoSize:true,clipOffset:32,clipStyle:'binder',fill:'#26313d'});
 });};
 app.querySelector('[data-add="text"]')!.after(clipCreate);
+const fileCreate=document.createElement('button');fileCreate.id='file-create';iconButton(fileCreate,'','クリアファイルへ');fileCreate.title='配置を保ってクリアファイルへ';
+fileCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{const operations=fileCreateOperations(desk.snapshot(),desk.selected(),desk.settingsSnapshot().grid);execute(operations);const add=operations.find(op=>op.kind==='add');if(add?.kind==='add')desk.select([add.object.id]);});};clipCreate.after(fileCreate);
 const thinkingMode = createThinkingMode($('header'), () => { objectAnimator.finish(); cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
@@ -323,11 +327,12 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
   void rasterPointedCard(desk, id => drawnNodes.get(id)).then(raster => openBhPreview(raster.dataUrl))
     .catch(error => notify(error instanceof Error ? error.message : String(error), true));
 });
-const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
+const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', file:'クリアファイル', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
+  if ($('#object-filter-files').getAttribute('aria-pressed')==='true'&&fileFor(renderedScene,object.id))return true;
   if ($('#object-filter-clips').getAttribute('aria-pressed')==='true' && clipFor(renderedScene,object.id)) return true;
-  const category = object.type === 'clip' ? 'clips' : object.type === 'label' ? 'pins' : object.type === 'text' ? 'text'
+  const category = object.type==='file'?'files':object.type === 'clip' ? 'clips' : object.type === 'label' ? 'pins' : object.type === 'text' ? 'text'
     : isShapeType(object.type) ? 'shapes'
       : object.type === 'line' ? 'lines'
         : ['image', 'svg', 'mermaid', 'prop'].includes(object.type) ? 'images' : 'other';
@@ -504,6 +509,7 @@ function drawObjectRaw(object: DeskObject) {
     if (object.type === 'mermaid') drawMermaidCard(group, object);
     drawOpenLink(group, object);
   }
+  if(object.type==='file'){drawClearFile(group,object);drawStamp(group,object,desk.selected().includes(object.id));}
   if(object.type==='clip') drawClip(group,object,renderedById.get(object.clipMembers?.[0] ?? ''));
   drawReactions(group, object, pinDescriptionVisible(object), camera.zoom);
   drawStickers(group, object, camera.zoom);
@@ -513,7 +519,7 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
   const stampSelection = new Set(desk.selected());
   for (const object of scene ?? renderedScene) {
     const node = drawnNodes.get(object.id);
-    if (node && object.type === 'text' && (object.stamp || node.querySelector('[data-stamp]'))) {
+    if (node && ['text','file'].includes(object.type) && (object.stamp || node.querySelector('[data-stamp]'))) {
       const source=object.cutout?node.querySelector<SVGGElement>('[data-cutout-source]'):node;
       if(source)drawStamp(source,object.cutout?cutoutSourceObject(object):object,stampSelection.has(object.id));
     }
@@ -531,18 +537,19 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
     drawAiPointing(overlays, [connectorForView(object)], camera.zoom, pinDescriptionVisible(object), colors.pointing);
   for (const source of selected.filter(pinIsVisible)) {
     const object = connectorForView(source);
-    if (object.locked) { drawLockedSelection(overlays, object, camera.zoom, pinDescriptionVisible(object), colors.selection); continue; }
-    if (drawEndpointHandles(overlays, object, camera.zoom, selected.length === 1, colors.selection)) continue;
+    const filed=fileFor(scene??renderedScene,object.id);
+    if (object.locked && !filed) { drawLockedSelection(overlays, object, camera.zoom, pinDescriptionVisible(object), colors.selection); continue; }
+    if (!filed && drawEndpointHandles(overlays, object, camera.zoom, selected.length === 1, colors.selection)) continue;
     const visual = labelVisualBounds(object, pinDescriptionVisible(object), camera.zoom);
     overlays.append(svg('rect', { x: visual.x - 3 / camera.zoom, y: visual.y - 3 / camera.zoom,
       width: visual.width + 6 / camera.zoom, height: visual.height + 6 / camera.zoom,
       fill: 'none', stroke: colors.selection, 'stroke-width': 1.5 / camera.zoom, 'stroke-dasharray': `${5 / camera.zoom} ${3 / camera.zoom}`, 'pointer-events': 'none', 'data-human-selection': object.id }));
-    if (selected.length === 1 && object.callout) overlays.append(svg('circle', {
+    if (selected.length === 1 && !filed && object.callout) overlays.append(svg('circle', {
       cx: object.callout.x, cy: object.callout.y, r: 6 / camera.zoom,
       fill: object.callout.binding ? '#16a34a' : colors.selection, stroke: '#fff', 'stroke-width': 1.5 / camera.zoom,
       'data-callout-tip': object.id, class: 'endpoint-handle',
     }));
-    if (selected.length === 1 && object.type !== 'label' && object.type !== 'clip') overlays.append(svg('rect', {
+    if (selected.length === 1 && !filed && object.type !== 'label' && object.type !== 'clip') overlays.append(svg('rect', {
       x: object.x + object.width - 5 / camera.zoom, y: object.y + object.height - 5 / camera.zoom,
       width: 10 / camera.zoom, height: 10 / camera.zoom, fill: colors.selection, stroke: '#fff',
       'stroke-width': 1 / camera.zoom, 'data-resize': object.id, class: 'resize-handle',
@@ -598,13 +605,16 @@ function render(rebuild = true) {
   if (ids.length === 1) {
     const object = desk.get(ids[0]);
     propertyEditor.sync(object);
+    if(fileFor(renderedScene,object.id))for(const name of ['width','height',...(object.type==='file'?[]:['x','y','x2','y2','calloutMode','clipOffset','clipOffsetMode','clipOffsetPercent','clipAnchor','clipSize','clipAutoSize','clipStyle'])]){const control=form.elements.namedItem(name) as HTMLInputElement|null;if(control)control.disabled=true;}
     clipMenuUpdates.forEach(update=>update());
     updateConnectorLineStyle();
     updateStartMarker(); updateEndMarker(); updateCallout(); updateTextFit();
     if (object.url) { link.href = object.url; link.hidden = false; }
   }
-  lockControls.update([...new Set(ids.flatMap(id => clipGroup(renderedScene,id).map(object => object.id)))].map(id => desk.get(id)));
+  lockControls.update([...new Set(ids.flatMap(id => fileGroup(renderedScene,id).map(object => object.id)))].map(id => desk.get(id)));
   for (const id of ['#front', '#back', '#delete', '#delete-animated']) $<HTMLButtonElement>(id).disabled = !ids.length;
+  for(const id of ['#front','#back'])if(ids.some(id=>{const f=fileFor(renderedScene,id);return f&&f.id!==id;}))$<HTMLButtonElement>(id).disabled=true;
+  fileCreate.disabled=!ids.length;
   bhDelete.refresh();cutoutControls.update();
   stickerControls.update();
   $('#object-list').replaceChildren();
@@ -773,7 +783,7 @@ canvas.addEventListener('dblclick', event => {
   const id = target.closest('[data-id]')?.getAttribute('data-id');
   if (!id || busy || editor.isActive()) return;
   const object = desk.get(id);
-  if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg', 'mermaid', 'prop'].includes(object.type)) editor.open(object);
+  if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg', 'mermaid', 'prop', 'file'].includes(object.type)) editor.open(object);
 });
 canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture) zoom(Math.exp(-event.deltaY * 0.001), screen(event)); }, { passive: false });
 // Middle-button release can paste the Linux primary selection after the pan ends.
@@ -817,7 +827,7 @@ function previewGesture(current: Gesture, point: { x: number; y: number }) {
   drawSelection(scene.filter(o => desk.selected().includes(o.id)), scene);
   if(current.mode==='move'&&!current.detach&&current.originals.length===1) {
     const source=current.originals[0];
-    const target=clipTarget(source)&&!clipFor(current.scene,source.id)?clipDropTarget(current.scene,point,camera.zoom,[source.id]):null;
+    const target=clipTarget(source)&&!fileFor(current.scene,source.id)&&!clipFor(current.scene,source.id)?clipDropTarget(current.scene,point,camera.zoom,[source.id]):null;
     if(target){const text=svg('text',{x:target.x,y:target.y-12/camera.zoom,fill:'#15803d','font-size':14/camera.zoom,'pointer-events':'none'});text.textContent='クリップへ追加';overlays.append(text);}
     if(source.type==='clip'&&!source.clipMembers?.length) drawSnapTargets(overlays,current.scene.filter(o=>clipTarget(o)&&!o.locked&&!clipFor(current.scene,o.id)),{x:source.x+source.width/2+point.x-current.start.x,y:source.y+source.height*.5+point.y-current.start.y},camera.zoom);
   }
@@ -891,7 +901,10 @@ window.addEventListener('keydown', event => {
   if (gesture) return;
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase()==='g') {
     event.preventDefault();if(busy)return;
-    attempt(()=>{const operations=event.shiftKey?unbundleOperations(desk.snapshot(),desk.selected()):bundleOperations(desk.snapshot(),desk.selected());
+    attempt(()=>{const scene=desk.snapshot(),selected=desk.selected();const files=selected.filter(id=>desk.get(id).type==='file');
+      if(selected.some(id=>fileFor(scene,id)&&desk.get(id).type!=='file'))throw new Error('ファイル内ではグループ操作できません。ファイル本体を選んで解除してください');
+      if(files.length&&(!event.shiftKey||files.length!==selected.length))throw new Error('クリアファイルの結合はできません');
+      const operations:Operation[]=files.length?files.map(id=>({kind:'delete',id})):event.shiftKey?unbundleOperations(scene,selected):bundleOperations(scene,selected);
       if(operations.length){execute(operations);if(!event.shiftKey&&operations[0].kind==='add')desk.select([operations[0].object.id]);}});return;
   }
   if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); deleteSelection(); }
@@ -931,7 +944,7 @@ function clipboardTextTarget(target: EventTarget | null) {
 for (const kind of ['copy', 'cut'] as const) window.addEventListener(kind, event => {
   if (clipboardTextTarget(event.target) || !getSelection()?.isCollapsed || busy || gesture || !event.clipboardData) return;
   const scene=desk.snapshot();
-  const selected=new Set(desk.selected().flatMap(id=>desk.get(id).type==='clip'?clipGroup(scene,id).map(o=>o.id):[id]));
+  const selected=new Set(desk.selected().flatMap(id=>['clip','file'].includes(desk.get(id).type)?fileGroup(scene,id).map(o=>o.id):[id]));
   const objects = scene.filter(object => selected.has(object.id));
   if (!objects.length) return;
   event.preventDefault();

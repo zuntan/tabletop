@@ -1,5 +1,5 @@
 import type { DeskObject } from './model';
-import { clipGroup } from './clip-bundles';
+import { fileGroup } from './clear-files';
 import type { FrameScheduler } from './camera-animation';
 
 const positions = ['x', 'y', 'x2', 'y2'] as const;
@@ -18,7 +18,7 @@ export function pointedMove(before: DeskObject[], after: DeskObject[], pointed: 
   if (!Number.isFinite(durationMs) || durationMs < 0 || durationMs > 2000) throw new Error('durationMs must be between 0 and 2000');
   if (!durationMs) return null;
   if (!pointed.length || !operations.length || before.length !== after.length) return null;
-  const allowed = new Set(pointed.flatMap(id => clipGroup(before, id).map(object => object.id)));
+  const allowed = new Set(pointed.flatMap(id => fileGroup(before, id).map(object => object.id)));
   const updated = new Set<string>();
   for (const value of operations) {
     const op = value as {kind?: string; id?: string; patch?: Record<string, unknown>};

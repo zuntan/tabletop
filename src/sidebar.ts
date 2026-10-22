@@ -23,7 +23,7 @@ export function createSidebar(app: HTMLElement) {
   const categories = document.createElement('div'); categories.className = 'object-filter-categories';
   categories.setAttribute('role', 'group'); categories.setAttribute('aria-label', 'フィルター対象');
   const notifyFilterChange = (kind: 'apply' | 'category') => app.dispatchEvent(new CustomEvent('object-filter-change', { detail: { kind } }));
-  for (const [id, label] of [['clips', 'クリップ'], ['pins', 'ピン'], ['text', 'テキスト'], ['shapes', '図形'], ['lines', '線'], ['images', '画像'], ['other', 'その他']]) {
+  for (const [id, label] of [['files','クリアファイル'],['clips', 'クリップ'], ['pins', 'ピン'], ['text', 'テキスト'], ['shapes', '図形'], ['lines', '線'], ['images', '画像'], ['other', 'その他']]) {
     const button = document.createElement('button'); button.id = `object-filter-${id}`; button.type = 'button'; button.textContent = label;
     button.setAttribute('aria-pressed', String(id === 'pins')); button.onclick = () => {
       button.setAttribute('aria-pressed', String(button.getAttribute('aria-pressed') !== 'true'));
