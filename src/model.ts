@@ -45,6 +45,8 @@ const objectFields = z.object({
   clipMembers: z.array(z.string().min(1).max(100)).optional(),
   clipAnchor: z.enum(['top','right','bottom','left','top-left','top-right','bottom-left','bottom-right']).optional(),
   clipOffset: z.number().finite().min(0).optional(),
+  clipOffsetMode: z.enum(['fixed','percent','base-short-side']).optional(),
+  clipOffsetPercent: z.number().finite().min(0).optional(),
   clipSize: z.number().finite().min(1).max(100000).optional(),
   clipAutoSize: z.boolean().optional(),
   clipStyle: z.enum(['binder','wire']).optional(),
@@ -135,7 +137,7 @@ type Entry = { before: Snapshot; after: Snapshot; beforeSettings: Settings; afte
 
 function validateObject(object: unknown): DeskObject {
   const parsed = objectSchema.parse(object);
-  if(parsed.type!=='clip' && ['clipMembers','clipAnchor','clipOffset','clipSize','clipAutoSize','clipStyle'].some(key=>(parsed as Record<string,unknown>)[key]!==undefined)) throw new Error('Clip fields belong only to clips');
+  if(parsed.type!=='clip' && ['clipMembers','clipAnchor','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipStyle'].some(key=>(parsed as Record<string,unknown>)[key]!==undefined)) throw new Error('Clip fields belong only to clips');
   if(parsed.stickers && !stickerTarget(parsed)) throw new Error('Stickers require text, shape or media cards');
   if (parsed.type === 'mermaid' && parsed.mermaidSource === undefined) throw new Error('Mermaid source required');
   if (['image', 'svg', 'prop'].includes(parsed.type) && !parsed.src) throw new Error('Image source required');
@@ -266,7 +268,7 @@ export class Desk {
       const bundle = clipFor(after, operation.id);
       if (batch.actor === 'human') {
         const structural = operation.kind === 'delete' || operation.kind === 'update' && Object.keys(operation.patch).some(key =>
-          ['x', 'y', 'width', 'height', 'clipMembers', 'clipAnchor', 'clipOffset', 'clipSize', 'clipAutoSize'].includes(key));
+          ['x', 'y', 'width', 'height', 'clipMembers', 'clipAnchor', 'clipOffset', 'clipOffsetMode', 'clipOffsetPercent', 'clipSize', 'clipAutoSize'].includes(key));
         if (bundle && structural && clipGroup(after, operation.id).some(object => object.locked))
           throw new Error('クリップの束をロック解除してから操作してください');
         if (operation.kind === 'update' && operation.patch.clipMembers?.some(id =>

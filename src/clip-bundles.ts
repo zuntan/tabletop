@@ -60,8 +60,12 @@ export function resolveClips(input: DeskObject[], before: DeskObject[] = []): De
     const anchor=anchorPoint(base,clip.clipAnchor as Anchor);
     const vx=base.x+base.width/2-anchor.x,vy=base.y+base.height/2-anchor.y,length=Math.hypot(vx,vy)||1;
     for(let i=1;i<members.length;i++) {
-      const member=map.get(members[i])!, local=anchorPoint({...member,x:0,y:0},clip.clipAnchor as Anchor), distance=i*clip.clipOffset!;
-      const x=anchor.x+vx/length*distance-local.x,y=anchor.y+vy/length*distance-local.y;
+      const member=map.get(members[i])!, local=anchorPoint({...member,x:0,y:0},clip.clipAnchor as Anchor), distance=i*(clip.clipOffsetMode==='base-short-side'?Math.min(base.width,base.height)*(clip.clipOffsetPercent??30)/100:clip.clipOffset!);
+      const previousMember=map.get(members[i-1])!, previousAnchor=anchorPoint(previousMember,clip.clipAnchor as Anchor);
+      const ratio=(clip.clipOffsetPercent??30)/100;
+      const percent=clip.clipOffsetMode==='percent';
+      const x=(percent?previousAnchor.x+Math.sign(vx)*previousMember.width*ratio:anchor.x+vx/length*distance)-local.x;
+      const y=(percent?previousAnchor.y+Math.sign(vy)*previousMember.height*ratio:anchor.y+vy/length*distance)-local.y;
       const dx=x-member.x,dy=y-member.y;member.x=x;member.y=y;
       if(member.callout&&!member.callout.binding) member.callout={...member.callout,x:member.callout.x+dx,y:member.callout.y+dy};
     }

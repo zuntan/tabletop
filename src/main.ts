@@ -132,6 +132,8 @@ app.innerHTML = `
           <label hidden>内側の余白<input name="padding" type="number" min="0" step="any"></label>
           <label hidden>文字サイズ調整<select name="textFit" disabled><option value="fixed" hidden>指定サイズ（既存）</option><option value="auto">完全自動</option><option value="shrink">縮小のみ</option></select></label>
           <label hidden>吹き出し<select name="calloutMode" disabled><option value="none">なし</option><option value="speech">三角</option><option value="thought">考え事</option><option value="leader">引き出し線</option></select></label>
+          <label hidden>間隔の指定<select name="clipOffsetMode"><option value="fixed">固定距離</option><option value="percent">割合（直前の紙）</option><option value="base-short-side">割合（1枚目の短辺）</option></select></label>
+          <label hidden>クリップの割合（%）<input name="clipOffsetPercent" type="number" min="0" step="any"></label>
           <label hidden>クリップの間隔<input name="clipOffset" type="number" min="0" step="any"></label>
           <label hidden>クリップのサイズ<input name="clipSize" type="number" min="1" max="100000" step="any"></label>
           <label hidden>サイズ指定<select name="clipAutoSize"><option value="false">数値指定</option><option value="true">自動（1枚目に合わせる）</option></select></label>
@@ -186,6 +188,7 @@ const propertyEditor = createPropertyEditor(form, desk, (id, patch) => {
 }, message => notify(message, true));
 addFormNumberPresets(form);
 const clipMenuUpdates = ([
+  ['clipOffsetMode','間隔の指定',{'fixed':'固定距離','percent':'割合（直前の紙）','base-short-side':'割合（1枚目の短辺）'}],
   ['clipAutoSize','サイズ指定',{'false':'数値指定','true':'自動（1枚目に合わせる）'}],
   ['clipStyle','クリップの形',{binder:'ダブルクリップ',wire:'ゼムクリップ'}],
   ['clipAnchor','留め位置',{'top-left':'左上',top:'上','top-right':'右上',right:'右','bottom-right':'右下',bottom:'下','bottom-left':'左下',left:'左'}],

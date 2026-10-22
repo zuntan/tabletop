@@ -4,15 +4,22 @@ import type { DeskObject } from './model';
 import { isConnector } from './geometry';
 import { supportsFill, transparencyPercent, opacityFromPercent } from './fill-opacity';
 
-const fields = ['x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'url','clipOffset','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
-const numeric = new Set(['x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'junctionRounding', 'fontSize', 'cornerRadius', 'padding','clipOffset','clipSize']);
+const fields = ['x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'url','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
+const numeric = new Set(['x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'junctionRounding', 'fontSize', 'cornerRadius', 'padding','clipOffset','clipOffsetPercent','clipSize']);
 export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   const connector = isConnector(object);
   const meaningful = new Set<string>(objectPropertyNames(object));
   for (const name of fields) {
     const input = form.elements.namedItem(name) as HTMLInputElement;
     if (!input) continue;
-    if(name.startsWith('clip')) { input.disabled=object.type!=='clip'||(name==='clipSize'&&!!object.clipAutoSize); input.closest('label')!.hidden=object.type!=='clip'; input.value=String(object[name as 'clipSize'|'clipOffset'|'clipAnchor'|'clipStyle'|'clipAutoSize']??(name==='clipAutoSize'?false:'')); if(name==='clipSize') input.title=object.clipAutoSize?'数値指定へ戻したときのサイズを保持しています':''; continue; }
+    if(name.startsWith('clip')) {
+      const percent=object.clipOffsetMode==='percent'||object.clipOffsetMode==='base-short-side';
+      input.disabled=object.type!=='clip'||(name==='clipSize'&&!!object.clipAutoSize);
+      input.closest('label')!.hidden=object.type!=='clip'||name==='clipOffset'&&percent||name==='clipOffsetPercent'&&!percent;
+      input.value=propertyValue(object,name);
+      if(name==='clipSize')input.title=object.clipAutoSize?'数値指定へ戻したときのサイズを保持しています':'';
+      continue;
+    }
     if (name === 'mermaidSource') {
       input.disabled = object.type !== 'mermaid'; input.closest('label')!.hidden = object.type !== 'mermaid';
       input.value = object.mermaidSource ?? ''; continue;
@@ -56,6 +63,8 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   }
 }
 export function propertyValue(object: DeskObject, key: string): string {
+  if (key === 'clipOffsetMode') return object.clipOffsetMode ?? 'fixed';
+  if (key === 'clipOffsetPercent') return String(object.clipOffsetPercent ?? 30);
   if (key === 'clipAutoSize') return String(object.clipAutoSize ?? false);
   if (key === 'textFit') return object.textFit ?? 'fixed';
   if (key === 'calloutMode') return object.callout ? object.callout.style ?? 'speech' : 'none';
@@ -71,6 +80,10 @@ export function propertyValue(object: DeskObject, key: string): string {
 export function propertyFieldPatch(key: string, value: string, object: DeskObject): Partial<DeskObject> {
   if (!(fields as readonly string[]).includes(key)) throw new Error('Unknown property');
   if (value === propertyValue(object, key)) return {};
+  if(key==='clipOffsetMode'){
+    if(object.type!=='clip'||!['fixed','percent','base-short-side'].includes(value))throw new Error('Invalid clip offset mode');
+    return {clipOffsetMode:value as 'fixed'|'percent'|'base-short-side',...(value!=='fixed'&&object.clipOffsetPercent===undefined?{clipOffsetPercent:30}:{})};
+  }
   if (key === 'clipAutoSize') {
     if (object.type !== 'clip' || !['true','false'].includes(value)) throw new Error('Invalid clip size mode');
     return { clipAutoSize: value === 'true' };

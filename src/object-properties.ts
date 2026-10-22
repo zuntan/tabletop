@@ -11,7 +11,7 @@ export function objectPropertyNames(object: DeskObject): readonly (keyof DeskObj
   const decoration = stickerTarget(object) ? ['stickers' as const] : [];
   if (object.type === 'line') return [...common, 'x2', 'y2', 'stroke', 'strokeWidth', 'dash',
     'startMarker', 'endMarker', 'startBinding', 'endBinding', 'startJunction', 'endJunction', 'junctionRounding'];
-  if (object.type === 'clip') return [...common,...box,'fill','clipMembers','clipAnchor','clipOffset','clipSize','clipAutoSize','clipStyle'];
+  if (object.type === 'clip') return [...common,...box,'fill','clipMembers','clipAnchor','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipStyle'];
   if (object.type === 'prop') return [...common, ...box, 'text', 'src'];
   if (object.type === 'mermaid') return [...common, ...decoration, ...box, 'text', 'mermaidSource', 'cutout'];
   if (object.type === 'text') return [...common, ...decoration, ...box, ...paint, ...text, 'cornerRadius', 'padding', 'callout', 'stamp', 'cutout'];

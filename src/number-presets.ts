@@ -1,6 +1,7 @@
 export const numberPresets = {
   clipSize: [32,64,96],
   clipOffset: [0,16,32,64,128],
+  clipOffsetPercent: [10,30,60,90,100],
   junctionRounding: [0, 48, 96, 192, 384],
   strokeWidth: [1, 2, 4, 8, 16],
   fontSize: [12, 16, 24, 32, 48],
