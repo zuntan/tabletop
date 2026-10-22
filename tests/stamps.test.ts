@@ -12,7 +12,7 @@ test('local press date and all weekday tilts are fixed values; unknown pattern p
     assert.equal(stamp.text, `2026.10.${18 + day}`); assert.equal(stamp.angle, -(3 + day));
     assert.equal(createStamp('done_ja', false, now).text, '');
   }
-  assert.equal(stampPatterns.length, 15);
+  assert.equal(stampPatterns.length, 16);
   assert.equal(stampPattern('future-design').title, '');
   const desk = new Desk();
   const stamp = { designId: 'future-design', text: '<おかしな文字>🦀', angle: -7 };

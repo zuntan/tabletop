@@ -7,13 +7,13 @@ test('stamp palette, arbitrary fallback text, selection retreat, resize and shar
   const { page, call, close, errors } = await openTestDesk('stamps');
   try {
     const patterns = await call('desk_stamp_patterns');
-    assert.equal(patterns.patterns.length, 15); assert.equal(patterns.fallback.internalOnly, true);
+    assert.equal(patterns.patterns.length, 16); assert.equal(patterns.fallback.internalOnly, true);
     await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'memo', type: 'text', x: 200, y: 150, width: 400, height: 280, text: 'ハンコのメモ' } }] });
     await page.locator('[data-id="memo"]').first().click({ position: { x: 100, y: 60 } });
     await page.locator('#stamp-open').click();
-    assert.deepEqual(await page.locator('[data-stamp-design]').evaluateAll(buttons => buttons.slice(0, 10).map(b => (b as HTMLElement).dataset.stampDesign)),
-      ['done_ja','sealed_ja','rejected_ja','on_hold_ja','handle_with_care_ja','done_en','sealed_en','rejected_en','on_hold_en','handle_with_care_en']);
-    for (const id of ['on_hold_ja','on_hold_en','handle_with_care_ja','handle_with_care_en','shirangana_ja','nandeyanen_ja']) {
+    assert.deepEqual(await page.locator('[data-stamp-design]').evaluateAll(buttons => buttons.map(b => (b as HTMLElement).dataset.stampDesign)),
+      ['done_ja','sealed_ja','rejected_ja','on_hold_ja','done_en','sealed_en','rejected_en','on_hold_en','handle_with_care_ja','hanamaru_ja','smile_ja','well_done_ja','keep_going_ja','nandeyanen_ja','shirangana_ja']);
+    for (const id of ['on_hold_ja','on_hold_en','handle_with_care_ja','keep_going_ja','shirangana_ja','nandeyanen_ja']) {
       await page.locator(`[data-stamp-design="${id}"]`).click();
       assert.equal((await call('desk_get', { id: 'memo' })).stamp.designId, id);
     }
@@ -22,6 +22,14 @@ test('stamp palette, arbitrary fallback text, selection retreat, resize and shar
     const praise = page.locator('[data-stamp-design="well_done_ja"] svg');
     assert.ok((await praise.textContent())?.includes('たいへんよくできました'));
     assert.equal(await praise.locator('path').count(), 1); // Cherry-blossom border accompanies the large lettering.
+    const encouragement=page.locator('[data-stamp-design="keep_going_ja"] svg');
+    assert.ok((await encouragement.textContent())?.includes('がんばりましょう'));
+    assert.equal(await encouragement.locator('path').first().getAttribute('d'),await praise.locator('path').first().getAttribute('d'));
+    const clear=page.locator('#stamp-clear'),last=page.locator('[data-stamp-design="shirangana_ja"]');
+    assert.equal(await clear.textContent(),'取り消し');
+    const cr=await clear.boundingBox(),lr=await last.boundingBox();assert.ok(cr!.height<lr!.height);assert.ok(cr!.y>lr!.y);assert.ok(cr!.x>lr!.x+lr!.width);
+    await call('desk_execute',{operations:[{kind:'update',id:'memo',patch:{stamp:{designId:'handle_with_care_en',text:'legacy',angle:-6}}}]});
+    assert.equal(await page.locator('[data-id="memo"] [data-stamp="handle_with_care_en"] path').count()>0,true);
     await page.locator('#stamp-dated').check();
     await page.locator('[data-stamp-design="done_ja"]').click();
     const stamp = (await call('desk_get', { id: 'memo' })).stamp;

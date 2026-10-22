@@ -14,6 +14,7 @@ export const stampPatterns = [
   { id: 'nandeyanen_ja', caption: 'なんでやねん', title: 'なんでやねん', shape: 'round', style: '大きな疑問符と白縁の赤文字' },
   { id: 'hanamaru_ja', caption: 'はなまる', title: '', shape: 'flower', style: '丸みのある花びらと中央のうずまき' },
   { id: 'smile_ja', caption: 'ニコニコ', title: '', shape: 'smile', style: '花の輪郭とオリジナルの笑顔' },
+  { id: 'keep_going_ja', caption: 'がんばりましょう', title: 'がんばりましょう', shape: 'words', style: '桜の花びらの縁取りと励ましの大きな文字' },
   { id: 'well_done_ja', caption: 'よくできました', title: 'たいへんよくできました', shape: 'words', style: '大きなごほうび文字と桜の花びらの縁取り' },
 ].map(pattern => ({ ...pattern, color: '#c93428', opacity: 0.9 }));
 export const fallbackStamp = { id: 'fallback', caption: '未知ID用', title: '', shape: 'round', style: '基本文字なしの代替印', color: '#c93428', opacity: 0.9 };

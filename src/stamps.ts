@@ -94,9 +94,14 @@ export function stampArtwork(stamp: Stamp) {
         blossom += ` C ${polar(54, a + 16)} ${polar(51, a + 32)} ${polar(37, a + 36)}`;
       }
       g.append(svg('path', { d: blossom + ' Z', 'stroke-width': 2.5 }));
-      text('たいへん', -20, 17, 70, 'sans-serif');
-      text('よくでき', 1, 19, 76, 'sans-serif');
-      text('ました', 22, 19, 64, 'sans-serif');
+      if(stamp.designId==='keep_going_ja') {
+        text('がんばり', -10, 19, 74, 'sans-serif');
+        text('ましょう', 14, 19, 74, 'sans-serif');
+      } else {
+        text('たいへん', -20, 17, 70, 'sans-serif');
+        text('よくでき', 1, 19, 76, 'sans-serif');
+        text('ました', 22, 19, 64, 'sans-serif');
+      }
       if (stamp.text) text(stamp.text, 35, 7, 52, 'monospace');
     } else {
       g.append(svg('circle', { r: 46 }), svg('circle', { r: 41, 'stroke-width': 1 }));

@@ -13,13 +13,12 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
   const dated = document.createElement('input'); dated.type = 'checkbox'; dated.id = 'stamp-dated';
   const label = document.createElement('label'); label.append(dated, ' 日付付き');
   const choices = document.createElement('div'); choices.className = 'stamp-choices';
-  const paletteOrder = ['done_ja', 'sealed_ja', 'rejected_ja', 'on_hold_ja', 'handle_with_care_ja',
-    'done_en', 'sealed_en', 'rejected_en', 'on_hold_en', 'handle_with_care_en',
-    'hanamaru_ja', 'smile_ja', 'well_done_ja', 'nandeyanen_ja', 'shirangana_ja'];
-  const palettePatterns = [
-    ...paletteOrder.map(id => stampPatterns.find(pattern => pattern.id === id)!),
-    ...stampPatterns.filter(pattern => !paletteOrder.includes(pattern.id)),
-  ];
+  const paletteOrder = ['done_ja', 'sealed_ja', 'rejected_ja', 'on_hold_ja',
+    'done_en', 'sealed_en', 'rejected_en', 'on_hold_en',
+    'handle_with_care_ja', 'hanamaru_ja', 'smile_ja', 'well_done_ja',
+    'keep_going_ja', 'nandeyanen_ja', 'shirangana_ja'];
+  // English handling artwork remains valid in saved data and the AI pattern list.
+  const palettePatterns = paletteOrder.map(id => stampPatterns.find(pattern => pattern.id === id)!);
   const buttons = palettePatterns.map(pattern => {
     const button = document.createElement('button'); button.type = 'button'; button.dataset.stampDesign = pattern.id;
     button.title = pattern.caption; button.setAttribute('aria-label', `${pattern.caption}を押す`);
@@ -34,9 +33,9 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
     };
     return button;
   });
-  const clear = document.createElement('button'); clear.id = 'stamp-clear'; clear.type = 'button'; clear.textContent = 'ハン解除';
+  const clear = document.createElement('button'); clear.id = 'stamp-clear'; clear.type = 'button'; clear.textContent = '取り消し';
   clear.onclick = () => apply(selected().filter(o => o.type === 'text' && o.stamp).map(o => ({ kind: 'update', id: o.id, patch: { stamp: null } })));
-  panel.append(label, choices, clear); container.append(trigger, panel);
+  choices.append(clear); panel.append(label, choices); container.append(trigger, panel);
   const position = () => {
     const rect = trigger.getBoundingClientRect();
     panel.style.left = `${Math.max(8, Math.min(rect.left, innerWidth - panel.offsetWidth - 8))}px`;
