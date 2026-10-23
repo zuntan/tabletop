@@ -166,3 +166,10 @@ SHA-256：`8a36795d78874a8bcf55809c029f73cccdcf98db07a97fbf2ed9999f28641079`
 [2026-10-23-05.tabletop](./2026-10-23-05.tabletop)：Tabletop main、302パーツ、revision2。共通ダイアログの実装済み・試用待ちカードとピン3を保持。利用者の確認は次回以降。format version 1。ZIP整合性とJSONの接続資格情報フィールド不在を確認。
 
 SHA-256：`0fee500095520403cd19a58834e3c9509bacca8b6bdb6a40ea5bbbdec83095ae`
+
+
+## 2026-10-23-06
+
+[2026-10-23-06.tabletop](./2026-10-23-06.tabletop)：302パーツ、revision3。共通ダイアログのカードにコミット・main統合済みを反映。動作確認は次回以降のため、未実装エリアとピン3を保持。
+
+SHA-256：`a2467f70591c7e70dc3df9386f5c0d7ff3ec61ed93666cc0ac168c433f1d5bd2`

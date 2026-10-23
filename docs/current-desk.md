@@ -4,12 +4,12 @@
 
 ## 復元する机
 
-- 保存名：`tabletop-main-common-dialogs-commit-20261023.tabletop`
+- 保存名：`tabletop-main-common-dialogs-merged-card-20261023.tabletop`
 - 保存場所：`~/.tabletop/saves/`（既定のTABLETOP_SAVE_ROOT）
 - 机の名前：Tabletop main
 - パーツ数：302
-- 保存時のrevision：2
-- Git保管用：[2026-10-23-05.tabletop](desk-snapshots/2026-10-23-05.tabletop)
+- 保存時のrevision：3
+- Git保管用：[2026-10-23-06.tabletop](desk-snapshots/2026-10-23-06.tabletop)
 - 次回起動：利用者の了承済み方針に従いChrome DevToolsで起動する。
 
 現在の机を確認せず、古いpreviewや試験前の保存へ戻さない。接続が切れただけなら既存タブの再接続を優先し、未保存の机を再読み込みしない。別環境でローカル保存がなければGit保管版を使う。
@@ -77,6 +77,6 @@ feat/common-confirm-dialogsで実装。mainへ統合。利用者による動作�
 - 編集の有無をrevisionで追跡。確認中のAI編集と机のショートカット・カット／貼付を拒否する。
 - MCP保存成功後のfile_saved通知を追加。古い通知や別セッションは未保存状態を消さない。通知失敗でファイル保存成功を失敗に変えない。
 - モデル4件、ブラウザ15件の関連試験を確認。既存試験の古い図形選択操作・小物ボタン位置・公開属性比較も現行UIへ合わせた。
-- card-common-dialogsは実装済み・試用待ち。ピン3は保持。最新保存は302パーツ・revision2。
+- card-common-dialogsは実装済み・試用待ち。ピン3は保持。最新保存は302パーツ・revision3。カードに実装9ddc127・main統合0a67f2cと、利用者の確認は次回以降であることを反映。
 - 保存後にブラウザを更新し、302パーツを復元済み（読込後revision2）。MCP側の新しい保存成功通知はサーバー再起動後に有効。再起動前は既存タブを保持し、最新保存を優先する。
 - 詳細：docs/confirmation-dialogs.md。Git保管版にも3の試用待ちカードを含む最新の机を保存した。
