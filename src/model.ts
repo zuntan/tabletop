@@ -87,6 +87,7 @@ const objectFields = z.object({
   fontSize: z.number().finite().min(1).max(1000).default(24),
   mermaidSource: z.string().max(100_000).optional(),
   src: source.optional(),
+  deskPath: z.string().min(1).max(4096).refine(value=>!/[\x00-\x1f]/.test(value)&&value.endsWith('.tabletop')).optional(),
   url: z.string().max(4096).refine(value => value === '' || safeUrl(value), 'Expected an HTTP(S) URL').optional(),
 }).strict();
 
@@ -135,7 +136,7 @@ export type Change = {
   details: { id: string; before?: DeskObject; after?: DeskObject; beforeIndex?: number; afterIndex?: number }[];
 };
 type Snapshot = DeskObject[];
-type Entry = { before: Snapshot; after: Snapshot; beforeSettings: Settings; afterSettings: Settings; actor: string; targets: string[] };
+type Entry = { replacement?:boolean; before: Snapshot; after: Snapshot; beforeSettings: Settings; afterSettings: Settings; actor: string; targets: string[] };
 
 function validateObject(object: unknown): DeskObject {
   const parsed = objectSchema.parse(object);
@@ -144,7 +145,8 @@ function validateObject(object: unknown): DeskObject {
   if(parsed.stickers && !stickerTarget(parsed)) throw new Error('Stickers require text, shape or media cards');
   if (parsed.type === 'mermaid' && parsed.mermaidSource === undefined) throw new Error('Mermaid source required');
   if (['image', 'svg', 'prop'].includes(parsed.type) && !parsed.src) throw new Error('Image source required');
-  if (['web', 'link'].includes(parsed.type) && !parsed.url) throw new Error('URL required');
+  if (parsed.deskPath && (parsed.type!=='link'||parsed.url)) throw new Error('Desk links require type link, deskPath and no URL');
+  if (['web', 'link'].includes(parsed.type) && !parsed.url && !parsed.deskPath) throw new Error('URL required');
   if (parsed.type === 'prop' && (!parsed.src?.startsWith('data:image/svg+xml;base64,') || parsed.url)) throw new Error('Props require embedded SVG and cannot have links');
   if (parsed.cutout && (!cutoutTarget(parsed)||parsed.height<=(parsed.type==='text'?0:34))) throw new Error('Invalid cutout target or content size');
   if (parsed.stamp && !['text','file'].includes(parsed.type)) throw new Error('Stamps are supported on text parts only and clear files');
@@ -157,6 +159,9 @@ export class Desk {
   readonly deskId = createDeskId();
   readonly imageGeometry = new ImageGeometry();
   revision = 0;
+  documentGeneration=randomUuid();
+  filePath:string|null=null;
+  fileNameHint='';
   private savedRevision=0;
   hasUnsavedChanges(){return this.revision!==this.savedRevision;}
   markSaved(revision:number){
@@ -237,9 +242,10 @@ export class Desk {
     const after = groupPinLayers(resolveConnections(materializeLabels(document.objects.map(validateObject), document.settings)).map(validateObject));
     const before = this.snapshot(), beforeSettings = this.settingsSnapshot();
     const targets = [...new Set([...before, ...after].map(object => object.id))];
-    this.undoStack.push({ before, after, beforeSettings, afterSettings: document.settings, actor, targets });
+    this.undoStack.push({ replacement:true, before, after, beforeSettings, afterSettings: document.settings, actor, targets });
     this.redoStack = [];
     this.commit(after, before, 'batch', actor, targets, document.settings);
+    this.documentGeneration=randomUuid();this.filePath=null;this.fileNameHint='';
     this.selection = []; this.aiPointing = []; this.pointer = null;
     this.markSaved(this.revision);
     return this.summary();
@@ -325,6 +331,7 @@ export class Desk {
     const entry = this.undoStack.pop();
     if (!entry) throw new Error('Nothing to undo');
     this.redoStack.push(entry);
+    if(entry.replacement){this.documentGeneration=randomUuid();this.filePath=null;this.fileNameHint='';this.selection=[];this.aiPointing=[];}
     this.commit(entry.before, this.objects, 'undo', actor, entry.targets, entry.beforeSettings);
     return this.summary();
   }
@@ -332,6 +339,7 @@ export class Desk {
     const entry = this.redoStack.pop();
     if (!entry) throw new Error('Nothing to redo');
     this.undoStack.push(entry);
+    if(entry.replacement){this.documentGeneration=randomUuid();this.filePath=null;this.fileNameHint='';this.selection=[];this.aiPointing=[];}
     this.commit(entry.after, this.objects, 'redo', actor, entry.targets, entry.afterSettings);
     return this.summary();
   }
@@ -363,9 +371,9 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('state') }),
   z.object({ method: z.literal('raster'), scale: z.number().finite().min(.1).max(3).default(1) }).strict(),
   z.object({ method: z.literal('mermaid_render'), id: z.string() }).strict(),
-  z.object({ method: z.literal('file_snapshot') }).strict(),
-  z.object({ method: z.literal('file_saved'), expectedSessionId:z.string().uuid(), expectedRevision:z.number().int().nonnegative() }).strict(),
-  z.object({ method: z.literal('load_document'), document: z.unknown(), confirm: z.literal(true),
+  z.object({ method: z.literal('file_snapshot'), includeGeneration:z.literal(true).optional() }).strict(),
+  z.object({ method: z.literal('file_saved'), expectedSessionId:z.string().uuid(), expectedRevision:z.number().int().nonnegative(), expectedGeneration:z.string().uuid().optional(),filePath:z.string().max(4096).optional() }).strict(),
+  z.object({ method: z.literal('load_document'), document: z.unknown(), confirm: z.literal(true), filePath:z.string().max(4096).optional(),
     expectedSessionId: z.string().uuid(), expectedRevision: z.number().int().nonnegative(),
     actor: z.string().min(1).max(100).default('agent-01') }).strict(),
   z.object({ method: z.literal('context'), sinceRevision: z.number().int().nonnegative().default(0), limit: z.number().int().min(1).max(200).default(100) }),
@@ -418,15 +426,21 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, text
     }
     case 'state': return { ...desk.summary(), objects: desk.snapshot().map(publishObject), selection: desk.selected(), aiPointing: desk.pointed(), settings: desk.settingsSnapshot() };
     case 'file_snapshot': {
-      const snapshot = { sessionId: desk.sessionId, revision: desk.revision, objects: desk.snapshot(), settings: desk.settingsSnapshot() };
+      const snapshot = { sessionId: desk.sessionId, revision: desk.revision, ...(request.includeGeneration?{generation:desk.documentGeneration}:{}), objects: desk.snapshot(), settings: desk.settingsSnapshot() };
       checkDeskBridgeSize(snapshot);
       return snapshot;
     }
-    case 'file_saved': return {marked:request.expectedSessionId===desk.sessionId&&desk.markSaved(request.expectedRevision)};
+    case 'file_saved': {
+      if(request.expectedSessionId!==desk.sessionId||(request.expectedGeneration&&request.expectedGeneration!==desk.documentGeneration))return {marked:false};
+      const marked=desk.markSaved(request.expectedRevision);
+      if(request.filePath&&(marked||request.expectedGeneration))desk.filePath=request.filePath;
+      return {marked};
+    }
     case 'load_document': {
       if (request.expectedSessionId !== desk.sessionId || request.expectedRevision !== desk.revision) throw new Error('Session or revision conflict: refresh before loading');
       checkDeskBridgeSize(request);
-      return desk.replaceDocument(request.document, request.actor);
+      const result=desk.replaceDocument(request.document, request.actor);
+      desk.filePath=request.filePath??null;return result;
     }
     case 'settings': return desk.listSettings();
     case 'context': return { ...deskContext(desk, request.sinceRevision, request.limit), ...(ui ? { ui: ui.get() } : {}) };

@@ -30,7 +30,7 @@ test('release preserves the local desk, stops retries, accepts another desk and 
     await page.locator('#redo').click();
     assert.ok(await page.locator('[data-id="kept"]').count());
     // Local download still works without an AI connection and retains objects/settings.
-    const downloading = page.waitForEvent('download'); await page.locator('#file-menu').click(); await page.locator('#save-desk').click();
+    const downloading = page.waitForEvent('download'); await page.locator('#file-menu').click(); await page.locator('#download-desk').click();
     const saved = await decodeDeskFile(new Uint8Array(await readFile((await (await downloading).path())!)));
     assert.deepEqual(saved.objects.map(publishObject), original.objects.map(publishObject));
     assert.deepEqual(saved.settings, original.settings);

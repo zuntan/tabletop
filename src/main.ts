@@ -49,7 +49,7 @@ import { groupToolbar, iconButton } from './toolbar';
 import { drawLabelDescription, labelVisualBounds } from './label-description';
 import { gridPoint, gridOrigin } from './grid';
 import { pinPath } from './pin-shape';
-import { drawOpenLink } from './link-card';
+import { drawOpenLink, drawDeskLinkIcon } from './link-card';
 import { readClipboardContent, svgClipboardFile, type ClipboardContent } from './clipboard';
 import { PartClipboard, partClipboardType, singleClipboardUrl } from './part-clipboard';
 import { effectivePinVisibility, pinTransform, pinScreenObject, pinThreadMembers, pinVisibilityNames, type PinVisibility } from './pin-series';
@@ -312,9 +312,11 @@ fileCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{const operatio
 const thinkingMode = createThinkingMode($('header'), () => { objectAnimator.finish(); cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
-createDeskFileControls($('header'), desk, () => { partClipboard.clear(); render(); fitView(desk.selected()); },
+const deskFiles=createDeskFileControls($('header'), desk, () => { bhDeletion.stop();objectAnimator.finish();cameraAnimator.cancel('Desk contents replaced');partClipboard.clear(); render(); fitView(desk.selected()); },
   () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing(),
-  () => {objectAnimator.finish();return deskPdf(desk,canvas,id=>pinDescriptionVisible(desk.get(id)));});
+  () => {objectAnimator.finish();return deskPdf(desk,canvas,id=>pinDescriptionVisible(desk.get(id)));},
+  request=>recovery.fileRequest(request),
+  (path,name)=>newObject('link',{deskPath:path,text:name,width:360,height:72}));
 createUiThemeButton($('header'));
 const deskMenu = createDeskMenu($('header'), desk, patch => {
   if (busy || gesture || editor.isActive()) { notify('操作が終わってから設定を変更してください', true); deskMenu.refresh(); return; }
@@ -492,8 +494,9 @@ function drawObjectRaw(object: DeskObject) {
       group.append(svg('rect', { width: w, height: h, fill: 'transparent', stroke: 'none', 'pointer-events': 'all', 'data-prop-body': '' }));
       group.append(svg('rect', { width: w, height: Math.min(IMAGE_TITLE_HEIGHT, h), rx: 6, fill: '#ffffff', stroke: '#94a3b8', 'data-prop-title': '' }));
     } else group.append(svg('rect', { width: w, height: h, rx: 6, fill: '#ffffff', stroke: '#94a3b8' }));
-    const title = svg('text', { x: 12, y: 23, 'font-size': 14, fill: '#1d4ed8' });
-    title.textContent = (object.text || object.url || '').slice(0, Math.max(0, Math.floor((w - 52) / 8))); group.append(title);
+    if(object.deskPath)drawDeskLinkIcon(group,object);
+    const title = svg('text', { x: object.deskPath?42:12, y: 23, 'font-size': 14, fill: '#1d4ed8' });
+    title.textContent = (object.text || object.deskPath || object.url || '').slice(0, Math.max(0, Math.floor((w - (object.deskPath?82:52)) / 8))); group.append(title);
     if (['image', 'svg', 'prop'].includes(object.type) && h > IMAGE_TITLE_HEIGHT) {
       // SVG stays in an image context, never inserted as executable markup.
       group.append(svg('image', { y: IMAGE_TITLE_HEIGHT, width: w, height: h - IMAGE_TITLE_HEIGHT, href: object.src!, preserveAspectRatio: 'xMidYMid meet' }));
@@ -507,7 +510,7 @@ function drawObjectRaw(object: DeskObject) {
       foreign.append(iframe); group.append(foreign);
     }
     if (object.type === 'mermaid') drawMermaidCard(group, object);
-    drawOpenLink(group, object);
+    drawOpenLink(group, object, path=>{void deskFiles.open(path);});
   }
   if(object.type==='file'){drawClearFile(group,object);drawStamp(group,object,desk.selected().includes(object.id));}
   if(object.type==='clip') drawClip(group,object,renderedById.get(object.clipMembers?.[0] ?? ''));
@@ -609,7 +612,7 @@ function render(rebuild = true) {
     clipMenuUpdates.forEach(update=>update());
     updateConnectorLineStyle();
     updateStartMarker(); updateEndMarker(); updateCallout(); updateTextFit();
-    if (object.url) { link.href = object.url; link.hidden = false; }
+    if (object.url&&!object.deskPath) { link.href = object.url; link.hidden = false; }
   }
   lockControls.update([...new Set(ids.flatMap(id => fileGroup(renderedScene,id).map(object => object.id)))].map(id => desk.get(id)));
   for (const id of ['#front', '#back', '#delete', '#delete-animated']) $<HTMLButtonElement>(id).disabled = !ids.length;
@@ -624,7 +627,7 @@ function render(rebuild = true) {
   listObjects.forEach(object => {
     const button = document.createElement('button'); button.className = 'object-row';
     button.classList.toggle('active', ids.includes(object.id));
-    const typeLabel = object.type === 'label' ? `ピン［${seriesNames.get(object.seriesId!) ?? object.seriesId}］` : labels[object.type];
+    const typeLabel = object.deskPath?'机リンク':object.type === 'label' ? `ピン［${seriesNames.get(object.seriesId!) ?? object.seriesId}］` : labels[object.type];
     button.textContent = `${typeLabel} · ${object.text.slice(0, 22) || object.id}`;
     button.onclick = event => attempt(() => {
       const current = desk.selected();
@@ -779,7 +782,7 @@ function focusHumanSelection() { focusObjects(desk.selected()); }
 $('#fit').onclick = () => focusObjects(desk.selected().length ? desk.selected() : desk.pointed());
 canvas.addEventListener('dblclick', event => {
   const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
-  if (target.closest('[data-open-url], [data-open-media], [data-markdown-link]')) return;
+  if (target.closest('[data-open-url], [data-open-media], [data-open-desk], [data-markdown-link]')) return;
   const id = target.closest('[data-id]')?.getAttribute('data-id');
   if (!id || busy || editor.isActive()) return;
   const object = desk.get(id);
@@ -790,7 +793,7 @@ canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture
 canvas.addEventListener('auxclick', event => { if (event.button === 1) event.preventDefault(); });
 canvas.addEventListener('pointerdown', event => {
   if (gesture || editor.isActive() || (event.button !== 0 && event.button !== 1)) return;
-  if (!space && (event.target as Element).closest('[data-open-url], [data-open-media], [data-markdown-link]')) return;
+  if (!space && (event.target as Element).closest('[data-open-url], [data-open-media], [data-open-desk], [data-markdown-link]')) return;
   const target = event.target as Element;
   const resize = target.closest('[data-resize]')?.getAttribute('data-resize');
   const calloutTip = target.closest('[data-callout-tip]')?.getAttribute('data-callout-tip');
@@ -1058,6 +1061,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if (typeof id !== 'string') throw new Error('Invalid request ID');
       if (typeof message.request?.method === 'string') activityLed.pulse(message.request.method);
       thinkingMode.assertAllowed(message.request?.method);
+      if(deskFiles.isBusy()&& !['summary','get','list','state','context','settings','selection','changes','file_saved','camera_get','ui_get'].includes(message.request?.method))throw new Error('Human file operation in progress. No change was made.');
       if(isConfirmDialogOpen()&&['execute','lock','undo','redo','select','point','load_document','fit','camera_move','ui_set'].includes(message.request?.method))throw new Error('Human confirmation in progress. No change was made; wait for the user.');
       if (['fit', 'camera_move'].includes(message.request.method)) humanScroll.assertIdle();
       if ((busy && message.request.method !== 'camera_get') || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
@@ -1087,7 +1091,8 @@ async function connect(token: string, port: string, manual = false, host = '127.
       // Read-only requests must not rebuild iframes or steal form edits.
       if (message.request.method === 'point') drawSelection();
       if (!animatedMove && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method)) render();
-      if (message.request.method === 'load_document') { partClipboard.clear(); fitView(desk.selected()); }
+      if (message.request.method === 'load_document') { bhDeletion.stop();partClipboard.clear(); if(desk.filePath)deskFiles.record(desk.filePath);fitView(desk.selected()); }
+      if(message.request.method==='file_saved'&&desk.filePath&&(!message.request.expectedGeneration||message.request.expectedGeneration===desk.documentGeneration))deskFiles.record(desk.filePath);
     } catch (error) { ws.send(JSON.stringify({ id, error: error instanceof Error ? error.message : String(error) })); }
   }, manual, host);
 }

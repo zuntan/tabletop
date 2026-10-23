@@ -20,7 +20,7 @@ test('name editing, download names, AI save/load, same-named tabs and manual rec
     const id = first.deskId;
     assert.equal(first.name, ''); assert.equal(await page.locator('#desk-name').textContent(), '無題');
     assert.equal(await page.locator('#desk-id').textContent(), id);
-    const emptyDownload = page.waitForEvent('download'); await page.locator('#file-menu').click(); await page.locator('#save-desk').click();
+    const emptyDownload = page.waitForEvent('download'); await page.locator('#file-menu').click(); await page.locator('#download-desk').click();
     assert.equal((await emptyDownload).suggestedFilename(), '無題.tabletop');
     await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'kept', type: 'rect', text: 'Keep me' } }] });
     const displayedName = await page.locator('#desk-name').boundingBox();
@@ -51,7 +51,7 @@ test('name editing, download names, AI save/load, same-named tabs and manual rec
     await page.locator('#desk-name-input').fill('取消する');
     await page.locator('#desk-name-input').press('Escape');
     assert.equal((await call('desk_summary')).name, '企画/メモ:案');
-    const downloading = page.waitForEvent('download'); await page.locator('#file-menu').click(); await page.locator('#save-desk').click();
+    const downloading = page.waitForEvent('download'); await page.locator('#file-menu').click(); await page.locator('#download-desk').click();
     const download = await downloading;
     assert.equal(download.suggestedFilename(), '企画_メモ_案.tabletop');
     const bytes = await readFile((await download.path())!);

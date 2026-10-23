@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" fill="none">
+  <g stroke="#64717d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- A little shared desk, with room for the next idea. -->
+    <ellipse cx="160" cy="201" rx="121" ry="9" fill="#e9eef1" stroke="none"/>
+    <path d="M48 114h16l-7 82H44z" fill="#c6a17b"/>
+    <path d="M254 114h16l6 82h-13z" fill="#c6a17b"/>
+    <path d="M64 122h190v17H64z" fill="#e6c7a2"/>
+    <path d="M101 123h113v31a7 7 0 0 1-7 7h-99a7 7 0 0 1-7-7z" fill="#f4dcbc"/>
+    <path d="M140 136h34" stroke="#bc9772"/>
+    <circle cx="146" cy="145" r="2" fill="#64717d" stroke="none"/>
+    <circle cx="167" cy="145" r="2" fill="#64717d" stroke="none"/>
+    <path d="M152 151q5 4 10 0" stroke-width="2"/>
+    <path d="M39 96h242l10 13-7 11H36l-7-11z" fill="#f3dab6"/>
+    <path d="M29 109h262v10a5 5 0 0 1-5 5H34a5 5 0 0 1-5-5z" fill="#ddba91"/>
+    <path d="M47 103h220" stroke="#fbebd3" stroke-width="3"/>
+    <!-- Mint lamp. -->
+    <path d="M62 96h41l-5-6H68z" fill="#b4d7d0"/>
+    <path d="M81 89V66l17-18"/>
+    <circle cx="81" cy="65" r="3.5" fill="#d4e9e3"/>
+    <path d="M96 44q13-10 24 1l7 15H87z" fill="#b4d7d0"/>
+    <path d="M94 60h26" stroke="#f4e9be" stroke-width="4"/>
+    <!-- Papers and a blue notebook. -->
+    <path d="m121 82 62-5 3 22-63 4z" fill="#d8e7ef"/>
+    <path d="m126 77 52 1-1 19-52-1z" fill="#fffdf6"/>
+    <path d="m134 84 29 1m-29 5 20 1" stroke="#b9c7cf" stroke-width="2"/>
+    <path d="m181 94 15-23 4 3-15 23z" fill="#e8bc7c"/>
+    <path d="m181 94-1 5 5-2" fill="#64717d"/>
+    <!-- A tiny warm drink. -->
+    <path d="M242 77h7q11 0 9 10-2 7-13 5" fill="#f6e1cf"/>
+    <path d="M220 73h26v21a6 6 0 0 1-6 6h-14a6 6 0 0 1-6-6z" fill="#f6e1cf"/>
+    <ellipse cx="233" cy="73" rx="13" ry="4" fill="#c79e7c"/>
+    <path d="M229 61q-5-5 0-10m10 11q-5-5 0-10" stroke="#c6d1d7" stroke-width="2"/>
+  </g>
+</svg>

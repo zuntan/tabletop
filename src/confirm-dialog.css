@@ -11,3 +11,5 @@
 .confirm-dialog .confirm-dialog-cancel { font-weight: 600; }
 .confirm-dialog .confirm-dialog-danger { color: #b45309; }
 :root[data-theme="dark"] .confirm-dialog .confirm-dialog-danger { color: #fdba74; }
+
+.confirm-dialog-input {box-sizing:border-box;width:100%;margin:0 0 18px;padding:8px;color:var(--ui-text,#334155);background:var(--ui-input,#fff);border:1px solid var(--ui-border,#cbd5e1);border-radius:5px;}

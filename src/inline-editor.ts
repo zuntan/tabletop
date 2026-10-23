@@ -2,7 +2,7 @@ import { createMarkdownPreview } from './markdown-preview';
 import { shapeTypes } from './shape-definitions';
 import { pinScreenObject } from './pin-series';
 import type { DeskObject } from './model';
-type EditorPatch = { text?: string; description?: string; url?: string; mermaidSource?: string };
+type EditorPatch = { text?: string; description?: string; url?: string; deskPath?:string; mermaidSource?: string };
 
 export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement,
   save: (object: DeskObject, patch: EditorPatch, fresh: boolean) => void) {
@@ -28,7 +28,9 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
     try {
       const patch: EditorPatch = object.type === 'label' ? { description: text.value } : { text: text.value };
       if (source) patch.mermaidSource = source.value;
-      if (url && ['image', 'svg'].includes(object.type) && !url.value.trim()) patch.url = '';
+      if(url&&object.deskPath){
+        const value=url.value.trim();if(!value.endsWith('.tabletop')||/[\x00-\x1f]/.test(value))throw new Error('.tabletopファイルのパスを入力してください');patch.deskPath=value;
+      }else if (url && ['image', 'svg'].includes(object.type) && !url.value.trim()) patch.url = '';
       else if (url) {
         const value = new URL(url.value);
         if (!['http:', 'https:'].includes(value.protocol)) throw new Error('HTTP(S) URLを入力してください');
@@ -62,10 +64,10 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       }
       let url: HTMLInputElement | undefined;
       if (['link', 'web', 'image', 'svg'].includes(object.type)) {
-        url = document.createElement('input'); url.type = 'url'; url.dataset.inlineUrl = '';
+        url = document.createElement('input'); url.type = object.deskPath?'text':'url'; url.dataset.inlineUrl = '';
         const optional = ['image', 'svg'].includes(object.type);
         url.setAttribute('aria-label', optional ? 'HTTP(S) URL（任意）' : 'HTTP(S) URL');
-        url.placeholder = optional ? 'リンク先URL（任意）https://' : 'https://'; url.value = object.url ?? ''; panel.append(url);
+        url.placeholder = optional ? 'リンク先URL（任意）https://' : 'https://'; url.value = object.deskPath??object.url??'';if(object.deskPath){url.setAttribute('aria-label','机ファイルのパス');url.placeholder='.tabletopファイルのパス';} panel.append(url);
       }
       const hint = document.createElement('small'); hint.id = 'inline-editor-hint'; hint.setAttribute('aria-live', 'polite');
       text.setAttribute('aria-describedby', hint.id);

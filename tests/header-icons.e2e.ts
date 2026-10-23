@@ -33,10 +33,10 @@ test('header actions use monochrome accessible icons with tooltips and keep thei
     await page.getByRole('button', { name: 'やり直す', exact: true }).click();
     assert.equal((await call('desk_summary')).count, 1);
     const download = page.waitForEvent('download');
-    await page.locator('#file-menu').click(); await page.locator('#save-desk').click();
+    await page.locator('#file-menu').click(); await page.locator('#download-desk').click();
     assert.equal((await download).suggestedFilename(), '無題.tabletop');
     const chooser = page.waitForEvent('filechooser');
-    await page.locator('#file-menu').click(); await page.locator('#load-desk').click();
+    await page.locator('#file-menu').click(); await page.locator('#upload-desk').click();
     assert.equal((await chooser).isMultiple(), false);
     assert.deepEqual(errors, []);
   } finally { await close(); }
