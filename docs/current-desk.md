@@ -4,12 +4,12 @@
 
 ## 復元する机
 
-- 保存名：`tabletop-main-about-committed-20261024.tabletop`
+- 保存名：`tabletop-main-card-cleanup-commit-20261024.tabletop`
 - 保存場所：`~/.tabletop/saves/`（既定のTABLETOP_SAVE_ROOT）
 - 机の名前：Tabletop main
 - パーツ数：301
-- 保存時のrevision：4
-- Git保管用：[2026-10-24.tabletop](desk-snapshots/2026-10-24.tabletop)
+- 保存時のrevision：10
+- Git保管用：[2026-10-24-02.tabletop](desk-snapshots/2026-10-24-02.tabletop)
 - 次回起動：利用者の了承済み方針に従いChrome DevToolsで起動する。
 
 現在の机を確認せず、古いpreviewや試験前の保存へ戻さない。接続が切れただけなら既存タブの再接続を優先し、未保存の机を再読み込みしない。別環境でローカル保存がなければGit保管版を使う。
@@ -189,3 +189,13 @@ Aboutカードを①整備済みへ更新し、利用者が移動した位置(16
 mainの54fb796に、Aboutの机イラスト・指定クレジット・プロジェクトと感想リンク・本体MIT欄・Release一覧リンク、ルートLICENSE・package/lockのMIT表記・READMEをコミット。既存のビルド・Aboutブラウザ試験と外観を確認。バージョンと依存関係は維持。今回はmain上なので追加マージなし。
 
 カードに実装コミットを反映し、利用者が配置した(1632,456)・1320×1248・ロックOFFを保持。About表示と本体MITの整備は完了、第三者通知・依存素材確認・配布物整理は継続するため、広い公開準備カード自体は未実装エリアに残す。最新の机301パーツ・revision4をローカルとGitに保存。push・GitHub設定・Release作成は行っていない。
+
+
+## 2026-10-24：About完了・本棚２枚を未来へ整理
+
+利用者の済／保留ハンコを確認。About・本体MITカードcard-publicを済ハンコのまま完了エリア(-1536,12744)へ移動し、緑・ロック。公開準備の残件（第三者通知・配布物・README・Release）はcard-release-01-roadmapへ整理し、既存位置を維持。
+
+card-bookshelfとcard-bookshelf-boundaryは保留ハンコを保持し、未来エリア(1632,7320)／(2424,7320)へ移動。紫・ロックで並べた。全４枚の本文の収まりを確認。最新の机301パーツ・revision9をローカル保存。Git保管版は今回のカード整理前。コードの変更はなく、この机整理と記録は未コミット。
+
+
+カード整理後の利用者の編集も含め、301パーツ・revision10を保存しGit保管版2026-10-24-02へ反映。Aboutの完了移動・本棚２枚の未来移動・公開準備カードの更新をmainへコミット済み。pushは別途。
