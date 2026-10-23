@@ -12,3 +12,5 @@ header { flex-wrap: wrap; }
   .brand { flex-basis: 100%; }
   .desk-identity { max-width: calc(100% - 8px); }
 }
+
+header[data-custom-title] .brand small, header[data-custom-title] #desk-id, header[data-custom-title] #revision {color:inherit;}

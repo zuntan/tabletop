@@ -187,3 +187,10 @@ SHA-256：`eba723db53bac284b80a771038b09fff0f4d93789cd79b2c098c8a5b0b3b50e1`
 [2026-10-23-08.tabletop](./2026-10-23-08.tabletop)：302パーツ、revision6。5番の接続なし起動カードを実装・試用待ちへ更新。ピン5・6は保持。
 
 SHA-256：`7c6f0bdbdd507c6b95afdd43ebc1b3085d431be0ce1e88656aeb9de64abede22`
+
+
+## 2026-10-23-09
+
+[2026-10-23-09.tabletop](./2026-10-23-09.tabletop)：302パーツ、revision8。5・6を実装・試用待ちへ更新。カード本文の高さを調整。ピン5・6は利用者確認待ちで保持。ZIP整合性と接続資格情報フィールド不在を確認。
+
+SHA-256：`7a66cdb19164cdb86c5329efc9407c77c5ab0f65d5c0ee0ed564bfddcec466df`

@@ -1,3 +1,4 @@
+import {applyTitleBackground} from './desk-appearance';
 import {fileCreateOperations,fileFor,fileGroup} from './clear-files';
 import {drawClearFile} from './clear-file-drawing';
 import {createDeskToast} from './desk-toast';
@@ -363,6 +364,7 @@ function world(event: PointerEvent | WheelEvent) {
 function cameraChanged() {
   const settings = desk.settingsSnapshot();
   deskBackground.update(settings.background, camera);
+  applyTitleBackground($('header'),settings.background.titleBackground);
   viewport.setAttribute('transform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
   const grid = settings.grid, dots = app.querySelector('#dots')!;
   dots.setAttribute('width', String(grid.interval)); dots.setAttribute('height', String(grid.interval));

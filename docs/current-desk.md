@@ -4,12 +4,12 @@
 
 ## 復元する机
 
-- 保存名：`tabletop-main-standalone-ready-20261023.tabletop`
+- 保存名：`tabletop-main-five-six-review-20261023.tabletop`
 - 保存場所：`~/.tabletop/saves/`（既定のTABLETOP_SAVE_ROOT）
 - 机の名前：Tabletop main
 - パーツ数：302
-- 保存時のrevision：6
-- Git保管用：[2026-10-23-08.tabletop](desk-snapshots/2026-10-23-08.tabletop)
+- 保存時のrevision：8
+- Git保管用：[2026-10-23-09.tabletop](desk-snapshots/2026-10-23-09.tabletop)
 - 次回起動：利用者の了承済み方針に従いChrome DevToolsで起動する。
 
 現在の机を確認せず、古いpreviewや試験前の保存へ戻さない。接続が切れただけなら既存タブの再接続を優先し、未保存の机を再読み込みしない。別環境でローカル保存がなければGit保管版を使う。
@@ -124,3 +124,12 @@ MCP更新後、ブラウザが空のタブになっていたため最新の机�
 ## 5：接続なし起動を実装・試用待ち
 
 feat/standalone-and-desk-colorsで5と6を別コミットにする。5はmode:standaloneで資格情報なしの空の机を開き、既存AI接続を維持。アップロード／ダウンロードで単独利用。ビルド・単体3件・ブラウザ1件確認済み。最新保存302パーツ・revision6。ピン5は利用者確認待ちで維持。ツールへの反映はMCP再起動後。6はまだ未実装。
+
+
+## 5・6の最新状態（以前の記録より優先）
+
+feat/standalone-and-desk-colors。5の接続なし起動は9a58f38、6のタイトル背景色と淡色無地は別コミット。利用者確認後のコミットフェーズでmainへマージする。まだmainへ統合・pushしていない。
+
+単体229件、接続なし起動・色設定・既存背景・メニューのブラウザ試験を確認。タイトル背景色はbackground.titleBackground（省略/nullは標準）、淡色はwallpaper:none＋color。保存・Undo・接続マーカー不変・ライト/ダークの外観を確認した。
+
+最新の机は302パーツ・revision8。5・6のカードを更新し、本文が収まるよう高さ600/888へ調整。ピン5・6は利用者の確認待ちで保持。MCPを再起動してからブラウザを更新し、この最新保存から復元する。未保存の現在の机がある場合は、必ず先に保存する。
