@@ -96,7 +96,7 @@ app.innerHTML = `
   <nav aria-label="追加ツール">
     <button data-add="rect">▭ 矩形</button><button data-add="roundedRect">▢ 角丸矩形</button><button data-add="ellipse">◯ 楕円</button>
     <button data-add="line">╱ 線</button><button data-add="arrow">↗ 矢印</button>
-    <button data-add="text">T テキスト</button><button id="image">画像 / SVG</button><button data-add="mermaid">Mermaid</button>
+    <button data-add="text">T カード</button><button id="image">画像 / SVG</button><button data-add="mermaid">Mermaid</button>
     <button id="clipboard" title="クリップボードから追加" aria-label="クリップボードから追加">▣ クリップボードから追加</button>
     <button data-add="web">Web資料</button><button data-add="link">リンク</button>
     <button id="numbering">ピン</button><div id="authoring-tools"></div>
@@ -326,7 +326,7 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
   void rasterPointedCard(desk, id => drawnNodes.get(id)).then(raster => openBhPreview(raster.dataUrl))
     .catch(error => notify(error instanceof Error ? error.message : String(error), true));
 });
-const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'テキスト', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', file:'クリアファイル', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
+const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'カード', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', file:'クリアファイル', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
   if ($('#object-filter-files').getAttribute('aria-pressed')==='true'&&fileFor(renderedScene,object.id))return true;
@@ -975,7 +975,7 @@ async function pasteClipboard(content: ClipboardContent) {
   execute([{ kind: 'add', object: { ...appearance,
     id, type, ...size,...gridPosition(centeredPartPoint(camera,cameraSize(),size)),
     text: url ?? content.text, ...(url ? { url } : {}) } }]);
-  desk.select([id]); render(); notify(url ? 'リンクを貼り付けました' : 'テキストを貼り付けました');
+  desk.select([id]); render(); notify(url ? 'リンクを貼り付けました' : 'カードを貼り付けました');
 }
 $('#clipboard').onclick = async () => {
   if (busy || gesture || editor.isActive() || identityControls.isEditing()) return;

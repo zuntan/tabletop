@@ -13,7 +13,7 @@ test('human creation and external paste use readable sizes centered in the panne
   await page.getByRole('dialog',{name:'図形の候補',exact:true}).getByRole('button',{name:'矩形',exact:true}).click();
   let objects=(await call('desk_list')).objects;const shape=objects.at(-1);
   assert.equal(shape.width,368);assert.equal(shape.height,192);near(shape.x+shape.width/2,camera.center.x);near(shape.y+shape.height/2,camera.center.y);
-  await page.getByRole('button',{name:'テキスト',exact:true}).click();
+  await page.getByRole('button',{name:'カード',exact:true}).click();
   await page.locator('[data-inline-text]').fill('New note');await page.locator('[data-inline-text]').press('Enter');
   const note=(await call('desk_list')).objects.at(-1);assert.equal(note.width,744);assert.equal(note.height,480);
   near(note.x+note.width/2,camera.center.x+22);near(note.y+note.height/2,camera.center.y+22);

@@ -120,7 +120,8 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
       choice.onclick = () => addPin(item.id); choices.append(choice);
     }
     const create = document.createElement('button'); create.type = 'button'; create.id = 'pin-series-new'; create.textContent = '新しいシリーズ＋1本'; create.onclick = newSeries;
-    popup.replaceChildren(heading, choices, create);
+    const hint=document.createElement('p');hint.className='pin-order-help';hint.textContent='ピンの順番変更はAIに相談してください';
+    popup.replaceChildren(heading, choices, create, hint);
   }
   popup.addEventListener('beforetoggle', event => { if ((event as ToggleEvent).newState === 'open') populate(); });
   popup.addEventListener('toggle', () => {

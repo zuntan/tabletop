@@ -39,7 +39,7 @@ export function moldPath(mold:DeskObject){
  return shapePaths(mold.type,1,1)!.outline;
 }
 export function applyCutoutPatch(target:DeskObject,mold:DeskObject):Partial<DeskObject>{
- if(!cutoutTarget(target))throw new Error('型抜き対象はテキスト・画像・SVG・Mermaid・Web資料です');
+ if(!cutoutTarget(target))throw new Error('型抜き対象はカード・画像・SVG・Mermaid・Web資料です');
  const original=sourceRect(target),window={x:mold.x,y:mold.y,width:mold.width,height:mold.height};
  if(Math.min(original.x+original.width,window.x+window.width)<=Math.max(original.x,window.x)||
     Math.min(original.y+original.height,window.y+window.height)<=Math.max(original.y,window.y))throw new Error('型と対象の中身が重なっていません。変更していません');

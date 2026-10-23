@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+  <title>作業中</title>
+  <desc>細い枠は表示領域に合わせて伸び、中央の木製立て看板は同じ大きさを保ちます。</desc>
+  <rect x="4%" y="8%" width="92%" height="87%" rx="8" fill="none" stroke="#b5b0a1" stroke-width="2"/>
+  <svg x="50%" y="50%" width="1" height="1" overflow="visible">
+    <g transform="translate(-106,-48)" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M48 50L31 119M164 50L181 119" fill="none" stroke="#937859" stroke-width="10"/>
+      <path d="M39 97H173" fill="none" stroke="#b39773" stroke-width="6"/>
+      <rect x="2" y="2" width="208" height="78" rx="5" fill="#eed8b4" stroke="#957b5b" stroke-width="3"/>
+      <path d="M14 14H196M14 68H196" fill="none" stroke="#d5b98f" stroke-width="1.5"/>
+      <text x="106" y="54" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="36" fill="#67553e">作業中</text>
+      <g fill="#a68a67"><circle cx="15" cy="39" r="2.5"/><circle cx="197" cy="39" r="2.5"/></g>
+    </g>
+  </svg>
+</svg>

@@ -9,8 +9,17 @@ export function createPropControls(container: HTMLElement, place: (preset: typeo
   for (const preset of propPresets) {
     const button = document.createElement('button'); button.type = 'button'; button.dataset.propPreset = preset.id;
     const image = document.createElement('img'); image.src = `/props/${preset.filename}`; image.alt = ''; image.width = 72; image.height = 84;
+    let preview:HTMLElement=image;
+    if('responsive' in preset&&preset.responsive){
+      // Lay out responsive SVG at its placement size before scaling the whole thumbnail.
+      const holder=document.createElement('span');holder.className='prop-responsive-preview';
+      const width=preset.width,height=preset.height-34,scale=Math.min(72/width,84/height);
+      image.width=width;image.height=height;
+      Object.assign(image.style,{width:`${width}px`,height:`${height}px`,transform:`translate(-50%,-50%) scale(${scale})`});
+      holder.append(image);preview=holder;
+    }
     const name = document.createElement('span'); name.textContent = preset.name;
-    button.title = preset.description; button.append(image, name); panel.append(button);
+    button.title = preset.description; button.append(preview, name); panel.append(button);
     button.onclick = async () => {
       button.disabled = true;
       try {

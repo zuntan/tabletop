@@ -23,7 +23,7 @@ export function groupToolbar(nav: HTMLElement) {
   parts.append(clearAi);
   const icons: Record<string, [string, string]> = {
     rect: ['▭', '矩形'], roundedRect: ['▢', '角丸矩形'], ellipse: ['◯', '楕円'],
-    line: ['╱', '線'], arrow: ['↗', '矢印'], text: ['T', 'テキスト'],
+    line: ['╱', '線'], arrow: ['↗', '矢印'], text: ['T', 'カード'],
     image: ['▧', '画像 / SVG'], mermaid: ['▧', 'Mermaid'], web: ['◎', 'Web資料'], link: ['↗▤', 'リンク'], numbering: ['📍', 'ピンを配置'],
     clipboard: ['▣', 'クリップボードから追加'],
   };

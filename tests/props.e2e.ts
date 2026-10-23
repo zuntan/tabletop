@@ -4,13 +4,13 @@ import { openTestDesk } from './desk-browser';
 test('human palette and AI read-only preset IF place embedded props, including custom SVGs, without open controls', { timeout: 60_000 }, async () => {
   const { page, call, client, close, errors } = await openTestDesk('props');
   try {
-    const catalog = await call('desk_prop_list'); assert.equal(catalog.presets.length, 8);
+    const catalog = await call('desk_prop_list'); assert.equal(catalog.presets.length, 11);
     for (const item of catalog.presets) {
       const source = await call('desk_prop_get', { id: item.id }); assert.match(source.svg, /<svg/);
     }
     const preset = await call('desk_prop_get', { id: 'teacup' }); assert.match(preset.svg, /<svg/);
     const bad = await client.callTool({ name: 'desk_prop_get', arguments: { id: '../server.ts' } }); assert.equal(bad.isError, true);
-    assert.equal(await page.locator('#prop-palette img').count(), 8);
+    assert.equal(await page.locator('#prop-palette img').count(), 11);
     await page.locator('#prop-palette img').evaluateAll(images => Promise.all(images.map(image => (image as HTMLImageElement).decode())));
     const before = await call('desk_summary');
     await page.locator('#prop-open').click(); await page.locator('[data-prop-preset="teacup"]').click();
