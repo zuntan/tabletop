@@ -7,8 +7,7 @@ import { deskPdf } from './desk-pdf';
 import { createCutoutControls } from './cutout-controls';
 import { drawCutout } from './cutout-drawing';
 import { cutoutTarget, cutoutSourceObject } from './logical-cutout';
-import { BhDeletion, bhDeleteControls } from './bh-delete';
-import type { BhMode } from './bh-animation';
+import { BhDeletion, bhDeleteControls, DELETE_MODES, type DeleteMode } from './bh-delete';
 import { openBhPreview } from './bh-preview';
 import { rasterPointedCard } from './part-raster';
 import { pointedMove, ObjectMoveAnimator } from './object-move-animation';
@@ -271,8 +270,8 @@ for (const [id, icon, label] of [['front', '▣↑', '最前面'], ['back', '▣
   const button = $<HTMLButtonElement>(`#${id}`); iconButton(button, icon, label); editActions.append(button);
 }
 const animatedDeleteButton=document.createElement('button');animatedDeleteButton.id='delete-animated';animatedDeleteButton.type='button';
-iconButton(animatedDeleteButton,'×','アニメ削除（落下／吸引をランダム）');
-animatedDeleteButton.onclick=()=>animateDelete(Math.random()<.5?'fall':'suction');
+iconButton(animatedDeleteButton,'×','アニメ削除（落下／吸引／消しゴム／三角片をランダム）');
+animatedDeleteButton.onclick=()=>animateDelete(DELETE_MODES[Math.floor(Math.random()*DELETE_MODES.length)]);
 editActions.append(animatedDeleteButton);
 editActions.append($('#reaction-controls'), $('#grid-snap')); $('.toolbar-parts').append(editActions);
 const lockControls = createLockControls($('#grid-snap'), form, () => {
@@ -709,7 +708,7 @@ $('#redo').onclick = () => attempt(() => { desk.redo(); });
 function deleteSelection() {
   const ids = desk.selected(); if (ids.length) attempt(() => execute(ids.map(id => ({ kind: 'delete', id }))));
 }
-function animateDelete(mode: BhMode) {
+function animateDelete(mode: DeleteMode) {
   if(busy||gesture||editor.isActive()||!desk.selected().length)return;
   objectAnimator.finish();
   const ids=desk.selected();

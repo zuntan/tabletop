@@ -2,5 +2,5 @@
 .bh-delete-controls { display: flex; flex: 1; gap: 0; }
 .bh-delete-controls #delete { border-radius: 6px 0 0 6px; }
 .bh-delete-controls #delete-style { flex: 0 0 30px; border-left: 0; border-radius: 0 6px 6px 0; }
-#delete-style-menu { position: fixed; inset: auto; margin: 0; width: 170px; padding: 6px; border: 1px solid var(--ui-border,#cbd5e1); border-radius: 8px; background: var(--ui-panel,#fff); color: var(--ui-text,#334155); box-shadow: 0 4px 18px #0003; }
+#delete-style-menu { position: fixed; inset: auto; margin: 0; width: 210px; padding: 6px; border: 1px solid var(--ui-border,#cbd5e1); border-radius: 8px; background: var(--ui-panel,#fff); color: var(--ui-text,#334155); box-shadow: 0 4px 18px #0003; }
 #delete-style-menu button { display: block; width: 100%; text-align: left; font-size: 12px; margin: 2px 0; }

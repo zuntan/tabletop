@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {BH_DURATION} from '../src/bh-animation';
+import {ERASER_DURATION,PARTICLE_DURATION} from '../src/stationery-delete-animation';
 import {openTestDesk} from './desk-browser';
 
 test('BH button commits one deletion, queues afterimages, and Undo rescues all; Delete stays instant',{timeout:30000},async()=>{
@@ -61,11 +62,11 @@ test('toolbar random choice stays the same across a multi-part deletion',{timeou
  const {page,call,close}=await openTestDesk('bh-toolbar');
  try{
   await call('desk_execute',{operations:['a','b'].map((id,i)=>({kind:'add',object:{id,type:'text',x:100+i*300,y:100,text:id,width:220,height:140}}))});
-  for(const [random,mode] of [[.1,'fall'],[.9,'suction']] as const){
+  for(const [random,mode,duration] of [[.1,'fall',BH_DURATION],[.3,'suction',BH_DURATION],[.6,'eraser',ERASER_DURATION],[.9,'particles',PARTICLE_DURATION]] as const){
    await page.evaluate(value=>{Math.random=()=>value;},random);
    await call('desk_select',{ids:['a','b']});await page.locator('#delete-animated').click();
    await page.locator('#bh-delete-overlay').waitFor();assert.equal(await page.locator('#bh-delete-overlay').getAttribute('data-mode'),mode);
-   await page.waitForTimeout(BH_DURATION+150);assert.equal(await page.locator('#bh-delete-overlay').getAttribute('data-mode'),mode);
+   await page.waitForTimeout(duration+150);assert.equal(await page.locator('#bh-delete-overlay').getAttribute('data-mode'),mode);
    assert.equal((await call('desk_summary')).count,0);
    await call('desk_undo');await page.waitForFunction(()=>!document.querySelector('#bh-delete-overlay'));
    assert.equal((await call('desk_summary')).count,2);
