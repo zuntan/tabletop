@@ -42,8 +42,15 @@ SVGの親グループ内に操作対象外のSVGアイコンを描く。型抜�
 
 形は独立した［▼］ボタンから選択。色ボタンの見本も選択形状へ変わる。選択・色見本・机上に同じSVGを使い、実輪郭の外接矩形で余白を取り除いて縦横比を保ち、指定直径の正方形内へ収める。
 
-ID一覧：circle / star / triangle / diamond / alert-square-rounded / heart / seedling / michelin-star / award / trophy / mood-smile / paw / pig / mickey / ghost。
+ID一覧：circle / star / triangle / diamond / alert-square-rounded / heart / seedling / michelin-star / award / trophy / mood-smile / paw / pig / confetti / ghost。
 
 diamond の図案は square-rotated。データIDは既存互換のため diamond を維持する。Tabler Icons の Filled版をローカル同梱し、描画時のネット接続やフォントに依存しない。出典とMITライセンスは src/assets/stickers/README.md と LICENSE。
 
 シールは書式スポイト・適用にも含む。列の色・形・順序と共通設定をまとめて記憶し、貼付・新規作成にも使う。詳細は[書式スポイト・適用](format-styles.md)。
+
+
+## 2026-10-24 図案の整理
+
+ミッキー形は選択肢・SVGとも削除。旧データの `shape: mickey` は読み込み・書式・コピー等の検証時に `circle` へ置換し、色・順序・共通設定は保持します。再保存では丸として記録します。その他の不明IDは従来どおり拒否します。
+
+元のミッキー形の位置（ぶたの後・おばけの前）へ、TablerのFilled `confetti` を「クラッカー」として追加。旧 `mickey` の互換変換先は引き続き `circle` とし、新規選択の `confetti` と区別します。

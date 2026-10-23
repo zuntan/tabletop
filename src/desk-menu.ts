@@ -1,3 +1,4 @@
+import thirdParty from '../public/licenses/generated/manifest.json';
 import deskArtwork from './assets/desk-link.svg?raw';
 import {plainDeskColors,wallpaperChoice,wallpaperPatch} from './desk-appearance';
 import type { Desk } from './model';
@@ -108,10 +109,6 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     text.append(releaseLink);
     const description = document.createElement('p'); description.className='about-description';description.textContent = '人間とAIが同じ机を囲んで考えるための作業机。';
     const link = document.createElement('a'); link.href = 'https://github.com/zuntan/tabletop'; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'プロジェクト → GitHub Repository';
-    const license = document.createElement('a'); license.href = '/licenses/tabler-icons.txt'; license.target = '_blank'; license.rel = 'noopener noreferrer'; license.textContent = 'Tabler Icons · MIT License';
-    const licenses = document.createElement('p'); licenses.append(license);
-    const mermaidLicense = document.createElement('a'); mermaidLicense.href = '/licenses/mermaid.txt'; mermaidLicense.target = '_blank'; mermaidLicense.rel = 'noopener noreferrer'; mermaidLicense.textContent = 'Mermaid · MIT License';
-    licenses.append(document.createElement('br'), mermaidLicense);
     const credits=document.createElement('dl');credits.className='about-credits';
     for(const [role,name]of [
       ['プログラマー','センパイ（GPT Sol 6.1 ～）'],
@@ -135,7 +132,20 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     projectLicense.append(projectHeading,projectText);
     const links=document.createElement('div');links.className='about-links';
     const licenseHeading=document.createElement('h4');licenseHeading.className='about-library-label';licenseHeading.textContent='ライブラリライセンス';
-    links.append(licenseHeading,licenses);
+    const licenseList=document.createElement('div');licenseList.className='about-license-list';
+    licenseList.tabIndex=0;licenseList.setAttribute('role','region');licenseList.setAttribute('aria-label','ライブラリライセンス一覧');
+    const directNames=[...new Set(['Tabler Icons','mermaid','markdown-it','@simonwep/pickr',...Object.keys(JSON.parse(packageSource).dependencies)])];
+    for(const name of directNames){
+      const entry=thirdParty.entries.find(entry=>entry.name===name);
+      if(!entry)continue;
+      const row=document.createElement('p'),a=document.createElement('a');
+      a.textContent=`${entry.name} · ${entry.license}`;a.href='/licenses/'+entry.notice;
+      a.target='_blank';a.rel='noopener noreferrer';a.title=`${entry.name} ${entry.version} — 著作権表示・ライセンス全文`;
+      row.append(a);licenseList.append(row);
+    }
+    const all=document.createElement('p'),allLink=document.createElement('a');
+    allLink.textContent='すべてのライブラリ・ライセンス';allLink.href='/licenses/THIRD_PARTY_NOTICES.txt';allLink.target='_blank';allLink.rel='noopener noreferrer';
+    all.append(allLink);links.append(licenseHeading,licenseList,all);
     panel.append(artwork,text,description,credits,projectLinks,projectLicense,links);
   }
   button.onclick = () => {

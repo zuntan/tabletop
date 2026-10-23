@@ -27,21 +27,31 @@
 #desk-menu-panel .about-desk-artwork { display: block; width: 230px; max-width: 100%; height: auto; margin: -6px auto 0; }
 #desk-menu-panel .about-app-name { margin: 2px 0 10px; font-size: 25px; font-weight: 750; text-align: center; color: var(--ui-text,#172554); }
 #desk-menu-panel .about-description { margin: 0 0 20px; text-align: center; line-height: 1.8; }
-#desk-menu-panel .about-credits { margin: 0; padding: 16px 0; border-top: 1px solid var(--ui-border,#cbd5e1); }
-#desk-menu-panel .about-credits dt { margin: 0 0 3px; font-size: 11px; color: var(--ui-muted,#64748b); }
-#desk-menu-panel .about-credits dd { margin: 0 0 13px; line-height: 1.6; overflow-wrap: anywhere; }
+#desk-menu-panel .about-credits { margin: 0; padding: 8px 0; border-top: 1px solid var(--ui-border,#cbd5e1); }
+#desk-menu-panel .about-credits dt { margin: 0 0 1px; font-size: 11px; color: var(--ui-muted,#64748b); }
+#desk-menu-panel .about-credits dd { margin: 0 0 5px; line-height: 1.35; overflow-wrap: anywhere; }
 #desk-menu-panel .about-credits dd:last-child { margin-bottom: 0; }
-#desk-menu-panel .about-links { padding-top: 14px; border-top: 1px solid var(--ui-border,#cbd5e1); font-size: 12px; line-height: 1.8; }
-#desk-menu-panel .about-links p { margin: 8px 0 0; }
+#desk-menu-panel .about-links { padding-top: 8px; border-top: 1px solid var(--ui-border,#cbd5e1); font-size: 12px; line-height: 1.4; }
+#desk-menu-panel .about-links p { margin: 3px 0 0; }
 
 #desk-menu-panel .about-library-label { margin: 0; font-size: 11px; font-weight: 400; color: var(--ui-muted,#64748b); }
 
-#desk-menu-panel .about-project-license { border-top: 1px solid var(--ui-border,#cbd5e1); padding: 14px 0; font-size: 12px; line-height: 1.8; }
-#desk-menu-panel .about-project-license p { margin: 7px 0 0; }
+#desk-menu-panel .about-project-license { border-top: 1px solid var(--ui-border,#cbd5e1); padding: 8px 0; font-size: 12px; line-height: 1.4; }
+#desk-menu-panel .about-project-license p { margin: 3px 0 0; }
 
-#desk-menu-panel .about-project-links { padding-bottom: 16px; font-size: 12px; line-height: 1.8; }
+#desk-menu-panel .about-project-links { padding-bottom: 8px; font-size: 12px; line-height: 1.4; }
 #desk-menu-panel .about-project-links p { margin: 0; }
-#desk-menu-panel .about-project-links p + p { margin-top: 6px; }
+#desk-menu-panel .about-project-links p + p { margin-top: 3px; }
 
 #desk-menu-panel .about-app-name a { color: inherit; text-decoration: none; }
 #desk-menu-panel .about-app-name a:hover, #desk-menu-panel .about-app-name a:focus-visible { text-decoration: underline; text-underline-offset: 4px; }
+
+/* Keep the license inventory compact without a framed box. */
+#desk-menu-panel .about-license-list { height: 72px; max-height: 72px; margin-top: 3px; line-height: 18px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-right: 6px; overflow-wrap: anywhere; }
+#desk-menu-panel .about-license-list p { margin: 0; }
+#desk-menu-panel .about-license-list:focus-visible { outline: 1px solid currentColor; outline-offset: 2px; }
+
+#desk-menu-panel .about-credits,
+#desk-menu-panel .about-project-links,
+#desk-menu-panel .about-project-license,
+#desk-menu-panel .about-links { text-align: center; }

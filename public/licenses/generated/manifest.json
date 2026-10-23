@@ -1,0 +1,2105 @@
+{
+  "lockSha256": "bdd78a274d9e29075f8242f6e331cfd8007b1569b993dfedbbd85fa1d1a0be77",
+  "scope": "Production dependency closure (browser and MCP server); includes conservative transitive/type/CLI entries, excludes devDependencies.",
+  "entries": [
+    {
+      "name": "Tabler Icons",
+      "version": "vendored",
+      "license": "MIT",
+      "source": "https://github.com/tabler/tabler-icons",
+      "notice": "tabler-icons.txt"
+    },
+    {
+      "name": "KaTeX（補足）",
+      "version": "0.18.10",
+      "license": "OFL-1.1 / Apache-2.0",
+      "notice": "generated/supplemental/katex-notices.txt"
+    },
+    {
+      "name": "ELK（補足・ソース）",
+      "version": "0.9.3",
+      "license": "EPL-2.0 / EPL-1.0 / Apache-2.0",
+      "notice": "generated/supplemental/elk-sources.txt"
+    },
+    {
+      "name": "@antfu/install-pkg",
+      "version": "2.1.0",
+      "license": "MIT",
+      "path": "node_modules/@antfu/install-pkg",
+      "source": "https://github.com/antfu-collective/install-pkg",
+      "notice": "generated/_antfu_install-pkg@2.1.0.txt"
+    },
+    {
+      "name": "@braintree/sanitize-url",
+      "version": "7.1.2",
+      "license": "MIT",
+      "path": "node_modules/@braintree/sanitize-url",
+      "source": "https://github.com/braintree/sanitize-url",
+      "notice": "generated/_braintree_sanitize-url@7.1.2.txt"
+    },
+    {
+      "name": "@chevrotain/cst-dts-gen",
+      "version": "13.2.0",
+      "license": "Apache-2.0",
+      "path": "node_modules/@chevrotain/cst-dts-gen",
+      "source": "https://github.com/Chevrotain/chevrotain",
+      "notice": "generated/_chevrotain_cst-dts-gen@13.2.0.txt"
+    },
+    {
+      "name": "@chevrotain/gast",
+      "version": "13.2.0",
+      "license": "Apache-2.0",
+      "path": "node_modules/@chevrotain/gast",
+      "source": "https://github.com/Chevrotain/chevrotain",
+      "notice": "generated/_chevrotain_gast@13.2.0.txt"
+    },
+    {
+      "name": "@chevrotain/regexp-to-ast",
+      "version": "13.2.0",
+      "license": "Apache-2.0",
+      "path": "node_modules/@chevrotain/regexp-to-ast",
+      "source": "https://github.com/Chevrotain/chevrotain",
+      "notice": "generated/_chevrotain_regexp-to-ast@13.2.0.txt"
+    },
+    {
+      "name": "@chevrotain/types",
+      "version": "13.2.0",
+      "license": "Apache-2.0",
+      "path": "node_modules/@chevrotain/types",
+      "source": "https://github.com/Chevrotain/chevrotain",
+      "notice": "generated/_chevrotain_types@13.2.0.txt"
+    },
+    {
+      "name": "@chevrotain/utils",
+      "version": "13.2.0",
+      "license": "Apache-2.0",
+      "path": "node_modules/@chevrotain/utils",
+      "source": "https://github.com/Chevrotain/chevrotain",
+      "notice": "generated/_chevrotain_utils@13.2.0.txt"
+    },
+    {
+      "name": "@hono/node-server",
+      "version": "2.1.5",
+      "license": "MIT",
+      "path": "node_modules/@hono/node-server",
+      "source": "https://github.com/honojs/node-server",
+      "notice": "generated/_hono_node-server@2.1.5.txt"
+    },
+    {
+      "name": "@iconify/types",
+      "version": "2.0.0",
+      "license": "MIT",
+      "path": "node_modules/@iconify/types",
+      "source": "https://github.com/iconify/iconify",
+      "notice": "generated/_iconify_types@2.0.0.txt"
+    },
+    {
+      "name": "@iconify/utils",
+      "version": "3.1.7",
+      "license": "MIT",
+      "path": "node_modules/@iconify/utils",
+      "source": "https://github.com/iconify/iconify",
+      "notice": "generated/_iconify_utils@3.1.7.txt"
+    },
+    {
+      "name": "@mermaid-js/parser",
+      "version": "2.0.1",
+      "license": "MIT",
+      "path": "node_modules/@mermaid-js/parser",
+      "source": "https://github.com/mermaid-js/mermaid",
+      "notice": "generated/_mermaid-js_parser@2.0.1.txt"
+    },
+    {
+      "name": "@modelcontextprotocol/sdk",
+      "version": "1.32.1",
+      "license": "MIT",
+      "path": "node_modules/@modelcontextprotocol/sdk",
+      "source": "https://github.com/modelcontextprotocol/typescript-sdk",
+      "notice": "generated/_modelcontextprotocol_sdk@1.32.1.txt"
+    },
+    {
+      "name": "@noble/hashes",
+      "version": "2.4.0",
+      "license": "MIT",
+      "path": "node_modules/@noble/hashes",
+      "source": "https://github.com/paulmillr/noble-hashes",
+      "notice": "generated/_noble_hashes@2.4.0.txt"
+    },
+    {
+      "name": "@simonwep/pickr",
+      "version": "1.10.2",
+      "license": "MIT",
+      "path": "node_modules/@simonwep/pickr",
+      "source": "https://github.com/simonwep/pickr",
+      "notice": "generated/_simonwep_pickr@1.10.2.txt"
+    },
+    {
+      "name": "@types/d3",
+      "version": "7.4.3",
+      "license": "MIT",
+      "path": "node_modules/@types/d3",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3@7.4.3.txt"
+    },
+    {
+      "name": "@types/d3-array",
+      "version": "3.2.2",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-array",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-array@3.2.2.txt"
+    },
+    {
+      "name": "@types/d3-axis",
+      "version": "3.0.6",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-axis",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-axis@3.0.6.txt"
+    },
+    {
+      "name": "@types/d3-brush",
+      "version": "3.0.6",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-brush",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-brush@3.0.6.txt"
+    },
+    {
+      "name": "@types/d3-chord",
+      "version": "3.0.6",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-chord",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-chord@3.0.6.txt"
+    },
+    {
+      "name": "@types/d3-color",
+      "version": "3.1.3",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-color",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-color@3.1.3.txt"
+    },
+    {
+      "name": "@types/d3-contour",
+      "version": "3.0.6",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-contour",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-contour@3.0.6.txt"
+    },
+    {
+      "name": "@types/d3-delaunay",
+      "version": "6.0.4",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-delaunay",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-delaunay@6.0.4.txt"
+    },
+    {
+      "name": "@types/d3-dispatch",
+      "version": "3.0.7",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-dispatch",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-dispatch@3.0.7.txt"
+    },
+    {
+      "name": "@types/d3-drag",
+      "version": "3.0.7",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-drag",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-drag@3.0.7.txt"
+    },
+    {
+      "name": "@types/d3-dsv",
+      "version": "3.0.7",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-dsv",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-dsv@3.0.7.txt"
+    },
+    {
+      "name": "@types/d3-ease",
+      "version": "3.0.2",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-ease",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-ease@3.0.2.txt"
+    },
+    {
+      "name": "@types/d3-fetch",
+      "version": "3.0.7",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-fetch",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-fetch@3.0.7.txt"
+    },
+    {
+      "name": "@types/d3-force",
+      "version": "3.0.10",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-force",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-force@3.0.10.txt"
+    },
+    {
+      "name": "@types/d3-format",
+      "version": "3.0.4",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-format",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-format@3.0.4.txt"
+    },
+    {
+      "name": "@types/d3-geo",
+      "version": "3.1.1",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-geo",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-geo@3.1.1.txt"
+    },
+    {
+      "name": "@types/d3-hierarchy",
+      "version": "3.1.7",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-hierarchy",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-hierarchy@3.1.7.txt"
+    },
+    {
+      "name": "@types/d3-interpolate",
+      "version": "3.0.4",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-interpolate",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-interpolate@3.0.4.txt"
+    },
+    {
+      "name": "@types/d3-path",
+      "version": "3.1.1",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-path",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-path@3.1.1.txt"
+    },
+    {
+      "name": "@types/d3-polygon",
+      "version": "3.0.2",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-polygon",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-polygon@3.0.2.txt"
+    },
+    {
+      "name": "@types/d3-quadtree",
+      "version": "3.0.6",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-quadtree",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-quadtree@3.0.6.txt"
+    },
+    {
+      "name": "@types/d3-random",
+      "version": "3.0.4",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-random",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-random@3.0.4.txt"
+    },
+    {
+      "name": "@types/d3-scale",
+      "version": "4.0.9",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-scale",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-scale@4.0.9.txt"
+    },
+    {
+      "name": "@types/d3-scale-chromatic",
+      "version": "3.1.0",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-scale-chromatic",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-scale-chromatic@3.1.0.txt"
+    },
+    {
+      "name": "@types/d3-selection",
+      "version": "3.0.12",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-selection",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-selection@3.0.12.txt"
+    },
+    {
+      "name": "@types/d3-shape",
+      "version": "3.2.0",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-shape",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-shape@3.2.0.txt"
+    },
+    {
+      "name": "@types/d3-time",
+      "version": "3.0.4",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-time",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-time@3.0.4.txt"
+    },
+    {
+      "name": "@types/d3-time-format",
+      "version": "4.0.3",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-time-format",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-time-format@4.0.3.txt"
+    },
+    {
+      "name": "@types/d3-timer",
+      "version": "3.0.2",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-timer",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-timer@3.0.2.txt"
+    },
+    {
+      "name": "@types/d3-transition",
+      "version": "3.0.9",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-transition",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-transition@3.0.9.txt"
+    },
+    {
+      "name": "@types/d3-zoom",
+      "version": "3.0.9",
+      "license": "MIT",
+      "path": "node_modules/@types/d3-zoom",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_d3-zoom@3.0.9.txt"
+    },
+    {
+      "name": "@types/geojson",
+      "version": "7946.0.16",
+      "license": "MIT",
+      "path": "node_modules/@types/geojson",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_geojson@7946.0.16.txt"
+    },
+    {
+      "name": "@types/trusted-types",
+      "version": "2.0.7",
+      "license": "MIT",
+      "path": "node_modules/@types/trusted-types",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "notice": "generated/_types_trusted-types@2.0.7.txt"
+    },
+    {
+      "name": "@upsetjs/venn.js",
+      "version": "2.0.0",
+      "license": "MIT",
+      "path": "node_modules/@upsetjs/venn.js",
+      "source": "https://github.com/upsetjs/venn.js",
+      "notice": "generated/_upsetjs_venn.js@2.0.0.txt"
+    },
+    {
+      "name": "accepts",
+      "version": "2.0.0",
+      "license": "MIT",
+      "path": "node_modules/accepts",
+      "source": "jshttp/accepts",
+      "notice": "generated/accepts@2.0.0.txt"
+    },
+    {
+      "name": "ajv",
+      "version": "8.20.0",
+      "license": "MIT",
+      "path": "node_modules/ajv",
+      "source": "ajv-validator/ajv",
+      "notice": "generated/ajv@8.20.0.txt"
+    },
+    {
+      "name": "ajv-formats",
+      "version": "3.0.1",
+      "license": "MIT",
+      "path": "node_modules/ajv-formats",
+      "source": "https://github.com/ajv-validator/ajv-formats",
+      "notice": "generated/ajv-formats@3.0.1.txt"
+    },
+    {
+      "name": "ansi-regex",
+      "version": "5.0.1",
+      "license": "MIT",
+      "path": "node_modules/ansi-regex",
+      "source": "chalk/ansi-regex",
+      "notice": "generated/ansi-regex@5.0.1.txt"
+    },
+    {
+      "name": "ansi-styles",
+      "version": "4.3.0",
+      "license": "MIT",
+      "path": "node_modules/ansi-styles",
+      "source": "chalk/ansi-styles",
+      "notice": "generated/ansi-styles@4.3.0.txt"
+    },
+    {
+      "name": "argparse",
+      "version": "3.0.2",
+      "license": "PSF-2.0",
+      "path": "node_modules/argparse",
+      "source": "nodeca/argparse",
+      "notice": "generated/argparse@3.0.2.txt"
+    },
+    {
+      "name": "body-parser",
+      "version": "2.3.0",
+      "license": "MIT",
+      "path": "node_modules/body-parser",
+      "source": "expressjs/body-parser",
+      "notice": "generated/body-parser@2.3.0.txt"
+    },
+    {
+      "name": "bundle-name",
+      "version": "4.1.1",
+      "license": "MIT",
+      "path": "node_modules/bundle-name",
+      "source": "sindresorhus/bundle-name",
+      "notice": "generated/bundle-name@4.1.1.txt"
+    },
+    {
+      "name": "bytes",
+      "version": "3.1.2",
+      "license": "MIT",
+      "path": "node_modules/bytes",
+      "source": "visionmedia/bytes.js",
+      "notice": "generated/bytes@3.1.2.txt"
+    },
+    {
+      "name": "call-bind-apply-helpers",
+      "version": "1.0.2",
+      "license": "MIT",
+      "path": "node_modules/call-bind-apply-helpers",
+      "source": "https://github.com/ljharb/call-bind-apply-helpers",
+      "notice": "generated/call-bind-apply-helpers@1.0.2.txt"
+    },
+    {
+      "name": "call-bound",
+      "version": "1.0.4",
+      "license": "MIT",
+      "path": "node_modules/call-bound",
+      "source": "https://github.com/ljharb/call-bound",
+      "notice": "generated/call-bound@1.0.4.txt"
+    },
+    {
+      "name": "camelcase",
+      "version": "5.3.1",
+      "license": "MIT",
+      "path": "node_modules/camelcase",
+      "source": "sindresorhus/camelcase",
+      "notice": "generated/camelcase@5.3.1.txt"
+    },
+    {
+      "name": "chevrotain",
+      "version": "13.2.0",
+      "license": "Apache-2.0",
+      "path": "node_modules/chevrotain",
+      "source": "https://github.com/Chevrotain/chevrotain",
+      "notice": "generated/chevrotain@13.2.0.txt"
+    },
+    {
+      "name": "cliui",
+      "version": "6.0.0",
+      "license": "ISC",
+      "path": "node_modules/cliui",
+      "source": "http://github.com/yargs/cliui",
+      "notice": "generated/cliui@6.0.0.txt"
+    },
+    {
+      "name": "color-convert",
+      "version": "2.0.1",
+      "license": "MIT",
+      "path": "node_modules/color-convert",
+      "source": "Qix-/color-convert",
+      "notice": "generated/color-convert@2.0.1.txt"
+    },
+    {
+      "name": "color-name",
+      "version": "1.1.4",
+      "license": "MIT",
+      "path": "node_modules/color-name",
+      "source": "git@github.com:colorjs/color-name",
+      "notice": "generated/color-name@1.1.4.txt"
+    },
+    {
+      "name": "commander",
+      "version": "7.2.0",
+      "license": "MIT",
+      "path": "node_modules/commander",
+      "source": "https://github.com/tj/commander.js",
+      "notice": "generated/commander@7.2.0.txt"
+    },
+    {
+      "name": "commander",
+      "version": "15.0.0",
+      "license": "MIT",
+      "path": "node_modules/katex/node_modules/commander",
+      "source": "https://github.com/tj/commander.js",
+      "notice": "generated/commander@15.0.0.txt"
+    },
+    {
+      "name": "content-disposition",
+      "version": "2.0.1",
+      "license": "MIT",
+      "path": "node_modules/content-disposition",
+      "source": "jshttp/content-disposition",
+      "notice": "generated/content-disposition@2.0.1.txt"
+    },
+    {
+      "name": "content-type",
+      "version": "2.1.0",
+      "license": "MIT",
+      "path": "node_modules/type-is/node_modules/content-type",
+      "source": "jshttp/content-type",
+      "notice": "generated/content-type@2.1.0.txt"
+    },
+    {
+      "name": "content-type",
+      "version": "1.0.5",
+      "license": "MIT",
+      "path": "node_modules/content-type",
+      "source": "jshttp/content-type",
+      "notice": "generated/content-type@1.0.5.txt"
+    },
+    {
+      "name": "cookie",
+      "version": "0.7.2",
+      "license": "MIT",
+      "path": "node_modules/cookie",
+      "source": "jshttp/cookie",
+      "notice": "generated/cookie@0.7.2.txt"
+    },
+    {
+      "name": "cookie-signature",
+      "version": "1.2.2",
+      "license": "MIT",
+      "path": "node_modules/cookie-signature",
+      "source": "https://github.com/visionmedia/node-cookie-signature",
+      "notice": "generated/cookie-signature@1.2.2.txt"
+    },
+    {
+      "name": "cors",
+      "version": "2.8.6",
+      "license": "MIT",
+      "path": "node_modules/cors",
+      "source": "expressjs/cors",
+      "notice": "generated/cors@2.8.6.txt"
+    },
+    {
+      "name": "cose-base",
+      "version": "1.0.3",
+      "license": "MIT",
+      "path": "node_modules/cose-base",
+      "source": "https://github.com/iVis-at-Bilkent/cose-base",
+      "notice": "generated/cose-base@1.0.3.txt"
+    },
+    {
+      "name": "cose-base",
+      "version": "2.2.0",
+      "license": "MIT",
+      "path": "node_modules/cytoscape-fcose/node_modules/cose-base",
+      "source": "https://github.com/iVis-at-Bilkent/cose-base",
+      "notice": "generated/cose-base@2.2.0.txt"
+    },
+    {
+      "name": "cross-spawn",
+      "version": "7.0.6",
+      "license": "MIT",
+      "path": "node_modules/cross-spawn",
+      "source": "git@github.com:moxystudio/node-cross-spawn",
+      "notice": "generated/cross-spawn@7.0.6.txt"
+    },
+    {
+      "name": "cytoscape",
+      "version": "3.34.4",
+      "license": "MIT",
+      "path": "node_modules/cytoscape",
+      "source": "https://github.com/cytoscape/cytoscape.js",
+      "notice": "generated/cytoscape@3.34.4.txt"
+    },
+    {
+      "name": "cytoscape-cose-bilkent",
+      "version": "4.1.0",
+      "license": "MIT",
+      "path": "node_modules/cytoscape-cose-bilkent",
+      "source": "https://github.com/cytoscape/cytoscape.js-cose-bilkent",
+      "notice": "generated/cytoscape-cose-bilkent@4.1.0.txt"
+    },
+    {
+      "name": "cytoscape-fcose",
+      "version": "2.2.0",
+      "license": "MIT",
+      "path": "node_modules/cytoscape-fcose",
+      "source": "https://github.com/iVis-at-Bilkent/cytoscape.js-fcose",
+      "notice": "generated/cytoscape-fcose@2.2.0.txt"
+    },
+    {
+      "name": "d3",
+      "version": "7.9.0",
+      "license": "ISC",
+      "path": "node_modules/d3",
+      "source": "https://github.com/d3/d3",
+      "notice": "generated/d3@7.9.0.txt"
+    },
+    {
+      "name": "d3-array",
+      "version": "3.2.4",
+      "license": "ISC",
+      "path": "node_modules/d3-array",
+      "source": "https://github.com/d3/d3-array",
+      "notice": "generated/d3-array@3.2.4.txt"
+    },
+    {
+      "name": "d3-array",
+      "version": "2.12.1",
+      "license": "BSD-3-Clause",
+      "path": "node_modules/d3-sankey/node_modules/d3-array",
+      "source": "https://github.com/d3/d3-array",
+      "notice": "generated/d3-array@2.12.1.txt"
+    },
+    {
+      "name": "d3-axis",
+      "version": "3.0.0",
+      "license": "ISC",
+      "path": "node_modules/d3-axis",
+      "source": "https://github.com/d3/d3-axis",
+      "notice": "generated/d3-axis@3.0.0.txt"
+    },
+    {
+      "name": "d3-brush",
+      "version": "3.0.0",
+      "license": "ISC",
+      "path": "node_modules/d3-brush",
+      "source": "https://github.com/d3/d3-brush",
+      "notice": "generated/d3-brush@3.0.0.txt"
+    },
+    {
+      "name": "d3-chord",
+      "version": "3.0.1",
+      "license": "ISC",
+      "path": "node_modules/d3-chord",
+      "source": "https://github.com/d3/d3-chord",
+      "notice": "generated/d3-chord@3.0.1.txt"
+    },
+    {
+      "name": "d3-color",
+      "version": "3.1.0",
+      "license": "ISC",
+      "path": "node_modules/d3-color",
+      "source": "https://github.com/d3/d3-color",
+      "notice": "generated/d3-color@3.1.0.txt"
+    },
+    {
+      "name": "d3-contour",
+      "version": "4.0.2",
+      "license": "ISC",
+      "path": "node_modules/d3-contour",
+      "source": "https://github.com/d3/d3-contour",
+      "notice": "generated/d3-contour@4.0.2.txt"
+    },
+    {
+      "name": "d3-delaunay",
+      "version": "6.0.4",
+      "license": "ISC",
+      "path": "node_modules/d3-delaunay",
+      "source": "https://github.com/d3/d3-delaunay",
+      "notice": "generated/d3-delaunay@6.0.4.txt"
+    },
+    {
+      "name": "d3-dispatch",
+      "version": "3.0.1",
+      "license": "ISC",
+      "path": "node_modules/d3-dispatch",
+      "source": "https://github.com/d3/d3-dispatch",
+      "notice": "generated/d3-dispatch@3.0.1.txt"
+    },
+    {
+      "name": "d3-drag",
+      "version": "3.0.0",
+      "license": "ISC",
+      "path": "node_modules/d3-drag",
+      "source": "https://github.com/d3/d3-drag",
+      "notice": "generated/d3-drag@3.0.0.txt"
+    },
+    {
+      "name": "d3-dsv",
+      "version": "3.0.1",
+      "license": "ISC",
+      "path": "node_modules/d3-dsv",
+      "source": "https://github.com/d3/d3-dsv",
+      "notice": "generated/d3-dsv@3.0.1.txt"
+    },
+    {
+      "name": "d3-ease",
+      "version": "3.0.1",
+      "license": "BSD-3-Clause",
+      "path": "node_modules/d3-ease",
+      "source": "https://github.com/d3/d3-ease",
+      "notice": "generated/d3-ease@3.0.1.txt"
+    },
+    {
+      "name": "d3-fetch",
+      "version": "3.0.1",
+      "license": "ISC",
+      "path": "node_modules/d3-fetch",
+      "source": "https://github.com/d3/d3-fetch",
+      "notice": "generated/d3-fetch@3.0.1.txt"
+    },
+    {
+      "name": "d3-force",
+      "version": "3.0.0",
+      "license": "ISC",
+      "path": "node_modules/d3-force",
+      "source": "https://github.com/d3/d3-force",
+      "notice": "generated/d3-force@3.0.0.txt"
+    },
+    {
+      "name": "d3-format",
+      "version": "3.1.2",
+      "license": "ISC",
+      "path": "node_modules/d3-format",
+      "source": "https://github.com/d3/d3-format",
+      "notice": "generated/d3-format@3.1.2.txt"
+    },
+    {
+      "name": "d3-geo",
+      "version": "3.1.1",
+      "license": "ISC",
+      "path": "node_modules/d3-geo",
+      "source": "https://github.com/d3/d3-geo",
+      "notice": "generated/d3-geo@3.1.1.txt"
+    },
+    {
+      "name": "d3-hierarchy",
+      "version": "3.1.2",
+      "license": "ISC",
+      "path": "node_modules/d3-hierarchy",
+      "source": "https://github.com/d3/d3-hierarchy",
+      "notice": "generated/d3-hierarchy@3.1.2.txt"
+    },
+    {
+      "name": "d3-interpolate",
+      "version": "3.0.1",
+      "license": "ISC",
+      "path": "node_modules/d3-interpolate",
+      "source": "https://github.com/d3/d3-interpolate",
+      "notice": "generated/d3-interpolate@3.0.1.txt"
+    },
+    {
+      "name": "d3-path",
+      "version": "3.1.0",
+      "license": "ISC",
+      "path": "node_modules/d3-path",
+      "source": "https://github.com/d3/d3-path",
+      "notice": "generated/d3-path@3.1.0.txt"
+    },
+    {
+      "name": "d3-path",
+      "version": "1.0.9",
+      "license": "BSD-3-Clause",
+      "path": "node_modules/d3-sankey/node_modules/d3-path",
+      "source": "https://github.com/d3/d3-path",
+      "notice": "generated/d3-path@1.0.9.txt"
+    },
+    {
+      "name": "d3-polygon",
+      "version": "3.0.1",
+      "license": "ISC",
+      "path": "node_modules/d3-polygon",
+      "source": "https://github.com/d3/d3-polygon",
+      "notice": "generated/d3-polygon@3.0.1.txt"
+    },
+    {
+      "name": "d3-quadtree",
+      "version": "3.0.1",
+      "license": "ISC",
+      "path": "node_modules/d3-quadtree",
+      "source": "https://github.com/d3/d3-quadtree",
+      "notice": "generated/d3-quadtree@3.0.1.txt"
+    },
+    {
+      "name": "d3-random",
+      "version": "3.0.1",
+      "license": "ISC",
+      "path": "node_modules/d3-random",
+      "source": "https://github.com/d3/d3-random",
+      "notice": "generated/d3-random@3.0.1.txt"
+    },
+    {
+      "name": "d3-sankey",
+      "version": "0.12.3",
+      "license": "BSD-3-Clause",
+      "path": "node_modules/d3-sankey",
+      "source": "https://github.com/d3/d3-sankey",
+      "notice": "generated/d3-sankey@0.12.3.txt"
+    },
+    {
+      "name": "d3-scale",
+      "version": "4.0.2",
+      "license": "ISC",
+      "path": "node_modules/d3-scale",
+      "source": "https://github.com/d3/d3-scale",
+      "notice": "generated/d3-scale@4.0.2.txt"
+    },
+    {
+      "name": "d3-scale-chromatic",
+      "version": "3.1.0",
+      "license": "ISC",
+      "path": "node_modules/d3-scale-chromatic",
+      "source": "https://github.com/d3/d3-scale-chromatic",
+      "notice": "generated/d3-scale-chromatic@3.1.0.txt"
+    },
+    {
+      "name": "d3-selection",
+      "version": "3.0.0",
+      "license": "ISC",
+      "path": "node_modules/d3-selection",
+      "source": "https://github.com/d3/d3-selection",
+      "notice": "generated/d3-selection@3.0.0.txt"
+    },
+    {
+      "name": "d3-shape",
+      "version": "1.3.7",
+      "license": "BSD-3-Clause",
+      "path": "node_modules/d3-sankey/node_modules/d3-shape",
+      "source": "https://github.com/d3/d3-shape",
+      "notice": "generated/d3-shape@1.3.7.txt"
+    },
+    {
+      "name": "d3-shape",
+      "version": "3.2.0",
+      "license": "ISC",
+      "path": "node_modules/d3-shape",
+      "source": "https://github.com/d3/d3-shape",
+      "notice": "generated/d3-shape@3.2.0.txt"
+    },
+    {
+      "name": "d3-time",
+      "version": "3.1.0",
+      "license": "ISC",
+      "path": "node_modules/d3-time",
+      "source": "https://github.com/d3/d3-time",
+      "notice": "generated/d3-time@3.1.0.txt"
+    },
+    {
+      "name": "d3-time-format",
+      "version": "4.1.0",
+      "license": "ISC",
+      "path": "node_modules/d3-time-format",
+      "source": "https://github.com/d3/d3-time-format",
+      "notice": "generated/d3-time-format@4.1.0.txt"
+    },
+    {
+      "name": "d3-timer",
+      "version": "3.0.1",
+      "license": "ISC",
+      "path": "node_modules/d3-timer",
+      "source": "https://github.com/d3/d3-timer",
+      "notice": "generated/d3-timer@3.0.1.txt"
+    },
+    {
+      "name": "d3-transition",
+      "version": "3.0.1",
+      "license": "ISC",
+      "path": "node_modules/d3-transition",
+      "source": "https://github.com/d3/d3-transition",
+      "notice": "generated/d3-transition@3.0.1.txt"
+    },
+    {
+      "name": "d3-zoom",
+      "version": "3.0.0",
+      "license": "ISC",
+      "path": "node_modules/d3-zoom",
+      "source": "https://github.com/d3/d3-zoom",
+      "notice": "generated/d3-zoom@3.0.0.txt"
+    },
+    {
+      "name": "dagre-d3-es",
+      "version": "7.0.14",
+      "license": "MIT",
+      "path": "node_modules/dagre-d3-es",
+      "source": "https://github.com/tbo47/dagre-es",
+      "notice": "generated/dagre-d3-es@7.0.14.txt"
+    },
+    {
+      "name": "dayjs",
+      "version": "1.11.23",
+      "license": "MIT",
+      "path": "node_modules/dayjs",
+      "source": "https://github.com/iamkun/dayjs",
+      "notice": "generated/dayjs@1.11.23.txt"
+    },
+    {
+      "name": "debug",
+      "version": "4.4.3",
+      "license": "MIT",
+      "path": "node_modules/debug",
+      "source": "https://github.com/debug-js/debug",
+      "notice": "generated/debug@4.4.3.txt"
+    },
+    {
+      "name": "decamelize",
+      "version": "1.2.0",
+      "license": "MIT",
+      "path": "node_modules/decamelize",
+      "source": "sindresorhus/decamelize",
+      "notice": "generated/decamelize@1.2.0.txt"
+    },
+    {
+      "name": "default-browser",
+      "version": "5.5.1",
+      "license": "MIT",
+      "path": "node_modules/default-browser",
+      "source": "sindresorhus/default-browser",
+      "notice": "generated/default-browser@5.5.1.txt"
+    },
+    {
+      "name": "default-browser-id",
+      "version": "5.0.1",
+      "license": "MIT",
+      "path": "node_modules/default-browser-id",
+      "source": "sindresorhus/default-browser-id",
+      "notice": "generated/default-browser-id@5.0.1.txt"
+    },
+    {
+      "name": "define-lazy-prop",
+      "version": "3.0.0",
+      "license": "MIT",
+      "path": "node_modules/define-lazy-prop",
+      "source": "sindresorhus/define-lazy-prop",
+      "notice": "generated/define-lazy-prop@3.0.0.txt"
+    },
+    {
+      "name": "delaunator",
+      "version": "5.1.0",
+      "license": "ISC",
+      "path": "node_modules/delaunator",
+      "source": "https://github.com/mapbox/delaunator",
+      "notice": "generated/delaunator@5.1.0.txt"
+    },
+    {
+      "name": "depd",
+      "version": "2.0.0",
+      "license": "MIT",
+      "path": "node_modules/depd",
+      "source": "dougwilson/nodejs-depd",
+      "notice": "generated/depd@2.0.0.txt"
+    },
+    {
+      "name": "dijkstrajs",
+      "version": "1.0.3",
+      "license": "MIT",
+      "path": "node_modules/dijkstrajs",
+      "source": "https://github.com/tcort/dijkstrajs",
+      "notice": "generated/dijkstrajs@1.0.3.txt"
+    },
+    {
+      "name": "dompurify",
+      "version": "3.4.17",
+      "license": "Apache-2.0",
+      "path": "node_modules/dompurify",
+      "source": "https://github.com/cure53/DOMPurify",
+      "notice": "generated/dompurify@3.4.17.txt"
+    },
+    {
+      "name": "dunder-proto",
+      "version": "1.0.1",
+      "license": "MIT",
+      "path": "node_modules/dunder-proto",
+      "source": "https://github.com/es-shims/dunder-proto",
+      "notice": "generated/dunder-proto@1.0.1.txt"
+    },
+    {
+      "name": "ee-first",
+      "version": "1.1.1",
+      "license": "MIT",
+      "path": "node_modules/ee-first",
+      "source": "jonathanong/ee-first",
+      "notice": "generated/ee-first@1.1.1.txt"
+    },
+    {
+      "name": "elkjs",
+      "version": "0.9.3",
+      "license": "EPL-2.0",
+      "path": "node_modules/elkjs",
+      "source": "https://github.com/kieler/elkjs",
+      "notice": "generated/elkjs@0.9.3.txt"
+    },
+    {
+      "name": "emoji-regex",
+      "version": "8.0.0",
+      "license": "MIT",
+      "path": "node_modules/emoji-regex",
+      "source": "https://github.com/mathiasbynens/emoji-regex",
+      "notice": "generated/emoji-regex@8.0.0.txt"
+    },
+    {
+      "name": "encodeurl",
+      "version": "2.0.0",
+      "license": "MIT",
+      "path": "node_modules/encodeurl",
+      "source": "pillarjs/encodeurl",
+      "notice": "generated/encodeurl@2.0.0.txt"
+    },
+    {
+      "name": "entities",
+      "version": "8.1.0",
+      "license": "BSD-2-Clause",
+      "path": "node_modules/entities",
+      "source": "https://github.com/fb55/entities",
+      "notice": "generated/entities@8.1.0.txt"
+    },
+    {
+      "name": "es-define-property",
+      "version": "1.0.1",
+      "license": "MIT",
+      "path": "node_modules/es-define-property",
+      "source": "https://github.com/ljharb/es-define-property",
+      "notice": "generated/es-define-property@1.0.1.txt"
+    },
+    {
+      "name": "es-errors",
+      "version": "1.3.0",
+      "license": "MIT",
+      "path": "node_modules/es-errors",
+      "source": "https://github.com/ljharb/es-errors",
+      "notice": "generated/es-errors@1.3.0.txt"
+    },
+    {
+      "name": "es-object-atoms",
+      "version": "1.1.2",
+      "license": "MIT",
+      "path": "node_modules/es-object-atoms",
+      "source": "https://github.com/ljharb/es-object-atoms",
+      "notice": "generated/es-object-atoms@1.1.2.txt"
+    },
+    {
+      "name": "es-toolkit",
+      "version": "1.52.0",
+      "license": "MIT",
+      "path": "node_modules/es-toolkit",
+      "source": "https://github.com/toss/es-toolkit",
+      "notice": "generated/es-toolkit@1.52.0.txt"
+    },
+    {
+      "name": "escape-html",
+      "version": "1.0.3",
+      "license": "MIT",
+      "path": "node_modules/escape-html",
+      "source": "component/escape-html",
+      "notice": "generated/escape-html@1.0.3.txt"
+    },
+    {
+      "name": "etag",
+      "version": "1.8.1",
+      "license": "MIT",
+      "path": "node_modules/etag",
+      "source": "jshttp/etag",
+      "notice": "generated/etag@1.8.1.txt"
+    },
+    {
+      "name": "eventsource",
+      "version": "3.0.7",
+      "license": "MIT",
+      "path": "node_modules/eventsource",
+      "source": "git://git@github.com/EventSource/eventsource",
+      "notice": "generated/eventsource@3.0.7.txt"
+    },
+    {
+      "name": "eventsource-parser",
+      "version": "3.1.1",
+      "license": "MIT",
+      "path": "node_modules/eventsource-parser",
+      "source": "ssh://git@github.com/rexxars/eventsource-parser",
+      "notice": "generated/eventsource-parser@3.1.1.txt"
+    },
+    {
+      "name": "express",
+      "version": "5.3.0",
+      "license": "MIT",
+      "path": "node_modules/express",
+      "source": "expressjs/express",
+      "notice": "generated/express@5.3.0.txt"
+    },
+    {
+      "name": "express-rate-limit",
+      "version": "8.7.1",
+      "license": "MIT",
+      "path": "node_modules/express-rate-limit",
+      "source": "https://github.com/express-rate-limit/express-rate-limit",
+      "notice": "generated/express-rate-limit@8.7.1.txt"
+    },
+    {
+      "name": "fast-deep-equal",
+      "version": "3.1.3",
+      "license": "MIT",
+      "path": "node_modules/fast-deep-equal",
+      "source": "https://github.com/epoberezkin/fast-deep-equal",
+      "notice": "generated/fast-deep-equal@3.1.3.txt"
+    },
+    {
+      "name": "fast-uri",
+      "version": "3.1.8",
+      "license": "BSD-3-Clause",
+      "path": "node_modules/fast-uri",
+      "source": "https://github.com/fastify/fast-uri",
+      "notice": "generated/fast-uri@3.1.8.txt"
+    },
+    {
+      "name": "fflate",
+      "version": "0.8.3",
+      "license": "MIT",
+      "path": "node_modules/fflate",
+      "source": "https://github.com/101arrowz/fflate",
+      "notice": "generated/fflate@0.8.3.txt"
+    },
+    {
+      "name": "finalhandler",
+      "version": "2.1.1",
+      "license": "MIT",
+      "path": "node_modules/finalhandler",
+      "source": "pillarjs/finalhandler",
+      "notice": "generated/finalhandler@2.1.1.txt"
+    },
+    {
+      "name": "find-up",
+      "version": "4.1.0",
+      "license": "MIT",
+      "path": "node_modules/find-up",
+      "source": "sindresorhus/find-up",
+      "notice": "generated/find-up@4.1.0.txt"
+    },
+    {
+      "name": "forwarded",
+      "version": "0.2.0",
+      "license": "MIT",
+      "path": "node_modules/forwarded",
+      "source": "jshttp/forwarded",
+      "notice": "generated/forwarded@0.2.0.txt"
+    },
+    {
+      "name": "fresh",
+      "version": "2.0.0",
+      "license": "MIT",
+      "path": "node_modules/fresh",
+      "source": "jshttp/fresh",
+      "notice": "generated/fresh@2.0.0.txt"
+    },
+    {
+      "name": "function-bind",
+      "version": "1.1.2",
+      "license": "MIT",
+      "path": "node_modules/function-bind",
+      "source": "https://github.com/Raynos/function-bind",
+      "notice": "generated/function-bind@1.1.2.txt"
+    },
+    {
+      "name": "get-caller-file",
+      "version": "2.0.5",
+      "license": "ISC",
+      "path": "node_modules/get-caller-file",
+      "source": "https://github.com/stefanpenner/get-caller-file",
+      "notice": "generated/get-caller-file@2.0.5.txt"
+    },
+    {
+      "name": "get-intrinsic",
+      "version": "1.3.0",
+      "license": "MIT",
+      "path": "node_modules/get-intrinsic",
+      "source": "https://github.com/ljharb/get-intrinsic",
+      "notice": "generated/get-intrinsic@1.3.0.txt"
+    },
+    {
+      "name": "get-proto",
+      "version": "1.0.1",
+      "license": "MIT",
+      "path": "node_modules/get-proto",
+      "source": "https://github.com/ljharb/get-proto",
+      "notice": "generated/get-proto@1.0.1.txt"
+    },
+    {
+      "name": "gopd",
+      "version": "1.2.0",
+      "license": "MIT",
+      "path": "node_modules/gopd",
+      "source": "https://github.com/ljharb/gopd",
+      "notice": "generated/gopd@1.2.0.txt"
+    },
+    {
+      "name": "hachure-fill",
+      "version": "0.5.2",
+      "license": "MIT",
+      "path": "node_modules/hachure-fill",
+      "source": "https://github.com/pshihn/hachure-fill",
+      "notice": "generated/hachure-fill@0.5.2.txt"
+    },
+    {
+      "name": "has-symbols",
+      "version": "1.1.0",
+      "license": "MIT",
+      "path": "node_modules/has-symbols",
+      "source": "https://github.com/inspect-js/has-symbols",
+      "notice": "generated/has-symbols@1.1.0.txt"
+    },
+    {
+      "name": "hasown",
+      "version": "2.0.4",
+      "license": "MIT",
+      "path": "node_modules/hasown",
+      "source": "https://github.com/inspect-js/hasOwn",
+      "notice": "generated/hasown@2.0.4.txt"
+    },
+    {
+      "name": "hono",
+      "version": "4.13.13",
+      "license": "MIT",
+      "path": "node_modules/hono",
+      "source": "https://github.com/honojs/hono",
+      "notice": "generated/hono@4.13.13.txt"
+    },
+    {
+      "name": "http-errors",
+      "version": "2.0.1",
+      "license": "MIT",
+      "path": "node_modules/http-errors",
+      "source": "jshttp/http-errors",
+      "notice": "generated/http-errors@2.0.1.txt"
+    },
+    {
+      "name": "iconv-lite",
+      "version": "0.6.3",
+      "license": "MIT",
+      "path": "node_modules/d3-dsv/node_modules/iconv-lite",
+      "source": "https://github.com/ashtuchkin/iconv-lite",
+      "notice": "generated/iconv-lite@0.6.3.txt"
+    },
+    {
+      "name": "iconv-lite",
+      "version": "0.7.3",
+      "license": "MIT",
+      "path": "node_modules/iconv-lite",
+      "source": "https://github.com/pillarjs/iconv-lite",
+      "notice": "generated/iconv-lite@0.7.3.txt"
+    },
+    {
+      "name": "import-meta-resolve",
+      "version": "4.2.0",
+      "license": "MIT",
+      "path": "node_modules/import-meta-resolve",
+      "source": "wooorm/import-meta-resolve",
+      "notice": "generated/import-meta-resolve@4.2.0.txt"
+    },
+    {
+      "name": "inherits",
+      "version": "2.0.4",
+      "license": "ISC",
+      "path": "node_modules/inherits",
+      "source": "https://github.com/isaacs/inherits",
+      "notice": "generated/inherits@2.0.4.txt"
+    },
+    {
+      "name": "internmap",
+      "version": "1.0.1",
+      "license": "ISC",
+      "path": "node_modules/d3-sankey/node_modules/internmap",
+      "source": "https://github.com/mbostock/internmap",
+      "notice": "generated/internmap@1.0.1.txt"
+    },
+    {
+      "name": "internmap",
+      "version": "2.0.3",
+      "license": "ISC",
+      "path": "node_modules/internmap",
+      "source": "https://github.com/mbostock/internmap",
+      "notice": "generated/internmap@2.0.3.txt"
+    },
+    {
+      "name": "ip-address",
+      "version": "10.7.4",
+      "license": "MIT",
+      "path": "node_modules/ip-address",
+      "source": "https://github.com/beaugunderson/ip-address",
+      "notice": "generated/ip-address@10.7.4.txt"
+    },
+    {
+      "name": "ipaddr.js",
+      "version": "1.9.1",
+      "license": "MIT",
+      "path": "node_modules/ipaddr.js",
+      "source": "https://github.com/whitequark/ipaddr.js",
+      "notice": "generated/ipaddr.js@1.9.1.txt"
+    },
+    {
+      "name": "is-docker",
+      "version": "3.0.0",
+      "license": "MIT",
+      "path": "node_modules/is-docker",
+      "source": "sindresorhus/is-docker",
+      "notice": "generated/is-docker@3.0.0.txt"
+    },
+    {
+      "name": "is-fullwidth-code-point",
+      "version": "3.0.0",
+      "license": "MIT",
+      "path": "node_modules/is-fullwidth-code-point",
+      "source": "sindresorhus/is-fullwidth-code-point",
+      "notice": "generated/is-fullwidth-code-point@3.0.0.txt"
+    },
+    {
+      "name": "is-in-ssh",
+      "version": "1.0.0",
+      "license": "MIT",
+      "path": "node_modules/is-in-ssh",
+      "source": "sindresorhus/is-in-ssh",
+      "notice": "generated/is-in-ssh@1.0.0.txt"
+    },
+    {
+      "name": "is-inside-container",
+      "version": "1.0.0",
+      "license": "MIT",
+      "path": "node_modules/is-inside-container",
+      "source": "sindresorhus/is-inside-container",
+      "notice": "generated/is-inside-container@1.0.0.txt"
+    },
+    {
+      "name": "is-promise",
+      "version": "4.0.0",
+      "license": "MIT",
+      "path": "node_modules/is-promise",
+      "source": "https://github.com/then/is-promise",
+      "notice": "generated/is-promise@4.0.0.txt"
+    },
+    {
+      "name": "is-wsl",
+      "version": "3.1.1",
+      "license": "MIT",
+      "path": "node_modules/is-wsl",
+      "source": "sindresorhus/is-wsl",
+      "notice": "generated/is-wsl@3.1.1.txt"
+    },
+    {
+      "name": "isexe",
+      "version": "2.0.0",
+      "license": "ISC",
+      "path": "node_modules/isexe",
+      "source": "https://github.com/isaacs/isexe",
+      "notice": "generated/isexe@2.0.0.txt"
+    },
+    {
+      "name": "jose",
+      "version": "6.2.12",
+      "license": "MIT",
+      "path": "node_modules/jose",
+      "source": "panva/jose",
+      "notice": "generated/jose@6.2.12.txt"
+    },
+    {
+      "name": "json-schema-traverse",
+      "version": "1.0.0",
+      "license": "MIT",
+      "path": "node_modules/json-schema-traverse",
+      "source": "https://github.com/epoberezkin/json-schema-traverse",
+      "notice": "generated/json-schema-traverse@1.0.0.txt"
+    },
+    {
+      "name": "json-schema-typed",
+      "version": "8.0.2",
+      "license": "BSD-2-Clause",
+      "path": "node_modules/json-schema-typed",
+      "source": "https://github.com/RemyRylan/json-schema-typed",
+      "notice": "generated/json-schema-typed@8.0.2.txt"
+    },
+    {
+      "name": "katex",
+      "version": "0.18.10",
+      "license": "MIT",
+      "path": "node_modules/katex",
+      "source": "https://github.com/KaTeX/KaTeX",
+      "notice": "generated/katex@0.18.10.txt"
+    },
+    {
+      "name": "khroma",
+      "version": "2.1.0",
+      "license": "MIT",
+      "path": "node_modules/khroma",
+      "source": "github:fabiospampinato/khroma",
+      "notice": "generated/khroma@2.1.0.txt"
+    },
+    {
+      "name": "layout-base",
+      "version": "2.0.1",
+      "license": "MIT",
+      "path": "node_modules/cytoscape-fcose/node_modules/layout-base",
+      "source": "https://github.com/iVis-at-Bilkent/layout-base",
+      "notice": "generated/layout-base@2.0.1.txt"
+    },
+    {
+      "name": "layout-base",
+      "version": "1.0.2",
+      "license": "MIT",
+      "path": "node_modules/layout-base",
+      "source": "https://github.com/iVis-at-Bilkent/layout-base",
+      "notice": "generated/layout-base@1.0.2.txt"
+    },
+    {
+      "name": "linkify-it",
+      "version": "6.1.0",
+      "license": "MIT",
+      "path": "node_modules/linkify-it",
+      "source": "https://github.com/markdown-it/linkify-it",
+      "notice": "generated/linkify-it@6.1.0.txt"
+    },
+    {
+      "name": "locate-path",
+      "version": "5.0.0",
+      "license": "MIT",
+      "path": "node_modules/locate-path",
+      "source": "sindresorhus/locate-path",
+      "notice": "generated/locate-path@5.0.0.txt"
+    },
+    {
+      "name": "lodash-es",
+      "version": "4.18.1",
+      "license": "MIT",
+      "path": "node_modules/lodash-es",
+      "source": "lodash/lodash",
+      "notice": "generated/lodash-es@4.18.1.txt"
+    },
+    {
+      "name": "markdown-it",
+      "version": "15.0.2",
+      "license": "MIT",
+      "path": "node_modules/markdown-it",
+      "source": "markdown-it/markdown-it",
+      "notice": "generated/markdown-it@15.0.2.txt"
+    },
+    {
+      "name": "marked",
+      "version": "16.4.2",
+      "license": "MIT",
+      "path": "node_modules/marked",
+      "source": "https://github.com/markedjs/marked",
+      "notice": "generated/marked@16.4.2.txt"
+    },
+    {
+      "name": "math-intrinsics",
+      "version": "1.1.0",
+      "license": "MIT",
+      "path": "node_modules/math-intrinsics",
+      "source": "https://github.com/es-shims/math-intrinsics",
+      "notice": "generated/math-intrinsics@1.1.0.txt"
+    },
+    {
+      "name": "mdurl",
+      "version": "2.1.0",
+      "license": "MIT",
+      "path": "node_modules/mdurl",
+      "source": "https://github.com/markdown-it/mdurl",
+      "notice": "generated/mdurl@2.1.0.txt"
+    },
+    {
+      "name": "media-typer",
+      "version": "1.1.1",
+      "license": "MIT",
+      "path": "node_modules/media-typer",
+      "source": "jshttp/media-typer",
+      "notice": "generated/media-typer@1.1.1.txt"
+    },
+    {
+      "name": "merge-descriptors",
+      "version": "2.0.0",
+      "license": "MIT",
+      "path": "node_modules/merge-descriptors",
+      "source": "sindresorhus/merge-descriptors",
+      "notice": "generated/merge-descriptors@2.0.0.txt"
+    },
+    {
+      "name": "mermaid",
+      "version": "12.2.0",
+      "license": "MIT",
+      "path": "node_modules/mermaid",
+      "source": "https://github.com/mermaid-js/mermaid",
+      "notice": "generated/mermaid@12.2.0.txt"
+    },
+    {
+      "name": "mime-db",
+      "version": "1.54.0",
+      "license": "MIT",
+      "path": "node_modules/mime-db",
+      "source": "jshttp/mime-db",
+      "notice": "generated/mime-db@1.54.0.txt"
+    },
+    {
+      "name": "mime-types",
+      "version": "3.0.2",
+      "license": "MIT",
+      "path": "node_modules/mime-types",
+      "source": "jshttp/mime-types",
+      "notice": "generated/mime-types@3.0.2.txt"
+    },
+    {
+      "name": "ms",
+      "version": "2.1.3",
+      "license": "MIT",
+      "path": "node_modules/ms",
+      "source": "vercel/ms",
+      "notice": "generated/ms@2.1.3.txt"
+    },
+    {
+      "name": "negotiator",
+      "version": "1.1.0",
+      "license": "MIT",
+      "path": "node_modules/negotiator",
+      "source": "jshttp/negotiator",
+      "notice": "generated/negotiator@1.1.0.txt"
+    },
+    {
+      "name": "object-assign",
+      "version": "4.1.1",
+      "license": "MIT",
+      "path": "node_modules/object-assign",
+      "source": "sindresorhus/object-assign",
+      "notice": "generated/object-assign@4.1.1.txt"
+    },
+    {
+      "name": "object-inspect",
+      "version": "1.13.4",
+      "license": "MIT",
+      "path": "node_modules/object-inspect",
+      "source": "https://github.com/inspect-js/object-inspect",
+      "notice": "generated/object-inspect@1.13.4.txt"
+    },
+    {
+      "name": "on-finished",
+      "version": "2.4.1",
+      "license": "MIT",
+      "path": "node_modules/on-finished",
+      "source": "jshttp/on-finished",
+      "notice": "generated/on-finished@2.4.1.txt"
+    },
+    {
+      "name": "once",
+      "version": "1.4.0",
+      "license": "ISC",
+      "path": "node_modules/once",
+      "source": "https://github.com/isaacs/once",
+      "notice": "generated/once@1.4.0.txt"
+    },
+    {
+      "name": "open",
+      "version": "11.0.4",
+      "license": "MIT",
+      "path": "node_modules/open",
+      "source": "sindresorhus/open",
+      "notice": "generated/open@11.0.4.txt"
+    },
+    {
+      "name": "p-limit",
+      "version": "2.3.0",
+      "license": "MIT",
+      "path": "node_modules/p-limit",
+      "source": "sindresorhus/p-limit",
+      "notice": "generated/p-limit@2.3.0.txt"
+    },
+    {
+      "name": "p-locate",
+      "version": "4.1.0",
+      "license": "MIT",
+      "path": "node_modules/p-locate",
+      "source": "sindresorhus/p-locate",
+      "notice": "generated/p-locate@4.1.0.txt"
+    },
+    {
+      "name": "p-try",
+      "version": "2.2.0",
+      "license": "MIT",
+      "path": "node_modules/p-try",
+      "source": "sindresorhus/p-try",
+      "notice": "generated/p-try@2.2.0.txt"
+    },
+    {
+      "name": "package-manager-detector",
+      "version": "1.9.0",
+      "license": "MIT",
+      "path": "node_modules/package-manager-detector",
+      "source": "https://github.com/antfu-collective/package-manager-detector",
+      "notice": "generated/package-manager-detector@1.9.0.txt"
+    },
+    {
+      "name": "parseurl",
+      "version": "1.3.3",
+      "license": "MIT",
+      "path": "node_modules/parseurl",
+      "source": "pillarjs/parseurl",
+      "notice": "generated/parseurl@1.3.3.txt"
+    },
+    {
+      "name": "path-data-parser",
+      "version": "0.1.0",
+      "license": "MIT",
+      "path": "node_modules/path-data-parser",
+      "source": "https://github.com/pshihn/path-data-parser",
+      "notice": "generated/path-data-parser@0.1.0.txt"
+    },
+    {
+      "name": "path-exists",
+      "version": "4.0.0",
+      "license": "MIT",
+      "path": "node_modules/path-exists",
+      "source": "sindresorhus/path-exists",
+      "notice": "generated/path-exists@4.0.0.txt"
+    },
+    {
+      "name": "path-key",
+      "version": "3.1.1",
+      "license": "MIT",
+      "path": "node_modules/path-key",
+      "source": "sindresorhus/path-key",
+      "notice": "generated/path-key@3.1.1.txt"
+    },
+    {
+      "name": "path-to-regexp",
+      "version": "8.4.2",
+      "license": "MIT",
+      "path": "node_modules/path-to-regexp",
+      "source": "https://github.com/pillarjs/path-to-regexp",
+      "notice": "generated/path-to-regexp@8.4.2.txt"
+    },
+    {
+      "name": "pkce-challenge",
+      "version": "5.0.1",
+      "license": "MIT",
+      "path": "node_modules/pkce-challenge",
+      "source": "https://github.com/crouchcd/pkce-challenge",
+      "notice": "generated/pkce-challenge@5.0.1.txt"
+    },
+    {
+      "name": "pngjs",
+      "version": "5.0.0",
+      "license": "MIT",
+      "path": "node_modules/pngjs",
+      "source": "https://github.com/lukeapage/pngjs",
+      "notice": "generated/pngjs@5.0.0.txt"
+    },
+    {
+      "name": "points-on-curve",
+      "version": "0.2.0",
+      "license": "MIT",
+      "path": "node_modules/points-on-curve",
+      "source": "https://github.com/pshihn/bezier-points",
+      "notice": "generated/points-on-curve@0.2.0.txt"
+    },
+    {
+      "name": "points-on-path",
+      "version": "0.2.1",
+      "license": "MIT",
+      "path": "node_modules/points-on-path",
+      "source": "https://github.com/pshihn/points-on-path",
+      "notice": "generated/points-on-path@0.2.1.txt"
+    },
+    {
+      "name": "powershell-utils",
+      "version": "0.2.1",
+      "license": "MIT",
+      "path": "node_modules/powershell-utils",
+      "source": "sindresorhus/powershell-utils",
+      "notice": "generated/powershell-utils@0.2.1.txt"
+    },
+    {
+      "name": "proxy-addr",
+      "version": "2.0.8",
+      "license": "MIT",
+      "path": "node_modules/proxy-addr",
+      "source": "jshttp/proxy-addr",
+      "notice": "generated/proxy-addr@2.0.8.txt"
+    },
+    {
+      "name": "punycode.js",
+      "version": "2.3.1",
+      "license": "MIT",
+      "path": "node_modules/punycode.js",
+      "source": "https://github.com/mathiasbynens/punycode.js",
+      "notice": "generated/punycode.js@2.3.1.txt"
+    },
+    {
+      "name": "qrcode",
+      "version": "1.5.4",
+      "license": "MIT",
+      "path": "node_modules/qrcode",
+      "source": "https://github.com/soldair/node-qrcode",
+      "notice": "generated/qrcode@1.5.4.txt"
+    },
+    {
+      "name": "qs",
+      "version": "6.16.0",
+      "license": "BSD-3-Clause",
+      "path": "node_modules/qs",
+      "source": "https://github.com/ljharb/qs",
+      "notice": "generated/qs@6.16.0.txt"
+    },
+    {
+      "name": "range-parser",
+      "version": "1.3.0",
+      "license": "MIT",
+      "path": "node_modules/range-parser",
+      "source": "jshttp/range-parser",
+      "notice": "generated/range-parser@1.3.0.txt"
+    },
+    {
+      "name": "raw-body",
+      "version": "3.0.2",
+      "license": "MIT",
+      "path": "node_modules/raw-body",
+      "source": "stream-utils/raw-body",
+      "notice": "generated/raw-body@3.0.2.txt"
+    },
+    {
+      "name": "require-directory",
+      "version": "2.1.1",
+      "license": "MIT",
+      "path": "node_modules/require-directory",
+      "source": "https://github.com/troygoode/node-require-directory",
+      "notice": "generated/require-directory@2.1.1.txt"
+    },
+    {
+      "name": "require-from-string",
+      "version": "2.0.2",
+      "license": "MIT",
+      "path": "node_modules/require-from-string",
+      "source": "floatdrop/require-from-string",
+      "notice": "generated/require-from-string@2.0.2.txt"
+    },
+    {
+      "name": "require-main-filename",
+      "version": "2.0.0",
+      "license": "ISC",
+      "path": "node_modules/require-main-filename",
+      "source": "ssh://git@github.com/yargs/require-main-filename",
+      "notice": "generated/require-main-filename@2.0.0.txt"
+    },
+    {
+      "name": "robust-predicates",
+      "version": "3.0.3",
+      "license": "Unlicense",
+      "path": "node_modules/robust-predicates",
+      "source": "https://github.com/mourner/robust-predicates",
+      "notice": "generated/robust-predicates@3.0.3.txt"
+    },
+    {
+      "name": "roughjs",
+      "version": "4.6.6",
+      "license": "MIT",
+      "path": "node_modules/roughjs",
+      "source": "https://github.com/pshihn/rough",
+      "notice": "generated/roughjs@4.6.6.txt"
+    },
+    {
+      "name": "router",
+      "version": "2.2.0",
+      "license": "MIT",
+      "path": "node_modules/router",
+      "source": "pillarjs/router",
+      "notice": "generated/router@2.2.0.txt"
+    },
+    {
+      "name": "run-applescript",
+      "version": "7.1.0",
+      "license": "MIT",
+      "path": "node_modules/run-applescript",
+      "source": "sindresorhus/run-applescript",
+      "notice": "generated/run-applescript@7.1.0.txt"
+    },
+    {
+      "name": "rw",
+      "version": "1.3.3",
+      "license": "BSD-3-Clause",
+      "path": "node_modules/rw",
+      "source": "http://github.com/mbostock/rw",
+      "notice": "generated/rw@1.3.3.txt"
+    },
+    {
+      "name": "safer-buffer",
+      "version": "2.1.2",
+      "license": "MIT",
+      "path": "node_modules/safer-buffer",
+      "source": "https://github.com/ChALkeR/safer-buffer",
+      "notice": "generated/safer-buffer@2.1.2.txt"
+    },
+    {
+      "name": "send",
+      "version": "1.2.1",
+      "license": "MIT",
+      "path": "node_modules/send",
+      "source": "pillarjs/send",
+      "notice": "generated/send@1.2.1.txt"
+    },
+    {
+      "name": "serve-static",
+      "version": "2.2.1",
+      "license": "MIT",
+      "path": "node_modules/serve-static",
+      "source": "expressjs/serve-static",
+      "notice": "generated/serve-static@2.2.1.txt"
+    },
+    {
+      "name": "set-blocking",
+      "version": "2.0.0",
+      "license": "ISC",
+      "path": "node_modules/set-blocking",
+      "source": "https://github.com/yargs/set-blocking",
+      "notice": "generated/set-blocking@2.0.0.txt"
+    },
+    {
+      "name": "setprototypeof",
+      "version": "1.2.0",
+      "license": "ISC",
+      "path": "node_modules/setprototypeof",
+      "source": "https://github.com/wesleytodd/setprototypeof",
+      "notice": "generated/setprototypeof@1.2.0.txt"
+    },
+    {
+      "name": "shebang-command",
+      "version": "2.0.0",
+      "license": "MIT",
+      "path": "node_modules/shebang-command",
+      "source": "kevva/shebang-command",
+      "notice": "generated/shebang-command@2.0.0.txt"
+    },
+    {
+      "name": "shebang-regex",
+      "version": "3.0.0",
+      "license": "MIT",
+      "path": "node_modules/shebang-regex",
+      "source": "sindresorhus/shebang-regex",
+      "notice": "generated/shebang-regex@3.0.0.txt"
+    },
+    {
+      "name": "side-channel",
+      "version": "1.1.1",
+      "license": "MIT",
+      "path": "node_modules/side-channel",
+      "source": "https://github.com/ljharb/side-channel",
+      "notice": "generated/side-channel@1.1.1.txt"
+    },
+    {
+      "name": "side-channel-list",
+      "version": "1.0.1",
+      "license": "MIT",
+      "path": "node_modules/side-channel-list",
+      "source": "https://github.com/ljharb/side-channel-list",
+      "notice": "generated/side-channel-list@1.0.1.txt"
+    },
+    {
+      "name": "side-channel-map",
+      "version": "1.0.1",
+      "license": "MIT",
+      "path": "node_modules/side-channel-map",
+      "source": "https://github.com/ljharb/side-channel-map",
+      "notice": "generated/side-channel-map@1.0.1.txt"
+    },
+    {
+      "name": "side-channel-weakmap",
+      "version": "1.0.2",
+      "license": "MIT",
+      "path": "node_modules/side-channel-weakmap",
+      "source": "https://github.com/ljharb/side-channel-weakmap",
+      "notice": "generated/side-channel-weakmap@1.0.2.txt"
+    },
+    {
+      "name": "statuses",
+      "version": "2.0.2",
+      "license": "MIT",
+      "path": "node_modules/statuses",
+      "source": "jshttp/statuses",
+      "notice": "generated/statuses@2.0.2.txt"
+    },
+    {
+      "name": "string-width",
+      "version": "4.2.3",
+      "license": "MIT",
+      "path": "node_modules/string-width",
+      "source": "sindresorhus/string-width",
+      "notice": "generated/string-width@4.2.3.txt"
+    },
+    {
+      "name": "strip-ansi",
+      "version": "6.0.1",
+      "license": "MIT",
+      "path": "node_modules/strip-ansi",
+      "source": "chalk/strip-ansi",
+      "notice": "generated/strip-ansi@6.0.1.txt"
+    },
+    {
+      "name": "stylis",
+      "version": "4.4.0",
+      "license": "MIT",
+      "path": "node_modules/stylis",
+      "source": "https://github.com/thysultan/stylis.js",
+      "notice": "generated/stylis@4.4.0.txt"
+    },
+    {
+      "name": "tinyexec",
+      "version": "1.3.1",
+      "license": "MIT",
+      "path": "node_modules/tinyexec",
+      "source": "https://github.com/tinylibs/tinyexec",
+      "notice": "generated/tinyexec@1.3.1.txt"
+    },
+    {
+      "name": "toidentifier",
+      "version": "1.0.1",
+      "license": "MIT",
+      "path": "node_modules/toidentifier",
+      "source": "component/toidentifier",
+      "notice": "generated/toidentifier@1.0.1.txt"
+    },
+    {
+      "name": "ts-dedent",
+      "version": "2.3.0",
+      "license": "MIT",
+      "path": "node_modules/ts-dedent",
+      "source": "https://github.com/tamino-martinius/node-ts-dedent",
+      "notice": "generated/ts-dedent@2.3.0.txt"
+    },
+    {
+      "name": "type-is",
+      "version": "2.1.0",
+      "license": "MIT",
+      "path": "node_modules/type-is",
+      "source": "jshttp/type-is",
+      "notice": "generated/type-is@2.1.0.txt"
+    },
+    {
+      "name": "uc.micro",
+      "version": "3.0.0",
+      "license": "MIT",
+      "path": "node_modules/uc.micro",
+      "source": "markdown-it/uc.micro",
+      "notice": "generated/uc.micro@3.0.0.txt"
+    },
+    {
+      "name": "unpipe",
+      "version": "1.0.0",
+      "license": "MIT",
+      "path": "node_modules/unpipe",
+      "source": "stream-utils/unpipe",
+      "notice": "generated/unpipe@1.0.0.txt"
+    },
+    {
+      "name": "uuid",
+      "version": "14.0.3",
+      "license": "MIT",
+      "path": "node_modules/uuid",
+      "source": "https://github.com/uuidjs/uuid",
+      "notice": "generated/uuid@14.0.3.txt"
+    },
+    {
+      "name": "vary",
+      "version": "1.1.2",
+      "license": "MIT",
+      "path": "node_modules/vary",
+      "source": "jshttp/vary",
+      "notice": "generated/vary@1.1.2.txt"
+    },
+    {
+      "name": "which",
+      "version": "2.0.2",
+      "license": "ISC",
+      "path": "node_modules/which",
+      "source": "https://github.com/isaacs/node-which",
+      "notice": "generated/which@2.0.2.txt"
+    },
+    {
+      "name": "which-module",
+      "version": "2.0.1",
+      "license": "ISC",
+      "path": "node_modules/which-module",
+      "source": "https://github.com/nexdrew/which-module",
+      "notice": "generated/which-module@2.0.1.txt"
+    },
+    {
+      "name": "wrap-ansi",
+      "version": "6.2.0",
+      "license": "MIT",
+      "path": "node_modules/wrap-ansi",
+      "source": "chalk/wrap-ansi",
+      "notice": "generated/wrap-ansi@6.2.0.txt"
+    },
+    {
+      "name": "wrappy",
+      "version": "1.0.2",
+      "license": "ISC",
+      "path": "node_modules/wrappy",
+      "source": "https://github.com/npm/wrappy",
+      "notice": "generated/wrappy@1.0.2.txt"
+    },
+    {
+      "name": "ws",
+      "version": "8.22.0",
+      "license": "MIT",
+      "path": "node_modules/ws",
+      "source": "https://github.com/websockets/ws",
+      "notice": "generated/ws@8.22.0.txt"
+    },
+    {
+      "name": "wsl-utils",
+      "version": "1.0.1",
+      "license": "MIT",
+      "path": "node_modules/wsl-utils",
+      "source": "sindresorhus/wsl-utils",
+      "notice": "generated/wsl-utils@1.0.1.txt"
+    },
+    {
+      "name": "y18n",
+      "version": "4.0.3",
+      "license": "ISC",
+      "path": "node_modules/y18n",
+      "source": "git@github.com:yargs/y18n",
+      "notice": "generated/y18n@4.0.3.txt"
+    },
+    {
+      "name": "yargs",
+      "version": "15.4.1",
+      "license": "MIT",
+      "path": "node_modules/yargs",
+      "source": "https://github.com/yargs/yargs",
+      "notice": "generated/yargs@15.4.1.txt"
+    },
+    {
+      "name": "yargs-parser",
+      "version": "18.1.3",
+      "license": "ISC",
+      "path": "node_modules/yargs-parser",
+      "source": "https://github.com/yargs/yargs-parser",
+      "notice": "generated/yargs-parser@18.1.3.txt"
+    },
+    {
+      "name": "zod",
+      "version": "3.25.76",
+      "license": "MIT",
+      "path": "node_modules/zod",
+      "source": "https://github.com/colinhacks/zod",
+      "notice": "generated/zod@3.25.76.txt"
+    },
+    {
+      "name": "zod-to-json-schema",
+      "version": "3.25.2",
+      "license": "ISC",
+      "path": "node_modules/zod-to-json-schema",
+      "source": "https://github.com/StefanTerdell/zod-to-json-schema",
+      "notice": "generated/zod-to-json-schema@3.25.2.txt"
+    }
+  ]
+}

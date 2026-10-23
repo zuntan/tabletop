@@ -4,7 +4,8 @@ import { isShapeType } from './shape-definitions';
 import type { DeskObject, Operation } from './model';
 import { stickerShapeIds, type StickerShape } from './sticker-shapes';
 export type { StickerShape } from './sticker-shapes';
-export const stickerShapeSchema = z.enum(stickerShapeIds);
+// Compatibility only: the removed design is no longer offered or rendered.
+export const stickerShapeSchema = z.preprocess(value => value === 'mickey' ? 'circle' : value, z.enum(stickerShapeIds));
 const itemSchema = z.object({color:colorSchema,shape:stickerShapeSchema.default('circle')}).strict();
 export const stickerSchema = z.object({
   items: z.array(itemSchema).optional(),

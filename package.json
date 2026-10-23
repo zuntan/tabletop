@@ -6,10 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run licenses && tsc --noEmit && vite build",
     "start": "tsx src/server.ts",
     "test": "tsx --test tests/*.test.ts",
-    "test:e2e": "tsx --test tests/*.e2e.ts"
+    "test:e2e": "tsx --test tests/*.e2e.ts",
+    "licenses": "node scripts/generate-licenses.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

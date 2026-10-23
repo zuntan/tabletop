@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { Desk } from '../src/model';
 import { stickerSchema,stickerLayout,stickerPoints,stickerOperations } from '../src/sticker-values';
 import { encodeDeskFile,decodeDeskFile } from '../src/desk-file';
+import {zipSync,unzipSync,strToU8,strFromU8} from 'fflate';
+import {stickerShapeIds} from '../src/sticker-shapes';
 import { PartClipboard } from '../src/part-clipboard';
 
 test('stickers retain duplicate color order, wrap to inward rows from all four corners without a height limit',()=>{
@@ -43,4 +45,22 @@ test('stickers are meaningful parent attributes, append/clear preserve settings 
  for(const type of ['line','clip','prop'] as const) assert.throws(()=>desk.execute({operations:[{kind:'add',object:{id:'bad-'+type,type,...(type==='prop'?{src:'data:image/svg+xml;base64,PHN2Zy8+'}:{}),stickers:{colors:['red']}}}]}));
  assert.throws(()=>stickerSchema.parse({colors:['url(evil)']}));assert.throws(()=>stickerSchema.parse({diameter:0}));
  assert.throws(()=>stickerSchema.parse({colors:['red'],x:3}));
+});
+
+
+test('removed sticker design loads as a circle and resaves without the legacy ID',async()=>{
+ assert.ok(!(stickerShapeIds as readonly string[]).includes('mickey'));
+ assert.deepEqual(stickerShapeIds.slice(-3),['pig','confetti','ghost']);
+ assert.equal(stickerSchema.parse({items:[{color:'red',shape:'confetti'}]}).items[0].shape,'confetti');
+ const desk=new Desk();desk.execute({operations:[{kind:'add',object:{id:'legacy',type:'text',text:'legacy',stickers:{items:[{color:'red',shape:'circle'},{color:'blue',shape:'star'}],origin:'bottom-left',diameter:48,fixed:true}}}]});
+ const files=unzipSync(await encodeDeskFile(desk));
+ const manifest=JSON.parse(strFromU8(files['manifest.json']));
+ manifest.objects[0].stickers.items[0].shape='mickey';
+ files['manifest.json']=strToU8(JSON.stringify(manifest));
+ const loaded=await decodeDeskFile(zipSync(files));
+ assert.deepEqual(loaded.objects[0].stickers,{items:[{color:'red',shape:'circle'},{color:'blue',shape:'star'}],origin:'bottom-left',diameter:48,fixed:true});
+ const restored=new Desk();restored.replaceDocument({objects:loaded.objects,settings:loaded.settings});
+ const saved=JSON.parse(strFromU8(unzipSync(await encodeDeskFile(restored))['manifest.json']));
+ assert.equal(saved.objects[0].stickers.items[0].shape,'circle');
+ assert.throws(()=>stickerSchema.parse({items:[{color:'red',shape:'not-a-shape'}]}));
 });

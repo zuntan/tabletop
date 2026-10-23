@@ -51,7 +51,24 @@ test('desk menu edits shared appearance, previews opacity once per gesture, foll
     assert.equal(await page.getByRole('link', { name: 'プロジェクト → GitHub Repository' }).getAttribute('href'), 'https://github.com/zuntan/tabletop');
     assert.deepEqual(await page.locator('.about-credits dt').allTextContents(),['プログラマー','アドバイザー','企画・ディレクション']);
     assert.deepEqual(await page.locator('.about-credits dd').allTextContents(),['センパイ（GPT Sol 6.1 ～）','おっさん〈だらっくだ〉（ChatGPT GPT 6 ～）','ずんたん〈zuntan〉']);
-    assert.equal(await page.locator('.about-credits a').count(),0);assert.equal(await page.locator('.about-links a').count(),2);
+    assert.equal(await page.locator('.about-credits a').count(),0);
+    const manifest=JSON.parse(await readFile(new URL('../public/licenses/generated/manifest.json',import.meta.url),'utf8'));
+    const project=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
+    assert.equal(await page.locator('.about-license-list a').count(),Object.keys(project.dependencies).length+1);
+    assert.deepEqual((await page.locator('.about-license-list a').allTextContents()).slice(0,4),['Tabler Icons · MIT','mermaid · MIT','markdown-it · MIT','@simonwep/pickr · MIT']);
+    assert.equal(await page.getByRole('link',{name:'すべてのライブラリ・ライセンス',exact:true}).getAttribute('href'),'/licenses/THIRD_PARTY_NOTICES.txt');
+    const scroll=await page.locator('.about-license-list').evaluate(el=>({height:el.clientHeight,scroll:el.scrollHeight,border:getComputedStyle(el).borderWidth}));
+    assert.ok(scroll.scroll>scroll.height);assert.ok(scroll.height<=72);assert.equal(scroll.border,'0px');
+    assert.ok(await page.locator('#desk-menu-panel').evaluate(el=>el.scrollHeight<=el.clientHeight+1),'About fits without outer scrolling at desktop height');
+    for(const part of ['d3-interpolate','es-toolkit','elkjs','KaTeX（補足）']){
+      const entry=manifest.entries.find((e:{name:string})=>e.name===part);
+      const response=await page.request.get(new URL('/licenses/'+entry.notice,page.url()).href);
+      assert.equal(response.status(),200);assert.ok((await response.text()).length>200);
+    }
+    const notices=await page.request.get(new URL('/licenses/THIRD_PARTY_NOTICES.txt',page.url()).href);
+    assert.equal(notices.status(),200);const noticeText=await notices.text();
+    for(const owner of ['Mike Bostock','Kiel University','Design Science','Facebook','Underscore'])assert.ok(noticeText.includes(owner),owner);
+    assert.match(await (await page.request.get(new URL('/licenses/tabletop-MIT.txt',page.url()).href)).text(),/Copyright \(c\) 2026 zuntan/);
     assert.equal(await page.getByRole('link',{name:'MIT License',exact:true}).getAttribute('href'),'https://github.com/zuntan/tabletop/blob/main/LICENSE');
     assert.match(await page.locator('.about-project-license').innerText(),/Copyright © 2026 zuntan/);
     assert.equal(await page.locator('.about-credits + .about-project-links + .about-project-license + .about-links').count(),1);

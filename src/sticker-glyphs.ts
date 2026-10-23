@@ -12,9 +12,9 @@ import svg9 from './assets/stickers/trophy.svg?raw';
 import svg10 from './assets/stickers/mood-smile.svg?raw';
 import svg11 from './assets/stickers/paw.svg?raw';
 import svg12 from './assets/stickers/pig.svg?raw';
-import svg13 from './assets/stickers/mickey.svg?raw';
+import svg13 from './assets/stickers/confetti.svg?raw';
 import svg14 from './assets/stickers/ghost.svg?raw';
-const sources: Record<StickerShape,string> = {'circle':svg0,'star':svg1,'triangle':svg2,'diamond':svg3,'alert-square-rounded':svg4,'heart':svg5,'seedling':svg6,'michelin-star':svg7,'award':svg8,'trophy':svg9,'mood-smile':svg10,'paw':svg11,'pig':svg12,'mickey':svg13,'ghost':svg14};
+const sources: Record<StickerShape,string> = {'circle':svg0,'star':svg1,'triangle':svg2,'diamond':svg3,'alert-square-rounded':svg4,'heart':svg5,'seedling':svg6,'michelin-star':svg7,'award':svg8,'trophy':svg9,'mood-smile':svg10,'paw':svg11,'pig':svg12,'confetti':svg13,'ghost':svg14};
 const bounds = new Map<StickerShape,string>();
 /** Use the actual SVG outline bounds, sharing one glyph in the palette, swatch and desk. */
 export function stickerGlyph(shape:StickerShape, color='currentColor'):SVGSVGElement {

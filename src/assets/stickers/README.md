@@ -6,3 +6,5 @@ Unmodified Filled SVG files from `icons/filled/` under the MIT license (see LICE
 Runtime removes intrinsic dimensions and crops each SVG viewBox to its actual outline bounds, preserving aspect ratio. `square-rotated.svg` is exposed as the existing `diamond` sticker ID.
 
 No network connection or icon font is required at runtime.
+
+`confetti.svg` was retrieved unmodified from `icons/filled/confetti.svg` on 2026-10-24 (Tabler Icons MIT). It replaces the removed Mickey palette entry; old Mickey data is normalized to circle.

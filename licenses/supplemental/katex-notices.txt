@@ -1,0 +1,19 @@
+KaTeX 0.18.10 — additional component notices
+
+The KaTeX MIT license is included in the package notice. In addition:
+
+SVG images adapted from glyphs in KaTeX fonts (src/stretchy.ts, src/svgGeometry.ts):
+Copyright (c) 2009-2010, Design Science, Inc. (<www.mathjax.org>)
+Copyright (c) 2014-2017 Khan Academy (<www.khanacademy.org>)
+Licensed under the SIL Open Font License, Version 1.1.
+Full text: OFL-1.1.txt in this directory.
+
+src/utils.ts states:
+"hyphenate and escape adapted from Facebook's React under Apache 2 license"
+This attribution is retained here. Full text: Apache-2.0.txt in this directory.
+
+Tabletop does not edit the upstream KaTeX source; the distributed browser code
+is mechanically bundled/minified by Vite. No KaTeX font binaries are bundled.
+Source for this exact npm package:
+https://registry.npmjs.org/katex/-/katex-0.18.10.tgz
+Project: https://github.com/KaTeX/KaTeX

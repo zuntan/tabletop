@@ -1,0 +1,46 @@
+ELK / elkjs 0.9.3 — source availability and additional component notices
+
+elkjs is distributed under the Eclipse Public License 2.0. Its source is
+available under that license at:
+https://github.com/kieler/elkjs/tree/0.9.3
+https://github.com/kieler/elkjs/archive/refs/tags/0.9.3.tar.gz
+Exact npm artifact:
+https://registry.npmjs.org/elkjs/-/elkjs-0.9.3.tgz
+Upstream git revision: a8304cf79fde75bc2ab1a89d28320f53f8637436
+The full EPL-2.0 is included in the elkjs package notice.
+
+Tabletop has not edited the upstream elkjs source. Vite mechanically bundles
+and minifies it into a browser chunk. The original source/build instructions
+remain available at the locations above. These notices do not relicense ELK
+under Tabletop's MIT license.
+
+ELK Java sources are maintained at https://github.com/eclipse-elk/elk
+The official elkjs 0.9.3 release identifies ELK 0.9.1 as its base, plus the
+port-placement change in ELK pull request 955:
+https://github.com/kieler/elkjs/releases/tag/0.9.3
+Base sources (EPL-2.0):
+https://github.com/eclipse-elk/elk/tree/v0.9.1
+https://github.com/eclipse-elk/elk/archive/refs/tags/v0.9.1.tar.gz
+Base commit: 62d5909f96fad541bc101ad52dabaece6b7eab7e
+Additional change and source patch:
+https://github.com/eclipse-elk/elk/pull/955
+https://github.com/eclipse-elk/elk/commit/7ca51784e42a24201f29bc13e458728b6fc61cdc.patch
+The upstream build.gradle identifies the relevant plugins and build inputs.
+This source correspondence follows the upstream release description; Tabletop
+uses the original npm artifact and does not rebuild or patch its Java sources.
+
+The upstream build uses GWT 2.10.0 (Apache-2.0, with its own COPYING notices),
+Guava 31.1-jre (Apache-2.0), and EMF GWT 2.12.4 (EPL-1.0 per parent POM).
+Their notices/licenses are retained conservatively for the compiled Java path;
+this does not mean the complete GWT SDK or its development tools are shipped.
+
+Sources:
+https://github.com/gwtproject/gwt/tree/2.10.0
+https://github.com/google/guava/tree/v31.1
+https://repo.maven.apache.org/maven2/com/genmymodel/emf/gwt/emf-ecore/2.12.4/emf-ecore-2.12.4-sources.jar
+https://repo.maven.apache.org/maven2/com/genmymodel/emf/gwt/emf-common/2.12.4/emf-common-2.12.4-sources.jar
+https://repo.maven.apache.org/maven2/com/genmymodel/emf/gwt/emf-parent/2.12.4/emf-parent-2.12.4.pom
+
+The embedded web-worker shim retains Copyright 2020 Google LLC and Apache-2.0.
+Original copyright headers are reproduced in elk-copyrights.txt. Full additional
+license texts and source metadata are in this directory.
