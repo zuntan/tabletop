@@ -1119,7 +1119,13 @@ $<HTMLFormElement>('#connect-form').onsubmit = event => {
     void connectUrl(url.value, true).catch(error => notify(error instanceof Error ? error.message : String(error), true));
   } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
 };
-if (location.hash) {
+const standaloneStartup=new URLSearchParams(location.search).get('connect')==='off';
+if(standaloneStartup){
+  if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+  $('#connection').textContent='AI未接続（単独の机）';
+  $('#connection-detail').textContent='アップロード／ダウンロードで利用できます。AIを接続する場合は接続欄から操作してください。';
+}
+if (location.hash&&!standaloneStartup) {
   const initialUrl = location.href;
   history.replaceState(null, '', location.pathname + location.search);
   $<HTMLInputElement>('#connection-url').value = initialUrl;

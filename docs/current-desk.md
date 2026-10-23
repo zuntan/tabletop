@@ -4,12 +4,12 @@
 
 ## 復元する机
 
-- 保存名：`tabletop-main-files-merged-20261023.tabletop`
+- 保存名：`tabletop-main-standalone-ready-20261023.tabletop`
 - 保存場所：`~/.tabletop/saves/`（既定のTABLETOP_SAVE_ROOT）
 - 机の名前：Tabletop main
 - パーツ数：302
-- 保存時のrevision：5
-- Git保管用：[2026-10-23-07.tabletop](desk-snapshots/2026-10-23-07.tabletop)
+- 保存時のrevision：6
+- Git保管用：[2026-10-23-08.tabletop](desk-snapshots/2026-10-23-08.tabletop)
 - 次回起動：利用者の了承済み方針に従いChrome DevToolsで起動する。
 
 現在の机を確認せず、古いpreviewや試験前の保存へ戻さない。接続が切れただけなら既存タブの再接続を優先し、未保存の机を再読み込みしない。別環境でローカル保存がなければGit保管版を使う。
@@ -119,3 +119,8 @@ MCP更新後、ブラウザが空のタブになっていたため最新の机�
 ## 最新の統合状態（以前の経過記録より優先）
 
 通常SAVE／LOAD・机リンク・履歴・中央の机イラストは実装a932552、main統合済み。カード3・4は完了エリア、ピン3・4は削除済み。MCP再起動コマンドのメモと利用者の机リンクを含む最新の机302パーツ・revision5をローカルとGitへ保存。次はピン5・6。今後コミットフェーズにはmainへのマージまで含め、pushは別途依頼で行う。
+
+
+## 5：接続なし起動を実装・試用待ち
+
+feat/standalone-and-desk-colorsで5と6を別コミットにする。5はmode:standaloneで資格情報なしの空の机を開き、既存AI接続を維持。アップロード／ダウンロードで単独利用。ビルド・単体3件・ブラウザ1件確認済み。最新保存302パーツ・revision6。ピン5は利用者確認待ちで維持。ツールへの反映はMCP再起動後。6はまだ未実装。
