@@ -159,3 +159,10 @@ SHA-256：`7cf84d3e34e1de8d24d480af397b8018a5f4b4beb4e915573e183b7b2d318909`
 [2026-10-22-03.tabletop](./2026-10-22-03.tabletop)：Tabletop main、268パーツ。ハンコのパレット整理と桜飾りの「がんばりましょう」を反映。はなまるの下へ見本を追加し、済ハンコ付きの改造カードを完了エリアへ移動。format version 1、新ハンコとクリップ割合指定の対応版で開く。
 
 SHA-256：`8a36795d78874a8bcf55809c029f73cccdcf98db07a97fbf2ed9999f28641079`
+
+
+## 2026-10-23-05
+
+[2026-10-23-05.tabletop](./2026-10-23-05.tabletop)：Tabletop main、302パーツ、revision2。共通ダイアログの実装済み・試用待ちカードとピン3を保持。利用者の確認は次回以降。format version 1。ZIP整合性とJSONの接続資格情報フィールド不在を確認。
+
+SHA-256：`0fee500095520403cd19a58834e3c9509bacca8b6bdb6a40ea5bbbdec83095ae`

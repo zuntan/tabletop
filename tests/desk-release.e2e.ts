@@ -1,3 +1,4 @@
+import { respondToConfirm } from './confirm-response';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
@@ -43,8 +44,9 @@ test('release preserves the local desk, stops retries, accepts another desk and 
     assert.equal((await call('desk_summary')).count, 0);
     await call('desk_release', { confirm: true });
     // Explicit manual connection keeps the first tab's content and session/history.
-    page.once('dialog', dialog => dialog.accept());
+    const confirmation1 = respondToConfirm(page, 'proceed');
     await page.locator('#connect-form').evaluate(element => (element as HTMLFormElement).requestSubmit());
+    await confirmation1;
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     const returned = await call('desk_state');
     assert.deepEqual(returned.objects, original.objects);

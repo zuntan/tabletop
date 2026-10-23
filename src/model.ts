@@ -157,6 +157,12 @@ export class Desk {
   readonly deskId = createDeskId();
   readonly imageGeometry = new ImageGeometry();
   revision = 0;
+  private savedRevision=0;
+  hasUnsavedChanges(){return this.revision!==this.savedRevision;}
+  markSaved(revision:number){
+    if(revision!==this.revision)return false;
+    this.savedRevision=revision;return true;
+  }
   private objects: Snapshot = [];
   private settings: Settings = initialSettings();
   private undoStack: Entry[] = [];
@@ -235,6 +241,7 @@ export class Desk {
     this.redoStack = [];
     this.commit(after, before, 'batch', actor, targets, document.settings);
     this.selection = []; this.aiPointing = []; this.pointer = null;
+    this.markSaved(this.revision);
     return this.summary();
   }
   execute(input: Batch) {
@@ -357,6 +364,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('raster'), scale: z.number().finite().min(.1).max(3).default(1) }).strict(),
   z.object({ method: z.literal('mermaid_render'), id: z.string() }).strict(),
   z.object({ method: z.literal('file_snapshot') }).strict(),
+  z.object({ method: z.literal('file_saved'), expectedSessionId:z.string().uuid(), expectedRevision:z.number().int().nonnegative() }).strict(),
   z.object({ method: z.literal('load_document'), document: z.unknown(), confirm: z.literal(true),
     expectedSessionId: z.string().uuid(), expectedRevision: z.number().int().nonnegative(),
     actor: z.string().min(1).max(100).default('agent-01') }).strict(),
@@ -414,6 +422,7 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, text
       checkDeskBridgeSize(snapshot);
       return snapshot;
     }
+    case 'file_saved': return {marked:request.expectedSessionId===desk.sessionId&&desk.markSaved(request.expectedRevision)};
     case 'load_document': {
       if (request.expectedSessionId !== desk.sessionId || request.expectedRevision !== desk.revision) throw new Error('Session or revision conflict: refresh before loading');
       checkDeskBridgeSize(request);

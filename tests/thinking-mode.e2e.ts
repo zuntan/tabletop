@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { openTestDesk } from './desk-browser';
 import { THINKING_MODE_REFUSAL } from '../src/thinking-mode';
+import { publishObject } from '../src/object-properties';
 
 test('human thinking mode gates AI actions at receipt, preserves reads/editing and reconnects without replay', { timeout: 40_000 }, async () => {
   const { page, client, call, close, errors } = await openTestDesk('thinking-mode', `
@@ -66,7 +67,7 @@ test('human thinking mode gates AI actions at receipt, preserves reads/editing a
         unknown: await request('unknown', { method: 'future_write' }),
       };
     }) as { saved: { result: { objects: unknown[] } }; loaded: { error: string }; unknown: { error: string } };
-    assert.deepEqual(snapshot.saved.result.objects, before.objects);
+    assert.deepEqual(snapshot.saved.result.objects.map(object=>publishObject(object as Parameters<typeof publishObject>[0])), before.objects);
     assert.equal(snapshot.loaded.error, THINKING_MODE_REFUSAL);
     assert.equal(snapshot.unknown.error, THINKING_MODE_REFUSAL);
     await page.locator('#undo').click();
@@ -89,7 +90,8 @@ test('human thinking mode gates AI actions at receipt, preserves reads/editing a
     assert.equal((await call('desk_summary')).revision, before.revision + 2);
     await call('desk_point', { ids: ['kept'] });
     assert.deepEqual((await call('desk_selection')).aiPointing, ['kept']);
-    assert.equal(await page.locator('#reaction-controls').evaluate(el => el.nextElementSibling?.id), 'grid-snap');
+    assert.equal(await page.locator('#reaction-controls').evaluate(el => el.nextElementSibling?.id), 'prop-controls');
+    assert.equal(await page.locator('#prop-controls').evaluate(el => el.nextElementSibling?.id), 'grid-snap');
     assert.equal(await page.locator('#numbering-settings').evaluate(el => el.nextElementSibling?.id), 'label-descriptions');
     assert.equal(await page.locator('#label-descriptions .tool-caption').textContent(), 'ピンとテキスト');
     assert.deepEqual(errors, []);

@@ -4,6 +4,7 @@ import { downloadDeskFilename } from './desk-identity';
 import './desk-file-menu.css';
 import { createIcon } from './icons';
 import { headerIcon } from './header-icon';
+import { confirmAction, confirmUnsavedChanges, isConfirmDialogOpen } from './confirm-dialog';
 
 export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh: () => void, canLoad: () => boolean, exportPdf?: () => Promise<{bytes:Uint8Array;revision:number;webCount:number}>) {
   const save = document.createElement('button');
@@ -29,8 +30,10 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
     if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();const current=items.indexOf(document.activeElement as HTMLButtonElement);const index=event.key==='Home'?0:event.key==='End'?items.length-1:(current+(event.key==='ArrowDown'?1:-1)+items.length)%items.length;items[index]?.focus();}
   });
   const report = (text: string,error=false) => { const message=document.querySelector('#message')!;message.textContent = text;message.classList.toggle('error',error); };
-  save.addEventListener('click', async () => {
-    menu.hidePopover();save.disabled = true;
+  let saving=false,loading=false;
+  async function saveDownload(){
+    if(saving)throw new Error('保存処理中です。完了してから再実行してください');
+    saving=true;save.disabled=true;
     try {
       const revision = desk.revision;
       const filename = downloadDeskFilename(desk.settingsSnapshot().name);
@@ -39,9 +42,15 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
       const link = document.createElement('a');
       link.href = url; link.download = filename;
       link.click(); setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      report(`revision ${revision} を保存しました`);
-    } catch (error) { report(`保存失敗: ${error instanceof Error ? error.message : String(error)}`,true); }
-    finally { save.disabled = false; }
+      desk.markSaved(revision);
+      report(`revision ${revision} を書き出しました`);
+      return revision;
+    } finally { saving=false;save.disabled = false; }
+  }
+  save.addEventListener('click', async () => {
+    menu.hidePopover();
+    try{await saveDownload();}
+    catch(error){report(`保存失敗: ${error instanceof Error ? error.message : String(error)}`,true);}
   });
   load.addEventListener('click', () => { menu.hidePopover();if (canLoad()) input.click(); });
   let pdfBusy=false;
@@ -62,18 +71,26 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
   });
   input.addEventListener('change', async () => {
     const file = input.files?.[0]; input.value = '';
-    if (!file || !canLoad()) return;
-    if (!confirm('現在の机をファイルの内容に置き換えます。未保存なら先に保存してください。読込後は「元に戻す」で戻せます。')) return;
+    if (!file || !canLoad() || loading || isConfirmDialogOpen()) return;
     const revision = desk.revision;
-    load.disabled = true;
+    loading=true;load.disabled = true;
     try {
+      const choice=desk.hasUnsavedChanges()?await confirmUnsavedChanges():await confirmAction('机を読み込みます',
+        '現在の机をファイルの内容に置き換えます。読込後は「元に戻す」で戻せます。','読み込む').then(ok=>ok?'discard':'cancel');
+      if(choice==='cancel')return;
+      if(desk.revision!==revision||!canLoad())throw new Error('確認中に机が変更されました。もう一度読み込んでください');
+      if(choice==='save'){
+        report('切替前の机を書き出しています…');
+        await saveDownload();
+        if(desk.revision!==revision||desk.hasUnsavedChanges()||!canLoad())throw new Error('保存中に机が変更されたため、切替を中止しました');
+      }
       if (file.size > MAX_DESK_FILE_BYTES) throw new Error('File exceeds 50 MiB');
       const result = await decodeDeskFile(new Uint8Array(await file.arrayBuffer()));
       if (desk.revision !== revision || !canLoad()) throw new Error('Desk changed during loading; please retry');
       desk.replaceDocument({ objects: result.objects, settings: result.settings });
       refresh();
       report(result.warnings.length ? `読込完了（画像欠落 ${result.warnings.length} 件）` : '読込完了');
-    } catch (error) { report(`読込失敗（机は変更していません）: ${error instanceof Error ? error.message : String(error)}`); }
-    finally { load.disabled = false; }
+    } catch (error) { report(`読込失敗（机は変更していません）: ${error instanceof Error ? error.message : String(error)}`,true); }
+    finally { loading=false;load.disabled = false; }
   });
 }
