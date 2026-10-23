@@ -4,12 +4,12 @@
 
 ## 復元する机
 
-- 保存名：`tabletop-main-card-cleanup-commit-20261024.tabletop`
+- 保存名：`tabletop-main-license-confetti-commit-20261024.tabletop`
 - 保存場所：`~/.tabletop/saves/`（既定のTABLETOP_SAVE_ROOT）
 - 机の名前：Tabletop main
-- パーツ数：301
-- 保存時のrevision：10
-- Git保管用：[2026-10-24-02.tabletop](desk-snapshots/2026-10-24-02.tabletop)
+- パーツ数：303
+- 保存時のrevision：3
+- Git保管用：[2026-10-24-03.tabletop](desk-snapshots/2026-10-24-03.tabletop)
 - 次回起動：利用者の了承済み方針に従いChrome DevToolsで起動する。
 
 現在の机を確認せず、古いpreviewや試験前の保存へ戻さない。接続が切れただけなら既存タブの再接続を優先し、未保存の机を再読み込みしない。別環境でローカル保存がなければGit保管版を使う。
@@ -199,3 +199,10 @@ card-bookshelfとcard-bookshelf-boundaryは保留ハンコを保持し、未来�
 
 
 カード整理後の利用者の編集も含め、301パーツ・revision10を保存しGit保管版2026-10-24-02へ反映。Aboutの完了移動・本棚２枚の未来移動・公開準備カードの更新をmainへコミット済み。pushは別途。
+
+
+## 第三者通知・About・confettiのコミット（2026-10-24）
+
+実装 `6b206db` をmainへコミット。Aboutは主要12件・中央寄せ・約4行の枠なしスクロール。全本番依存の全文・著作権・NOTICEとELK/KaTeXの補足を同梱し、ビルドで再生成。ミッキーの選択肢とSVGを削除し、同じ位置へconfetti（クラッカー）を追加。旧mickeyは丸へ変換する。関連チェック6件成功。
+
+机303パーツ・revision3を保存し、調査・通知整備カードへ済を押印。持込素材・開発机は利用者確認に基づき採用継続。次は配布物構成・最終梱包の通知照合とREADME整備。push・Release公開は今回行っていない。既存MCPプロセスのツール説明・入力スキーマは次回再起動で更新される。
