@@ -1,15 +1,15 @@
 # 現在の机と次の作業
 
-2026-10-23更新。接続中の机と未保存の編集を優先する。新しい空の机を開く場合だけ、以下の最新保存から復元する。
+2026-10-24更新。接続中の机と未保存の編集を優先する。新しい空の机を開く場合だけ、以下の最新保存から復元する。
 
 ## 復元する机
 
-- 保存名：`tabletop-main-five-six-done-20261023.tabletop`
+- 保存名：`tabletop-main-about-committed-20261024.tabletop`
 - 保存場所：`~/.tabletop/saves/`（既定のTABLETOP_SAVE_ROOT）
 - 机の名前：Tabletop main
 - パーツ数：301
-- 保存時のrevision：9
-- Git保管用：[2026-10-23-10.tabletop](desk-snapshots/2026-10-23-10.tabletop)
+- 保存時のrevision：4
+- Git保管用：[2026-10-24.tabletop](desk-snapshots/2026-10-24.tabletop)
 - 次回起動：利用者の了承済み方針に従いChrome DevToolsで起動する。
 
 現在の机を確認せず、古いpreviewや試験前の保存へ戻さない。接続が切れただけなら既存タブの再接続を優先し、未保存の机を再読み込みしない。別環境でローカル保存がなければGit保管版を使う。
@@ -145,3 +145,47 @@ feat/standalone-and-desk-colors。5の接続なし起動は9a58f38、6のタイ�
 ## 2026-10-24：BH比較のメニュー非表示
 
 利用者の依頼により、BH比較の実験コードは残し、通常メニュー・キーボード操作からは非表示にした。開いている机にも非表示を反映。机のデータは変更しない。mainへコミット済み。ビルドと関連ブラウザ試験2件を確認。
+
+
+## 2026-10-24：About表示の確認待ち
+
+右上の既存パネルへ、机リンクと同じSVG、Tabletop＋package.json由来の番号、従来の紹介文、利用者指定の3役のクレジットを実装。役順はプログラマー、アドバイザー、企画・ディレクション。指定表記はdocs/public-info-and-license.mdを参照。GitHubと既存の素材ライセンスリンクを保持。正式なアプリLICENSE・第三者通知等は別途。公開操作やVer 0.1のリリースは行っていない。
+
+最新ローカル保存301パーツ・revision11。Git保管版2026-10-23-10はAbout表示調整前。現在の机を確認せず古い版へ戻さない。About表示は未コミット。
+
+ビルド・既存メニューのブラウザ試験を確認。ライト／ダーク・幅390pxの外観を確認し、ダーク見出しの色を調整。保存後にブラウザを更新して301パーツを復元済み（revision2）。Aboutを開いた状態で利用者確認待ち。
+
+Aboutのアドバイザーは同一人物の別名と分かるよう「おっさん〈だらっくだ〉（ChatGPT GPT 6 ～）」へ修正。利用者了承済み。
+
+企画・ディレクションを「ずんたん〈zuntan〉(GitHub・zuntan/tabletop)」とし、GitHub部分へのリンクを同じ行へ移動。区切りの下は「ライブラリライセンス」領域として既存2件を掲載。開いているAboutにも反映。
+
+
+## 2026-10-24：① 本体ライセンスの整備
+
+利用者の補足により、ファイル整備はセンパイが担当、GitHub設定変更・Release公開等はずんたんが担当。ルートLICENSEに標準MIT本文とCopyright (c) 2026 zuntanを追加。package.jsonとlockのルートlicenseをMITへ同期し、README・公開準備メモを更新。バージョン・依存関係は維持したことを確認。②Aboutの本体ライセンス欄と③Releaseリンクは未実施。GitHub操作・コミット・pushは行っていない。
+
+Aboutカードを①整備済みへ更新し、利用者が移動した位置(1632,456)とサイズ・ロック状態を保持。最新の机301パーツ・revision8を保存。Git保管版は以前のものなので上記ローカル保存を優先。
+
+
+## 2026-10-24：② Aboutの本体ライセンス欄
+
+クレジットとライブラリライセンスの間に本体の「ライセンス」を追加。Tabletop — MIT License、Copyright © 2026 zuntanを表示。MIT LicenseはGitHubのmain/LICENSEへリンク（GitHubへファイル反映前は未公開）。開いているAboutにも反映済み。カードを①・②整備済みへ更新し、机301パーツ・revision9を保存。③Releaseリンクは未実施。未コミット・未push。
+
+
+## 2026-10-24：Aboutのプロジェクト・感想リンク
+
+企画者名は「ずんたん〈zuntan〉」のみ。クレジットの後、本体ライセンスの前へ「プロジェクト → GitHub Repository」「ファンレター・感想 → GitHub Discussions」を順に配置する。感想のURLは利用者指定のfan-lettersカテゴリ。ソース・説明・既存試験を更新。カードの現在表示説明も更新し、机301パーツ・revision10を保存。未コミット。
+
+本体ライセンスを「Tabletop — MIT License · Copyright © 2026 zuntan」の一行へ整理。ライブラリ側もMIT Licenseの英語表記へ統一し、開いているAboutへ反映。机データは変更なし。
+
+
+## 2026-10-24：③ バージョン見出しからRelease一覧へ
+
+利用者が提案した https://github.com/zuntan/tabletop/releases を固定のリンク先に採用。「Tabletop ＋ package.jsonのversion」全体から別タブで開く。個別Releaseの判定・フラグ・ビルド時照会は不要。Aboutの①・②・③を整備済みへカード更新。机301パーツ・revision3を保存。GitHub操作・コミット・pushは未実施。
+
+
+## About・本体MITのコミット完了（以前の経過より優先）
+
+mainの54fb796に、Aboutの机イラスト・指定クレジット・プロジェクトと感想リンク・本体MIT欄・Release一覧リンク、ルートLICENSE・package/lockのMIT表記・READMEをコミット。既存のビルド・Aboutブラウザ試験と外観を確認。バージョンと依存関係は維持。今回はmain上なので追加マージなし。
+
+カードに実装コミットを反映し、利用者が配置した(1632,456)・1320×1248・ロックOFFを保持。About表示と本体MITの整備は完了、第三者通知・依存素材確認・配布物整理は継続するため、広い公開準備カード自体は未実装エリアに残す。最新の机301パーツ・revision4をローカルとGitに保存。push・GitHub設定・Release作成は行っていない。
