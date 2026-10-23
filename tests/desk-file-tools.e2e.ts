@@ -83,7 +83,7 @@ test('real MCP save/load round-trip, browser interoperability, conflicts and saf
     assert.equal(await page.locator('[data-ai-point], [data-human-selection], [data-resize], [data-endpoint]').count(), 0);
     assert.equal(await page.locator('#object-list .active').count(), 0);
     // And MCP must load a browser-downloaded file.
-    const downloading = page.waitForEvent('download'); await page.locator('#file-menu').click(); await page.locator('#save-desk').click();
+    const downloading = page.waitForEvent('download'); await page.locator('#file-menu').click(); await page.locator('#download-desk').click();
     const download = await downloading;
     const browserBytes = await readFile((await download.path())!);
     await writeFile(join(root, 'browser.tabletop'), browserBytes);

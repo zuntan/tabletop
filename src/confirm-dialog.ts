@@ -5,7 +5,7 @@ export const isConfirmDialogOpen=()=>!!dismiss;
 export const cancelConfirmDialog=()=>dismiss?.();
 
 /** A single modal, with cancellation as the initial and dismissal action. */
-export function choiceDialog<T extends string>(options:{title:string;message:string;choices:readonly {value:T;label:string;danger?:boolean}[];cancel:T}):Promise<T>{
+export function choiceDialog<T extends string>(options:{title:string;message:string;choices:readonly {value:T;label:string;danger?:boolean}[];cancel:T;input?:{label:string;value:string;onAccept:(value:string)=>boolean}}):Promise<T>{
   // Never stack confirmations or queue an action the human has not seen.
   if(dismiss)return Promise.resolve(options.cancel);
   const cancel=options.choices.find(c=>c.value===options.cancel);
@@ -19,7 +19,9 @@ export function choiceDialog<T extends string>(options:{title:string;message:str
   heading.append(title,close);
   const message=document.createElement('p');message.id='confirm-dialog-message';message.textContent=options.message;
   const actions=document.createElement('div');actions.className='confirm-dialog-actions';
-  dialog.append(heading,message,actions);
+  const input=options.input?document.createElement('input'):null;
+  if(input){input.type='text';input.value=options.input!.value;input.setAttribute('aria-label',options.input!.label);input.className='confirm-dialog-input';}
+  dialog.append(heading,message);if(input)dialog.append(input);dialog.append(actions);
   return new Promise<T>(resolve=>{
     let done=false;
     const finish=(value:T)=>{
@@ -33,7 +35,7 @@ export function choiceDialog<T extends string>(options:{title:string;message:str
       const button=document.createElement('button');button.type='button';button.textContent=choice.label;button.dataset.dialogChoice=choice.value;
       if(choice.danger)button.classList.add('confirm-dialog-danger');
       if(choice.value===options.cancel){button.autofocus=true;button.classList.add('confirm-dialog-cancel');}
-      button.onclick=()=>finish(choice.value);actions.append(button);return button;
+      button.onclick=()=>{if(choice.value!==options.cancel&&input&&!options.input!.onAccept(input.value)){input.focus();return;}finish(choice.value);};actions.append(button);return button;
     });
     close.onclick=()=>finish(options.cancel);
     dialog.addEventListener('cancel',event=>{event.preventDefault();finish(options.cancel);});
@@ -42,7 +44,7 @@ export function choiceDialog<T extends string>(options:{title:string;message:str
     dialog.addEventListener('keydown',event=>{
       event.stopPropagation();
       if(event.key==='Tab'){
-        const focusable=[close,...buttons].filter(button=>!button.disabled);
+        const focusable:HTMLElement[]=[close,...(input?[input]:[]),...buttons].filter(button=>!button.disabled);
         const index=focusable.indexOf(document.activeElement as HTMLButtonElement);
         const next=(index+(event.shiftKey?-1:1)+focusable.length)%focusable.length;
         event.preventDefault();focusable[next].focus();
@@ -64,3 +66,9 @@ export const confirmUnsavedChanges=()=>choiceDialog({
   title:'未保存の変更があります',message:'現在の机を別の内容へ切り替えます。変更をどうしますか？',cancel:'cancel',
   choices:[{value:'save',label:'保存して切り替える'},{value:'discard',label:'保存せず切り替える',danger:true},{value:'cancel',label:'キャンセル'}],
 });
+
+export async function askFilePath(title:string,value:string){
+  let path='';
+  const choice=await choiceDialog({title,message:'サーバー上の.tabletopファイルを指定します。ファイル名だけなら既定の保存フォルダーを使います。別の場所は絶対パスで指定してください。',cancel:'cancel',choices:[{value:'accept',label:'決定'},{value:'cancel',label:'キャンセル'}],input:{label:'机ファイルのパス',value,onAccept:value=>{path=value.trim();return !!path&&path.endsWith('.tabletop');}}});
+  return choice==='accept'?path:null;
+}

@@ -18,7 +18,7 @@ npm run build
 npm start
 ```
 
-AIがMCPで初回受付を開いた後、`desk_browser_open`でOS標準ブラウザを起動できます（[手順と制限](./docs/default-browser.md)）。手動の場合は、案内された `http://127.0.0.1:4317/#token=...&port=4317` をブラウザで開きます。URLのトークンは画面起動時に除去されます。上部の「保存」で机を画像込みの `.tabletop`（ZIP）に保存し、「読込」で再開できます。自動保存はなく、Undo履歴はタブ内のみです。対象・制限は [保存・読込](./docs/save-load.md) を参照してください。
+AIがMCPで初回受付を開いた後、`desk_browser_open`でOS標準ブラウザを起動できます（[手順と制限](./docs/default-browser.md)）。手動の場合は、案内された `http://127.0.0.1:4317/#token=...&port=4317` をブラウザで開きます。URLのトークンは画面起動時に除去されます。ファイルメニューのSAVE／LOADでサーバー上へ保存・読込でき、机リンクや最近使った机から切り替えられます。ブラウザ単独のアップロード／ダウンロードも利用できます。[操作](docs/desk-files-and-links.md)。自動保存はなく、Undo履歴はタブ内のみです。対象・制限は [保存・読込](./docs/save-load.md) を参照してください。
 
 `npm start` は開発用の手動起動手順です。通常は下記のMCP設定でエージェントにサーバーを起動させ、初回ペアリングを行います。URLだけでは共有の受付は開きません。AIなしの単独起動の整備は今回の対象外です。手動起動したサーバーは先にCtrl+Cで停止します。同じポートで二重起動はできません。
 
@@ -107,7 +107,7 @@ AI向けの使い方・接続線・ピンシリーズ・画像／SVGの受け渡
 | `desk_get` | ID指定の詳細。画像ソースを含む |
 | `desk_state` | 全状態。大きくなるため必要時だけ使用 |
 | `desk_context` | 状態・接続関係・ピンシリーズのメンバー・履歴を一回で取得（画像データなし） |
-| `desk_save` | サーバーの専用フォルダーへ `.tabletop` を保存。上書き禁止 |
+| `desk_save` | サーバー上の `.tabletop` へ保存。path指定と明示的なoverwriteに対応（旧filenameは新規作成のみ） |
 | `desk_load` | 明示確認とsession／revisionガード付きで読込。共通Undo対応。[詳細](./docs/mcp-save-load.md) |
 | `desk_asset_read` | 画像をMCP imageブロック、SVGをソースで取得。任意で一時ファイル出力 |
 | `desk_asset_import` | ファイル・SVGコード・data URLから追加／画像だけ差し替え |
