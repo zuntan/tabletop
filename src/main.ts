@@ -1,3 +1,4 @@
+import {applyTitleBackground} from './desk-appearance';
 import {fileCreateOperations,fileFor,fileGroup} from './clear-files';
 import {drawClearFile} from './clear-file-drawing';
 import {createDeskToast} from './desk-toast';
@@ -363,6 +364,7 @@ function world(event: PointerEvent | WheelEvent) {
 function cameraChanged() {
   const settings = desk.settingsSnapshot();
   deskBackground.update(settings.background, camera);
+  applyTitleBackground($('header'),settings.background.titleBackground);
   viewport.setAttribute('transform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
   const grid = settings.grid, dots = app.querySelector('#dots')!;
   dots.setAttribute('width', String(grid.interval)); dots.setAttribute('height', String(grid.interval));
@@ -1119,7 +1121,13 @@ $<HTMLFormElement>('#connect-form').onsubmit = event => {
     void connectUrl(url.value, true).catch(error => notify(error instanceof Error ? error.message : String(error), true));
   } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
 };
-if (location.hash) {
+const standaloneStartup=new URLSearchParams(location.search).get('connect')==='off';
+if(standaloneStartup){
+  if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+  $('#connection').textContent='AI未接続（単独の机）';
+  $('#connection-detail').textContent='アップロード／ダウンロードで利用できます。AIを接続する場合は接続欄から操作してください。';
+}
+if (location.hash&&!standaloneStartup) {
   const initialUrl = location.href;
   history.replaceState(null, '', location.pathname + location.search);
   $<HTMLInputElement>('#connection-url').value = initialUrl;

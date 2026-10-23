@@ -1,3 +1,4 @@
+import {plainDeskColors,wallpaperChoice,wallpaperPatch} from './desk-appearance';
 import type { Desk } from './model';
 import type { Settings } from './settings';
 import { createIcon } from './icons';
@@ -45,11 +46,17 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
       const caption = document.createElement('span'); caption.textContent = text; node.append(caption, control); panel.append(node);
     };
     const wallpaper = document.createElement('select'); wallpaper.setAttribute('aria-label', '壁紙');
-    for (const [value, text] of [['none', '無地'], ['wood-1', '木目1'], ['wood-2', '木目2'], ['wood', 'フローリング'], ['cutting-mat', 'カッターマット'], ['pink-notebook', 'ピンクのノート'], ['charcoal', 'チャコール']]) {
+    for (const [value, text] of [['none', '無地'], ...plainDeskColors.map(p=>[p.value,p.label]), ['wood-1', '木目1'], ['wood-2', '木目2'], ['wood', 'フローリング'], ['cutting-mat', 'カッターマット'], ['pink-notebook', 'ピンクのノート'], ['charcoal', 'チャコール']]) {
       const option = document.createElement('option'); option.value = value; option.textContent = text; wallpaper.append(option);
     }
-    wallpaper.onchange = () => change({ wallpaper: wallpaper.value as Settings['background']['wallpaper'] });
+    wallpaper.onchange = () => change(wallpaperPatch(wallpaper.value));
     label('壁紙', wallpaper);
+    const titleColor=document.createElement('input');titleColor.type='color';titleColor.setAttribute('aria-label','タイトル背景色');
+    titleColor.onchange=()=>change({titleBackground:titleColor.value});
+    const resetTitle=document.createElement('button');resetTitle.type='button';resetTitle.textContent='標準に戻す';resetTitle.setAttribute('aria-label','タイトル背景色を標準に戻す');
+    resetTitle.onclick=()=>change({titleBackground:null});
+    const titleRow=document.createElement('div');titleRow.className='desk-menu-colors';titleRow.append(titleColor,resetTitle);label('タイトル背景色',titleRow);
+
     const opacity = document.createElement('input'); opacity.type = 'range'; opacity.min = '0'; opacity.max = '100'; opacity.step = '1'; opacity.setAttribute('aria-label', '壁紙の不透明度');
     const output = document.createElement('output'); output.htmlFor = opacity.id = 'wallpaper-opacity';
     const range = document.createElement('div'); range.className = 'desk-menu-range'; range.append(opacity, output);
@@ -79,7 +86,8 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     sync = () => {
       const bg = desk.settingsSnapshot().background, resolved = frameColors(bg);
       brightness.value = String(Math.round(bg.underlayBrightness * 100)); brightnessOutput.value = brightness.value + '%';
-      wallpaper.value = bg.wallpaper; opacity.value = String(Math.round(bg.opacity * 100)); output.value = opacity.value + '%';
+      titleColor.value=bg.titleBackground??'#0f172a';resetTitle.disabled=!bg.titleBackground;
+      wallpaper.value = wallpaperChoice(bg); opacity.value = String(Math.round(bg.opacity * 100)); output.value = opacity.value + '%';
       for (const { key, input, auto } of colors) {
         const color = key === 'selectionColor' ? resolved.selection : resolved.pointing;
         input.value = /^#[0-9a-f]{6}$/i.test(color) ? color : '#808080';

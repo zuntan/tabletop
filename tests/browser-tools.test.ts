@@ -35,3 +35,16 @@ test('browser launcher requires listening and explicit pairing, never exposes la
   const done=child(), success=observeBrowserLauncher(done,100);done.emit('exit',0);await success;
   const running=child();await observeBrowserLauncher(running,5);assert.equal(running.listenerCount('exit'),0);
  });
+
+test('standalone launch strips all credentials and never needs or changes pairing',async()=>{
+ const server=new McpServer({name:'standalone-test',version:'1'}),client=new Client({name:'reader',version:'1'});
+ const state={url:'http://127.0.0.1:4317/?private=secret#token=private-token&port=4317',listening:true,accepting:false,connected:true};
+ const launched:string[]=[];registerBrowserTools(server,()=>state,async url=>{launched.push(url);});
+ const [a,b]=InMemoryTransport.createLinkedPair();
+ try{await server.connect(a);await client.connect(b);
+  const result=await client.callTool({name:'desk_browser_open',arguments:{mode:'standalone'}});
+  assert.notEqual(result.isError,true);assert.deepEqual(launched,['http://127.0.0.1:4317/?connect=off']);
+  assert.equal(state.connected,true);assert.equal(state.accepting,false);assert.doesNotMatch(JSON.stringify(result),/private-token|private=secret/);
+  state.listening=false;assert.equal((await client.callTool({name:'desk_browser_open',arguments:{mode:'standalone'}})).isError,true);assert.equal(launched.length,1);
+ }finally{await client.close();await server.close();}
+});
