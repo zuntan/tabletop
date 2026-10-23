@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import {mkdir,readFile} from 'node:fs/promises';
 import { openTestDesk } from './desk-browser';
 
 test('desk menu edits shared appearance, previews opacity once per gesture, follows Undo and stays independent of UI theme', { timeout: 30_000 }, async () => {
@@ -45,11 +46,24 @@ test('desk menu edits shared appearance, previews opacity once per gesture, foll
     assert.equal(await page.locator('#desk-menu-panel').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(32, 41, 54)');
     await page.keyboard.press('Escape');
     await menu.click(); await page.getByRole('button', { name: 'Tabletopについて…' }).click();
-    assert.match(await page.locator('#desk-menu-panel').innerText(), /Tabletop 0.1.0/);
-    assert.equal(await page.getByRole('link', { name: 'GitHub · zuntan/tabletop' }).getAttribute('href'), 'https://github.com/zuntan/tabletop');
+    const version=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8')).version;
+    assert.equal(await page.getByRole('link',{name:`Tabletop ${version}`,exact:true}).getAttribute('href'),'https://github.com/zuntan/tabletop/releases');
+    assert.equal(await page.getByRole('link', { name: 'プロジェクト → GitHub Repository' }).getAttribute('href'), 'https://github.com/zuntan/tabletop');
+    assert.deepEqual(await page.locator('.about-credits dt').allTextContents(),['プログラマー','アドバイザー','企画・ディレクション']);
+    assert.deepEqual(await page.locator('.about-credits dd').allTextContents(),['センパイ（GPT Sol 6.1 ～）','おっさん〈だらっくだ〉（ChatGPT GPT 6 ～）','ずんたん〈zuntan〉']);
+    assert.equal(await page.locator('.about-credits a').count(),0);assert.equal(await page.locator('.about-links a').count(),2);
+    assert.equal(await page.getByRole('link',{name:'MIT License',exact:true}).getAttribute('href'),'https://github.com/zuntan/tabletop/blob/main/LICENSE');
+    assert.match(await page.locator('.about-project-license').innerText(),/Copyright © 2026 zuntan/);
+    assert.equal(await page.locator('.about-credits + .about-project-links + .about-project-license + .about-links').count(),1);
+    assert.deepEqual(await page.locator('.about-project-links a').allTextContents(),['プロジェクト → GitHub Repository','ファンレター・感想 → GitHub Discussions']);
+    assert.equal(await page.getByRole('link',{name:'ファンレター・感想 → GitHub Discussions',exact:true}).getAttribute('href'),'https://github.com/zuntan/tabletop/discussions/categories/fan-letters');
+    await page.locator('.about-desk-artwork').evaluate((img:HTMLImageElement)=>img.decode());
+    await mkdir('tmp/about',{recursive:true});await page.screenshot({path:'tmp/about/dark.png'});
+    await call('desk_ui_set',{theme:'light'});await page.screenshot({path:'tmp/about/light.png'});
     await page.setViewportSize({ width: 390, height: 700 });
     const rect = (await page.locator('#desk-menu-panel').boundingBox())!;
     assert.ok(rect.x >= 0 && rect.x + rect.width <= 390);
+    await page.screenshot({path:'tmp/about/small.png'});
     assert.deepEqual((await call('desk_state')).objects, before.objects);
     // Viewport size changes camera bounds, but menu interactions do not move its world center.
     const afterCamera = await call('desk_camera_get');

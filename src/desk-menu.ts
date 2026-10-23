@@ -1,3 +1,4 @@
+import deskArtwork from './assets/desk-link.svg?raw';
 import {plainDeskColors,wallpaperChoice,wallpaperPatch} from './desk-appearance';
 import type { Desk } from './model';
 import type { Settings } from './settings';
@@ -26,7 +27,7 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
   });
   let sync = () => {};
   function heading(title: string) {
-    panel.replaceChildren();
+    panel.replaceChildren();panel.classList.remove('desk-about');
     const row = document.createElement('div'); row.className = 'desk-menu-heading';
     const h = document.createElement('h2'); h.textContent = title;
     const close = document.createElement('button'); close.type = 'button'; close.title = '閉じる'; close.setAttribute('aria-label', '閉じる');
@@ -99,14 +100,43 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
   }
   function about() {
     heading('Tabletopについて');
-    const text = document.createElement('p'); text.textContent = 'Tabletop ' + JSON.parse(packageSource).version;
-    const description = document.createElement('p'); description.textContent = '人間とAIが同じ机を囲んで考えるための作業机。';
-    const link = document.createElement('a'); link.href = 'https://github.com/zuntan/tabletop'; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'GitHub · zuntan/tabletop';
-    const license = document.createElement('a'); license.href = '/licenses/tabler-icons.txt'; license.target = '_blank'; license.rel = 'noopener noreferrer'; license.textContent = 'Tabler Icons · MITライセンス';
+    panel.classList.add('desk-about');
+    const artwork=document.createElement('img');artwork.className='about-desk-artwork';artwork.src=`data:image/svg+xml;base64,${btoa(deskArtwork)}`;
+    artwork.alt='ランプと紙とマグカップ、笑顔の引き出しがある机';artwork.width=230;artwork.height=158;
+    const text = document.createElement('h3');text.className='about-app-name';
+    const releaseLink=document.createElement('a');releaseLink.textContent='Tabletop '+JSON.parse(packageSource).version;releaseLink.href='https://github.com/zuntan/tabletop/releases';releaseLink.target='_blank';releaseLink.rel='noopener noreferrer';
+    text.append(releaseLink);
+    const description = document.createElement('p'); description.className='about-description';description.textContent = '人間とAIが同じ机を囲んで考えるための作業机。';
+    const link = document.createElement('a'); link.href = 'https://github.com/zuntan/tabletop'; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'プロジェクト → GitHub Repository';
+    const license = document.createElement('a'); license.href = '/licenses/tabler-icons.txt'; license.target = '_blank'; license.rel = 'noopener noreferrer'; license.textContent = 'Tabler Icons · MIT License';
     const licenses = document.createElement('p'); licenses.append(license);
-    const mermaidLicense = document.createElement('a'); mermaidLicense.href = '/licenses/mermaid.txt'; mermaidLicense.target = '_blank'; mermaidLicense.rel = 'noopener noreferrer'; mermaidLicense.textContent = 'Mermaid · MITライセンス';
+    const mermaidLicense = document.createElement('a'); mermaidLicense.href = '/licenses/mermaid.txt'; mermaidLicense.target = '_blank'; mermaidLicense.rel = 'noopener noreferrer'; mermaidLicense.textContent = 'Mermaid · MIT License';
     licenses.append(document.createElement('br'), mermaidLicense);
-    panel.append(text, description, link, licenses);
+    const credits=document.createElement('dl');credits.className='about-credits';
+    for(const [role,name]of [
+      ['プログラマー','センパイ（GPT Sol 6.1 ～）'],
+      ['アドバイザー','おっさん〈だらっくだ〉（ChatGPT GPT 6 ～）'],
+      ['企画・ディレクション','ずんたん〈zuntan〉'],
+    ]){
+      const title=document.createElement('dt');title.textContent=role;
+      const value=document.createElement('dd');value.textContent=name;
+      credits.append(title,value);
+    }
+    const projectLinks=document.createElement('div');projectLinks.className='about-project-links';
+    const repositoryLine=document.createElement('p');repositoryLine.append(link);
+    const fanLetters=document.createElement('a');fanLetters.textContent='ファンレター・感想 → GitHub Discussions';
+    fanLetters.href='https://github.com/zuntan/tabletop/discussions/categories/fan-letters';fanLetters.target='_blank';fanLetters.rel='noopener noreferrer';
+    const feedbackLine=document.createElement('p');feedbackLine.append(fanLetters);projectLinks.append(repositoryLine,feedbackLine);
+    const projectLicense=document.createElement('section');projectLicense.className='about-project-license';
+    const projectHeading=document.createElement('h4');projectHeading.className='about-library-label';projectHeading.textContent='ライセンス';
+    const projectText=document.createElement('p');
+    const mit=document.createElement('a');mit.textContent='MIT License';mit.href='https://github.com/zuntan/tabletop/blob/main/LICENSE';mit.target='_blank';mit.rel='noopener noreferrer';
+    projectText.append('Tabletop — ',mit,' · Copyright © 2026 zuntan');
+    projectLicense.append(projectHeading,projectText);
+    const links=document.createElement('div');links.className='about-links';
+    const licenseHeading=document.createElement('h4');licenseHeading.className='about-library-label';licenseHeading.textContent='ライブラリライセンス';
+    links.append(licenseHeading,licenses);
+    panel.append(artwork,text,description,credits,projectLinks,projectLicense,links);
   }
   button.onclick = () => {
     if (panel.matches(':popover-open')) { panel.hidePopover(); return; }

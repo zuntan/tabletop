@@ -6,7 +6,7 @@
   box-shadow: 0 8px 28px #0003; font-size: 13px;
 }
 #desk-menu-panel .desk-menu-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-#desk-menu-panel h2 { font-size: 15px; margin: 0; }
+#desk-menu-panel h2 { font-size: 15px; margin: 0; color: inherit; }
 #desk-menu-panel .desk-menu-heading button { display: flex; padding: 4px; }
 #desk-menu-panel .desk-menu-item { display: block; width: 100%; text-align: left; margin-top: 8px; }
 #desk-menu-panel .desk-menu-field { display: grid; gap: 7px; margin-top: 16px; }
@@ -22,3 +22,26 @@
 :root[data-theme=dark] #desk-menu-panel a { color: #93c5fd; }
 
 #desk-menu-panel .desk-menu-item[hidden] { display: none; }
+
+#desk-menu-panel.desk-about { width: 370px; }
+#desk-menu-panel .about-desk-artwork { display: block; width: 230px; max-width: 100%; height: auto; margin: -6px auto 0; }
+#desk-menu-panel .about-app-name { margin: 2px 0 10px; font-size: 25px; font-weight: 750; text-align: center; color: var(--ui-text,#172554); }
+#desk-menu-panel .about-description { margin: 0 0 20px; text-align: center; line-height: 1.8; }
+#desk-menu-panel .about-credits { margin: 0; padding: 16px 0; border-top: 1px solid var(--ui-border,#cbd5e1); }
+#desk-menu-panel .about-credits dt { margin: 0 0 3px; font-size: 11px; color: var(--ui-muted,#64748b); }
+#desk-menu-panel .about-credits dd { margin: 0 0 13px; line-height: 1.6; overflow-wrap: anywhere; }
+#desk-menu-panel .about-credits dd:last-child { margin-bottom: 0; }
+#desk-menu-panel .about-links { padding-top: 14px; border-top: 1px solid var(--ui-border,#cbd5e1); font-size: 12px; line-height: 1.8; }
+#desk-menu-panel .about-links p { margin: 8px 0 0; }
+
+#desk-menu-panel .about-library-label { margin: 0; font-size: 11px; font-weight: 400; color: var(--ui-muted,#64748b); }
+
+#desk-menu-panel .about-project-license { border-top: 1px solid var(--ui-border,#cbd5e1); padding: 14px 0; font-size: 12px; line-height: 1.8; }
+#desk-menu-panel .about-project-license p { margin: 7px 0 0; }
+
+#desk-menu-panel .about-project-links { padding-bottom: 16px; font-size: 12px; line-height: 1.8; }
+#desk-menu-panel .about-project-links p { margin: 0; }
+#desk-menu-panel .about-project-links p + p { margin-top: 6px; }
+
+#desk-menu-panel .about-app-name a { color: inherit; text-decoration: none; }
+#desk-menu-panel .about-app-name a:hover, #desk-menu-panel .about-app-name a:focus-visible { text-decoration: underline; text-underline-offset: 4px; }
