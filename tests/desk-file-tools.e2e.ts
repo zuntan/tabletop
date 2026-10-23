@@ -1,3 +1,4 @@
+import { respondToConfirm } from './confirm-response';
 import { publishObject } from '../src/object-properties';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -72,8 +73,9 @@ test('real MCP save/load round-trip, browser interoperability, conflicts and saf
     await call('desk_redo'); assert.equal((await call('desk_get', { id: 'note' })).text, 'Saved');
     // The browser UI must load files written by MCP.
     await call('desk_select', { ids: ['note'] }); await call('desk_point', { ids: ['note'] });
-    page.once('dialog', dialog => dialog.accept());
+    const confirmation1 = respondToConfirm(page, 'proceed');
     await page.locator('#desk-file').setInputFiles(saved.path);
+    await confirmation1;
     await page.waitForFunction(() => document.querySelector('#message')?.textContent === '読込完了');
     assert.deepEqual((await call('desk_state')).objects, original.objects);
     assert.deepEqual((await call('desk_state')).selection, []);

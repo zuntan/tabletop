@@ -1,3 +1,4 @@
+import { respondToConfirm } from './confirm-response';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { openTestDesk } from './desk-browser';
@@ -53,8 +54,9 @@ test('green AI frames coexist with blue selection without replacing media or int
     await page.locator('[data-id="memo"] .markdown-text').click();
     assert.deepEqual((await call('desk_selection')).ids, ['memo']);
     // Canceling manual pairing replacement must not disconnect or clear pointing.
-    page.once('dialog', dialog => void dialog.dismiss());
+    const confirmation1 = respondToConfirm(page, 'cancel');
     await page.locator('#connect-form').evaluate(element => (element as HTMLFormElement).requestSubmit());
+    await confirmation1;
     assert.deepEqual((await call('desk_selection')).aiPointing, ['memo']);
     assert.equal(await page.locator('[data-ai-point]').count(), 1);
     assert.deepEqual(errors, []);

@@ -1,3 +1,4 @@
+import { respondToConfirm } from './confirm-response';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { openTestDesk } from './desk-browser';
@@ -21,7 +22,7 @@ test('pasted URLs validate before connection, preserve confirmation and reconnec
     const url = `http://localhost:${port}/#token=${token}&port=${port}`;
     const location = page.url();
     await input.fill(url);
-    const dismissed = new Promise<void>(resolve => page.once('dialog', async dialog => { await dialog.dismiss(); resolve(); }));
+    const dismissed = respondToConfirm(page, 'cancel');
     await connect.click();
     assert.equal(sockets, 0);
     await dismissed;
@@ -32,8 +33,9 @@ test('pasted URLs validate before connection, preserve confirmation and reconnec
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'AI接続解放済み');
     // Only the URL is needed for a deliberate manual return.
     await input.fill(url);
-    page.once('dialog', dialog => dialog.accept());
+    const confirmation1 = respondToConfirm(page, 'proceed');
     await connect.click();
+    await confirmation1;
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     const after = await call('desk_state');
     assert.deepEqual(after, before);
@@ -47,8 +49,9 @@ test('pasted URLs validate before connection, preserve confirmation and reconnec
     await page.waitForFunction(() => document.querySelector('#message')?.textContent?.includes('#token='));
     assert.equal(sockets, 1);
     await input.fill(url);
-    page.once('dialog', dialog => dialog.accept());
+    const confirmation2 = respondToConfirm(page, 'proceed');
     await connect.click();
+    await confirmation2;
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     assert.deepEqual(await call('desk_state'), before);
     assert.deepEqual(errors, []);

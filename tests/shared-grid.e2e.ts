@@ -1,3 +1,4 @@
+import { respondToConfirm } from './confirm-response';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -54,8 +55,9 @@ test('shared snap defaults, public MCP placement, exact numeric editing and save
     assert.deepEqual((await decodeDeskFile(bytes)).settings.grid, { enabled: true, interval: 10, origin: { x: 3, y: -4 } });
     await execute([{ kind: 'grid_update', patch: { enabled: false, interval: 24, origin: { x: 0, y: 0 } } }]);
     assert.equal(await button.getAttribute('aria-pressed'), 'false');
-    page.once('dialog', dialog => dialog.accept());
+    const confirmation1 = respondToConfirm(page, 'proceed');
     await page.locator('#desk-file').setInputFiles({ name: 'grid.tabletop', mimeType: 'application/zip', buffer: bytes });
+    await confirmation1;
     await page.waitForFunction(() => document.querySelector('#message')?.textContent === '読込完了');
     assert.deepEqual((await call('desk_context')).settings.grid, { enabled: true, interval: 10, origin: { x: 3, y: -4 } });
     assert.equal(await button.getAttribute('aria-pressed'), 'true'); assert.equal(await page.locator('#dots').getAttribute('width'), '10');

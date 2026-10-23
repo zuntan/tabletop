@@ -1,3 +1,4 @@
+import { respondToConfirm } from './confirm-response';
 import { publishObject } from '../src/object-properties';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -25,8 +26,9 @@ test('save/download, load/upload, shared Undo, rejected file, and cancel work in
     const parsed = await decodeDeskFile(bytes);
     assert.deepEqual(parsed.objects.map(publishObject), original.objects);
     await call('desk_execute', { operations: [{ kind: 'update', id: 'note', patch: { text: 'Changed' } }] });
-    page.once('dialog', dialog => dialog.accept());
+    const confirmation1 = respondToConfirm(page, 'proceed');
     await page.locator('#desk-file').setInputFiles({ name: 'roundtrip.tabletop', mimeType: 'application/zip', buffer: bytes });
+    await confirmation1;
     await page.waitForFunction(() => document.querySelector('#message')?.textContent === '読込完了');
     assert.deepEqual((await call('desk_state')).objects, original.objects);
     const loadedImage = page.locator('[data-id="picture"] image');
@@ -37,13 +39,15 @@ test('save/download, load/upload, shared Undo, rejected file, and cancel work in
     await page.locator('#redo').click();
     assert.equal((await call('desk_get', { id: 'note' })).text, 'Saved note');
     const before = await call('desk_state');
-    page.once('dialog', dialog => dialog.accept());
+    const confirmation2 = respondToConfirm(page, 'proceed');
     await page.locator('#desk-file').setInputFiles({ name: 'broken.tabletop', mimeType: 'application/zip',
       buffer: Buffer.from(zipSync({ 'manifest.json': strToU8('{broken') })) });
     await page.waitForFunction(() => document.querySelector('#message')?.textContent?.startsWith('読込失敗'));
+    await confirmation2;
     assert.deepEqual(await call('desk_state'), before);
-    page.once('dialog', dialog => dialog.dismiss());
+    const confirmation3 = respondToConfirm(page, 'cancel');
     await page.locator('#desk-file').setInputFiles({ name: 'cancel.tabletop', mimeType: 'application/zip', buffer: bytes });
+    await confirmation3;
     assert.deepEqual(await call('desk_state'), before);
     assert.deepEqual(desk.errors, []);
   } finally { await desk.close(); }

@@ -1,3 +1,4 @@
+import { respondToConfirm } from './confirm-response';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -70,16 +71,18 @@ test('name editing, download names, AI save/load, same-named tabs and manual rec
     const second = await page.context().browser()!.newPage();
     await second.goto(`http://127.0.0.1:${port}/`);
     const secondId = await second.locator('#desk-id').textContent(); assert.notEqual(secondId, id);
-    second.once('dialog', dialog => dialog.accept());
+    const confirmation1 = respondToConfirm(second, 'proceed');
     await second.locator('#desk-file').setInputFiles({ name: 'same.tabletop', mimeType: 'application/zip', buffer: bytes });
+    await confirmation1;
     await second.waitForFunction(() => document.querySelector('#message')?.textContent === '読込完了');
     assert.equal(await second.locator('#desk-name').textContent(), '企画/メモ:案');
     assert.equal(await second.locator('#desk-id').textContent(), secondId);
     // Legacy files have no name; loading clears the previous name, Undo restores it, ID never changes.
     const files = unzipSync(bytes), manifest = JSON.parse(strFromU8(files['manifest.json']));
     delete manifest.settings.name; files['manifest.json'] = strToU8(JSON.stringify(manifest));
-    page.once('dialog', dialog => dialog.accept());
+    const confirmation2 = respondToConfirm(page, 'proceed');
     await page.locator('#desk-file').setInputFiles({ name: 'legacy.tabletop', mimeType: 'application/zip', buffer: Buffer.from(zipSync(files)) });
+    await confirmation2;
     await page.waitForFunction(() => document.querySelector('#message')?.textContent === '読込完了');
     assert.equal(await page.locator('#desk-name').textContent(), '無題');
     await page.locator('#undo').click(); assert.equal(await page.locator('#desk-name').textContent(), '企画/メモ:案');
@@ -87,8 +90,9 @@ test('name editing, download names, AI save/load, same-named tabs and manual rec
     // Short hint and name survive intentional disconnect and a new pairing.
     await call('desk_release', { confirm: true });
     assert.equal(await page.locator('#desk-id').textContent(), id);
-    page.once('dialog', dialog => dialog.accept());
+    const confirmation3 = respondToConfirm(page, 'proceed');
     await page.locator('#connect-form').evaluate(element => (element as HTMLFormElement).requestSubmit());
+    await confirmation3;
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     const returned = await call('desk_summary'); assert.equal(returned.deskId, id); assert.equal(returned.name, '企画/メモ:案');
     // Narrow headers remain usable, including long names and the inline form.

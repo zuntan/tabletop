@@ -12,7 +12,7 @@ export function registerDeskFileTools(mcp: McpServer, request: (input: Request) 
   const result = (value: unknown): CallToolResult => ({ content: [{ type: 'text', text: JSON.stringify(value) }] });
   const failure = (error: unknown): CallToolResult => ({ isError: true, content: [{ type: 'text', text: error instanceof Error ? error.message : String(error) }] });
   mcp.registerTool('desk_save', {
-    description: 'Save the connected desk, including embedded images, to a server-local .tabletop ZIP. filename is a simple basename under TABLETOP_SAVE_ROOT (default ~/.tabletop/saves), never an arbitrary path. Existing files are never overwritten. Returns saved session/revision, formatVersion and path. UI and MCP share format/version and validators. Snapshot is taken at request time; later edits require another save. Max MCP transfer 20 MB JSON, archive 50 MiB. Requires the new browser UI; do not refresh an unsaved old tab. No network fetch or automatic retry.',
+    description: 'Save the connected desk, including embedded images, to a server-local .tabletop ZIP. filename is a simple basename under TABLETOP_SAVE_ROOT (default ~/.tabletop/saves), never an arbitrary path. Existing files are never overwritten. Returns saved session/revision, formatVersion and path. browserSavedState reports updated/unchanged/unavailable for the unsaved-warning baseline; a failed/stale notification does not undo file-save success and must not trigger automatic replay. UI and MCP share format/version and validators. Snapshot is taken at request time; later edits require another save. Max MCP transfer 20 MB JSON, archive 50 MiB. Requires the new browser UI; do not refresh an unsaved old tab. No network fetch or automatic retry.',
     inputSchema: { filename: name },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   }, async ({ filename }) => {
@@ -21,7 +21,13 @@ export function registerDeskFileTools(mcp: McpServer, request: (input: Request) 
       const validator = new Desk(); validator.replaceDocument({ objects: snapshot.objects, settings: snapshot.settings });
       const bytes = await encodeDeskFile(validator);
       const path = await store.save(filename, bytes);
-      return result({ filename, path, sessionId: snapshot.sessionId, revision: snapshot.revision, count: snapshot.objects.length, formatVersion: 1, bytes: bytes.length });
+      // The file is already safely written. A lost/old browser must not turn success into a retryable save failure.
+      let browserSavedState:'updated'|'unchanged'|'unavailable'='unavailable';
+      try{
+        const reply=await request({method:'file_saved',expectedSessionId:snapshot.sessionId,expectedRevision:snapshot.revision}) as {marked?:boolean};
+        browserSavedState=reply.marked?'updated':'unchanged';
+      }catch{/* Save succeeded; leave the browser's unsaved warning conservative. */}
+      return result({ filename, path, sessionId: snapshot.sessionId, revision: snapshot.revision, count: snapshot.objects.length, formatVersion: 1, bytes: bytes.length, browserSavedState });
     } catch (error) { return failure(error); }
   });
   mcp.registerTool('desk_load', {

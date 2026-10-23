@@ -1,3 +1,4 @@
+import { respondToConfirm } from './confirm-response';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { once } from 'node:events';
@@ -55,7 +56,8 @@ for (const fixed of [false, true]) {
       await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'AI再接続待ち');
       assert.notEqual(await page.locator('#message').textContent(), 'AIと共有できる状態です');
       assert.equal(await page.locator('[data-ai-point]').count(), 0);
-      await page.getByRole('button', { name: '矩形', exact: true }).click(); // Human editing while disconnected.
+      await page.locator('[data-add="rect"]').click(); // Human editing while disconnected.
+      await page.getByRole('dialog',{name:'図形の候補',exact:true}).getByRole('button',{name:'矩形',exact:true}).click();
       assert.equal(await page.locator('#message').evaluate(element => element.classList.contains('error')), false);
       await start();
       const nextToken = await credentials();
@@ -88,8 +90,9 @@ for (const fixed of [false, true]) {
       await call('desk_pairing_open', { confirm: true });
       await page.getByRole('tab', { name: '接続', exact: true }).click();
       await page.locator('#connection-url').fill(`http://127.0.0.1:${port}/#token=${encodeURIComponent(await credentials())}&port=${port}`);
-      page.once('dialog', dialog => void dialog.accept());
+      const confirmation1 = respondToConfirm(page, 'proceed');
       await page.locator('#connect-form button[type="submit"]').click();
+      await confirmation1;
       await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み', undefined, { timeout: 10_000 });
       assert.equal((await call('desk_summary')).sessionId, before.sessionId);
       assert.equal((await call('desk_summary')).count, 2);

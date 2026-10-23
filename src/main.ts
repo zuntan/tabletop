@@ -8,6 +8,7 @@ import { createCutoutControls } from './cutout-controls';
 import { drawCutout } from './cutout-drawing';
 import { cutoutTarget, cutoutSourceObject } from './logical-cutout';
 import { BhDeletion, bhDeleteControls, DELETE_MODES, type DeleteMode } from './bh-delete';
+import { confirmAction, isConfirmDialogOpen, cancelConfirmDialog } from './confirm-dialog';
 import { openBhPreview } from './bh-preview';
 import { rasterPointedCard } from './part-raster';
 import { pointedMove, ObjectMoveAnimator } from './object-move-animation';
@@ -894,6 +895,7 @@ canvas.addEventListener('pointercancel', event => endGesture(event, true));
 canvas.addEventListener('lostpointercapture', event => { if (gesture) endGesture(event, true); });
 window.addEventListener('blur', () => { space = false; if (gesture) { gesture = null; busy = false; render(); } });
 window.addEventListener('keydown', event => {
+  if(isConfirmDialogOpen())return;
   if (editor.isActive()) return;
   if ((event.target as Element).closest('input,textarea,select') || colorControls.isOpen()) return;
   if (event.code === 'Space') { space = true; event.preventDefault(); }
@@ -941,6 +943,7 @@ function clipboardTextTarget(target: EventTarget | null) {
     || target instanceof Element && !!target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"])');
 }
 for (const kind of ['copy', 'cut'] as const) window.addEventListener(kind, event => {
+  if(isConfirmDialogOpen()){event.preventDefault();return;}
   if (clipboardTextTarget(event.target) || !getSelection()?.isCollapsed || busy || gesture || !event.clipboardData) return;
   const scene=desk.snapshot();
   const selected=new Set(desk.selected().flatMap(id=>['clip','file'].includes(desk.get(id).type)?fileGroup(scene,id).map(o=>o.id):[id]));
@@ -1004,6 +1007,7 @@ window.addEventListener('pointerdown', event => {
 }, true);
 window.addEventListener('keydown', () => { middleCanvasPaste = false; }, true);
 window.addEventListener('paste', event => {
+  if(isConfirmDialogOpen()){event.preventDefault();return;}
   if (middleCanvasPaste) { event.preventDefault(); return; }
   if (clipboardTextTarget(event.target) || busy || gesture || !event.clipboardData) return;
   const data = event.clipboardData;
@@ -1020,7 +1024,7 @@ const recovery = new BrowserConnection({
   beforeRelease: () => thinkingMode.assertAllowed('release'),
   handoff: url => { void connectionPanel.display(url); },
   handoffError: message => notify(message, true),
-  disconnected: () => { bhDeletion.stop(); activityLed.clear(); objectAnimator.finish(); cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
+  disconnected: () => { cancelConfirmDialog(); bhDeletion.stop(); activityLed.clear(); objectAnimator.finish(); cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
   status: (state, detail) => {
     bellControls.connected(state==='connected');
     if (state === 'connected') connectionPanel.hide();
@@ -1036,8 +1040,9 @@ const recovery = new BrowserConnection({
 });
 const deskToast=createDeskToast();
 const connectionPanel = connectionControls(app, () => recovery.requestHandoff(), message => notify(message, true));
-function connect(token: string, port: string, manual = false, host = '127.0.0.1') {
-  if (manual && (recovery.hasPairing() || desk.summary().count > 0) && !confirm('机の内容を保持したまま、接続先のペアリングを置き換えますか？')) return;
+async function connect(token: string, port: string, manual = false, host = '127.0.0.1', current=()=>true) {
+  if (manual && (recovery.hasPairing() || desk.summary().count > 0) && !await confirmAction('AI接続を切り替える','机の内容を保持したまま、接続先のペアリングを置き換えますか？','接続を切り替える')) return;
+  if(!current())return;
   if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535 || token.length < 22) { notify('有効なポートと接続トークンを入力してください', true); return; }
 
   // Do not serialize flights in the protocol chain: reads/release must remain responsive.
@@ -1053,6 +1058,7 @@ function connect(token: string, port: string, manual = false, host = '127.0.0.1'
       if (typeof id !== 'string') throw new Error('Invalid request ID');
       if (typeof message.request?.method === 'string') activityLed.pulse(message.request.method);
       thinkingMode.assertAllowed(message.request?.method);
+      if(isConfirmDialogOpen()&&['execute','lock','undo','redo','select','point','load_document','fit','camera_move','ui_set'].includes(message.request?.method))throw new Error('Human confirmation in progress. No change was made; wait for the user.');
       if (['fit', 'camera_move'].includes(message.request.method)) humanScroll.assertIdle();
       if ((busy && message.request.method !== 'camera_get') || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       if (['fit', 'camera_move'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing())) throw new Error('Human editing in progress. No camera change was made.');
@@ -1099,7 +1105,7 @@ async function connectUrl(value: string, manual: boolean) {
   if (attempt !== connectionAttempt) return;
   const parsed = parseConnectionUrl(value, allowedHosts);
   if (!parsed.token) throw new Error('接続URLに #token=… を含めてください。環境変数のトークンはAIから表示されません。');
-  connect(parsed.token, parsed.port, manual, parsed.host);
+  await connect(parsed.token, parsed.port, manual, parsed.host,()=>attempt===connectionAttempt);
 }
 $<HTMLFormElement>('#connect-form').onsubmit = event => {
   event.preventDefault();

@@ -1,3 +1,4 @@
+import { respondToConfirm } from './confirm-response';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { openTestDesk } from './desk-browser';
@@ -19,8 +20,9 @@ test('small URL controls preserve the desk; local-only handoff fails without rel
     await page.getByRole('button', { name: 'URLをクリア', exact: true }).click();
     assert.equal(await input.inputValue(), '');
     assert.equal(await input.evaluate(el => el === document.activeElement), true);
-    page.once('dialog', dialog => dialog.accept());
+    const confirmation1 = respondToConfirm(page, 'proceed');
     await page.getByRole('button', { name: '別端末へ渡す', exact: true }).click();
+    await confirmation1;
     await page.waitForFunction(() => document.querySelector('#message')?.textContent?.includes('引き渡しできません'));
     assert.deepEqual(await call('desk_state'), before);
     assert.equal((await call('desk_connection_info')).network.lanEnabled, false);
@@ -48,13 +50,15 @@ test('authenticated human handoff renders a private QR and pairs a second empty 
       if (value.type === 'release') handoffUrl = value.handoffUrl;
     });
     await page.getByRole('tab', { name: '接続', exact: true }).click();
-    page.once('dialog', dialog => dialog.dismiss());
+    const confirmation2 = respondToConfirm(page, 'cancel');
     await page.getByRole('button', { name: '別端末へ渡す', exact: true }).click();
+    await confirmation2;
     assert.deepEqual(await call('desk_state'), before);
     // Human-initiated handoff remains available in read-only AI thinking mode.
     await page.locator('#thinking-mode').click();
-    page.once('dialog', dialog => dialog.accept());
+    const confirmation3 = respondToConfirm(page, 'proceed');
     await page.getByRole('button', { name: '別端末へ渡す', exact: true }).click();
+    await confirmation3;
     await page.locator('#handoff-panel').waitFor({ state: 'visible' });
     assert.match(handoffUrl, new RegExp(`^http://127.0.0.1:${port}/#token=`));
     assert.equal(handoffUrl.includes('handoff-positive'), false);

@@ -1,5 +1,6 @@
 import QRCode from 'qrcode';
 import { headerIcon } from './header-icon';
+import { confirmAction } from './confirm-dialog';
 
 /** Connection secrets live in this panel only, never in the desk model. */
 export function connectionControls(root: HTMLElement, handoff: () => void, error: (message: string) => void) {
@@ -18,8 +19,8 @@ export function connectionControls(root: HTMLElement, handoff: () => void, error
   clear.onclick = () => { input.value = ''; mask(); input.dispatchEvent(new Event('input', { bubbles: true })); input.focus(); };
   const hide = () => { clearTimeout(expiry); panel.hidden = true; canvas.width = 0; canvas.height = 0; };
   root.querySelector<HTMLButtonElement>('#handoff-hide')!.onclick = hide;
-  root.querySelector<HTMLButtonElement>('#handoff-start')!.onclick = () => {
-    if (!confirm('この机のAI接続を解放して、別端末向けのQRを表示しますか？机の内容は移動しません。必要なら先に保存してください。')) return;
+  root.querySelector<HTMLButtonElement>('#handoff-start')!.onclick = async () => {
+    if (!await confirmAction('別端末へ接続を渡す','この机のAI接続を解放して、別端末向けのQRを表示しますか？机の内容は移動しません。必要なら先に保存してください。','接続を解放する')) return;
     hide();
     try { handoff(); } catch (cause) { error(cause instanceof Error ? cause.message : String(cause)); }
   };

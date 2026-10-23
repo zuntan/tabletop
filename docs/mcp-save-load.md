@@ -1,5 +1,7 @@
 # AI用MCP保存・読込
 
+保存成功後、対応ブラウザに保存時点を通知し、同じsessionId・revisionなら未保存状態を解除します。`browserSavedState`がunchanged／unavailableでも、ファイル保存自体の成功は取り消されません。警告を消すための保存再試行はしないでください。[未保存確認](confirmation-dialogs.md)を参照してください。
+
 ## 前提
 
 `desk_save` と `desk_load` は、サーバー側のローカルフォルダーに `.tabletop` ファイルを書き込み／読み込みます。エージェント側や人間のブラウザ側のファイルシステムとは限りません。ブラウザUIと同じ [version 1のZIP形式・検証処理](./save-load.md) を使います。旧形式への互換変換はまだありません。
