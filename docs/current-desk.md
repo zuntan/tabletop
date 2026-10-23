@@ -163,4 +163,4 @@ MCP再起動後に更新版を起動、保存済み256パーツを復元。大�
 - 消してよい見本４枚：stationery-delete-sample-1〜4、(1632〜2712,2952)。本文の方式名は目安で、どの演出でも試せる。
 - 試用変更も含む285パーツ・revision25をtabletop-main-stationery-delete-done-20261023.tabletopへ保存し、Git保管。既存の未保存編集があれば優先する。
 - ビルドと関連6試験成功（既存BH・4方式の複数枚処理・Undo・動きを減らす設定・描画段階・分割数上限）。
-- 関連仕様：docs/bh-delete.md。ブランチでコミット、mainへのマージはまだ。
+- 関連仕様：docs/bh-delete.md。feat/stationery-delete-effectsでコミットし、mainへ統合済み。
