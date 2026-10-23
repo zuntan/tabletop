@@ -10,7 +10,11 @@ test('BH comparison replays both rasters without deleting or changing desk state
       text:'## 消してみたいカード\n\n**これはラスタ画像です。**\n\n- 前振り\n- すとーん／ぎゅー\n- 後始末',fill:'#fff7ed',fillOpacity:1,stroke:'#c7a782'}}]});
     await call('desk_point',{ids:['sample']});
     const before=await call('desk_summary');
-    await page.locator('#desk-menu').click();await page.getByRole('button',{name:'BH比較（実験）…',exact:true}).click();
+    await page.locator('#desk-menu').click();
+    const preview=page.locator('#desk-menu-panel .desk-menu-item').filter({hasText:'BH比較（実験）…'});
+    assert.equal(await preview.isVisible(),false);
+    // Internal verification can invoke the retained experimental handler; the human menu cannot.
+    await preview.evaluate((button:HTMLButtonElement)=>button.click());
     await page.locator('#bh-preview').waitFor({state:'visible'});
     await page.locator('#bh-preview-both').click();
     await page.waitForTimeout(700);

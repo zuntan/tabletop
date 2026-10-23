@@ -37,7 +37,7 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
   function action(label: string, run: () => void) {
     const item = document.createElement('button'); item.type = 'button'; item.textContent = label;
     item.className = 'desk-menu-item'; item.onclick = () => { run(); panel.querySelector<HTMLElement>('input,select,button')?.focus(); };
-    panel.append(item);
+    panel.append(item); return item;
   }
   function appearance() {
     heading('机の見た目');
@@ -111,7 +111,8 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
   button.onclick = () => {
     if (panel.matches(':popover-open')) { panel.hidePopover(); return; }
     heading('メニュー'); action('机の見た目…', appearance); action('Tabletopについて…', about);
-    if (bhPreview) action('BH比較（実験）…', () => { panel.hidePopover(); bhPreview(); });
+    // Keep the experimental entry for internal verification, outside the visible menu.
+    if (bhPreview) action('BH比較（実験）…', () => { panel.hidePopover(); bhPreview(); }).hidden = true;
     panel.showPopover();
   };
   panel.addEventListener('beforetoggle', event => {
