@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { openTestDesk } from './desk-browser';
@@ -26,7 +27,7 @@ test('human wheel zoom wins over AI camera writes and fit without blocking human
       ['desk_camera_move', { pan: { x: 100, y: 0 }, zoomBy: 1.25 }],
       ['desk_fit', {}],
     ] as const) {
-      const result = await client.callTool({ name, arguments: args });
+      const result = await callTestTool(client, { name, arguments: args });
       assert.equal(result.isError, true);
       assert.ok(JSON.stringify(result).includes(HUMAN_SCROLL_CAMERA_REFUSAL));
       assert.deepEqual(await call('desk_camera_get'), humanView);
@@ -37,7 +38,7 @@ test('human wheel zoom wins over AI camera writes and fit without blocking human
     assert.ok(manual.zoom > humanView.zoom);
     assert.deepEqual(await call('desk_state'), state);
     await time(1399);
-    const refused = await client.callTool({ name: 'desk_fit', arguments: {} });
+    const refused = await callTestTool(client, { name: 'desk_fit', arguments: {} });
     assert.equal(refused.isError, true);
     await time(2000); await page.waitForTimeout(500);
     assert.deepEqual(await call('desk_camera_get'), manual); // Nothing is replayed when the quiet period ends.
@@ -61,14 +62,14 @@ test('native sidebar scrolling also cancels AI camera actions conservatively and
     await page.waitForTimeout(50);
     assert.ok(await panel.evaluate(el => el.scrollTop) > 0);
     const before = await call('desk_camera_get');
-    const denied = await client.callTool({ name: 'desk_camera_move', arguments: { pan: { x: 10, y: 0 } } });
+    const denied = await callTestTool(client, { name: 'desk_camera_move', arguments: { pan: { x: 10, y: 0 } } });
     assert.equal(denied.isError, true);
     assert.ok(JSON.stringify(denied).includes(HUMAN_SCROLL_CAMERA_REFUSAL));
     await time(1350);
     await panel.evaluate(el => { el.scrollTop = 70; });
     await page.waitForTimeout(50);
     await time(1700);
-    const stillDenied = await client.callTool({ name: 'desk_fit', arguments: {} });
+    const stillDenied = await callTestTool(client, { name: 'desk_fit', arguments: {} });
     assert.equal(stillDenied.isError, true);
     assert.deepEqual(await call('desk_camera_get'), before);
     await time(2000); await page.waitForTimeout(500);
@@ -80,7 +81,7 @@ test('native sidebar scrolling also cancels AI camera actions conservatively and
     await page.waitForTimeout(50);
     assert.ok(await page.evaluate(() => window.scrollY) > 0);
     const scrolledPage = await call('desk_camera_get');
-    const pageDenied = await client.callTool({ name: 'desk_camera_move', arguments: { zoomBy: 2 } });
+    const pageDenied = await callTestTool(client, { name: 'desk_camera_move', arguments: { zoomBy: 2 } });
     assert.equal(pageDenied.isError, true);
     assert.ok(JSON.stringify(pageDenied).includes(HUMAN_SCROLL_CAMERA_REFUSAL));
     assert.deepEqual(await call('desk_camera_get'), scrolledPage);

@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -31,13 +32,13 @@ test('AI reads semantic state and image/SVG content, attaches pins and replaces 
     assert.equal((await call('desk_asset_read', { id: 'svg' })).svg, replacement);
     await page.locator('#undo').click(); assert.equal((await call('desk_asset_read', { id: 'svg' })).svg, svg);
     await page.locator('#redo').click(); assert.equal((await call('desk_asset_read', { id: 'svg' })).svg, replacement);
-    const conflict = await client.callTool({ name: 'desk_asset_import', arguments: { id: 'svg', mode: 'replace', source: { svg }, expectedRevision: 0 } });
+    const conflict = await callTestTool(client, { name: 'desk_asset_import', arguments: { id: 'svg', mode: 'replace', source: { svg }, expectedRevision: 0 } });
     assert.equal(conflict.isError, true);
-    const denied = await client.callTool({ name: 'desk_asset_import', arguments: { id: 'bad', source: { path: '/etc/passwd' } } });
+    const denied = await callTestTool(client, { name: 'desk_asset_import', arguments: { id: 'bad', source: { path: '/etc/passwd' } } });
     assert.equal(denied.isError, true);
     const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
     await call('desk_asset_import', { id: 'png', source: { dataUrl: `data:image/png;base64,${png}` } });
-    const raster = await client.callTool({ name: 'desk_asset_read', arguments: { id: 'png' } });
+    const raster = await callTestTool(client, { name: 'desk_asset_read', arguments: { id: 'png' } });
     assert.notEqual(raster.isError, true);
     const image = (raster as import('@modelcontextprotocol/sdk/types.js').CallToolResult).content.find(block => block.type === 'image');
     assert.equal(image?.type, 'image');

@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import { respondToConfirm } from './confirm-response';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -33,7 +34,7 @@ for (const fixed of [false, true]) {
       if (previous) { await previous.client.close(); await previous.transport.close(); }
     }
     async function call(name: string, args: Record<string, unknown> = {}) {
-      const result = await current!.client.callTool({ name, arguments: args });
+      const result = await callTestTool(current!.client, { name, arguments: args });
       assert.notEqual(result.isError, true, JSON.stringify(result));
       return JSON.parse((result.content as { text: string }[])[0].text);
     }
@@ -68,7 +69,7 @@ for (const fixed of [false, true]) {
         assert.equal(await page.locator('#count').textContent(), '2');
         assert.equal(await page.locator('#message').evaluate(element => element.classList.contains('error')), false);
       }
-      assert.equal((await call('desk_pairing_info')).pairing, null);
+      assert.deepEqual((await call('desk_connections')).desks,[]);
       await call('desk_pairing_restore', { pairing });
       await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み', undefined, { timeout: 10_000 });
       const after = await call('desk_summary');
@@ -79,7 +80,7 @@ for (const fixed of [false, true]) {
       assert.ok(!JSON.stringify(await call('desk_state')).includes(pairing.secret));
       // Pair mismatch or a wrong server proof stops recovery; manual replacement keeps the document.
       await stop(); await start();
-      const wrongPairing = fixed ? { ...pairing, pairId: crypto.randomUUID() } : { ...pairing, secret: '0'.repeat(64) };
+      const wrongPairing = { ...pairing, secret: '0'.repeat(64) };
       await call('desk_pairing_restore', { pairing: wrongPairing });
       await page.waitForFunction(() => document.querySelector('#connection')?.textContent === '接続確認が必要', undefined, { timeout: 10_000 });
       assert.equal((await call('desk_connection_info')).browserConnected, false);

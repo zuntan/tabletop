@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Page } from 'playwright';
@@ -95,7 +96,7 @@ test('AI pointer-set locking is atomic and independent, locks pins/connectors an
       { kind: 'label_add', id: 'pin', seriesId: 's', x: 600, y: 100 },
     ] });
     await call('desk_select', { ids: ['a'] });
-    const empty = await client.callTool({ name: 'desk_lock', arguments: { locked: true } }); assert.equal(empty.isError, true);
+    const empty = await callTestTool(client, { name: 'desk_lock', arguments: { locked: true } }); assert.equal(empty.isError, true);
     await call('desk_point', { ids: ['line', 'pin'] });
     const revision = (await call('desk_summary')).revision;
     const result = await call('desk_lock', { locked: true, expectedRevision: revision });
@@ -111,9 +112,9 @@ test('AI pointer-set locking is atomic and independent, locks pins/connectors an
     await call('desk_execute', { operations: [{ kind: 'update', id: 'line', patch: { x: 550, x2: 350 } }] });
     assert.equal((await call('desk_get', { id: 'line' })).x, 550);
     await call('desk_fit', { durationMs: 0 });
-    const stale = await client.callTool({ name: 'desk_lock', arguments: { locked: false, expectedRevision: revision } }); assert.equal(stale.isError, true);
+    const stale = await callTestTool(client, { name: 'desk_lock', arguments: { locked: false, expectedRevision: revision } }); assert.equal(stale.isError, true);
     await page.locator('#thinking-mode').click();
-    const denied = await client.callTool({ name: 'desk_lock', arguments: { locked: false } }); assert.equal(denied.isError, true);
+    const denied = await callTestTool(client, { name: 'desk_lock', arguments: { locked: false } }); assert.equal(denied.isError, true);
     assert.equal((await call('desk_get', { id: 'line' })).locked, true);
     await page.locator('#thinking-mode').click();
     await call('desk_point', { ids: ['line', 'pin'] });

@@ -29,7 +29,7 @@ export class PairingGate {
     this.change(); this.pairing = pair; this.bootstrap = false;
     return { waitingFor: 'paired-desk', pairId: pair.pairId };
   }
-  accept(ws: WebSocket, initial: boolean, ready: () => void) {
+  accept(ws: WebSocket, initial: boolean, ready: () => void, firstMessage?: import('ws').RawData) {
     if (this.waiting.size >= 8) { ws.close(4000, 'Retry later'); return; }
     this.waiting.add(ws);
     const epoch = this.epoch;
@@ -79,6 +79,7 @@ export class PairingGate {
       } catch { reject('Invalid pairing message'); }
       finally { processing = false; }
     };
-    ws.on('message', message); ws.once('close', cleanup); ws.on('error', () => {});
+    ws.on('message', message); ws.once('close', cleanup);
+    if(firstMessage!==undefined)void message(firstMessage); ws.on('error', () => {});
   }
 }

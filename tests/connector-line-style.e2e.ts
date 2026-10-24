@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { openTestDesk } from './desk-browser';
@@ -34,7 +35,7 @@ test('line and arrow styles share the palette, persist and undo without changing
     const current = await call('desk_summary');
     await call('desk_load', { filename: saved.filename, confirm: true, expectedSessionId: current.sessionId, expectedRevision: current.revision });
     assert.equal((await call('desk_get', { id: 'line' })).dash, 'dotted');
-    const invalid = await client.callTool({ name: 'desk_execute', arguments: { operations: [{ kind: 'update', id: 'line', patch: { dash: 'invalid' } }] } });
+    const invalid = await callTestTool(client, { name: 'desk_execute', arguments: { operations: [{ kind: 'update', id: 'line', patch: { dash: 'invalid' } }] } });
     assert.equal(invalid.isError, true);
     await call('desk_select', { ids: ['target'] });
     assert.equal(await page.locator('#properties').getByRole('button', { name: '線種の候補', exact: true }).isVisible(), false);

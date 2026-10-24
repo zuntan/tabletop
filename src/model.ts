@@ -156,7 +156,7 @@ function validateObject(object: unknown): DeskObject {
 /** The sole committed state writer for both UI and MCP operations. */
 export class Desk {
   readonly sessionId = randomUuid();
-  readonly deskId = createDeskId();
+  deskId = createDeskId();
   readonly imageGeometry = new ImageGeometry();
   revision = 0;
   documentGeneration=randomUuid();

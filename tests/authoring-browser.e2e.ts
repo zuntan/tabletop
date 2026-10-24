@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
@@ -18,7 +19,7 @@ test('defaults, inline editing and independent numbering systems work through UI
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   page.on('dialog', dialog => { errors.push('Unexpected native dialog'); void dialog.dismiss(); });
   async function call(name: string, args: Record<string, unknown> = {}) {
-    const result = await client.callTool({ name, arguments: args });
+    const result = await callTestTool(client, { name, arguments: args });
     assert.notEqual(result.isError, true, JSON.stringify(result));
     return JSON.parse((result.content as { text: string }[])[0].text);
   }

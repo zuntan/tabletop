@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { openTestDesk } from './desk-browser';
@@ -44,7 +45,7 @@ test('human and AI attach eighteen reactions to objects and pins with shared Und
     const badgeBox = (await page.locator('[data-reactions="card"]').boundingBox())!;
     const openBox = (await page.locator('[data-id="card"] [data-open-url]').boundingBox())!;
     assert.ok(badgeBox.y > openBox.y + openBox.height);
-    const invalid = await client.callTool({ name: 'desk_execute', arguments: { operations: [{ kind: 'update', id: 'pin', patch: { reactions: ['👍', '👍'] } }] } });
+    const invalid = await callTestTool(client, { name: 'desk_execute', arguments: { operations: [{ kind: 'update', id: 'pin', patch: { reactions: ['👍', '👍'] } }] } });
     assert.equal(invalid.isError, true); assert.equal((await call('desk_summary')).revision, context.revision);
     await call('desk_select', { ids: ['memo'] });
     const box = (await page.locator('[data-id="memo"] > rect').boundingBox())!;

@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { openTestDesk } from './desk-browser';
@@ -66,14 +67,14 @@ test('camera writes reject invalid combinations, human editing and gestures with
   try {
     const before = await call('desk_camera_get');
     for (const args of [{}, { zoom: 0 }, { zoom: 9 }, { zoomBy: 0 }, { zoom: 2, zoomBy: 2 }, { center: { x: 0, y: 0 }, pan: { x: 1, y: 1 } }]) {
-      const result = await client.callTool({ name: 'desk_camera_move', arguments: args });
+      const result = await callTestTool(client, { name: 'desk_camera_move', arguments: args });
       assert.equal(result.isError, true, JSON.stringify(args));
       assert.deepEqual(await call('desk_camera_get'), before);
     }
     await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'memo', type: 'text', x: 100, y: 100, text: 'Human memo' } }] });
     await page.locator('[data-id="memo"] .markdown-text').dblclick();
     const input = page.locator('[data-inline-text]'); await input.fill('Still editing');
-    const denied = await client.callTool({ name: 'desk_camera_move', arguments: { zoomBy: 1.25 } });
+    const denied = await callTestTool(client, { name: 'desk_camera_move', arguments: { zoomBy: 1.25 } });
     assert.equal(denied.isError, true); assert.match(JSON.stringify(denied), /Human editing in progress/);
     assert.deepEqual(await call('desk_camera_get'), before);
     assert.equal(await input.inputValue(), 'Still editing'); assert.equal(await input.evaluate(el => el === document.activeElement), true);
@@ -81,12 +82,12 @@ test('camera writes reject invalid combinations, human editing and gestures with
     const canvas = (await page.locator('#canvas').boundingBox())!;
     await page.mouse.move(canvas.x + 50, canvas.y + 50); await page.mouse.down({ button: 'middle' });
     try {
-      const denied = await client.callTool({ name: 'desk_camera_move', arguments: { pan: { x: 100, y: 0 } } });
+      const denied = await callTestTool(client, { name: 'desk_camera_move', arguments: { pan: { x: 100, y: 0 } } });
       assert.equal(denied.isError, true); assert.match(JSON.stringify(denied), /Human editing in progress/);
       assert.deepEqual(await call('desk_camera_get'), before);
     } finally { await page.mouse.up({ button: 'middle' }); }
     await page.locator('#thinking-mode').click();
-    const alone = await client.callTool({ name: 'desk_camera_move', arguments: { zoom: 2 } });
+    const alone = await callTestTool(client, { name: 'desk_camera_move', arguments: { zoom: 2 } });
     assert.equal(alone.isError, true); assert.match(JSON.stringify(alone), /ひとりで考えています/);
     assert.deepEqual(await call('desk_camera_get'), before);
     assert.deepEqual(errors, []);

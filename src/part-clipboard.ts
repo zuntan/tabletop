@@ -1,3 +1,5 @@
+import {clipboardTransferSchema,type ClipboardTransfer} from './clipboard-transfer';
+import type {Settings} from './settings';
 import type { Desk, DeskObject, Operation } from './model';
 import { endpoints, isConnector } from './geometry';
 import { randomUuid } from './portable-crypto';
@@ -29,11 +31,11 @@ export function singleClipboardUrl(text: string): string | null {
   } catch { return null; }
 }
 
-/** A token refers only to the last snapshot in this tab. No serialized parts leave it. */
+/** Last copy stays in this tab; another paired tab may request it by the exact token. */
 export class PartClipboard {
-  private snapshot?: { token: string; objects: DeskObject[]; pasted: number };
+  private snapshot?: { token: string; objects: DeskObject[]; series:Settings['series']; pasted: number };
   clear() { this.snapshot = undefined; }
-  write(data: Pick<DataTransfer, 'setData' | 'getData'>, objects: DeskObject[]) {
+  write(data: Pick<DataTransfer, 'setData' | 'getData'>, objects: DeskObject[], series:Settings['series']=[]) {
     if (!objects.length) throw new Error('コピーするパーツを選択してください');
     if (objects.length > 200) throw new Error('一度にコピーできるパーツは200個までです');
     const text = partClipboardText(objects), token = randomUuid();
@@ -42,7 +44,8 @@ export class PartClipboard {
     data.setData('text/html', `<pre data-tabletop-copy="${token}">${escapeHtml(text)}</pre>`);
     data.setData(partClipboardType, token);
     if (data.getData(partClipboardType) !== token) throw new Error('クリップボードへ書き込めませんでした');
-    this.snapshot = { token, objects: structuredClone(objects), pasted: 0 };
+    const used=new Set(objects.filter(o=>o.type==='label').map(o=>o.seriesId));
+    this.snapshot = { token, objects: structuredClone(objects),series:structuredClone(series.filter(s=>used.has(s.id))), pasted: 0 };
     return { text, count: objects.length };
   }
   matches(token: string, html: string): boolean {
@@ -50,34 +53,51 @@ export class PartClipboard {
     const marker = /data-tabletop-copy=["']([a-f0-9-]{36})["']/.exec(html)?.[1];
     return token === this.snapshot.token || marker === this.snapshot.token;
   }
-  paste(desk: Desk): string[] {
+  export(token:string):ClipboardTransfer|null{
+    if(!this.snapshot||this.snapshot.token!==token)return null;
+    const {objects,series}=this.snapshot;return structuredClone({token,objects,series});
+  }
+  pasteRemote(desk:Desk,raw:unknown,token:string,delta:{x:number;y:number}):string[]{
+    const transfer=clipboardTransferSchema.parse(raw);
+    if(transfer.token!==token)throw new Error('Clipboard token mismatch');
+    const clipboard=new PartClipboard();clipboard.snapshot={...transfer,pasted:0};
+    return clipboard.paste(desk,{series:transfer.series,delta});
+  }
+  paste(desk: Desk,remote?:{series:Settings['series'];delta:{x:number;y:number}}): string[] {
     if (!this.snapshot) throw new Error('もう一度パーツをコピーしてください');
     const { objects, pasted } = this.snapshot;
     const ids = new Map(objects.map(object => [object.id, `${object.type}-${randomUuid()}`]));
     const step = desk.settingsSnapshot().grid.enabled ? desk.settingsSnapshot().grid.interval : 24;
-    const offset = step * (pasted + 1);
+    const offset = remote?.delta??{x:step*(pasted+1),y:step*(pasted+1)};
     const operations: Operation[] = [];
+    const seriesIds=new Map<string,string>();
+    if(remote){
+      for(const seriesId of new Set(objects.filter(o=>o.type==='label').map(o=>o.seriesId!))){
+        const series=remote.series.find(s=>s.id===seriesId);if(!series)throw new Error('Copied pin series unavailable');
+        const id='series-'+randomUuid();seriesIds.set(seriesId,id);operations.push({kind:'series_add',series:{...series,id}});
+      }
+    }
     const junctions = new Map<string, string>();
     for (const object of objects) {
       const id = ids.get(object.id)!;
       if (object.type === 'label') {
-        operations.push({ kind: 'label_add', id, seriesId: object.seriesId!, x: object.x + offset, y: object.y + offset, description: object.description });
+        operations.push({ kind: 'label_add', id, seriesId: seriesIds.get(object.seriesId!)??object.seriesId!, x: object.x + offset.x, y: object.y + offset.y, description: object.description });
         if (object.locked || object.reactions?.length) operations.push({ kind: 'update', id,
           patch: { locked: !!object.locked, reactions: [...object.reactions ?? []] } });
         if (object.attachment && ids.has(object.attachment.objectId)) operations.push({ kind: 'update', id,
           patch: { attachment: { ...object.attachment, objectId: ids.get(object.attachment.objectId)! } } });
       } else {
-        const copy = { ...object, id, x: object.x + offset, y: object.y + offset };
+        const copy = { ...object, id, x: object.x + offset.x, y: object.y + offset.y };
         if (object.type === 'file') copy.fileMembers=object.fileMembers?.filter(id=>ids.has(id)).map(id=>ids.get(id)!);
         if (object.type === 'clip') copy.clipMembers = object.clipMembers?.filter(id=>ids.has(id)).map(id=>ids.get(id)!);
         if (object.callout) {
           const binding = object.callout.binding, target = binding && ids.get(binding.objectId);
-          copy.callout = { ...object.callout, x: object.callout.x + offset, y: object.callout.y + offset,
+          copy.callout = { ...object.callout, x: object.callout.x + offset.x, y: object.callout.y + offset.y,
             binding: binding && target ? { ...binding, objectId: target } : null };
         }
         if (isConnector(object)) {
           const points = endpoints(object);
-          Object.assign(copy, { x: points.start.x + offset, y: points.start.y + offset, x2: points.end.x + offset, y2: points.end.y + offset });
+          Object.assign(copy, { x: points.start.x + offset.x, y: points.start.y + offset.y, x2: points.end.x + offset.x, y2: points.end.y + offset.y });
           for (const field of ['startJunction', 'endJunction'] as const) {
             const junction = object[field];
             if (junction) {

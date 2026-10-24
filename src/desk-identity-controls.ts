@@ -42,6 +42,7 @@ export function createDeskIdentityControls(header: HTMLElement, desk: Desk, canE
     isEditing: () => !form.hidden,
     refresh: () => {
       const title = desk.settingsSnapshot().name || '無題';
+      id.textContent=desk.deskId;id.setAttribute('aria-label',`棚ID ${desk.deskId}`);
       name.textContent = title; name.title = title;
       document.title = `${title} [${desk.deskId}] — Tabletop`;
     },

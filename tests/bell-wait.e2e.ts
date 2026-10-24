@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {openTestDesk} from './desk-browser';
@@ -19,12 +20,13 @@ test('bounded MCP waits time out or return a bell and selected IDs while ordinar
   await page.waitForFunction(()=>document.querySelector('#desk-bell')?.getAttribute('data-waiting')==='true');
   assert.ok((await call('desk_camera_get')).zoom>0);
   await page.locator('#desk-bell').click();const event=await waiting;assert.equal(event.status,'bell');assert.deepEqual(event.ids,['memo']);assert.equal(event.sequence,1);
-  assert.equal(await page.locator('#bell-led').getAttribute('data-lit'),'true');
+  await page.waitForFunction(()=>document.querySelector('#bell-led')?.getAttribute('data-lit')==='true');
   assert.equal((await call('desk_bell_wait',{afterSequence:1,epoch:event.epoch,timeoutMs:0})).status,'timeout');
   assert.equal(await page.locator('#bell-led').getAttribute('data-lit'),'true');
   assert.equal((await call('desk_summary')).revision,revision);assert.equal(await page.locator('#bell-led').getAttribute('data-lit'),'false');
   await page.locator('#desk-bell').click();await page.waitForFunction(()=>document.querySelector('#bell-led')?.getAttribute('data-lit')==='true');
-  await client.callTool({name:'desk_help',arguments:{topic:'index'}});await page.waitForFunction(()=>document.querySelector('#bell-led')?.getAttribute('data-lit')==='false');
+  await callTestTool(client, {name:'desk_help',arguments:{topic:'index'}});assert.equal(await page.locator('#bell-led').getAttribute('data-lit'),'true');
+  await call('desk_summary');await page.waitForFunction(()=>document.querySelector('#bell-led')?.getAttribute('data-lit')==='false');
   assert.equal((await call('desk_bell_wait',{afterSequence:1,epoch:event.epoch,timeoutMs:0})).sequence,2);
   await page.locator('#desk-bell-options').click();const note=page.locator('#bell-note-text');
   assert.equal(await note.isVisible(),true);await note.fill('**伝言**です');

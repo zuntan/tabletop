@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { openTestDesk } from './desk-browser';
@@ -44,7 +45,7 @@ test('human input interrupts at the current frame and never resumes; resize and 
     for (const interrupt of ['wheel', 'pointer', 'resize', 'thinking'] as const) {
       await page.waitForTimeout(450);
       const before = await matrix(page);
-      const pending = client.callTool({ name: 'desk_camera_move', arguments: { pan: { x: 8000, y: 3000 }, zoomBy: 1.5, durationMs: 1800 } });
+      const pending = callTestTool(client, { name: 'desk_camera_move', arguments: { pan: { x: 8000, y: 3000 }, zoomBy: 1.5, durationMs: 1800 } });
       await page.waitForFunction(before => {
         const m = (document.querySelector('#viewport') as unknown as SVGGElement).transform.baseVal.consolidate()!.matrix;
         return Math.abs(m.e - before.x) > 5;
@@ -74,7 +75,7 @@ test('instant override and reduced motion land immediately; duration-only reques
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const reduced = await call('desk_camera_move', { center: { x: -1000, y: 500 }, zoom: 2, durationMs: 2000 });
     assert.deepEqual(reduced.center, { x: -1000, y: 500 }); assert.equal(reduced.zoom, 2);
-    const invalid = await client.callTool({ name: 'desk_camera_move', arguments: { durationMs: 100 } });
+    const invalid = await callTestTool(client, { name: 'desk_camera_move', arguments: { durationMs: 100 } });
     assert.equal(invalid.isError, true);
     const { zoomClamped: _clamped, ...view } = reduced;
     assert.deepEqual(await call('desk_camera_get'), view);

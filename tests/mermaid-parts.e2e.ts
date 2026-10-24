@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { openTestDesk } from './desk-browser';
@@ -21,7 +22,7 @@ test('Mermaid originals render locally, expose SVG/source, recover errors and pe
     await input.fill('broken mermaid');await input.blur();
     await page.locator('[data-id="m"][data-mermaid-status="error"]').waitFor();
     assert.equal((await call('desk_get',{id:'m'})).mermaidSource,'broken mermaid');
-    const failure=await client.callTool({name:'desk_asset_read',arguments:{id:'m'}});assert.equal(failure.isError,true);
+    const failure=await callTestTool(client, {name:'desk_asset_read',arguments:{id:'m'}});assert.equal(failure.isError,true);
     const sequence='sequenceDiagram\n  participant 人間\n  participant AI\n  人間->>AI: 同じ机を見よう\n  AI-->>人間: はい';
     await input.fill(sequence);await input.blur();
     await page.locator('[data-id="m"][data-mermaid-status="ready"]').waitFor();

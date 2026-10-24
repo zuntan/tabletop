@@ -17,3 +17,5 @@ READMEなどからの既存リンクは、参照切れを避けるため移動�
 - `.gitattributes` の `export-ignore` は未決定です。この移動だけで配布対象外にはしていません。
 - `src/help-tools.ts` は実行時に `docs_devel/help/*.md` を読みます。将来このフォルダーを一括除外する場合は、ヘルプ原本の配布先を先に決め、実装参照と同梱を整える必要があります。
 - READMEのMCP設定例は個人環境のパスを使わず、配置先へ置換するLinux／macOSの例と、既存のWindows手順への案内にします。
+
+- [複数の机との接続と識別](./multiple-desk-connections.md)：必須deskId、机別の復旧・ベル・共有。

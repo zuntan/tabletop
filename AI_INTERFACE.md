@@ -2,18 +2,28 @@
 
 外部AI向けには、`/share/{shareId}` の文章案内から `desk_context`・`desk_get`・`desk_asset_read` を同名で取得できる読み取り共有があります。ローカルMCPの `desk_share_open`／`desk_share_close` で管理します。公開範囲・HTTPとMCPの応答の違い・実験手順は [読み取り共有](./docs_devel/read-only-sharing.md) を参照してください。共有の開始は外部公開を伴うため、人間の了承と専用トンネルの準備が必要です。
 
+## 複数の机と必須の机ID
+
+`desk_connections()` はペアリング済みの接続先を一覧し、`deskId`・接続状態・名前・配色を返します。**机に作用する全ツールで `deskId` が必須です。1机だけでも省略できず、カレント机もありません。** 以下の説明や操作断片で省略されている場合も、MCPの引数には必ず指定します。
+
+例：`desk_summary({deskId:"ABCD-EFGH"})`、`desk_execute({deskId:"ABCD-EFGH",operations:[...]})`。IDは実際の一覧の値に置き換えます。無効ID・切断時に別机へ振り替えません。ファイルの同一性・保存先・会話上の「元の机」等を判定するキーではありません。
+
+`desk_pairing_open` は追加受付で、既存の接続を残します。復旧は机ごとの秘密recordで `desk_pairing_restore`。新規接続は既存の `browserConnected:true` ではなく、一覧に追加された接続先で確認します。名前・タイトル色・壁紙を使った識別や必要な命名の提案はAIの判断です。判断できなければ確認します。
+
+ID不要なのは、接続一覧・サーバー接続情報・新規受付・復帰recordの登録・ブラウザ起動・ポート/LAN・Help・小物/ハンコカタログです。ベル・共有・保存・接続解放も机別です。HTTPの読み取り共有はURLが対象を固定するため、追加の机ID引数は不要です。[設計と責任範囲](./docs_devel/multiple-desk-connections.md)。
+
 ## ブラウザを接続する
 
-**初回は、利用者の了承後に `desk_pairing_open({ confirm: true })` で受付を開きます。** 接続したら `desk_pairing_info` の秘密recordを非公開の継続コンテキストに保持し、引継ぎでも残してください。再起動後は同じrecordを `desk_pairing_restore({ pairing })` へ渡し、数秒待ってから現在の机を読み直します。固定トークンでも同じ確認を行います。記憶を失った場合は推測せず手動再接続を案内し、既存タブを再読込しません。詳細・秘密の扱い・旧版の安全な更新は [接続復帰](./docs_devel/connection-recovery.md) を参照してください。
+**初回は、利用者の了承後に `desk_pairing_open({ confirm: true })` で受付を開きます。** 接続したら `desk_connections` で机IDを確認し、`desk_pairing_info({ deskId })` の秘密recordを非公開の継続コンテキストに保持し、引継ぎでも残してください。再起動後は同じrecordを `desk_pairing_restore({ pairing })` へ渡し、数秒待ってから現在の机を読み直します。固定トークンでも同じ確認を行います。記憶を失った場合は推測せず手動再接続を案内し、既存タブを再読込しません。詳細・秘密の扱い・旧版の安全な更新は [接続復帰](./docs_devel/connection-recovery.md) を参照してください。
 
-棚を残して現在の接続を解放する場合は、利用者の了承後に `desk_release({ confirm: true })` を使います。元のタブはローカル編集・保存を続けられ、自動再接続は停止します。成功時に以前のペアを無効にして新規・手動接続の受付を開きます。保存・読込・同期・トークン再生成は行いません。旧UIや保留要求は拒否し、応答未確認でも受付は開きません。エラー時は状態を確認し、推測で再送しません。成功後は以下の接続情報を案内し、次の接続の秘密recordを保持します。サーバー再起動からの復帰には使いません。
+棚を残して現在の接続を解放する場合は、利用者の了承後に `desk_release({ deskId, confirm: true })` を使います。元のタブはローカル編集・保存を続けられ、自動再接続は停止します。成功時に以前のペアを無効にして新規・手動接続の受付を開きます。保存・読込・同期・トークン再生成は行いません。旧UIや保留要求は拒否し、応答未確認でも受付は開きません。エラー時は状態を確認し、推測で再送しません。成功後は以下の接続情報を案内し、次の接続の秘密recordを保持します。サーバー再起動からの復帰には使いません。
 
 `desk_connection_info` はブラウザ未接続でも呼べるサーバー側の参照ツールです。既存の `url`・`port`・`tokenSource`・`tokenIncluded`・`browserConnected`・`pairingState` に加え、`bootstrapReady`・`nextAction`・状態別の `message` を返します。トークンを再生成せず、机も変更しません。
 
 - `waiting-for-AI`：受付も復旧先も未設定。`nextAction.kind: ask-user` で新規・手動接続か復旧かを確認します。新規・手動接続は了承 → `desk_pairing_open` → `desk_connection_info` → URL案内の順。復旧は保持済みrecordで `desk_pairing_restore` を使い、openで代用しません。
 - `new-pairing-open`：`bootstrapReady: true` は新規受付が開いた意味で、接続済みではありません。`nextAction.kind: browser-connect` に従ってURLを案内します。
 - `paired` かつ未接続：ペア情報が登録されているだけです。`nextAction.kind: wait-for-browser` に従って既知の机の再接続を待ち、状態を再確認します。無断で受付を開き直しません。
-- `browserConnected: true`：ブラウザ接続成立。`nextAction: { kind: call-tool, tool: desk_pairing_info }` に従い秘密recordを非公開で保持し、机を読み直します。
+- `browserConnected: true`：ブラウザ接続成立。`nextAction: { kind: call-tool, tool: desk_connections }` に従って対象IDを確認し、その机の秘密recordを非公開で保持して読み直します。
 
 `nextAction` はツール名だけではなく行動の種類を示します。`ask-user` は `topic`、`call-tool` は `tool`、ブラウザ操作・待機は確認先の `verifyWith` を持ちます。各応答は取得時点の状態であり、受付開始・URL取得・URLを開く操作の成功を接続成立と扱わず、最後に `browserConnected: true` を確認します。受付前にも互換性のためURLを返しますが、そのURLだけでは接続できません。
 
@@ -35,7 +45,7 @@ LANは毎回の起動で禁止です。人間の明示承認後だけ `desk_netw
 
 ## 棚を名前で呼ぶ
 
-`desk_summary`／`desk_context`／`desk_state`／`desk_list` の `name` が棚の名前、`deskId` が今開いている棚の短い公開目印です。普段は名前を使い、同名の棚があるときだけIDを添えて照合します。名前の空文字は「無題」。名前はファイルに保存しますが、棚IDは保存せず、読込・切断・再接続でも現在の値を維持します。同じファイルを別タブで開けば別IDです。認証やrevisionガードには使わず、従来どおり `sessionId`／`revision` を使います。
+`desk_summary`／`desk_context`／`desk_state`／`desk_list` の `name` が棚の名前、`deskId` が今開いている棚の短い公開目印です。会話には名前を使えますが、ツールのルーティングは常にIDで行います。名前の空文字は「無題」。名前はファイルに保存しますが、棚IDは保存せず、読込・通常の再接続でも現在の値を維持します。新規ペアリング時は接続先IDへ変わり、永続性は保証しません。同じファイルを別タブで開けば別IDです。認証やrevisionガードには使わず、従来どおり `sessionId`／`revision` を使います。
 
 改名は人間の依頼時だけ、`desk_execute` の `{ kind: "desk_rename", name: "企画メモ" }` と現在の `expectedRevision` を使います。共通Undo対象です。人間側ダウンロード名は `棚の名前.tabletop`（時刻なし）、AIの保存名指定は従来どおり。予定ダウンロード名の専用取得機能はありません。詳細：[棚の名前・棚ID・保存名](./docs_devel/desk-identity.md)。
 

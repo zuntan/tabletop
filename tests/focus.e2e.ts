@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { openTestDesk } from './desk-browser';
@@ -59,7 +60,7 @@ test('human fit prioritizes selection then AI pointing then all, while MCP fit a
     await page.locator('[data-id="memo"] .markdown-text').dblclick();
     const input = page.locator('[data-inline-text]'); await input.fill('Unsaved human edit');
     const editingCamera = await camera();
-    const rejected = await client.callTool({ name: 'desk_fit', arguments: {} });
+    const rejected = await callTestTool(client, { name: 'desk_fit', arguments: {} });
     assert.equal(rejected.isError, true);
     assert.match(JSON.stringify(rejected), /Human editing in progress/);
     assert.deepEqual(await camera(), editingCamera);

@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,mkdir,rm} from 'node:fs/promises';
@@ -17,7 +18,7 @@ test('shared modal defaults to cancel, traps keys, blocks AI edits, and supports
     await upload();await dialog.waitFor();
     assert.equal(await page.locator('[data-dialog-choice="cancel"]').evaluate(el=>el===document.activeElement),true);
     assert.equal(await dialog.locator('[data-dialog-choice]').count(),3);
-    const denied=await client.callTool({name:'desk_execute',arguments:{operations:[{kind:'delete',id:'kept'}]}});assert.equal(denied.isError,true);
+    const denied=await callTestTool(client, {name:'desk_execute',arguments:{operations:[{kind:'delete',id:'kept'}]}});assert.equal(denied.isError,true);
     await page.keyboard.press('Control+z');await page.keyboard.press('Delete');assert.deepEqual(await call('desk_state'),original);
     await page.evaluate(()=>{
       const data=new DataTransfer();data.setData('text/plain','Do not paste behind the confirmation');
@@ -57,7 +58,7 @@ test('save failure aborts replacement; successful MCP save clears warning and fa
     assert.equal((await call('desk_save',{filename})).browserSavedState,'updated');
     await upload();await page.locator('#confirm-dialog').waitFor();assert.equal(await page.locator('[data-dialog-choice="save"]').count(),0);await page.keyboard.press('Escape');
     await call('desk_execute',{operations:[{kind:'update',id:'kept',patch:{x:100}}]});
-    assert.equal((await client.callTool({name:'desk_save',arguments:{filename}})).isError,true);
+    assert.equal((await callTestTool(client, {name:'desk_save',arguments:{filename}})).isError,true);
     await upload();await page.locator('#confirm-dialog').waitFor();assert.equal(await page.locator('[data-dialog-choice="save"]').count(),1);await page.keyboard.press('Escape');
     assert.deepEqual(errors,[]);
   }finally{await close();}

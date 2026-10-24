@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
@@ -25,7 +26,7 @@ test('browser UI and real stdio agent share objects, gestures, selection and his
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   async function call(name: string, args: Record<string, unknown> = {}) {
-    const result = await client.callTool({ name, arguments: args });
+    const result = await callTestTool(client, { name, arguments: args });
     assert.notEqual(result.isError, true, JSON.stringify(result));
     return JSON.parse((result.content as { text: string }[])[0].text);
   }
@@ -44,7 +45,7 @@ test('browser UI and real stdio agent share objects, gestures, selection and his
     const bounds = (await shape.boundingBox())!;
     await page.mouse.move(bounds.x + 30, bounds.y + 30); await page.mouse.down();
     await page.mouse.move(bounds.x + 110, bounds.y + 70, { steps: 5 });
-    const busy = await client.callTool({ name: 'desk_summary' });
+    const busy = await callTestTool(client, { name: 'desk_summary' });
     assert.equal(busy.isError, true);
     await page.mouse.up();
     const moved = await call('desk_get', { id });

@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { createServer } from 'node:net';
@@ -17,7 +18,7 @@ test('stdio network control requires confirmation; startup and restart remain lo
     const client = new Client({ name: 'network-policy', version: '1.0.0' });
     try {
       await client.connect(transport);
-      const info = await client.callTool({ name: 'desk_connection_info', arguments: {} });
+      const info = await callTestTool(client, { name: 'desk_connection_info', arguments: {} });
       const state = JSON.parse((info.content as { text: string }[])[0].text);
       assert.equal(state.network.lanEnabled, false);
       assert.equal(state.network.bindAddress, '127.0.0.1');
@@ -26,10 +27,10 @@ test('stdio network control requires confirmation; startup and restart remain lo
       assert.equal(JSON.stringify(info).includes(token), false);
       // Invalid input is rejected by the MCP schema, before an enable callback can run.
       for (const args of [{ enabled: true }, { enabled: true, confirm: false }]) {
-        const result = await client.callTool({ name: 'desk_network_set', arguments: args });
+        const result = await callTestTool(client, { name: 'desk_network_set', arguments: args });
         assert.equal(result.isError, true);
       }
-      const result = await client.callTool({ name: 'desk_network_set', arguments: { enabled: false, confirm: true } });
+      const result = await callTestTool(client, { name: 'desk_network_set', arguments: { enabled: false, confirm: true } });
       assert.notEqual(result.isError, true);
       const origin = `http://127.0.0.1:${port}`;
       const response = await fetch(`${origin}/connection-policy`);

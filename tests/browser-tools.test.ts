@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -15,15 +16,15 @@ test('browser launcher requires listening and explicit pairing, never exposes la
   const [a,b]=InMemoryTransport.createLinkedPair();
   try{
     await server.connect(a);await client.connect(b);
-    const call=()=>client.callTool({name:'desk_browser_open',arguments:{}});
+    const call=()=>callTestTool(client, {name:'desk_browser_open',arguments:{}});
     assert.equal((await call()).isError,true);assert.equal(launched.length,0);
     state.accepting=true;
     assert.notEqual((await call()).isError,true);assert.equal(launched[0],state.url);
     assert.notEqual((await call()).isError,true);assert.equal(launched.length,2);
-    state.connected=true;assert.equal((await call()).isError,true);assert.equal(launched.length,2);
-    state.connected=false;state.listening=false;assert.equal((await call()).isError,true);assert.equal(launched.length,2);
+    state.connected=true;assert.notEqual((await call()).isError,true);assert.equal(launched.length,3);
+    state.connected=false;state.listening=false;assert.equal((await call()).isError,true);assert.equal(launched.length,3);
     state.listening=true;fail=true;const error=await call();assert.equal(error.isError,true);
-    assert.equal(launched.length,3);assert.doesNotMatch(JSON.stringify(error),/private-test-token/);
+    assert.equal(launched.length,4);assert.doesNotMatch(JSON.stringify(error),/private-test-token/);
     assert.equal(state.accepting,true);
   }finally{await client.close();await server.close();}
 });
@@ -42,9 +43,12 @@ test('standalone launch strips all credentials and never needs or changes pairin
  const launched:string[]=[];registerBrowserTools(server,()=>state,async url=>{launched.push(url);});
  const [a,b]=InMemoryTransport.createLinkedPair();
  try{await server.connect(a);await client.connect(b);
-  const result=await client.callTool({name:'desk_browser_open',arguments:{mode:'standalone'}});
+  const result=await callTestTool(client, {name:'desk_browser_open',arguments:{mode:'standalone'}});
   assert.notEqual(result.isError,true);assert.deepEqual(launched,['http://127.0.0.1:4317/?connect=off']);
   assert.equal(state.connected,true);assert.equal(state.accepting,false);assert.doesNotMatch(JSON.stringify(result),/private-token|private=secret/);
-  state.listening=false;assert.equal((await client.callTool({name:'desk_browser_open',arguments:{mode:'standalone'}})).isError,true);assert.equal(launched.length,1);
+  Object.assign(state,{initialName:'無題(2)'});
+  assert.notEqual((await callTestTool(client,{name:'desk_browser_open',arguments:{mode:'standalone'}})).isError,true);
+  const named=new URL(launched[1]);assert.equal(named.searchParams.get('newDeskName'),'無題(2)');assert.equal(named.searchParams.get('connect'),'off');assert.equal(named.hash,'');
+  state.listening=false;assert.equal((await callTestTool(client, {name:'desk_browser_open',arguments:{mode:'standalone'}})).isError,true);assert.equal(launched.length,2);
  }finally{await client.close();await server.close();}
 });

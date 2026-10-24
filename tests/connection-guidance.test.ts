@@ -16,7 +16,7 @@ test('open acceptance directs browser connection and verification, not claims of
   const guidance = connectionGuidance(false, 'new-pairing-open');
   assert.equal(guidance.bootstrapReady, true);
   assert.deepEqual(guidance.nextAction, { kind: 'browser-connect', verifyWith: 'desk_connection_info' });
-  assert.match(guidance.message, /no browser is connected yet/);
+  assert.match(guidance.message, /additional endpoint/);
   assert.match(guidance.message, /browserConnected:true/);
 });
 
@@ -27,10 +27,10 @@ test('registered credentials without a browser wait for reconnection without aut
   assert.match(guidance.message, /Do not open new acceptance automatically/);
 });
 
-test('a connected browser directs private record retention then a fresh desk read', () => {
+test('a connected browser directs listing targets and retaining records by ID', () => {
   const guidance = connectionGuidance(true, 'paired');
   assert.equal(guidance.bootstrapReady, false);
-  assert.deepEqual(guidance.nextAction, { kind: 'call-tool', tool: 'desk_pairing_info' });
+  assert.deepEqual(guidance.nextAction, { kind: 'call-tool', tool: 'desk_connections' });
   assert.match(guidance.message, /privately/);
-  assert.match(guidance.message, /desk_summary or desk_context/);
+  assert.match(guidance.message, /desk_connections/);
 });

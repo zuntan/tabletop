@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import { respondToConfirm } from './confirm-response';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -40,7 +41,7 @@ test('name editing, download names, AI save/load, same-named tabs and manual rec
     await call('desk_context');
     assert.equal(await page.locator('#desk-name-input').inputValue(), '  企画/メモ:案  ');
     assert.equal(await page.locator('#desk-name-input').evaluate(element => element === document.activeElement), true);
-    assert.equal((await client.callTool({ name: 'desk_execute', arguments: { operations: [{ kind: 'desk_rename', name: 'AI overwrite' }] } })).isError, true);
+    assert.equal((await callTestTool(client, { name: 'desk_execute', arguments: { operations: [{ kind: 'desk_rename', name: 'AI overwrite' }] } })).isError, true);
     await page.locator('#desk-name-input').press('Enter');
     assert.equal((await call('desk_summary')).name, '企画/メモ:案');
     assert.equal(await page.locator('#desk-name').textContent(), '企画/メモ:案');
@@ -94,7 +95,7 @@ test('name editing, download names, AI save/load, same-named tabs and manual rec
     await page.locator('#connect-form').evaluate(element => (element as HTMLFormElement).requestSubmit());
     await confirmation3;
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
-    const returned = await call('desk_summary'); assert.equal(returned.deskId, id); assert.equal(returned.name, '企画/メモ:案');
+    const returned = await call('desk_summary'); assert.notEqual(returned.deskId, id); assert.equal(returned.deskId,await page.locator('#desk-id').textContent()); assert.equal(returned.name, '企画/メモ:案');
     // Narrow headers remain usable, including long names and the inline form.
     await call('desk_execute', { operations: [{ kind: 'desk_rename', name: '長い名前'.repeat(25) }] });
     await page.setViewportSize({ width: 390, height: 900 });

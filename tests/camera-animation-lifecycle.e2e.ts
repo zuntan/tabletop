@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { openTestDesk } from './desk-browser';
@@ -13,7 +14,7 @@ test('superseding commands, visibility, sidebar resize and disconnect stop old f
   const transform = () => page.locator('#viewport').getAttribute('transform');
   async function start() {
     const before = await transform();
-    const pending = client.callTool({ name: 'desk_camera_move', arguments: { pan: { x: 5000, y: 1000 }, durationMs: 2000 } });
+    const pending = callTestTool(client, { name: 'desk_camera_move', arguments: { pan: { x: 5000, y: 1000 }, durationMs: 2000 } });
     await page.waitForFunction(before => document.querySelector('#viewport')!.getAttribute('transform') !== before, before);
     return { pending };
   }

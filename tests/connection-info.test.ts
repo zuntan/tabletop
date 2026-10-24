@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
@@ -22,7 +23,7 @@ for (const configured of [false, true]) {
     const client = new Client({ name: 'connection-info-test', version: '1.0.0' });
     let browser: WebSocket | undefined;
     async function info() {
-      const result = await client.callTool({ name: 'desk_connection_info', arguments: {} });
+      const result = await callTestTool(client, { name: 'desk_connection_info', arguments: {} });
       assert.notEqual(result.isError, true);
       return JSON.parse((result.content as { text: string }[])[0].text);
     }
@@ -48,18 +49,18 @@ for (const configured of [false, true]) {
         assert.match(first.message, /temporary secret/);
       }
       assert.deepEqual(await info(), first);
-      const unavailable = await client.callTool({ name: 'desk_summary' });
+      const unavailable = await callTestTool(client, { name: 'desk_summary' });
       assert.equal(unavailable.isError, true);
-      assert.match((unavailable.content as { text: string }[])[0].text, /Call desk_connection_info/);
+      assert.match((unavailable.content as { text: string }[])[0].text, /Unknown deskId/);
       assert.doesNotMatch((unavailable.content as { text: string }[])[0].text, /URL shown on stderr/);
-      const unapproved = await client.callTool({ name: 'desk_pairing_open', arguments: { confirm: false } });
+      const unapproved = await callTestTool(client, { name: 'desk_pairing_open', arguments: { confirm: false } });
       assert.equal(unapproved.isError, true);
       assert.deepEqual(await info(), first);
       for (const path of ['connection-info', 'token', 'mcp']) {
         const response = await fetch(`${url.origin}/${path}`);
         assert.equal(response.status, 404); assert.ok(!(await response.text()).includes(token));
       }
-      const opened = await client.callTool({ name: 'desk_pairing_open', arguments: { confirm: true } });
+      const opened = await callTestTool(client, { name: 'desk_pairing_open', arguments: { confirm: true } });
       assert.notEqual(opened.isError, true);
       const acceptance = JSON.parse((opened.content as { text: string }[])[0].text);
       assert.equal(acceptance.waitingFor, 'new-pairing');
@@ -77,8 +78,8 @@ for (const configured of [false, true]) {
       assert.equal(connected.browserConnected, true); assert.equal(connected.url, first.url);
       assert.equal(connected.pairingState, 'paired');
       assert.equal(connected.bootstrapReady, false);
-      assert.deepEqual(connected.nextAction, { kind: 'call-tool', tool: 'desk_pairing_info' });
-      const secretResult = await client.callTool({ name: 'desk_pairing_info', arguments: {} });
+      assert.deepEqual(connected.nextAction, { kind: 'call-tool', tool: 'desk_connections' });
+      const secretResult = await callTestTool(client, { name: 'desk_pairing_info', arguments: {} });
       const { pairing } = JSON.parse((secretResult.content as { text: string }[])[0].text);
       assert.ok(pairing.secret); assert.notEqual(pairing.token, token);
       assert.ok(!log.includes(pairing.secret)); assert.ok(!log.includes(pairing.token));
@@ -86,7 +87,7 @@ for (const configured of [false, true]) {
       const tools = await client.listTools();
       const tool = tools.tools.find(tool => tool.name === 'desk_connection_info');
       assert.equal(tool?.annotations?.readOnlyHint, true);
-      assert.equal(tools.tools.length, 41);
+      assert.equal(tools.tools.length, 42);
       browser.close(); await once(browser, 'close');
       let disconnected = await info();
       for (let attempt = 0; disconnected.browserConnected && attempt < 20; attempt++) {
@@ -96,7 +97,7 @@ for (const configured of [false, true]) {
       assert.equal(disconnected.pairingState, 'paired');
       assert.equal(disconnected.bootstrapReady, false);
       assert.equal(disconnected.nextAction.kind, 'wait-for-browser');
-      const restored = await client.callTool({ name: 'desk_pairing_restore', arguments: { pairing } });
+      const restored = await callTestTool(client, { name: 'desk_pairing_restore', arguments: { pairing } });
       assert.notEqual(restored.isError, true);
       assert.deepEqual(await info(), disconnected);
     } finally {

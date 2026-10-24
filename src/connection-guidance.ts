@@ -2,16 +2,16 @@ export type PairingState = 'waiting-for-AI' | 'new-pairing-open' | 'paired';
 
 /** Guidance only: never opens acceptance, restores credentials or changes a connection. */
 export function connectionGuidance(browserConnected: boolean, pairingState: PairingState) {
-  const bootstrapReady = !browserConnected && pairingState === 'new-pairing-open';
-  if (browserConnected) return {
+  const bootstrapReady = pairingState === 'new-pairing-open';
+  if (browserConnected && !bootstrapReady) return {
     bootstrapReady,
-    nextAction: { kind: 'call-tool', tool: 'desk_pairing_info' },
-    message: 'Browser connected. Retain the pairing record privately, then read desk_summary or desk_context before editing. Never publish recovery credentials.',
+    nextAction: { kind: 'call-tool', tool: 'desk_connections' },
+    message: 'Browser connected. Read desk_connections, then retain each desk_pairing_info record privately by deskId. Never publish recovery credentials.',
   };
   if (bootstrapReady) return {
     bootstrapReady,
     nextAction: { kind: 'browser-connect', verifyWith: 'desk_connection_info' },
-    message: 'New/manual pairing acceptance is open, but no browser is connected yet. For an approved local browser launch, call desk_browser_open; otherwise present the connection URL for manual opening. Confirm browserConnected:true afterward; opening acceptance or a URL alone is not connection success. Do not reload an existing unsaved tab.',
+    message: 'New/manual pairing acceptance is open for an additional endpoint. Existing desks may already be connected. For an approved local browser launch, call desk_browser_open; otherwise present the connection URL for manual opening. Verify the new endpoint in desk_connections afterward; an existing browserConnected:true does not establish that the new browser connected. Do not reload an existing unsaved tab.',
   };
   if (pairingState === 'paired') return {
     bootstrapReady,

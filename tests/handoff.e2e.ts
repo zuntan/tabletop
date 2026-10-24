@@ -77,8 +77,8 @@ test('authenticated human handoff renders a private QR and pairs a second empty 
     const next = await page.context().browser()!.newPage();
     await next.goto(handoffUrl);
     await next.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
-    assert.equal((await call('desk_summary')).count, 0);
-    await call('desk_release', { confirm: true });
+    assert.equal((await call('desk_summary',{deskId:await next.locator('#desk-id').textContent()})).count, 0);
+    await call('desk_release', {deskId:await next.locator('#desk-id').textContent(),confirm: true });
     // Opening another acceptance epoch does not revive the consumed ticket.
     const replay = await page.context().browser()!.newPage();
     await replay.goto(handoffUrl);

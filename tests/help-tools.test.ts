@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -11,15 +12,15 @@ test('desk_help returns discoverable plain-text manuals without any browser; rej
   try{
     await server.connect(a);await client.connect(b);
     const tools=await client.listTools();assert.equal(tools.tools[0].annotations?.readOnlyHint,true);
-    const index=await client.callTool({name:'desk_help',arguments:{}});
+    const index=await callTestTool(client, {name:'desk_help',arguments:{}});
     assert.notEqual(index.isError,true);assert.match((index.content as any)[0].text,/mermaid-imitation/);
-    const guide=await client.callTool({name:'desk_help',arguments:{topic:'mermaid-imitation'}});
+    const guide=await callTestTool(client, {name:'desk_help',arguments:{topic:'mermaid-imitation'}});
     assert.notEqual(guide.isError,true);assert.match((guide.content as any)[0].text,/原本を残し/);
     assert.match((guide.content as any)[0].text,/再現できなかった/);
     for(const [topic,title] of [['bell-conversation','ベル'],['desk-connections','机を開くこと']] as const){
-      const result=await client.callTool({name:'desk_help',arguments:{topic}});
+      const result=await callTestTool(client, {name:'desk_help',arguments:{topic}});
       assert.notEqual(result.isError,true,topic);assert.ok((result.content as any)[0].text.includes(title),topic);
     }
-    const invalid=await client.callTool({name:'desk_help',arguments:{topic:'../../etc/passwd'}});assert.equal(invalid.isError,true);
+    const invalid=await callTestTool(client, {name:'desk_help',arguments:{topic:'../../etc/passwd'}});assert.equal(invalid.isError,true);
   }finally{await client.close();await server.close();}
 });

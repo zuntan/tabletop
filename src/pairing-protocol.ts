@@ -33,3 +33,11 @@ export async function verifyPair(pair: Pairing, role: string, client: string, se
   for (let i = 0; i < expected.length; i++) difference |= expected[i]! ^ actual[i]!;
   return difference === 0;
 }
+
+/** Public connection hint, derived from the pairing; not an authentication credential. */
+export function connectionDeskId(pairId:string){
+  const alphabet='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let bits=BigInt('0x'+pairId.replaceAll('-','').slice(0,10)),id='';
+  for(let i=0;i<8;i++){id=alphabet[Number(bits&31n)]+id;bits>>=5n;}
+  return id.slice(0,4)+'-'+id.slice(4);
+}

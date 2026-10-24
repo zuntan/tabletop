@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { openTestDesk } from './desk-browser';
@@ -29,7 +30,7 @@ test('human thinking mode gates AI actions at receipt, preserves reads/editing a
     assert.deepEqual((await call('desk_selection')).aiPointing, []);
     assert.deepEqual((await call('desk_selection')).ids, ['kept']);
     const deny = async (name: string, args: Record<string, unknown> = {}) => {
-      const result = await client.callTool({ name, arguments: args });
+      const result = await callTestTool(client, { name, arguments: args });
       assert.equal(result.isError, true, name);
       assert.ok(JSON.stringify(result).includes(THINKING_MODE_REFUSAL), JSON.stringify(result));
     };

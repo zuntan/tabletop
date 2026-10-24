@@ -1,6 +1,7 @@
-import { challengeSchema, readySchema, randomHex, signPair, verifyPair, type Pairing } from './pairing-protocol';
+import { challengeSchema, readySchema, randomHex, signPair, verifyPair, type Pairing, connectionDeskId } from './pairing-protocol';
 
 type Callbacks = {
+  identity?: (deskId:string)=>void;
   status: (state: 'waiting' | 'connected' | 'blocked' | 'released', detail: string) => void;
   disconnected: () => void;
   beforeRelease?: () => void;
@@ -18,14 +19,15 @@ export class BrowserConnection {
   private fileReady=false;
   private filePending=new Map<string,{resolve:(value:any)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>}>();
   private clearFiles(){this.fileReady=false;for(const p of this.filePending.values()){clearTimeout(p.timer);p.reject(new Error('接続が切れました。保存結果は未確定の場合があります。自動再実行はしません'));}this.filePending.clear();}
-  fileRequest(request:unknown):Promise<any>{
+  fileRequest(request:unknown,timeoutMs=30_000):Promise<any>{
     if(!this.fileReady||this.socket?.readyState!==WebSocket.OPEN)return Promise.reject(new Error('通常SAVE／LOADには対応したMCP接続が必要です。未保存の机はダウンロードできます'));
     const id=crypto.randomUUID();return new Promise((resolve,reject)=>{
-      const timer=setTimeout(()=>{this.filePending.delete(id);reject(new Error('ファイル処理が時間切れになりました。結果を確認してから操作してください（自動再実行なし）'));},30_000);
+      const timer=setTimeout(()=>{this.filePending.delete(id);reject(new Error('ファイル処理が時間切れになりました。結果を確認してから操作してください（自動再実行なし）'));},timeoutMs);
       this.filePending.set(id,{resolve,reject,timer});
       try{this.socket!.send(JSON.stringify({type:'file_request',id,request}));}catch(error){clearTimeout(timer);this.filePending.delete(id);reject(error);}
     });
   }
+  clipboardRequest(token:string):Promise<unknown>{return this.fileRequest({method:'clipboard_lookup',token},1500);}
   constructor(private callbacks: Callbacks) {}
   hasPairing() { return this.pair !== null; }
   ringBell(ids:string[],note:{text:string;draftVersion:number}) {
@@ -106,6 +108,7 @@ export class BrowserConnection {
           if (!candidate || !serverNonce || !await verifyPair(candidate, 'ready', clientNonce, serverNonce, ready.proof)) { block(); return; }
           if (!current() || ws.readyState !== WebSocket.OPEN) return;
           this.pair = candidate; authenticated = true; this.attempt = 0;
+          this.callbacks.identity?.(connectionDeskId(candidate.pairId));
           ws.send(JSON.stringify({ type: 'capabilities', release: true, bell:true, toast:true, fileOperations:true }));
           clearTimeout(deadline); this.callbacks.status('connected', '');
         }

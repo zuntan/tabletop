@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import { respondToConfirm } from './confirm-response';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,7 +9,7 @@ import { decodeDeskFile } from '../src/desk-file';
 test('shared snap defaults, public MCP placement, exact numeric editing and saved custom grid stay in sync', { timeout: 45_000 }, async () => {
   const { page, client, call, close, errors } = await openTestDesk('shared-grid');
   async function execute(operations: unknown[], extra: Record<string, unknown> = {}) {
-    const result = await client.callTool({ name: 'desk_execute', arguments: { operations, ...extra } });
+    const result = await callTestTool(client, { name: 'desk_execute', arguments: { operations, ...extra } });
     assert.notEqual(result.isError, true, JSON.stringify(result));
     return JSON.parse((result.content as { text: string }[])[0].text);
   }

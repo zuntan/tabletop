@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { openTestDesk } from './desk-browser';
@@ -9,7 +10,7 @@ test('human palette and AI read-only preset IF place embedded props, including c
       const source = await call('desk_prop_get', { id: item.id }); assert.match(source.svg, /<svg/);
     }
     const preset = await call('desk_prop_get', { id: 'teacup' }); assert.match(preset.svg, /<svg/);
-    const bad = await client.callTool({ name: 'desk_prop_get', arguments: { id: '../server.ts' } }); assert.equal(bad.isError, true);
+    const bad = await callTestTool(client, { name: 'desk_prop_get', arguments: { id: '../server.ts' } }); assert.equal(bad.isError, true);
     assert.equal(await page.locator('#prop-palette img').count(), 11);
     await page.locator('#prop-palette img').evaluateAll(images => Promise.all(images.map(image => (image as HTMLImageElement).decode())));
     const before = await call('desk_summary');
@@ -34,7 +35,7 @@ test('human palette and AI read-only preset IF place embedded props, including c
     assert.equal((await call('desk_asset_read', { id: 'custom' })).svg, custom);
     await call('desk_asset_import', { id: 'custom', mode: 'replace', source: { svg: preset.svg } });
     assert.equal((await call('desk_get', { id: 'custom' })).type, 'prop');
-    const illegal = await client.callTool({ name: 'desk_asset_import', arguments: { id: 'bad-prop', asProp: true, source: { svg: custom }, url: 'https://example.com' } });
+    const illegal = await callTestTool(client, { name: 'desk_asset_import', arguments: { id: 'bad-prop', asProp: true, source: { svg: custom }, url: 'https://example.com' } });
     assert.equal(illegal.isError, true);
     await call('desk_undo'); assert.equal((await call('desk_asset_read', { id: 'custom' })).svg, custom);
     assert.deepEqual(errors, []);

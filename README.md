@@ -57,7 +57,7 @@ MCPの `desk_connection_info` を呼ぶとブラウザ未接続でも現在の�
 
 「接続」タブはURL入力だけです。トークンを含むURLを丸ごと貼り「接続」を押します。ページ移動・再読込はしません。URLは伏せ字表示でタブ内に保持し、解放後の手動再接続にも使えます。トークンなしURLやポート不一致は拒否します。LAN接続はAIが明示許可した場合のみ可能です。[HTTP LAN試用](./docs_devel/http-lan.md) を参照してください。
 
-初回・手動置換は利用者の了承後に `desk_pairing_open({ confirm: true })` で受付を開きます。接続後はAIが `desk_pairing_info` を非公開で保持し、サーバー再起動後は `desk_pairing_restore({ pairing })` で既知の机だけを復帰させます。固定トークンでもペアリング確認を省略しません。通常の切断は控えめな「AI再接続待ち」、確認不能時は手動接続を案内します。[接続復帰・旧版からの更新](./docs_devel/connection-recovery.md) を参照してください。
+初回・手動置換は利用者の了承後に `desk_pairing_open({ confirm: true })` で受付を開きます。接続後は `desk_connections` で机IDを確認し、AIが `desk_pairing_info({ deskId })` を非公開で保持し、サーバー再起動後は `desk_pairing_restore({ pairing })` で既知の机だけを復帰させます。固定トークンでもペアリング確認を省略しません。通常の切断は控えめな「AI再接続待ち」、確認不能時は手動接続を案内します。[接続復帰・旧版からの更新](./docs_devel/connection-recovery.md) を参照してください。
 
 ランダム生成時は標準エラーログにも起動URLを表示します。env指定時はログにも固定トークンを表示しません。接続URL取得はMCP側だけで、HTTPにトークン取得口はありません。
 
@@ -65,7 +65,7 @@ MCPの `desk_connection_info` を呼ぶとブラウザ未接続でも現在の�
 - `TABLETOP_TOKEN`：省略時は起動ごとに128ビット乱数・base64urlの22文字を自動生成。明示する場合は22文字以上で、十分にランダムな値にしてください。従来の長い値も使用できます。復帰recordの秘密は従来どおり別管理です。
 - トークン生成例：`node -e "console.log(require('node:crypto').randomBytes(16).toString('base64url'))"`
 - トークンは秘密情報です。公開リポジトリや公開チャットへ貼らないでください。ランダム生成時の接続URLをMCPで取得して案内すると、AIの会話履歴にトークンが残る可能性があります。非開示で使う場合はenv指定＋手動入力にしてください。
-- 一つのサーバーにつき接続できる作業机タブは一つです。複数エージェントの同時接続・共同編集は未対応です。
+- 一つのMCPサーバーへ複数の机を接続できます。机を操作するツールは、1机だけでも `deskId` が必須です。カレント机はありません。複数エージェント間の共同編集・同期は別の機能です。
 
 ## 操作
 
@@ -110,6 +110,7 @@ AI向けの使い方・接続線・ピンシリーズ・画像／SVGの受け渡
 | `desk_network_set` | 人間の明示了承後、同じポートのLAN待受を開閉。毎回の起動はローカル限定 |
 | `desk_release` | 人間の了承後、棚を保持して接続と自動再接続を止め、新規・手動接続の受付を開く |
 | `desk_pairing_open` | 人間の了承後に初回・手動置換の受付を開く。復帰には使わない |
+| `desk_connections` | 接続先の机ID・机名・配色・接続状態を一覧取得 |
 | `desk_pairing_info` | 非公開で保持する復帰用recordを取得。秘密情報を含む |
 | `desk_pairing_restore` | 再起動後に以前のrecordを指定し、既知の机だけ復帰を許可 |
 | `desk_summary` | 棚の名前・短い棚ID、sessionId、revision、種類別件数、Undo / Redo可否 |

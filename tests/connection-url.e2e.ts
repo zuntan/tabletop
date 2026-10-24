@@ -38,7 +38,7 @@ test('pasted URLs validate before connection, preserve confirmation and reconnec
     await confirmation1;
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     const after = await call('desk_state');
-    assert.deepEqual(after, before);
+    assert.notEqual(after.deskId,before.deskId);assert.deepEqual({...after,deskId:before.deskId}, before);
     assert.equal(sockets, 1);
     assert.equal(page.url(), location);
     // A tokenless fixed-token URL must not silently reuse previous credentials.
@@ -53,7 +53,7 @@ test('pasted URLs validate before connection, preserve confirmation and reconnec
     await connect.click();
     await confirmation2;
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
-    assert.deepEqual(await call('desk_state'), before);
+    const returned=await call('desk_state');assert.deepEqual({...returned,deskId:before.deskId}, before);
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });

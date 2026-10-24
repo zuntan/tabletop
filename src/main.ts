@@ -1,3 +1,5 @@
+import {checkDeskBridgeSize} from './desk-file-protocol';
+import {partClipboardToken,clipboardTransferSchema} from './clipboard-transfer';
 import {applyTitleBackground} from './desk-appearance';
 import {fileCreateOperations,fileFor,fileGroup} from './clear-files';
 import {drawClearFile} from './clear-file-drawing';
@@ -956,7 +958,7 @@ for (const kind of ['copy', 'cut'] as const) window.addEventListener(kind, event
   if (!objects.length) return;
   event.preventDefault();
   try {
-    const copied = partClipboard.write(event.clipboardData, objects);
+    const copied = partClipboard.write(event.clipboardData, objects,desk.settingsSnapshot().series);
     if (kind === 'cut') {
       desk.execute({ actor: 'human', expectedRevision: desk.revision, operations: objects.map(object => ({ kind: 'delete', id: object.id })) });
       render();
@@ -969,6 +971,22 @@ async function pasteClipboard(content: ClipboardContent) {
     desk.select(partClipboard.paste(desk));
     render(); notify(`${desk.selected().length}パーツを貼り付けました`);
     return;
+  }
+  const token=partClipboardToken(content.token,content.html);
+  if(token){
+    const revision=desk.revision,generation=desk.documentGeneration;
+    let remote:unknown=null;
+    try{remote=await recovery.clipboardRequest(token);}catch{/* Best effort: ordinary paste remains available. */}
+    if(desk.revision!==revision||desk.documentGeneration!==generation||isConfirmDialogOpen()||editor.isActive()||identityControls.isEditing()||gesture)throw new Error('読み取り中に机の状態が変わりました。もう一度貼り付けてください');
+    const parsed=clipboardTransferSchema.safeParse(remote);
+    if(parsed.success&&parsed.data.token===token){
+      const frames=parsed.data.objects.map(bounds),left=Math.min(...frames.map(b=>b.x)),top=Math.min(...frames.map(b=>b.y));
+      const right=Math.max(...frames.map(b=>b.x+b.width)),bottom=Math.max(...frames.map(b=>b.y+b.height));
+      const origin=gridPosition(centeredPartPoint(camera,cameraSize(),{width:right-left,height:bottom-top}));
+      // The existing paste transaction remaps every ID/reference and creates independent pin series.
+      desk.select(partClipboard.pasteRemote(desk,parsed.data,token,{x:origin.x-left,y:origin.y-top}));
+      render();notify(`${desk.selected().length}パーツを別の机から貼り付けました`);return;
+    }
   }
   if (content.files.length) { await addFiles(content.files); return; }
   const file = svgClipboardFile(content.text);
@@ -1018,7 +1036,7 @@ window.addEventListener('paste', event => {
   const data = event.clipboardData;
   const content: ClipboardContent = { text: data.getData('text/plain'), html: data.getData('text/html'),
     token: data.getData(partClipboardType), files: [...data.files] };
-  if (!content.text && !content.files.length && !partClipboard.matches(content.token, content.html)) return;
+  if (!content.text && !content.files.length && !partClipboardToken(content.token,content.html)) return;
   event.preventDefault();
   busy = true;
   void pasteClipboard(content).catch(error => notify(error instanceof Error ? error.message : String(error), true))
@@ -1026,6 +1044,7 @@ window.addEventListener('paste', event => {
 });
 
 const recovery = new BrowserConnection({
+  identity: id => { desk.deskId=id; render(); },
   beforeRelease: () => thinkingMode.assertAllowed('release'),
   handoff: url => { void connectionPanel.display(url); },
   handoffError: message => notify(message, true),
@@ -1061,6 +1080,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if(message.type==='ai_activity'){activityLed.pulse('tool');return;}
       id = message.id;
       if (typeof id !== 'string') throw new Error('Invalid request ID');
+      if(message.request?.method==='clipboard_read'){const result=partClipboard.export(message.request.token);checkDeskBridgeSize(result);ws.send(JSON.stringify({id,result}));return;}
       if (typeof message.request?.method === 'string') activityLed.pulse(message.request.method);
       thinkingMode.assertAllowed(message.request?.method);
       if(deskFiles.isBusy()&& !['summary','get','list','state','context','settings','selection','changes','file_saved','camera_get','ui_get'].includes(message.request?.method))throw new Error('Human file operation in progress. No change was made.');
@@ -1121,7 +1141,13 @@ $<HTMLFormElement>('#connect-form').onsubmit = event => {
     void connectUrl(url.value, true).catch(error => notify(error instanceof Error ? error.message : String(error), true));
   } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
 };
-const standaloneStartup=new URLSearchParams(location.search).get('connect')==='off';
+const startupParameters=new URLSearchParams(location.search);
+const suggestedDeskName=startupParameters.get('newDeskName');
+if(suggestedDeskName&&!desk.list().length&&!desk.settingsSnapshot().name){
+ try{desk.execute({operations:[{kind:'desk_rename',name:suggestedDeskName}]});notify(`机の名前を「${suggestedDeskName}」にしました`);}catch{/* Invalid launch hints never prevent opening a desk. */}
+ startupParameters.delete('newDeskName');history.replaceState(null,'',location.pathname+(startupParameters.size?'?'+startupParameters.toString():'')+location.hash);
+}
+const standaloneStartup=startupParameters.get('connect')==='off';
 if(standaloneStartup){
   if(location.hash)history.replaceState(null,'',location.pathname+location.search);
   $('#connection').textContent='AI未接続（単独の机）';

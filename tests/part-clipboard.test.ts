@@ -100,3 +100,28 @@ test('URL detection accepts one clean HTTP URL and rejects ambiguous or unsafe t
     assert.equal(singleClipboardUrl(value), null, value);
   }
 });
+
+test('remote paste uses an exact-token snapshot, remaps clip/file references and isolates pin series',()=>{
+ const source=new Desk();source.execute({operations:[
+  {kind:'series_update',id:'series-1',patch:{fill:'#ff0000',fontSize:32,name:'red pins'}},
+  {kind:'add',object:{id:'a',type:'text',x:10,y:20,text:'A',stamp:{designId:'done_ja',text:'fixed',angle:-3}}},
+  {kind:'add',object:{id:'b',type:'text',x:30,y:40,text:'B'}},
+  {kind:'add',object:{id:'c',type:'clip',clipMembers:['a','b']}},
+  {kind:'add',object:{id:'folder',type:'file',text:'Folder',x:-100,y:-100,width:1000,height:1000,fileMembers:['a','b','c']}},
+  {kind:'label_add',id:'p',seriesId:'series-1',x:60,y:70},
+  {kind:'update',id:'p',patch:{attachment:{objectId:'a',anchor:'top'}}},
+ ]});
+ const cb=new PartClipboard(),data=new ClipboardMap();cb.write(data,source.snapshot(),source.settingsSnapshot().series);
+ const token=data.getData(partClipboardType),snapshot=cb.export(token)!;assert.ok(snapshot);assert.equal(cb.export(crypto.randomUUID()),null);
+ const original=structuredClone(snapshot),destination=new Desk(),defaults=destination.settingsSnapshot().series;
+ const ids=new PartClipboard().pasteRemote(destination,snapshot,token,{x:100,y:200});
+ const objects=ids.map(id=>destination.get(id)),clip=objects.find(o=>o.type==='clip')!,pin=objects.find(o=>o.type==='label')!;
+ assert.deepEqual(clip.clipMembers,objects.filter(o=>o.type==='text').map(o=>o.id));
+ assert.equal(pin.attachment?.objectId,objects.find(o=>o.text==='A')!.id);
+ assert.deepEqual(objects.find(o=>o.type==='file')!.fileMembers,objects.filter(o=>['text','clip'].includes(o.type)).map(o=>o.id));assert.notEqual(pin.seriesId,'series-1');assert.equal(pin.fill,'#ff0000');
+ assert.deepEqual(destination.settingsSnapshot().series.slice(0,defaults.length),defaults);
+ assert.deepEqual(snapshot,original);assert.deepEqual(cb.export(token),original);
+ assert.throws(()=>cb.pasteRemote(destination,snapshot,crypto.randomUUID(),{x:0,y:0}),/token mismatch/);
+ destination.undo();assert.equal(destination.snapshot().length,0);assert.deepEqual(destination.settingsSnapshot().series,defaults);
+ cb.clear();assert.equal(cb.export(token),null);
+});

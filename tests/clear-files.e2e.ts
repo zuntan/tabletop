@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
@@ -20,7 +21,7 @@ test('clear files preserve layouts, disable individual geometry, support editing
   await call('desk_select',{ids:['a']});assert.equal(await page.locator('[name="x"]').isDisabled(),true);assert.equal(await page.locator('[data-resize="a"]').count(),0);
   assert.equal(await page.locator('#front').isDisabled(),true);
   await page.locator('[name="text"]').fill('本文は編集できます');await page.locator('[name="text"]').dispatchEvent('change');assert.equal((await call('desk_get',{id:'a'})).text,'本文は編集できます');
-  const invalid=await client.callTool({name:'desk_execute',arguments:{operations:[{kind:'update',id:'a',patch:{width:500}}]}});assert.equal(invalid.isError,true);
+  const invalid=await callTestTool(client, {name:'desk_execute',arguments:{operations:[{kind:'update',id:'a',patch:{width:500}}]}});assert.equal(invalid.isError,true);
   await page.locator('#canvas').focus();await page.keyboard.press('Control+Shift+g');assert.ok(await call('desk_get',{id}));
   // Drag the body, not a special group handle: the complete file moves.
   const position=await page.locator('#viewport').evaluate((el)=>{const p=new DOMPoint(220,240).matrixTransform((el as unknown as SVGGraphicsElement).getScreenCTM()!);return{x:p.x,y:p.y};});

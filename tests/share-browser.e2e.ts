@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:net';
@@ -105,7 +106,7 @@ test('MCP external share lets a human follow the URL and read current context, m
     assert.ok(JSON.stringify(updated).includes('Edited version'));
     const after = await call('desk_state');
     assert.equal(after.revision, updated.revision);
-    const closed = await client.callTool({ name: 'desk_share_close', arguments: { confirm: true } });
+    const closed = await callTestTool(client, { name: 'desk_share_close', arguments: { confirm: true } });
     assert.notEqual(closed.isError, true, JSON.stringify(closed));
     assert.deepEqual(JSON.parse((closed.content as { text: string }[])[0].text), { closed: true });
     await assert.rejects(fetch(`${shareOrigin}/share/${opened.shareId}/desk_context`));

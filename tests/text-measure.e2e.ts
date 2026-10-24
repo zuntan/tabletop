@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { openTestDesk } from './desk-browser';
@@ -34,7 +35,7 @@ test('live text measurement is read-only, padding-aware and zoom independent; pl
     assert.equal((await call('desk_text_measure', { ids: ['md'] })).measurements[0].status, 'measured');
     assert.equal(await page.locator('#text-measure').isVisible(), false);
     assert.equal(await page.locator('#text-measure-result').isVisible(), false);
-    const bad = await client.callTool({ name: 'desk_text_measure', arguments: { ids: ['missing'] } });
+    const bad = await callTestTool(client, { name: 'desk_text_measure', arguments: { ids: ['missing'] } });
     assert.equal(bad.isError, true);
     const view = await page.locator('[data-id="md"]').evaluate(g => ({
       rx: g.querySelector('rect')!.getAttribute('rx'), padding: getComputedStyle(g.querySelector('.markdown-text')!).padding,

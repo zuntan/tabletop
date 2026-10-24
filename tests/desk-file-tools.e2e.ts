@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import { respondToConfirm } from './confirm-response';
 import { publishObject } from '../src/object-properties';
 import test from 'node:test';
@@ -36,7 +37,7 @@ test('real MCP save/load round-trip, browser interoperability, conflicts and saf
     assert.deepEqual(await call('desk_state'), original);
     async function fails(name: string, args: Record<string, unknown>) {
       const before = await call('desk_state');
-      const result = await client.callTool({ name, arguments: args });
+      const result = await callTestTool(client, { name, arguments: args });
       assert.equal(result.isError, true, JSON.stringify(result));
       assert.deepEqual(await call('desk_state'), before);
     }

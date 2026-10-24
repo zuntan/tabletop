@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
@@ -28,7 +29,7 @@ test('round swatch palettes, shape labels, arrow endpoints and attached movement
   const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   async function call(name: string, args: Record<string, unknown> = {}) {
-    const result = await client.callTool({ name, arguments: args });
+    const result = await callTestTool(client, { name, arguments: args });
     assert.notEqual(result.isError, true, JSON.stringify(result));
     return JSON.parse((result.content as { text: string }[])[0].text);
   }

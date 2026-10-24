@@ -1,3 +1,4 @@
+import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { once } from 'node:events';
@@ -18,7 +19,7 @@ test('release rejects legacy/pending/uncertain peers and isolates stale handshak
     env: { ...Object.fromEntries(Object.entries(process.env).filter((pair): pair is [string, string] => pair[1] !== undefined)), TABLETOP_PORT: String(port), TABLETOP_TOKEN: token }, stderr: 'pipe' });
   const client = new Client({ name: 'release-test', version: '1.0.0' });
   const sockets: WebSocket[] = [];
-  const call = (name: string, args: Record<string, unknown> = {}) => client.callTool({ name, arguments: args });
+  const call = (name: string, args: Record<string, unknown> = {}) => callTestTool(client, { name, arguments: args });
   const value = (result: Awaited<ReturnType<typeof call>>) => JSON.parse((result.content as { text: string }[])[0].text);
   try {
     await client.connect(transport);
@@ -57,7 +58,7 @@ test('release rejects legacy/pending/uncertain peers and isolates stale handshak
     assert.notEqual(released.isError, true);
     assert.equal(value(released).waitingFor, 'new-pairing');
     await staleClosed;
-    assert.equal(value(await call('desk_pairing_info')).pairing, null);
+    assert.equal((await call('desk_pairing_info',{deskId:peer.deskId})).isError,true);
     const next = await pairPeer(base + '?token=' + token, origin); sockets.push(next.ws);
     assert.notEqual(next.pairing.pairId, peer.pairing.pairId);
     const incoming = once(next.ws, 'message'); const nextSummary = call('desk_summary');

@@ -1,27 +1,13 @@
-import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { pairingSchema } from './pairing-protocol.js';
-import type { PairingGate } from './pairing-server.js';
-
-export function registerPairingTools(mcp: McpServer, gate: PairingGate, release: () => Promise<unknown>) {
-  const json = (value: unknown) => ({ content: [{ type: 'text' as const, text: JSON.stringify(value) }] });
-  mcp.registerTool('desk_release', {
-    description: 'With explicit user approval and confirm:true, disconnect the current browser while preserving its desk and local editing/saving, stop its automatic reconnection, invalidate its pairing and open NEW/manual pairing acceptance. No save/load/copy/sync or bootstrap token rotation. Refuses unsupported old browsers and pending requests. Requires browser acknowledgement; on failure new acceptance is NOT opened, inspect connection state before retrying. After success use desk_connection_info for connection instructions; retain the next desk_pairing_info privately. Never use for restart recovery.',
-    inputSchema: { confirm: z.literal(true) }, annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
-  }, async () => { try { return json(await release()); } catch (error) { return { ...json({ error: (error as Error).message }), isError: true }; } });
-  mcp.registerTool('desk_pairing_open', {
-    description: 'Explicitly allow NEW or manual replacement pairing before presenting the connection URL. Required order: user approval, desk_pairing_open, desk_connection_info, desk_browser_open (OS default browser) or manual browser connection, then verify browserConnected:true. Success opens acceptance only; it does not connect a browser. Requires user approval and confirm:true. Refuses while a desk is connected. Invalidates the previous pairing; never use this to recover an existing paired desk. Keep the current browser content; never reload it. For recovery use desk_pairing_restore instead.',
-    inputSchema: { confirm: z.literal(true) }, annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
-  }, async () => { try { return json({ ...gate.open(), bootstrapReady: true, browserConnected: false,
-    nextAction: { kind: 'call-tool', tool: 'desk_connection_info' },
-    message: 'Acceptance is open, but no browser is connected yet. Get desk_connection_info, use desk_browser_open for local launch or present the URL for manual opening, then verify browserConnected:true. Do not reload an existing unsaved tab.',
-  }); } catch (error) { return { ...json({ error: (error as Error).message }), isError: true }; } });
-  mcp.registerTool('desk_pairing_info', {
-    description: 'Get the current pairing recovery credentials through MCP only. Contains SECRET token and secret: retain the full record in private continuation/handoff context after initial pairing. Never put it in public docs, repositories, normal logs or desk files. It is not the configured TABLETOP_TOKEN. Null means no pairing exists in this server process. After restart restore your previously retained record; do NOT open a new pairing or guess credentials. If lost, ask the human to save or manually reconnect the existing tab without reload.',
-    inputSchema: {}, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
-  }, async () => json({ pairing: gate.info() }));
-  mcp.registerTool('desk_pairing_restore', {
-    description: 'Arm recovery after MCP server restart using the exact private pairing record retained from desk_pairing_info. Fixed and generated bootstrap tokens follow the same pairing rules. No browser automation or token file is needed. Refuses an active desk or a different armed pairing; never automatically replace one. Wait a few seconds, then read session/revision/current content before editing. No mutation replay. If credentials were lost, use human-approved manual pairing instead. This record is secret; do not publish it.',
-    inputSchema: { pairing: pairingSchema }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-  }, async ({ pairing }) => { try { return json(gate.restore(pairing)); } catch (error) { return { ...json({ error: (error as Error).message }), isError: true }; } });
+import {z} from 'zod';
+import type {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
+import {pairingSchema} from './pairing-protocol';
+import type {DeskConnections,DeskConnection} from './desk-connections';
+import {deskTargetFields} from './desk-target';
+export function registerPairingTools(mcp:McpServer,desks:DeskConnections,release:(desk:DeskConnection)=>Promise<unknown>){
+ const json=(value:unknown)=>({content:[{type:'text' as const,text:JSON.stringify(value)}]});
+ const fail=(e:unknown)=>({isError:true,content:[{type:'text' as const,text:e instanceof Error?e.message:String(e)}]});
+ mcp.registerTool('desk_release',{description:'Release only the specified deskId with human approval. Preserve its contents first. Other pairings and desks remain connected. Opens acceptance for a new/manual connection; never transfers or reloads content.',inputSchema:{...deskTargetFields,confirm:z.literal(true)}},async({deskId})=>{try{return json(await release(desks.get(deskId)));}catch(e){return fail(e);}});
+ mcp.registerTool('desk_pairing_open',{description:'With human approval, open acceptance for one additional new/manual pairing. Existing desks are not released or replaced. Use desk_connection_info for the URL, then desk_connections to identify the new desk. Not for recovery.',inputSchema:{confirm:z.literal(true)}},async()=>{try{return json({...desks.open(),nextAction:{kind:'call-tool',tool:'desk_connection_info'}});}catch(e){return fail(e);}});
+ mcp.registerTool('desk_pairing_info',{description:'Get SECRET recovery credentials for the specified deskId only. Retain privately; never write to public docs, logs, desk files or Git. Other desks are unchanged.',inputSchema:deskTargetFields},async({deskId})=>{try{const d=desks.get(deskId);d.activity();return json({deskId,pairing:desks.info(deskId)});}catch(e){return fail(e);}});
+ mcp.registerTool('desk_pairing_restore',{description:'Restore this exact privately retained pairing after a server restart. Other registered/connected pairings are unaffected. Does not create a new browser, replay edits or replace a connected endpoint. After recovery read desk_connections; IDs need not be permanently stable.',inputSchema:{pairing:pairingSchema}},async({pairing})=>{try{return json(desks.restore(pairing));}catch(e){return fail(e);}});
 }
