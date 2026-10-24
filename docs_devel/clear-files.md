@@ -31,4 +31,4 @@ AIは既存のdesk_executeで追加・更新・削除する。中身の外接矩
 
 利用者が実際の机で外観・全体移動を確認済み。ファイル単独選択時にも色欄が表示されるよう修正。ファイル化はクリップ右隣の「ファイルへ」、色は本体選択後の塗り・輪郭で変更する。
 
-カードを完了エリアへ移動し、試用変更を含む280パーツをtabletop-main-clear-files-done-20261023.tabletopへ保存。Git保管版はdocs/desk-snapshots/2026-10-23.tabletop。
+カードを完了エリアへ移動し、試用変更を含む280パーツをtabletop-main-clear-files-done-20261023.tabletopへ保存。Git保管版はdocs_devel/desk-snapshots/2026-10-23.tabletop。

@@ -4,12 +4,12 @@
 
 ## 復元する机
 
-- 保存名：`tabletop-main-license-confetti-commit-20261024.tabletop`
+- 保存名：`tabletop-main-docs-devel-migration-20261024.tabletop`
 - 保存場所：`~/.tabletop/saves/`（既定のTABLETOP_SAVE_ROOT）
 - 机の名前：Tabletop main
-- パーツ数：303
-- 保存時のrevision：3
-- Git保管用：[2026-10-24-03.tabletop](desk-snapshots/2026-10-24-03.tabletop)
+- パーツ数：304
+- 保存時のrevision：14
+- Git保管用：[2026-10-24-04.tabletop](desk-snapshots/2026-10-24-04.tabletop)
 - 次回起動：利用者の了承済み方針に従いChrome DevToolsで起動する。
 
 現在の机を確認せず、古いpreviewや試験前の保存へ戻さない。接続が切れただけなら既存タブの再接続を優先し、未保存の机を再読み込みしない。別環境でローカル保存がなければGit保管版を使う。
@@ -79,7 +79,7 @@ feat/common-confirm-dialogsで実装。mainへ統合。利用者による動作�
 - モデル4件、ブラウザ15件の関連試験を確認。既存試験の古い図形選択操作・小物ボタン位置・公開属性比較も現行UIへ合わせた。
 - card-common-dialogsは実装済み・試用待ち。ピン3は保持。最新保存は302パーツ・revision3。カードに実装9ddc127・main統合0a67f2cと、利用者の確認は次回以降であることを反映。
 - 保存後にブラウザを更新し、302パーツを復元済み（読込後revision2）。MCP側の新しい保存成功通知はサーバー再起動後に有効。再起動前は既存タブを保持し、最新保存を優先する。
-- 詳細：docs/confirmation-dialogs.md。Git保管版にも3の試用待ちカードを含む最新の机を保存した。
+- 詳細：docs_devel/confirmation-dialogs.md。Git保管版にも3の試用待ちカードを含む最新の机を保存した。
 
 
 ## 4：SAVE／LOAD・机リンク・履歴の試用待ち
@@ -149,7 +149,7 @@ feat/standalone-and-desk-colors。5の接続なし起動は9a58f38、6のタイ�
 
 ## 2026-10-24：About表示の確認待ち
 
-右上の既存パネルへ、机リンクと同じSVG、Tabletop＋package.json由来の番号、従来の紹介文、利用者指定の3役のクレジットを実装。役順はプログラマー、アドバイザー、企画・ディレクション。指定表記はdocs/public-info-and-license.mdを参照。GitHubと既存の素材ライセンスリンクを保持。正式なアプリLICENSE・第三者通知等は別途。公開操作やVer 0.1のリリースは行っていない。
+右上の既存パネルへ、机リンクと同じSVG、Tabletop＋package.json由来の番号、従来の紹介文、利用者指定の3役のクレジットを実装。役順はプログラマー、アドバイザー、企画・ディレクション。指定表記はdocs_devel/public-info-and-license.mdを参照。GitHubと既存の素材ライセンスリンクを保持。正式なアプリLICENSE・第三者通知等は別途。公開操作やVer 0.1のリリースは行っていない。
 
 最新ローカル保存301パーツ・revision11。Git保管版2026-10-23-10はAbout表示調整前。現在の机を確認せず古い版へ戻さない。About表示は未コミット。
 
@@ -206,3 +206,10 @@ card-bookshelfとcard-bookshelf-boundaryは保留ハンコを保持し、未来�
 実装 `6b206db` をmainへコミット。Aboutは主要12件・中央寄せ・約4行の枠なしスクロール。全本番依存の全文・著作権・NOTICEとELK/KaTeXの補足を同梱し、ビルドで再生成。ミッキーの選択肢とSVGを削除し、同じ位置へconfetti（クラッカー）を追加。旧mickeyは丸へ変換する。関連チェック6件成功。
 
 机303パーツ・revision3を保存し、調査・通知整備カードへ済を押印。持込素材・開発机は利用者確認に基づき採用継続。次は配布物構成・最終梱包の通知照合とREADME整備。push・Release公開は今回行っていない。既存MCPプロセスのツール説明・入力スキーマは次回再起動で更新される。
+
+
+## 開発資料をdocs_develへ移動
+
+旧docsの114ファイルをdocs_develへ移し、ルート文書・相互リンク・MCPヘルプの実行時参照・アーカイブテストの参照先を更新。READMEのMCP設定例を個人パスから汎用の絶対パス置換例へ変更し、Windowsの既存手順も案内。新しい利用者向けdocsの内容とREADMEの構成、export-ignoreは未決定のまま。開発資料の入口は[README](README.md)。desk_help原本はまだdocs_devel/helpにあるため、将来配布対象から除く場合は先に原本配置と同梱を整える。
+
+現在の机58パーツの文章内参照・移行カードを更新し、304パーツ・revision14で保存。旧アーカイブは記録の中身を変更せず移動した。ビルド・関連テスト4件、README設定例の別cwd・空白入りパスでのMCP起動とヘルプ全topic取得を確認。ローカルMarkdownリンクの切れなし・外部リンク維持を点検。未コミット、既存MCPのヘルプ参照は再起動で更新。

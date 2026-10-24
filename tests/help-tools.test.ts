@@ -16,6 +16,10 @@ test('desk_help returns discoverable plain-text manuals without any browser; rej
     const guide=await client.callTool({name:'desk_help',arguments:{topic:'mermaid-imitation'}});
     assert.notEqual(guide.isError,true);assert.match((guide.content as any)[0].text,/原本を残し/);
     assert.match((guide.content as any)[0].text,/再現できなかった/);
+    for(const [topic,title] of [['bell-conversation','ベル'],['desk-connections','机を開くこと']] as const){
+      const result=await client.callTool({name:'desk_help',arguments:{topic}});
+      assert.notEqual(result.isError,true,topic);assert.ok((result.content as any)[0].text.includes(title),topic);
+    }
     const invalid=await client.callTool({name:'desk_help',arguments:{topic:'../../etc/passwd'}});assert.equal(invalid.isError,true);
   }finally{await client.close();await server.close();}
 });

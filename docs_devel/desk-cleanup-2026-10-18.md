@@ -32,7 +32,7 @@
 - sessionId・revision・capturedAtで鮮度を確認
 
 コピーの内容が同じ、だけではなく、一つの机を囲むことが発端。
-参照：docs/read-only-sharing.md
+参照：docs_devel/read-only-sharing.md
 
 元パーツ／接頭辞：`future-shared-desk`、`future-server-now`
 
@@ -48,7 +48,7 @@
 
 自動保存・旧形式からの移行は未実装。
 形式versionと編集revisionは別。
-参照：docs/mcp-save-load.md
+参照：docs_devel/mcp-save-load.md
 
 元パーツ／接頭辞：`idea-mcp-file`、`done-desk-identity`
 
@@ -65,7 +65,7 @@
 - 復帰情報を失ったら手動再接続
 - LAN接続は明示許可したときだけ
 
-参照：docs/connection-recovery.md
+参照：docs_devel/connection-recovery.md
 
 元パーツ／接頭辞：`idea-ws`、`done-desk-release`、`idea-connection-url`、`idea-thinking-mode`
 
@@ -79,8 +79,8 @@ SVG・リモート画像など、未確定の場合は状態を返す。
 スナップは人間とAIで共有。ON/OFF・間隔・原点を保存し、MCPは既定で机に従う。
 
 厳密配置は snap:exact。画像内へのピンの自動取り付けは未実装。
-参照：docs/image-geometry.md
-参照：docs/shared-snap.md
+参照：docs_devel/image-geometry.md
+参照：docs_devel/shared-snap.md
 
 元パーツ／接頭辞：`topic-01`、`topic-02`
 
@@ -96,7 +96,7 @@ SVG・リモート画像など、未確定の場合は状態を返す。
 
 カメラ移動でパーツの座標は変えない。
 領域のブックマークは未実装。
-参照：docs/feat-ui-refinement.md
+参照：docs_devel/feat-ui-refinement.md
 
 元パーツ／接頭辞：`idea-focus`
 
@@ -113,7 +113,7 @@ SVG・リモート画像など、未確定の場合は状態を返す。
 - 「糸を表示」スイッチ。新規は非表示
 
 通常採番は最大番号＋1、欠番は詰めない。
-参照：docs/pin-update.md
+参照：docs_devel/pin-update.md
 
 元パーツ／接頭辞：`text-9ccd7072`、`idea-pin-scale`、`idea-pin-series`
 
@@ -242,7 +242,7 @@ zuntanメモの残案を統合。UI配置など、完了した項目は「使え
 
 Context7掲載は候補。必須依存にしない。
 資料版・アプリ版・保存形式・revisionは別。
-参照：docs/afternoon-report-2026-10-15.md
+参照：docs_devel/afternoon-report-2026-10-15.md
 
 元パーツ／接頭辞：`idea-help`、`idea-doc-versions`
 
@@ -335,7 +335,7 @@ AIが座標を順に更新するパラパラ漫画は既存MCPで試せるが、
 一括アニメーション案：対象・移動先・時間・easingを一度指定し、ブラウザが動かす。カメラ追従、途中停止、確定とUndoは要設計。
 
 おもしろゴミ箱：破砕・放り投げ・ブラックホール等。削除とUndoは即時、編集を止めない。Deleteキーは通常どおり。
-参照：docs/object-animation-proposal.md
+参照：docs_devel/object-animation-proposal.md
 
 元パーツ／接頭辞：`idea-simulation`、`idea-batch-animation`、`idea-trash`
 
@@ -349,7 +349,7 @@ AIが座標を順に更新するパラパラ漫画は既存MCPで試せるが、
 WindowsのCopilot／Sonnet、ローカルMuse等でも試す。小さいモデルで何ができるかを見る。
 
 Muse＋llama.cppではツールSchemaの大きなmaxItemsとGBNF解析の問題が疑われた。検証用変更は破棄済み。原因確定・正式対応は未実施。
-参照：docs/windows-copilot-cli.md
+参照：docs_devel/windows-copilot-cli.md
 
 元パーツ／接頭辞：`text-98c56d03`
 
@@ -421,7 +421,7 @@ human等の表示をマスター・センパイ・おっさんへ。
 - 公開の明示許可とペアリングは維持
 
 HTTPは暗号化されない。
-参照：docs/http-lan.md
+参照：docs_devel/http-lan.md
 
 元パーツ／接頭辞：`idea-lan-tls`、`idea-connection-url`
 
@@ -438,7 +438,7 @@ Aboutは静的Markdownから机に広げる案。消しても開ける入口を�
 - 必要に応じ第三者の表示を整備
 
 名義・クレジットは公開前に確認。
-参照：docs/public-info-and-license.md
+参照：docs_devel/public-info-and-license.md
 
 元パーツ／接頭辞：`idea-public-info`
 

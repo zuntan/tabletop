@@ -6,7 +6,7 @@ import { Desk, objectSchema } from '../src/model';
 import { decodeDeskFile, encodeDeskFile } from '../src/desk-file';
 
 test('all archived desks keep their objects and legacy arrow intent in canonical lines', async () => {
-  const root = new URL('../docs/desk-snapshots/', import.meta.url);
+  const root = new URL('../docs_devel/desk-snapshots/', import.meta.url);
   for (const name of (await readdir(root)).filter(name => name.endsWith('.tabletop'))) {
     const bytes = await readFile(new URL(name, root));
     const old = JSON.parse(strFromU8(unzipSync(bytes)['manifest.json']));
