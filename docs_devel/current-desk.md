@@ -4,12 +4,12 @@
 
 ## 復元する机
 
-- 保存名：`tabletop-main-docs-devel-migration-20261024.tabletop`
+- 保存名：`tabletop-main-git-save-20261024-05.tabletop`
 - 保存場所：`~/.tabletop/saves/`（既定のTABLETOP_SAVE_ROOT）
 - 机の名前：Tabletop main
-- パーツ数：304
-- 保存時のrevision：14
-- Git保管用：[2026-10-24-04.tabletop](desk-snapshots/2026-10-24-04.tabletop)
+- パーツ数：303
+- 保存時のrevision：18
+- Git保管用：[2026-10-24-05.tabletop](desk-snapshots/2026-10-24-05.tabletop)
 - 次回起動：利用者の了承済み方針に従いChrome DevToolsで起動する。
 
 現在の机を確認せず、古いpreviewや試験前の保存へ戻さない。接続が切れただけなら既存タブの再接続を優先し、未保存の机を再読み込みしない。別環境でローカル保存がなければGit保管版を使う。

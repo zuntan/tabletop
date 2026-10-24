@@ -222,3 +222,10 @@ SHA-256：`4e82f8c539205421876998eec0580fe623edf2eff23b227f73f78d8749fa5a10`
 [2026-10-24-04.tabletop](./2026-10-24-04.tabletop)：304パーツ、revision14。docs_develへの移動に合わせ、現在の机の資料参照と移行作業カードを更新。利用者の配置は保持。旧アーカイブの内容は変更せず移動。ZIP整合性と接続資格情報・Undo履歴フィールド不在を確認。
 
 SHA-256：`d34ee7eb7836a1b099dbfcbdadfab0c5e372df3642e8c068494d1ea3c957cee1`
+
+
+## 2026-10-24-05
+
+[2026-10-24-05.tabletop](./2026-10-24-05.tabletop)：現在の机Tabletop main、303パーツ、revision18。利用者の最新編集をそのまま保存。ZIP整合性、資格情報・Undo履歴フィールド不在、元ファイルとのハッシュ一致を確認。
+
+SHA-256：`25adb4cd2683f59e10dde6e9e8e3b8ccd7d18d16d147bd4470c8ef25c902aa8b`
