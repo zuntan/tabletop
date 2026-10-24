@@ -270,3 +270,5 @@ text.calloutは{x,y,binding?:{objectId,anchor}|null}、null/省略で無効。�
 
 ## 有効なプロパティのみの取得・保存
 保存とMCP取得・履歴・共有GETは、種類ごとに意味のある項目だけを出力する。線の塗り・文字サイズや、メディアの固定装飾に対する見かけの設定値は出さない。有効な0や既定値は残す。旧ファイルの読取は互換。詳細はdocs_devel/meaningful-properties.md。
+
+原点の縦横線は、対象deskIdの `desk_execute` → `background_update` で `originAxes:true/false` と `originAxesColor:"#94a3b8"` を設定します。省略時OFF、色は固定で壁紙に追従しません。部品ではなく表示補助で、選択・全体表示範囲・PDFには含めません。

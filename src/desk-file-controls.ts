@@ -24,11 +24,12 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
     if(button!==pdf){const text=document.createElement('span');text.textContent=label;button.append(text);}menu.append(button);
   }
   const normalSave=document.createElement('button');normalSave.id='save-desk';normalSave.textContent='SAVE（保存）';
+  const saveAs=document.createElement('button');saveAs.id='save-desk-as';saveAs.textContent='SAVE AS（名前を付けて保存）';
   const normalLoad=document.createElement('button');normalLoad.id='load-desk';normalLoad.textContent='LOAD（読み込み）';
   const recent=document.createElement('button');recent.id='recent-desks';recent.textContent='最近使った机';
   const deskLink=document.createElement('button');deskLink.id='add-desk-link';deskLink.textContent='机リンクを置く';
-  for(const button of [normalSave,normalLoad,recent,deskLink]){button.type='button';button.className='file-menu-item';button.setAttribute('role','menuitem');}
-  menu.prepend(normalSave,normalLoad,recent,deskLink);
+  for(const button of [normalSave,saveAs,normalLoad,recent,deskLink]){button.type='button';button.className='file-menu-item';button.setAttribute('role','menuitem');}
+  menu.prepend(normalSave,saveAs,normalLoad,recent,deskLink);
   header.append(trigger,input);document.body.append(menu);
   menu.addEventListener('toggle',()=>{const open=menu.matches(':popover-open');trigger.setAttribute('aria-expanded',String(open));if(open){normalSave.title=desk.filePath?`保存先：${desk.filePath}`:'初回SAVEで保存先を指定';const r=trigger.getBoundingClientRect();menu.style.left=`${Math.max(8,Math.min(r.left,innerWidth-226))}px`;menu.style.top=`${r.bottom+6}px`;}});
   trigger.addEventListener('keydown',event=>{event.stopPropagation();if(event.key==='ArrowDown'){event.preventDefault();menu.showPopover();menu.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();}});
@@ -42,13 +43,13 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
   let storage:Storage|null=null;try{storage=localStorage;}catch{}
   const history=new DeskFileHistory(storage);
   const snapshot=()=>({sessionId:desk.sessionId,revision:desk.revision,generation:desk.documentGeneration,objects:desk.snapshot(),settings:desk.settingsSnapshot()});
-  async function saveNormal(){
+  async function saveNormal(as=false){
     if(!remote)throw new Error('MCP接続が必要です');
     const generation=desk.documentGeneration;
-    const path=desk.filePath??await askFilePath('机の保存先',desk.fileNameHint||downloadDeskFilename(desk.settingsSnapshot().name));
+    const path=as?await askFilePath('名前を付けて保存',(desk.filePath??desk.fileNameHint)||downloadDeskFilename(desk.settingsSnapshot().name)):desk.filePath??await askFilePath('机の保存先',desk.fileNameHint||downloadDeskFilename(desk.settingsSnapshot().name));
     if(!path)return null;
     if(desk.documentGeneration!==generation)throw new Error('机が切り替わったため保存を中止しました');
-    const overwrite=!!desk.filePath;
+    const overwrite=!as&&!!desk.filePath;
     const saved=snapshot();let result;
     try{result=await remote({action:'save',path,overwrite,snapshot:saved});}
     catch(error){
@@ -88,7 +89,8 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
     }catch(error){report(`読込失敗（机は保持）: ${error instanceof Error?error.message:String(error)}`,true);}
     finally{normalBusy=false;}
   }
-  normalSave.onclick=()=>{menu.hidePopover();if(normalBusy||loading||saving||!canLoad())return;normalBusy=true;void saveNormal().catch(error=>report(`保存失敗: ${error instanceof Error?error.message:String(error)}`,true)).finally(()=>{normalBusy=false;});};
+  const startSave=(as=false)=>{menu.hidePopover();if(normalBusy||loading||saving||!canLoad())return;normalBusy=true;void saveNormal(as).catch(error=>report(`保存失敗: ${error instanceof Error?error.message:String(error)}`,true)).finally(()=>{normalBusy=false;});};
+  normalSave.onclick=()=>startSave();saveAs.onclick=()=>startSave(true);
   normalLoad.onclick=()=>{menu.hidePopover();if(normalBusy||loading||!canLoad())return;void askFilePath('机を読み込む',desk.filePath??'').then(path=>{if(path)return loadPath(path);}).catch(error=>report(String(error),true));};
   deskLink.onclick=()=>{menu.hidePopover();if(normalBusy||!canLoad())return;void askFilePath('机リンクの参照先',desk.filePath??'').then(path=>{if(path&&canLoad())addDeskLink?.(path,path.split(/[\\/]/).pop()??path);}).catch(error=>report(String(error),true));};
   recent.onclick=async()=>{

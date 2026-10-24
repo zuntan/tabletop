@@ -1,3 +1,4 @@
+import {createOriginGuides} from './origin-guides';
 import {checkDeskBridgeSize} from './desk-file-protocol';
 import {partClipboardToken,clipboardTransferSchema} from './clipboard-transfer';
 import {applyTitleBackground} from './desk-appearance';
@@ -179,6 +180,7 @@ headerIcon($<HTMLButtonElement>('#undo'), 'undo', '元に戻す');
 headerIcon($<HTMLButtonElement>('#redo'), 'redo', 'やり直す');
 const canvas = app.querySelector<SVGSVGElement>('#canvas')!;
 const deskBackground = createDeskBackground(canvas);
+const originGuides=createOriginGuides(canvas,app.querySelector<HTMLElement>('#empty')!);
 const viewport = app.querySelector<SVGGElement>('#viewport')!;
 const objectsLayer = app.querySelector<SVGGElement>('#objects')!;
 const overlays = app.querySelector<SVGGElement>('#overlays')!;
@@ -366,6 +368,7 @@ function world(event: PointerEvent | WheelEvent) {
 function cameraChanged() {
   const settings = desk.settingsSnapshot();
   deskBackground.update(settings.background, camera);
+  originGuides.update(settings.background,camera);
   applyTitleBackground($('header'),settings.background.titleBackground);
   viewport.setAttribute('transform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
   const grid = settings.grid, dots = app.querySelector('#dots')!;
@@ -591,8 +594,8 @@ function render(rebuild = true) {
   }
   gridEnabled = desk.settingsSnapshot().grid.enabled;
   $('#grid-snap').setAttribute('aria-pressed', String(gridEnabled));
-  cameraChanged(); drawSelection();
   $('#empty').hidden = desk.summary().count > 0;
+  cameraChanged(); drawSelection();
   $('#revision').textContent = `revision ${desk.revision}`;
   $<HTMLButtonElement>('#undo').disabled = !desk.summary().canUndo;
   $<HTMLButtonElement>('#redo').disabled = !desk.summary().canRedo;

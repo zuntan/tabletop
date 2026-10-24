@@ -36,6 +36,7 @@ export async function deskPdf(desk:Desk,canvas:SVGSVGElement,descriptions:(id:st
  root.removeAttribute('id');root.removeAttribute('style');root.setAttribute('width','1024');root.setAttribute('height','768');
  root.setAttribute('font-family',getComputedStyle(canvas).fontFamily);
  root.setAttribute('color',getComputedStyle(canvas).color);
+ root.querySelector('#origin-guides')?.remove();root.querySelector('#origin-guide-mask')?.remove();
  root.querySelector('#overlays')?.remove();root.querySelectorAll('.open-link,.connector-hit').forEach(n=>n.remove());
  root.querySelector('#viewport')?.removeAttribute('transform');
  for(const pattern of root.querySelectorAll('pattern'))pattern.removeAttribute('patternTransform');

@@ -85,8 +85,15 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
       const autoLabel = document.createElement('label'); autoLabel.append(auto, '壁紙に合わせる');
       row.append(input, autoLabel); label(title, row); colors.push({ key, input, auto });
     }
+    const axes=document.createElement('input');axes.type='checkbox';axes.setAttribute('aria-label','原点の縦横線を表示');
+    axes.onchange=()=>change({originAxes:axes.checked});
+    const axesLabel=document.createElement('label');axesLabel.append(axes,'表示する');
+    const axesColor=document.createElement('input');axesColor.type='color';axesColor.setAttribute('aria-label','原点軸の色');
+    axesColor.onchange=()=>change({originAxesColor:axesColor.value});
+    const axesRow=document.createElement('div');axesRow.className='desk-menu-colors';axesRow.append(axesLabel,axesColor);label('原点の縦横線',axesRow);
     sync = () => {
       const bg = desk.settingsSnapshot().background, resolved = frameColors(bg);
+      axes.checked=bg.originAxes??false;axesColor.value=bg.originAxesColor??'#94a3b8';
       brightness.value = String(Math.round(bg.underlayBrightness * 100)); brightnessOutput.value = brightness.value + '%';
       titleColor.value=bg.titleBackground??'#0f172a';resetTitle.disabled=!bg.titleBackground;
       wallpaper.value = wallpaperChoice(bg); opacity.value = String(Math.round(bg.opacity * 100)); output.value = opacity.value + '%';

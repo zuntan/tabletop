@@ -8,6 +8,8 @@ export const colorSchema = z.string().regex(/^(#[0-9a-fA-F]{3,8}|transparent|[a-
 export const backgroundSchema = z.object({
   wallpaper: z.enum(['none', 'wood-1', 'wood-2', 'wood', 'cutting-mat', 'pink-notebook', 'charcoal']).default('none'),
   color: colorSchema.nullable().default(null),
+  originAxes:z.boolean().optional(),
+  originAxesColor:z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   titleBackground:z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
   opacity: z.number().finite().min(0).max(1).default(1),
   underlayBrightness: z.number().finite().min(0).max(1).default(0.5),
