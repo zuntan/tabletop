@@ -1,3 +1,4 @@
+import {publicAsset} from './runtime-mode';
 import type { Desk } from './model';
 import { rasterRenderedPart } from './part-raster';
 import { bhFrames, BH_DURATION, type BhMode } from './bh-animation';
@@ -30,7 +31,7 @@ export class BhDeletion {
     try {
       let eraser:HTMLImageElement|undefined;
       if(mode==='eraser'){
-        eraser=new Image();eraser.src='/props/eraser.svg';await eraser.decode();
+        eraser=new Image();eraser.src=publicAsset('props/eraser.svg');await eraser.decode();
         if(!valid())throw new Error('机が変更されたため、アニメ削除を中止しました');
       }
       const scene=desk.snapshot(), selected=new Set(ids);

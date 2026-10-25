@@ -19,3 +19,5 @@ READMEなどからの既存リンクは、参照切れを避けるため移動�
 - READMEのMCP設定例は個人環境のパスを使わず、配置先へ置換するLinux／macOSの例と、既存のWindows手順への案内にします。
 
 - [複数の机との接続と識別](./multiple-desk-connections.md)：必須deskId、机別の復旧・ベル・共有。
+
+- [Pages版](pages-viewer.md)：AIなしの静的配信、URLによる机の読込、公開手順。

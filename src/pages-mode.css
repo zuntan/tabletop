@@ -1,0 +1,4 @@
+/* Pages uses the same editor, with AI and server-local file controls removed. */
+html[data-app-mode="pages"] :is(#connection,#thinking-mode,#clear-ai-pointing,#desk-bell,#desk-bell-options,#bell-led,#ai-activity-led,#bell-note-panel,#desk-toast,#tab-connection,#panel-connection,#save-desk,#save-desk-as,#load-desk,#recent-desks,#add-desk-link) {
+  display: none !important;
+}

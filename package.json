@@ -10,7 +10,9 @@
     "start": "tsx src/server.ts",
     "test": "tsx --test tests/*.test.ts",
     "test:e2e": "tsx --test tests/*.e2e.ts",
-    "licenses": "node scripts/generate-licenses.mjs"
+    "licenses": "node scripts/generate-licenses.mjs",
+    "build:pages": "npm run licenses && tsc --noEmit && vite build --mode pages && node scripts/prepare-pages.mjs",
+    "preview:pages": "vite preview --mode pages --host 127.0.0.1"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

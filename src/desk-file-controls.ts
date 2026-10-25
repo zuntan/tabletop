@@ -8,7 +8,7 @@ import { createIcon } from './icons';
 import { headerIcon } from './header-icon';
 import { confirmAction, confirmUnsavedChanges, isConfirmDialogOpen } from './confirm-dialog';
 
-export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh: () => void, canLoad: () => boolean, exportPdf?: () => Promise<{bytes:Uint8Array;revision:number;webCount:number}>, remote?:(request:unknown)=>Promise<any>, addDeskLink?:(path:string,name:string)=>void) {
+export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh: () => void, canLoad: () => boolean, exportPdf?: () => Promise<{bytes:Uint8Array;revision:number;webCount:number}>, remote?:(request:unknown)=>Promise<any>, addDeskLink?:(path:string,name:string)=>void, pages=false) {
   const save = document.createElement('button');
   save.id = 'download-desk'; headerIcon(save, 'save', '保存');
   const load = document.createElement('button');
@@ -29,12 +29,13 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
   const recent=document.createElement('button');recent.id='recent-desks';recent.textContent='最近使った机';
   const deskLink=document.createElement('button');deskLink.id='add-desk-link';deskLink.textContent='机リンクを置く';
   for(const button of [normalSave,saveAs,normalLoad,recent,deskLink]){button.type='button';button.className='file-menu-item';button.setAttribute('role','menuitem');}
+  if(pages)for(const button of [normalSave,saveAs,normalLoad,recent,deskLink])button.hidden=true;
   menu.prepend(normalSave,saveAs,normalLoad,recent,deskLink);
   header.append(trigger,input);document.body.append(menu);
   menu.addEventListener('toggle',()=>{const open=menu.matches(':popover-open');trigger.setAttribute('aria-expanded',String(open));if(open){normalSave.title=desk.filePath?`保存先：${desk.filePath}`:'初回SAVEで保存先を指定';const r=trigger.getBoundingClientRect();menu.style.left=`${Math.max(8,Math.min(r.left,innerWidth-226))}px`;menu.style.top=`${r.bottom+6}px`;}});
-  trigger.addEventListener('keydown',event=>{event.stopPropagation();if(event.key==='ArrowDown'){event.preventDefault();menu.showPopover();menu.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();}});
+  trigger.addEventListener('keydown',event=>{event.stopPropagation();if(event.key==='ArrowDown'){event.preventDefault();menu.showPopover();menu.querySelector<HTMLButtonElement>('button:not(:disabled):not([hidden])')?.focus();}});
   menu.addEventListener('keydown',event=>{
-    event.stopPropagation();const items=[...menu.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
+    event.stopPropagation();const items=[...menu.querySelectorAll<HTMLButtonElement>('button:not(:disabled):not([hidden])')];
     if(event.key==='Escape'){event.preventDefault();menu.hidePopover();trigger.focus();}
     if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();const current=items.indexOf(document.activeElement as HTMLButtonElement);const index=event.key==='Home'?0:event.key==='End'?items.length-1:(current+(event.key==='ArrowDown'?1:-1)+items.length)%items.length;items[index]?.focus();}
   });
@@ -69,16 +70,16 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
     if(choice==='cancel')return false;
     if(desk.documentGeneration!==generation||desk.revision!==revision||!canLoad())throw new Error('確認中に机が変更されました');
     if(choice==='save'){
-      if(await saveNormal()===null)return false;
+      if(await (pages?saveDownload(true):saveNormal())===null)return false;
       if(desk.documentGeneration!==generation||desk.revision!==revision||desk.hasUnsavedChanges()||!canLoad())throw new Error('保存中に机が変更されたため切替を中止しました');
     }
     return true;
   }
-  async function loadPath(path:string){
+  async function loadPath(path:string,initial=false){
     if(normalBusy||loading||saving||!canLoad()||isConfirmDialogOpen())return;
     normalBusy=true;
     try{
-      if(!await authorizeSwitch())return;
+      if(!initial&&!await authorizeSwitch())return;
       const generation=desk.documentGeneration,revision=desk.revision;
       const result=await remote?.({action:'load',path});
       if(!result)throw new Error('MCP接続が必要です');
@@ -103,9 +104,9 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
     if(action==='remove')history.remove(entry.path);
     if(action==='link'&&canLoad())addDeskLink?.(entry.path,entry.name||entry.path);
   };
-  async function saveDownload(){
+  async function saveDownload(forSwitch=false){
     if(saving)throw new Error('保存処理中です。完了してから再実行してください');
-    if(normalBusy||loading)throw new Error('ファイル処理が進行中です');
+    if(!forSwitch&&(normalBusy||loading))throw new Error('ファイル処理が進行中です');
     saving=true;save.disabled=true;
     try {
       const revision = desk.revision;
@@ -161,6 +162,7 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
   });
   return {
     open:loadPath,
+    openInitial:(path:string)=>loadPath(path,true),
     record:(path:string)=>history.record(path,desk.settingsSnapshot().name),
     isBusy:()=>normalBusy||loading||saving,
   };

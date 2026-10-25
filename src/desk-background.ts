@@ -1,3 +1,4 @@
+import {publicAsset} from './runtime-mode';
 import floorSource from '../public/wallpapers/wood_floor.svg?raw';
 import type { Settings } from './settings';
 import { element } from './diagram-drawing';
@@ -35,7 +36,7 @@ export function createDeskBackground(canvas: SVGSVGElement) {
     if (wallpaper === 'wood-1' || wallpaper === 'wood-2') {
       // Keep supplied image pixels and aspect ratio; seams are accepted for this trial.
       pattern.setAttribute('width', '1672'); pattern.setAttribute('height', '941');
-      pattern.append(element('image', { href: '/wallpapers/' + wallpaper + '.png', x: 0, y: 0, width: 1672, height: 941, preserveAspectRatio: 'none' }));
+      pattern.append(element('image', { href: publicAsset('wallpapers/' + wallpaper + '.png'), x: 0, y: 0, width: 1672, height: 941, preserveAspectRatio: 'none' }));
     } else if (wallpaper === 'wood') {
       pattern.setAttribute('width', floor.getAttribute('width')!);
       pattern.setAttribute('height', floor.getAttribute('height')!);

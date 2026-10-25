@@ -1,3 +1,4 @@
+import {publicAsset} from './runtime-mode';
 import thirdParty from '../public/licenses/generated/manifest.json';
 import deskArtwork from './assets/desk-link.svg?raw';
 import {plainDeskColors,wallpaperChoice,wallpaperPatch} from './desk-appearance';
@@ -146,12 +147,12 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
       const entry=thirdParty.entries.find(entry=>entry.name===name);
       if(!entry)continue;
       const row=document.createElement('p'),a=document.createElement('a');
-      a.textContent=`${entry.name} · ${entry.license}`;a.href='/licenses/'+entry.notice;
+      a.textContent=`${entry.name} · ${entry.license}`;a.href=publicAsset('licenses/'+entry.notice);
       a.target='_blank';a.rel='noopener noreferrer';a.title=`${entry.name} ${entry.version} — 著作権表示・ライセンス全文`;
       row.append(a);licenseList.append(row);
     }
     const all=document.createElement('p'),allLink=document.createElement('a');
-    allLink.textContent='すべてのライブラリ・ライセンス';allLink.href='/licenses/THIRD_PARTY_NOTICES.txt';allLink.target='_blank';allLink.rel='noopener noreferrer';
+    allLink.textContent='すべてのライブラリ・ライセンス';allLink.href=publicAsset('licenses/THIRD_PARTY_NOTICES.txt');allLink.target='_blank';allLink.rel='noopener noreferrer';
     all.append(allLink);links.append(licenseHeading,licenseList,all);
     panel.append(artwork,text,description,credits,projectLinks,projectLicense,links);
   }

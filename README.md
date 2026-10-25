@@ -289,3 +289,7 @@ AIが指差した対象を、位置だけのバッチで同じ量だけ平行移
 
 
 「メニュー → 机の見た目」で、タイトル背景色と淡色の無地5色を選べます。机ごとに保存され、UIテーマや接続マーカーとは独立しています。[壁紙とタイトル色](docs_devel/desk-background.md)。
+
+## GitHub Pages版
+
+AI・MCPなしで机ファイルを閲覧する静的版もビルドできます。通常版とソースを共用し、出力は `dist-pages/` に分離します。`npm run build:pages` → `npm run preview:pages` で確認できます。URLで机ファイルを指定して開けます。[利用・公開手順](./docs/pages.md)。

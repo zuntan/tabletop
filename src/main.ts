@@ -1,3 +1,6 @@
+import {pagesMode} from './runtime-mode';
+import {pagesFileRequest} from './pages-desk';
+import './pages-mode.css';
 import {createOriginGuides} from './origin-guides';
 import {checkDeskBridgeSize} from './desk-file-protocol';
 import {partClipboardToken,clipboardTransferSchema} from './clipboard-transfer';
@@ -93,6 +96,7 @@ import { drawLockedSelection } from './lock-drawing';
 const desk = new Desk();
 const partClipboard = new PartClipboard();
 const app = document.querySelector<HTMLDivElement>('#app')!;
+document.documentElement.dataset.appMode=pagesMode?'pages':'desk';
 app.innerHTML = `
   <header><div class="brand">Tabletop <small>人間とAIの共有作業机</small></div>
     <span id="connection" class="badge">未接続</span><span id="revision">revision 0</span>
@@ -174,7 +178,7 @@ app.innerHTML = `
   <input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" hidden>
 `;
 groupToolbar(app.querySelector<HTMLElement>('nav')!);
-createSidebar(app);
+createSidebar(app,!pagesMode);
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => app.querySelector<T>(selector)!;
 headerIcon($<HTMLButtonElement>('#undo'), 'undo', '元に戻す');
 headerIcon($<HTMLButtonElement>('#redo'), 'redo', 'やり直す');
@@ -320,8 +324,8 @@ const identityControls = createDeskIdentityControls($('header'), desk,
 const deskFiles=createDeskFileControls($('header'), desk, () => { bhDeletion.stop();objectAnimator.finish();cameraAnimator.cancel('Desk contents replaced');partClipboard.clear(); render(); fitView(desk.selected()); },
   () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing(),
   () => {objectAnimator.finish();return deskPdf(desk,canvas,id=>pinDescriptionVisible(desk.get(id)));},
-  request=>recovery.fileRequest(request),
-  (path,name)=>newObject('link',{deskPath:path,text:name,width:360,height:72}));
+  request=>pagesMode?pagesFileRequest(request,desk.filePath??document.baseURI):recovery.fileRequest(request),
+  (path,name)=>newObject('link',{deskPath:path,text:name,width:360,height:72}),pagesMode);
 createUiThemeButton($('header'));
 const deskMenu = createDeskMenu($('header'), desk, patch => {
   if (busy || gesture || editor.isActive()) { notify('操作が終わってから設定を変更してください', true); deskMenu.refresh(); return; }
@@ -1123,6 +1127,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
 }
 let connectionAttempt = 0;
 async function connectUrl(value: string, manual: boolean) {
+  if(pagesMode)throw new Error('Pages版ではAIに接続しません');
   const attempt = ++connectionAttempt;
   let allowedHosts = ['127.0.0.1', 'localhost'];
   try {
@@ -1150,7 +1155,7 @@ if(suggestedDeskName&&!desk.list().length&&!desk.settingsSnapshot().name){
  try{desk.execute({operations:[{kind:'desk_rename',name:suggestedDeskName}]});notify(`机の名前を「${suggestedDeskName}」にしました`);}catch{/* Invalid launch hints never prevent opening a desk. */}
  startupParameters.delete('newDeskName');history.replaceState(null,'',location.pathname+(startupParameters.size?'?'+startupParameters.toString():'')+location.hash);
 }
-const standaloneStartup=startupParameters.get('connect')==='off';
+const standaloneStartup=pagesMode||startupParameters.get('connect')==='off';
 if(standaloneStartup){
   if(location.hash)history.replaceState(null,'',location.pathname+location.search);
   $('#connection').textContent='AI未接続（単独の机）';
@@ -1163,3 +1168,9 @@ if (location.hash&&!standaloneStartup) {
   void connectUrl(initialUrl, false).catch(error => notify(error instanceof Error ? error.message : String(error), true));
 }
 render();
+
+if(pagesMode){
+ $('#empty small').textContent='ファイルからアップロード · 上のツールから追加 · 画像をドロップ';
+ const reference=startupParameters.get('desk');
+ if(reference)void deskFiles.openInitial(reference);
+}

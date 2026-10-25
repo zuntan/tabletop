@@ -1,4 +1,4 @@
-export function createSidebar(app: HTMLElement) {
+export function createSidebar(app: HTMLElement, connection=true) {
   const aside = app.querySelector<HTMLElement>('aside')!;
   aside.id = 'sidebar'; aside.setAttribute('aria-label', '机の詳細');
   const sections = [...aside.querySelectorAll<HTMLElement>(':scope > section')];
@@ -55,9 +55,10 @@ export function createSidebar(app: HTMLElement) {
     tab.type = 'button'; tab.setAttribute('role', 'tab'); tab.setAttribute('aria-controls', `panel-${id}`);
     const panel = document.createElement('div'); panel.id = `panel-${id}`; panel.className = 'sidebar-panel';
     panel.setAttribute('role', 'tabpanel'); panel.setAttribute('aria-labelledby', tab.id); panel.tabIndex = 0;
+    if(id==='connection'&&!connection){tab.hidden=true;panel.hidden=true;}
     panel.append(...content); tabs.append(tab); panels.append(panel);
     return { id, tab, panel };
-  });
+  }).filter(item=>connection||item.id!=='connection');
   const heading = document.createElement('div'); heading.className = 'sidebar-heading';
   heading.append(tabs); aside.replaceChildren(heading, objectFilter, panels);
   const workspace = app.querySelector<HTMLElement>('#workspace')!;
