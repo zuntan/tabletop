@@ -1,3 +1,4 @@
+import { publicAsset } from './runtime-mode';
 import { propPresets } from './prop-presets';
 import { stationeryButton } from './stationery-button';
 export function createPropControls(container: HTMLElement, place: (preset: typeof propPresets[number], src: string) => void, report: (message: string, error?: boolean) => void) {
@@ -8,7 +9,7 @@ export function createPropControls(container: HTMLElement, place: (preset: typeo
   trigger.popoverTargetElement = panel;
   for (const preset of propPresets) {
     const button = document.createElement('button'); button.type = 'button'; button.dataset.propPreset = preset.id;
-    const image = document.createElement('img'); image.src = `/props/${preset.filename}`; image.alt = ''; image.width = 72; image.height = 84;
+    const image = document.createElement('img'); image.src = publicAsset(`props/${preset.filename}`); image.alt = ''; image.width = 72; image.height = 84;
     let preview:HTMLElement=image;
     if('responsive' in preset&&preset.responsive){
       // Lay out responsive SVG at its placement size before scaling the whole thumbnail.
@@ -23,7 +24,7 @@ export function createPropControls(container: HTMLElement, place: (preset: typeo
     button.onclick = async () => {
       button.disabled = true;
       try {
-        const response = await fetch(`/props/${preset.filename}`);
+        const response = await fetch(publicAsset(`props/${preset.filename}`));
         if (!response.ok) throw new Error('小物のSVGを読み込めませんでした');
         const source = await response.text();
         const bytes = new TextEncoder().encode(source);

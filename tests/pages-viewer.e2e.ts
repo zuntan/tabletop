@@ -32,6 +32,13 @@ test('Pages serves from a repository subpath, opens a URL without MCP, and keeps
   assert.equal(await page.locator('#canvas .markdown-text strong').first().textContent(),'Pages');
   await page.waitForFunction(()=>document.querySelector('[data-id="mermaid"] image')?.getAttribute('href')?.startsWith('data:image/svg+xml'));
   assert.ok(requests.includes('/tabletop/wallpapers/wood-1.png'));assert.equal(requests.some(p=>p.includes('connection-policy')||p.includes('/bridge')),false);assert.deepEqual(sockets,[]);
+  await page.locator('#prop-open').click();
+  await page.waitForFunction(()=>[...document.querySelectorAll<HTMLImageElement>('#prop-palette img')].every(image=>image.complete&&image.naturalWidth>0));
+  const preset=page.locator('[data-prop-preset]').first();await preset.click();
+  await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='4');
+  assert.equal(await page.locator('#objects [data-id] image').evaluateAll(images=>images.some(image=>image.getAttribute('href')?.startsWith('data:image/svg+xml;base64,'))),true);
+  assert.ok(requests.some(path=>path.startsWith('/tabletop/props/')));assert.equal(requests.some(path=>path.startsWith('/props/')),false);
+  await page.keyboard.press('Escape');await page.locator('#undo').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='3');
   await page.screenshot({path:'/tmp/tabletop-pages-loaded.png'});
   await page.locator('#file-menu').focus();await page.keyboard.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement?.id),'download-desk');
   assert.equal(await page.locator('#file-menu-panel button:visible').count(),3);await page.keyboard.press('Escape');
