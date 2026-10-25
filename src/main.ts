@@ -1172,5 +1172,5 @@ render();
 if(pagesMode){
  $('#empty small').textContent='ファイルからアップロード · 上のツールから追加 · 画像をドロップ';
  const reference=startupParameters.get('desk');
- if(reference)void deskFiles.openInitial(reference);
+ if(reference)void deskFiles.openInitial(reference).then(loaded=>{if(loaded&&startupParameters.get('pdf'))return deskFiles.openPdfHere();});
 }

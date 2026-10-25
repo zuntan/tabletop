@@ -87,6 +87,7 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
       desk.replaceDocument(result.document);desk.filePath=result.path;
       history.record(result.path,desk.settingsSnapshot().name);refresh();
       report(`読込完了：${result.path}${result.missingAssets.length?'（画像欠落あり）':''}`);
+      return true;
     }catch(error){report(`読込失敗（机は保持）: ${error instanceof Error?error.message:String(error)}`,true);}
     finally{normalBusy=false;}
   }
@@ -163,6 +164,24 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
   return {
     open:loadPath,
     openInitial:(path:string)=>loadPath(path,true),
+    openPdfHere:async()=>{
+      if(pdfBusy||!exportPdf)return;
+      const generation=desk.documentGeneration,revision=desk.revision;
+      pdfBusy=true;pdf.disabled=true;report('机全体をPDFにしています…');
+      try{
+        const deadline=Date.now()+30_000;
+        while(document.querySelector('#canvas [data-mermaid-status="loading"]')){
+          if(Date.now()>deadline)throw new Error('Mermaidの描画が時間内に完了しませんでした');
+          await new Promise(resolve=>setTimeout(resolve,50));
+        }
+        if(desk.documentGeneration!==generation||desk.revision!==revision||!canLoad())throw new Error('机が変更されたためPDF表示を中止しました');
+        const result=await exportPdf();
+        if(desk.documentGeneration!==generation||desk.revision!==revision)throw new Error('机が変更されたためPDF表示を中止しました');
+        const url=URL.createObjectURL(new Blob([new Uint8Array(result.bytes).buffer],{type:'application/pdf'}));
+        location.replace(url);
+      }catch(error){report(`PDF生成失敗: ${error instanceof Error?error.message:String(error)}`,true);}
+      finally{pdfBusy=false;pdf.disabled=false;}
+    },
     record:(path:string)=>history.record(path,desk.settingsSnapshot().name),
     isBusy:()=>normalBusy||loading||saving,
   };

@@ -43,7 +43,26 @@ test('Pages serves from a repository subpath, opens a URL without MCP, and keeps
   await page.goto(base+'/tabletop/?desk='+encodeURIComponent(base+'/another-product/guide.tabletop'));await page.waitForFunction(()=>document.querySelector('#desk-name')?.textContent==='Other product');
   await page.locator('#desk-file').setInputFiles({name:'uploaded.tabletop',mimeType:'application/zip',buffer:Buffer.from(bytes)});await page.locator('[data-dialog-choice="confirm"]').click();await page.waitForFunction(()=>document.querySelector('#desk-name')?.textContent==='Pages guide');
   await page.goto(base+'/?desk=desks/guide.tabletop');await page.waitForFunction(()=>document.querySelector('#desk-name')?.textContent==='Pages guide');
-  await page.goto(base+'/tabletop/?desk=missing.tabletop');await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('HTTP 404'));assert.equal(await page.locator('#count').textContent(),'0');
+  // Capture PDF bytes while keeping this test in HTML (native PDF viewers differ by browser).
+  await page.addInitScript(()=>{
+   const original=URL.createObjectURL.bind(URL);
+   URL.createObjectURL=(blob:Blob|MediaSource)=>{
+    if(blob instanceof Blob&&blob.type==='application/pdf'){
+     (window as any).__pdfBlob=blob;
+     (window as any).__pdfMermaidReady=document.querySelector('[data-id="mermaid"]')?.getAttribute('data-mermaid-status');
+     return location.href+'#pdf-captured';
+    }
+    return original(blob);
+   };
+  });
+  for(const value of ['1','yes']){
+   await page.goto(base+'/tabletop/?desk=desks/guide.tabletop&pdf='+value);
+   await page.waitForURL('**#pdf-captured');
+   const pdf=await page.evaluate(async()=>({bytes:Array.from(new Uint8Array(await (window as any).__pdfBlob.arrayBuffer())),ready:(window as any).__pdfMermaidReady}));
+   assert.equal(pdf.ready,'ready');assert.match(Buffer.from(pdf.bytes).toString('latin1'),/^%PDF-/);
+  }
+  await page.goto(base+'/tabletop/?desk=desks/guide.tabletop&pdf=');await page.waitForFunction(()=>document.querySelector('#desk-name')?.textContent==='Pages guide');assert.equal(await page.evaluate(()=>!!(window as any).__pdfBlob),false);
+  await page.goto(base+'/tabletop/?desk=missing.tabletop&pdf=1');await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('HTTP 404'));assert.equal(await page.locator('#count').textContent(),'0');assert.equal(await page.evaluate(()=>!!(window as any).__pdfBlob),false);
   await page.screenshot({path:'/tmp/tabletop-pages-viewer.png'});assert.deepEqual(errors,[]);assert.deepEqual(sockets,[]);
  }finally{await browser.close();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
 });

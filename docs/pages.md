@@ -22,6 +22,14 @@ https://zuntan.github.io/tabletop/?desk=%2Fother-product%2Fguide.tabletop
 
 URL指定がなければ空の机が開き、「ファイル → アップロード」で手元の `.tabletop` を読み込めます。
 
+## 読込後すぐPDFを表示する
+
+```text
+https://zuntan.github.io/tabletop/?desk=desks/guide.tabletop&pdf=1
+```
+
+`pdf` に空でない値（`1` など）がある場合、机の読込とMermaid描画の完了後にPDFを生成し、同じタブで表示します。`pdf=0` も有効です。省略または空なら通常の机を表示します。読込・生成に失敗した場合は机の画面にエラーを表示します。PDFから机へ戻るには、元のURLから `pdf` を外して開きます。
+
 ## 通常版との違い
 
 接続・接続状態・LED・ひとりで考える・ベル・AI指差し解除は表示せず、AIへの自動接続も行いません。サーバー保存のSAVE／SAVE AS／LOAD・サーバーの履歴・机リンク追加は非表示です。アップロード・ダウンロード・PDFは残します。
