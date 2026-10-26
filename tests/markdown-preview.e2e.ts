@@ -12,11 +12,23 @@ test('held Markdown draft preview matches the resized field, clips, and never co
     await page.locator('[data-id="memo"] .markdown-text').dblclick();
     const input = page.locator('[data-inline-text]'), mode = page.getByRole('button', { name: 'Enter改行モード' });
     assert.equal(await mode.getAttribute('aria-pressed'), 'true');
+    const stableWidth=async()=>{
+      return page.locator('.inline-editor').evaluate(async panel=>{
+        const widths:number[]=[];
+        for(let i=0;i<12;i++){await new Promise(requestAnimationFrame);widths.push(panel.getBoundingClientRect().width);}
+        return Math.max(...widths)-Math.min(...widths);
+      });
+    };
+    assert.ok(await stableWidth()<1,'opening the editor must not grow its width');
+    // Even if the panel box model changes, the field must not grow with its parent.
+    await page.locator('.inline-editor').evaluate(panel=>{panel.style.padding='12px';});
+    assert.ok(await stableWidth()<1,'parent geometry must not cause a resize loop');
     const draft = '# Draft\n\n**bold**\n\n- item\n\n<script>not executable</script>\n\n' + 'more\n'.repeat(60);
     await input.fill(draft);
     await input.evaluate(e => { e.style.height = '180px'; e.style.width = '520px'; });
+    assert.ok(await stableWidth()<1,'manual resize must settle');
     const button = page.getByRole('button', { name: 'Markdownプレビュー', exact: true });
-    const preview = page.locator('.editor-markdown-preview');
+    const preview = page.locator('.inline-editor .editor-markdown-preview');
     const rect = await button.boundingBox(); assert.ok(rect);
     await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2); await page.mouse.down();
     assert.equal(await preview.isVisible(), true);

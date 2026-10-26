@@ -94,6 +94,9 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       const width = object.type === 'label' ? object.width : object.width * (matrix?.a ?? 1);
       const matchesTextPart = textFrameTypes.has(object.type);
       panel.style.width = `${matchesTextPart ? width + 20 : Math.max(object.type === 'mermaid' ? 360 : 220, width)}px`;
+      // Keep the resized field independent of its parent: width:100% plus the
+      // observer below otherwise forms a parent/child sizing feedback loop.
+      if (matchesTextPart) text.style.width = `${width}px`;
       if (matchesTextPart && matrix) text.style.height = `${object.height * matrix.d}px`;
       const resizeObserver = matchesTextPart ? new ResizeObserver(() => {
         if (active?.text === text) panel.style.width = `${text.offsetWidth + 20}px`;
