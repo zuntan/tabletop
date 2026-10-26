@@ -284,7 +284,7 @@ const formatControls = createFormatControls(desk, $('#authoring-tools'), operati
   execute(operations); render();
 }, notify);
 const editActions = document.createElement('div'); editActions.className = 'toolbar-edit-actions';
-editActions.setAttribute('role', 'group'); editActions.setAttribute('aria-label', '重なり順・リアクション');
+editActions.setAttribute('role', 'group'); editActions.setAttribute('aria-label', '重なり順・削除・スナップ・ロック');
 for (const [id, icon, label] of [['front', '▣↑', '最前面'], ['back', '▣↓', '最背面']]) {
   const button = $<HTMLButtonElement>(`#${id}`); iconButton(button, icon, label); editActions.append(button);
 }
@@ -305,7 +305,12 @@ const lockControls = createLockControls($('#grid-snap'), form, () => {
 $('#numbering-settings').after($('#label-descriptions'));
 $('main').append($('.toolbar-view'));
 const activityLed = createActivityLed($('footer'));
-const bellControls=createBellControls($('#fit'),$('footer'),note=>recovery.ringBell(desk.selected(),note),notify);
+const centerViewButton=document.createElement('button');centerViewButton.id='view-center';centerViewButton.type='button';
+iconButton(centerViewButton,'','原点（0, 0）を画面の中心へ');$('#fit').after(centerViewButton);
+centerViewButton.onclick=()=>{void cameraControls.move({center:{x:0,y:0}}).catch(error=>{
+  if(!(error instanceof Error&&error.message.startsWith('Camera animation cancelled:')))notify(error instanceof Error?error.message:String(error),true);
+});};
+const bellControls=createBellControls(centerViewButton,$('footer'),note=>recovery.ringBell(desk.selected(),note),notify);
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });
@@ -318,6 +323,13 @@ createPropControls(propContainer, (preset, src) => {
   if (busy || editor.isActive()) throw new Error('編集を終えてから小物を置いてください');
   attempt(() => newObject('prop', { src, text: preset.name, width: preset.width, height: preset.height }));
 }, notify);
+$('#clipboard').before(stampContainer, $('#reaction-controls'), propContainer);
+const formatGroup=document.createElement('div');formatGroup.className='toolbar-format-group';formatGroup.setAttribute('role','group');formatGroup.setAttribute('aria-label','色・線幅・書式');
+const deskOptions=document.createElement('div');deskOptions.className='toolbar-options-group';deskOptions.setAttribute('role','group');deskOptions.setAttribute('aria-label','ピン・スナップ・ロック');
+deskOptions.append($('#numbering-settings'),$('#label-descriptions'),$('#grid-snap'),$('#mouse-lock'));
+formatGroup.append(...$('#authoring-tools').children);
+editActions.prepend($('#clipboard'));editActions.setAttribute('aria-label','貼り付け・重なり順・削除');
+$('#authoring-tools').append(formatGroup,editActions,deskOptions);
 const clipCreate=document.createElement('button');clipCreate.id='clip-create';iconButton(clipCreate, '', 'クリップ');clipCreate.title='選択を束ねる（Ctrl/⌘＋G）。未選択ならクリップを置く';
 clipCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{
   const operations=bundleOperations(desk.snapshot(),desk.selected());

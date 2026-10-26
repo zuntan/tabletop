@@ -1,3 +1,5 @@
+import crosshair from './vendor/tabler/crosshair.svg?raw';
+import strokeDynamic from './vendor/tabler/stroke-dynamic.svg?raw';
 import rulerIcon from './vendor/tabler/ruler-2.svg?raw';
 import fileLock from './vendor/tabler/file-lock.svg?raw';
 import scissors from './vendor/tabler/scissors.svg?raw';
@@ -35,7 +37,7 @@ import svg27 from './vendor/tabler/folder-open.svg?raw';
 import svg28 from './vendor/tabler/pencil.svg?raw';
 
 const sources = {
-  'ruler-2':rulerIcon, moon, sun, paperclip, scissors, 'file-lock': fileLock,
+  crosshair, 'stroke-dynamic': strokeDynamic, 'ruler-2':rulerIcon, moon, sun, paperclip, scissors, 'file-lock': fileLock,
   'pointer': svg0,
   'pointer-x': svg1,
   'rectangle': svg2,
