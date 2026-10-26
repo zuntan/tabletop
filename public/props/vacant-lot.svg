@@ -1,20 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
   <title>空き地</title>
-  <desc>枠は表示領域に合わせて伸び、看板と草は同じ大きさを保ちます。中央は透明です。</desc>
-  <rect x="4%" y="8%" width="92%" height="87%" rx="10" fill="none" stroke="#83a88b" stroke-width="3"/>
-  <svg x="50%" y="8%" width="1" height="1" overflow="visible">
+  <desc>枠は周囲の余白を固定して伸び、看板と草は同じ大きさを保ちます。中央は透明です。</desc>
+  <rect x="16" y="28" style="width:calc(100% - 32px);height:calc(100% - 44px)" rx="10" fill="none" stroke="#83a88b" stroke-width="3"/>
+  <svg x="50%" y="28" width="1" height="1" overflow="visible">
     <g transform="translate(-86,-23)" stroke-linejoin="round">
       <rect width="172" height="46" rx="7" fill="#e8f1df" stroke="#72947a" stroke-width="2.5"/>
       <text x="86" y="34" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="32" fill="#446b50">空き地</text>
     </g>
   </svg>
-  <svg x="6%" y="95%" width="1" height="1" overflow="visible">
-    <g fill="none" stroke="#729b78" stroke-width="2.5" stroke-linecap="round">
+  <svg x="24" y="100%" width="1" height="1" overflow="visible">
+    <g transform="translate(0,-16)" fill="none" stroke="#729b78" stroke-width="2.5" stroke-linecap="round">
       <path d="M8 0Q7-13 0-19M8 0Q12-15 20-17M28 0Q26-8 22-11"/>
     </g>
   </svg>
-  <svg x="94%" y="95%" width="1" height="1" overflow="visible">
+  <svg x="100%" y="100%" width="1" height="1" overflow="visible">
+    <g transform="translate(-24,-16)">
     <path d="M-13 0V-15" fill="none" stroke="#729b78" stroke-width="2.5" stroke-linecap="round"/>
     <path d="M-13-13Q-31-13-29-26Q-13-27-13-13ZM-13-13Q2-14 1-27Q-13-27-13-13Z" fill="#aac79a" stroke="#729b78" stroke-width="2" stroke-linejoin="round"/>
+    </g>
   </svg>
 </svg>

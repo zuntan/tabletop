@@ -1,13 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
   <title>仮置き場</title>
-  <desc>浅いトレー風の枠は表示領域に合わせて伸び、上の看板は同じ大きさを保ちます。中央は透明です。</desc>
+  <desc>浅いトレー風の枠は周囲の余白を固定して伸び、上の看板は同じ大きさを保ちます。中央は透明です。</desc>
   <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="4%" y="8%" width="92%" height="87%" rx="10" stroke="#8da4b3" stroke-width="3"/>
-    <line x1="5%" y1="91%" x2="95%" y2="91%" stroke="#c0cdd5" stroke-width="2"/>
-    <line x1="5%" y1="91%" x2="4%" y2="95%" stroke="#a5b7c2" stroke-width="2"/>
-    <line x1="95%" y1="91%" x2="96%" y2="95%" stroke="#a5b7c2" stroke-width="2"/>
+    <rect x="16" y="28" style="width:calc(100% - 32px);height:calc(100% - 44px)" rx="10" stroke="#8da4b3" stroke-width="3"/>
+    <svg x="20" y="100%" style="width:calc(100% - 40px)" height="1" overflow="visible">
+      <line x1="0" y1="-28" x2="100%" y2="-28" stroke="#c0cdd5" stroke-width="2"/>
+    </svg>
+    <svg x="0" y="100%" width="1" height="1" overflow="visible">
+      <path d="M20 -28L16 -16" stroke="#a5b7c2" stroke-width="2"/>
+    </svg>
+    <svg x="100%" y="100%" width="1" height="1" overflow="visible">
+      <path d="M-20 -28L-16 -16" stroke="#a5b7c2" stroke-width="2"/>
+    </svg>
   </g>
-  <svg x="50%" y="8%" width="1" height="1" overflow="visible">
+  <svg x="50%" y="28" width="1" height="1" overflow="visible">
     <g transform="translate(-100,-23)" stroke-linejoin="round">
       <rect width="200" height="46" rx="7" fill="#e5edf1" stroke="#849eaf" stroke-width="2.5"/>
       <text x="100" y="33" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="30" fill="#4e697b">仮置き場</text>
