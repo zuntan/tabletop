@@ -73,6 +73,8 @@ test('Pages serves from a repository subpath, opens a URL without MCP, and keeps
   await page.goto(base+'/tabletop/?desk=desks/guide.tabletop&pdf=');await page.waitForFunction(()=>document.querySelector('#desk-name')?.textContent==='Pages guide');assert.equal(await page.evaluate(()=>!!(window as any).__pdfBlob),false);
   await page.goto(base+'/tabletop/?desk=missing.tabletop&pdf=1');await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('HTTP 404'));assert.equal(await page.locator('#count').textContent(),'0');assert.equal(await page.evaluate(()=>!!(window as any).__pdfBlob),false);
   await page.goto(base+'/tabletop/?desk=desks/ruler.tabletop&pdf=1');await page.waitForURL('**#pdf-captured');assert.equal(await page.locator('[data-ruler-body] pattern').count(),1);assert.equal(await page.locator('#count').textContent(),'2');
+  await page.goto(base+'/tabletop/');await page.locator('#line-input-open').click();await page.getByRole('menuitem',{name:'連続線',exact:true}).click();
+  const canvasBox=await page.locator('#canvas').boundingBox();assert.ok(canvasBox);await page.mouse.click(canvasBox.x+100,canvasBox.y+100);await page.mouse.click(canvasBox.x+300,canvasBox.y+100);await page.keyboard.press('Escape');assert.equal(await page.locator('#count').textContent(),'1');assert.equal(await page.locator('#canvas').getAttribute('data-line-input'),null);
   await page.screenshot({path:'/tmp/tabletop-pages-viewer.png'});assert.deepEqual(errors,[]);assert.deepEqual(sockets,[]);
  }finally{await browser.close();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
 });

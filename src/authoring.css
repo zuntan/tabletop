@@ -95,3 +95,10 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 #file-create .tool-icon { height: 16px; line-height: 16px; }
 #file-create .ui-icon { width: 16px; height: 16px; }
 #file-create .tool-caption { white-space: pre-line; line-height: 10px; }
+.line-input-tools { display: inline-flex; align-items: stretch; gap: 2px; }
+.line-input-tools #line-input-open { width: 22px; padding: 0; height: 46px; }
+#line-input-open[data-active] { background: #dbeafe; border-color: #2563eb; }
+#canvas[data-line-input] { cursor: crosshair; }
+#line-input-menu { margin: 0; position: fixed; padding: 6px; border: 1px solid var(--ui-border,#cbd5e1); border-radius: 8px; background: var(--ui-panel,#fff); color: var(--ui-text,#334155); }
+#line-input-menu:popover-open { display: grid; gap: 4px; }
+#line-input-menu button { text-align: left; font-size: 12px; }

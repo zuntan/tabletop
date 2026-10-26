@@ -104,3 +104,6 @@ Markdownメモは背景や輪郭の有無に関係なく、矩形の枠として
 - `src/properties.ts`：オブジェクト種類別のプロパティ編集。
 - `tests/diagram.test.ts`：接続整合性、原子性、Undo / Redo、任意方向、プレビュー。
 - `tests/diagram-browser.e2e.ts`：実ブラウザと実stdio MCPを使う色・ラベル・端点・接続操作の検証。
+
+## 連続線・フリー連続線
+「線」の隣の▼からクリック式／ドラッグ式を選びます。生成後は通常の直線と既存端点接合・角丸めです。クリック式は各線分を確定し、Enter／Escで終了。フリー式は離した時に粗く清書し、1回のUndoで戻せます。Altで吸着解除。詳しくは[入力仕様](docs_devel/continuous-line-input.md)。

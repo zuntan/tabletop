@@ -1,3 +1,4 @@
+import {createLineInput} from './line-input';
 import {rulerCreateOperations,rulerFor,rulerDropTarget,rulerTarget} from './ruler-layout';
 import {drawRuler} from './ruler-drawing';
 import {pagesMode} from './runtime-mode';
@@ -806,7 +807,7 @@ canvas.addEventListener('dblclick', event => {
   const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
   if (target.closest('[data-open-url], [data-open-media], [data-open-desk], [data-markdown-link]')) return;
   const id = target.closest('[data-id]')?.getAttribute('data-id');
-  if (!id || busy || editor.isActive()) return;
+  if (!id || busy || editor.isActive() || lineInput.isActive()) return;
   const object = desk.get(id);
   if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg', 'mermaid', 'prop', 'file'].includes(object.type)) editor.open(object);
 });
@@ -1106,8 +1107,8 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if(deskFiles.isBusy()&& !['summary','get','list','state','context','settings','selection','changes','file_saved','camera_get','ui_get'].includes(message.request?.method))throw new Error('Human file operation in progress. No change was made.');
       if(isConfirmDialogOpen()&&['execute','lock','undo','redo','select','point','load_document','fit','camera_move','ui_set'].includes(message.request?.method))throw new Error('Human confirmation in progress. No change was made; wait for the user.');
       if (['fit', 'camera_move'].includes(message.request.method)) humanScroll.assertIdle();
-      if ((busy && message.request.method !== 'camera_get') || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
-      if (['fit', 'camera_move'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing())) throw new Error('Human editing in progress. No camera change was made.');
+      if ((busy && message.request.method!=='camera_get') || (lineInput.isActive() && !['camera_get','summary','context','list','get','state','selection','settings','changes','file_saved','asset_read','ui_get','text_measure'].includes(message.request.method)) || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
+      if (['fit', 'camera_move'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing() || lineInput.isActive())) throw new Error('Human editing in progress. No camera change was made.');
       if (['execute', 'lock', 'undo', 'redo', 'select', 'point', 'load_document', 'fit', 'camera_move', 'ui_set'].includes(message.request.method)) objectAnimator.finish();
       const beforeMove = message.request.method === 'execute' ? desk.snapshot() : null;
       let animatedMove = false;
@@ -1180,6 +1181,8 @@ if (location.hash&&!standaloneStartup) {
   $<HTMLInputElement>('#connection-url').value = initialUrl;
   void connectUrl(initialUrl, false).catch(error => notify(error instanceof Error ? error.message : String(error), true));
 }
+const lineInput=createLineInput(canvas,viewport,$<HTMLButtonElement>('[data-add="line"]'),desk,world,()=>camera.zoom,
+ ()=>formatControls.appearance('line',desk.settingsSnapshot().defaults),()=>render(),()=>!busy&&!gesture&&!editor.isActive()&&!identityControls.isEditing()&&!isConfirmDialogOpen(),notify,()=>desk.snapshot().filter(pinIsVisible).map(o=>pinScreenObject(o,camera.zoom)));
 render();
 
 if(pagesMode){
