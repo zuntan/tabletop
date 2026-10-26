@@ -272,3 +272,6 @@ text.calloutは{x,y,binding?:{objectId,anchor}|null}、null/省略で無効。�
 保存とMCP取得・履歴・共有GETは、種類ごとに意味のある項目だけを出力する。線の塗り・文字サイズや、メディアの固定装飾に対する見かけの設定値は出さない。有効な0や既定値は残す。旧ファイルの読取は互換。詳細はdocs_devel/meaningful-properties.md。
 
 原点の縦横線は、対象deskIdの `desk_execute` → `background_update` で `originAxes:true/false` と `originAxesColor:"#94a3b8"` を設定します。省略時OFF、色は固定で壁紙に追従しません。部品ではなく表示補助で、選択・全体表示範囲・PDFには含めません。
+
+## 長文カードの分割
+「分割して」と依頼された場合は `desk_help({topic:"card-splitting"})` を参照。意味単位で分け、原本は全文・付属物・接続とも保持する。分割先とクリップへハンコ・シール・リアクション・接続を複製しない。未指定は上留め・直前カード基準100%で縦並び、横指定なら左留め・同100%。専用UIや結合操作は追加しない。

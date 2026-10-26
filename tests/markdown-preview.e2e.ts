@@ -62,3 +62,27 @@ test('held Markdown draft preview matches the resized field, clips, and never co
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });
+
+test('card editor starts within the visible workspace at extreme sizes and zooms without changing the card',{timeout:60_000},async()=>{
+ const {page,call,close,errors}=await openTestDesk('editor-bounds');
+ try{
+  await call('desk_execute',{operations:[{kind:'add',object:{id:'bounds-note',type:'text',x:0,y:0,width:5000,height:4000,fontSize:100,text:'Editor bounds'}}]});
+  for(const [width,height,zoom,viewportWidth] of [[5000,4000,8,1400],[48,24,.05,1400],[5000,4000,1,540]]){
+   await page.setViewportSize({width:viewportWidth,height:900});
+   await call('desk_execute',{operations:[{kind:'update',id:'bounds-note',patch:{width,height}}]});
+   await call('desk_camera_move',{center:{x:0,y:0},zoom,durationMs:0});
+   const before=await call('desk_get',{id:'bounds-note'});
+   await page.locator('[data-id="bounds-note"] .markdown-text').dispatchEvent('dblclick',{clientX:-1,clientY:-1});
+   const layout=await page.locator('.inline-editor').evaluate(panel=>{
+    const box=panel.getBoundingClientRect(),workspace=document.querySelector('#workspace')!.getBoundingClientRect(),input=panel.querySelector('textarea')!;
+    return {left:box.left,top:box.top,right:box.right,bottom:box.bottom,minX:Math.max(0,workspace.left),minY:Math.max(0,workspace.top),maxX:Math.min(innerWidth,workspace.right),maxY:Math.min(innerHeight,workspace.bottom),font:getComputedStyle(input).fontSize,width:input.getBoundingClientRect().width,height:input.getBoundingClientRect().height};
+   });
+   assert.ok(layout.left>=layout.minX&&layout.top>=layout.minY,JSON.stringify(layout));
+   assert.ok(layout.right<=layout.maxX+1&&layout.bottom<=layout.maxY+1,JSON.stringify(layout));
+   assert.equal(layout.font,'16px');assert.ok(layout.width<=800&&layout.height<=480);
+   await page.locator('[data-inline-text]').press('Escape');
+   assert.deepEqual(await call('desk_get',{id:'bounds-note'}),before);
+  }
+  assert.deepEqual(errors,[]);
+ }finally{await close();}
+});

@@ -21,3 +21,4 @@ READMEなどからの既存リンクは、参照切れを避けるため移動�
 - [複数の机との接続と識別](./multiple-desk-connections.md)：必須deskId、机別の復旧・ベル・共有。
 
 - [Pages版](pages-viewer.md)：AIなしの静的配信、URLによる机の読込、公開手順。
+- [入力欄の開始サイズとAI分割](inline-editor-bounds.md)：画面内補正と、原本を残す意味単位のカード分割。

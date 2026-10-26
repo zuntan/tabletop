@@ -20,7 +20,15 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
     const point = new DOMPoint(object.x, object.y).matrixTransform(matrix);
     const rect = workspace.getBoundingClientRect();
     const inset = textFrameTypes.has(active.object.type) ? 10 : 0;
-    Object.assign(active.panel.style, { left: `${point.x - rect.left - inset}px`, top: `${point.y - rect.top - inset}px` });
+    let left=point.x-rect.left-inset,top=point.y-rect.top-inset;
+    if(active.object.type==='text'){
+      const box=active.panel.getBoundingClientRect();
+      const minX=Math.max(0,-rect.left)+8,minY=Math.max(0,-rect.top)+8;
+      const maxX=Math.min(rect.width,innerWidth-rect.left)-8-box.width;
+      const maxY=Math.min(rect.height,innerHeight-rect.top)-8-box.height;
+      left=Math.max(minX,Math.min(left,maxX));top=Math.max(minY,Math.min(top,maxY));
+    }
+    Object.assign(active.panel.style, { left: `${left}px`, top: `${top}px` });
   }
   function commit() {
     if (!active) return true;
@@ -91,17 +99,29 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       const disposePreview = object.type === 'text' ? createMarkdownPreview(panel, text, actions) : undefined;
       const error = document.createElement('div'); error.className = 'editor-error'; error.setAttribute('role', 'alert'); panel.append(error);
       const matrix = viewport.getScreenCTM();
-      const width = object.type === 'label' ? object.width : object.width * (matrix?.a ?? 1);
+      let width = object.type === 'label' ? object.width : object.width * (matrix?.a ?? 1);
+      const bounds=workspace.getBoundingClientRect();
+      const availableWidth=Math.max(1,Math.min(bounds.right,innerWidth)-Math.max(bounds.left,0)-16);
+      const availableHeight=Math.max(1,Math.min(bounds.bottom,innerHeight)-Math.max(bounds.top,0)-16);
+      if(object.type==='text')width=Math.min(Math.max(1,availableWidth-20),Math.max(320,Math.min(800,width)));
       const matchesTextPart = textFrameTypes.has(object.type);
       panel.style.width = `${matchesTextPart ? width + 20 : Math.max(object.type === 'mermaid' ? 360 : 220, width)}px`;
       // Keep the resized field independent of its parent: width:100% plus the
       // observer below otherwise forms a parent/child sizing feedback loop.
       if (matchesTextPart) text.style.width = `${width}px`;
       if (matchesTextPart && matrix) text.style.height = `${object.height * matrix.d}px`;
+      if(object.type==='text'){
+        text.style.fontSize='16px';text.style.lineHeight='1.4';text.style.overflow='auto';
+        text.style.height=`${Math.max(160,Math.min(480,object.height*(matrix?.d??1)))}px`;
+      }
       const resizeObserver = matchesTextPart ? new ResizeObserver(() => {
         if (active?.text === text) panel.style.width = `${text.offsetWidth + 20}px`;
       }) : undefined;
       active = { object, fresh, panel, text, url, source, error, resizeObserver, disposePreview }; workspace.append(panel);
+      if(object.type==='text'){
+        const overhead=panel.getBoundingClientRect().height-text.getBoundingClientRect().height;
+        text.style.height=`${Math.max(1,Math.min(text.getBoundingClientRect().height,availableHeight-overhead))}px`;
+      }
       resizeObserver?.observe(text); reposition();
       panel.addEventListener('compositionstart', () => { composing = true; });
       panel.addEventListener('compositionend', () => { composing = false; });
@@ -114,7 +134,7 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
           event.preventDefault(); commit();
         }
       });
-      (source ?? text).focus(); (source ?? text).select();
+      (source ?? text).focus({preventScroll:true}); (source ?? text).select();
     },
   };
 }
