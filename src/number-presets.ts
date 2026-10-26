@@ -50,6 +50,12 @@ export function addPresetPalette(input: HTMLInputElement | HTMLSelectElement, va
     event.preventDefault();
     if (popup.matches(':popover-open')) { hide(); return; }
     if (input.disabled) return;
+    if(input.name==='clipOffsetPercent'){
+      const previous=(input.form?.elements.namedItem('clipOffsetMode') as HTMLSelectElement|null)?.value==='percent';
+      const buttons=[...choices.querySelectorAll<HTMLButtonElement>('button')];
+      buttons.sort((a,b)=>previous?Number(b.dataset.value)-Number(a.dataset.value):Number(a.dataset.value)-Number(b.dataset.value));
+      for(const button of buttons){button.textContent=previous?(button.dataset.value==='100'?'隙間無し（100%）':`${button.dataset.value}%`):button.dataset.value!;choices.append(button);}
+    }
     choices.querySelectorAll<HTMLButtonElement>('button').forEach(choice => choice.setAttribute('aria-pressed', String(input.value === choice.dataset.value)));
     popup.showPopover();
     menu.setAttribute('aria-expanded', 'true');
