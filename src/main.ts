@@ -316,7 +316,7 @@ clipCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{
   else if(!desk.selected().length)newObject('clip',{clipMembers:[],clipSize:64,clipAutoSize:true,clipOffset:32,clipStyle:'binder',fill:'#26313d'});
 });};
 app.querySelector('[data-add="text"]')!.after(clipCreate);
-const fileCreate=document.createElement('button');fileCreate.id='file-create';iconButton(fileCreate,'','クリアファイルへ');fileCreate.title='配置を保ってクリアファイルへ';
+const fileCreate=document.createElement('button');fileCreate.id='file-create';iconButton(fileCreate,'','クリアファイル');fileCreate.title='選択を配置ごとクリアファイルにまとめる';
 fileCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{const operations=fileCreateOperations(desk.snapshot(),desk.selected(),desk.settingsSnapshot().grid);execute(operations);const add=operations.find(op=>op.kind==='add');if(add?.kind==='add')desk.select([add.object.id]);});};clipCreate.after(fileCreate);
 const thinkingMode = createThinkingMode($('header'), () => { objectAnimator.finish(); cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,

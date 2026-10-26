@@ -8,3 +8,6 @@ The application sets display size, stroke width 1 and currentColor when renderin
 
 Additional icon: `scissors.svg`, retrieved from upstream `main` on 2026-10-21
 (https://raw.githubusercontent.com/tabler/tabler-icons/main/icons/outline/scissors.svg), same MIT license.
+
+Additional icon: `file-lock.svg`, retrieved from upstream `main` on 2026-10-27
+(https://raw.githubusercontent.com/tabler/tabler-icons/main/icons/outline/file-lock.svg), same MIT license.

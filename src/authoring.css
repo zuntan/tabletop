@@ -89,3 +89,9 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
 .pin-series-choices button { text-align: left; font-size: 12px; }
 .pin-series-choices button[aria-pressed="true"] { border-color: #2563eb; }
 #pin-series-new { width: 100%; font-size: 12px; }
+
+/* Two-line stationery name, within the standard toolbar button height. */
+.toolbar-group #file-create { gap: 1px; padding-top: 2px; padding-bottom: 2px; }
+#file-create .tool-icon { height: 16px; line-height: 16px; }
+#file-create .ui-icon { width: 16px; height: 16px; }
+#file-create .tool-caption { white-space: pre-line; line-height: 10px; }

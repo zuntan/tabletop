@@ -1,3 +1,4 @@
+import fileLock from './vendor/tabler/file-lock.svg?raw';
 import scissors from './vendor/tabler/scissors.svg?raw';
 import paperclip from './vendor/tabler/paperclip.svg?raw';
 import svg0 from './vendor/tabler/pointer.svg?raw';
@@ -33,7 +34,7 @@ import svg27 from './vendor/tabler/folder-open.svg?raw';
 import svg28 from './vendor/tabler/pencil.svg?raw';
 
 const sources = {
-  moon, sun, paperclip, scissors,
+  moon, sun, paperclip, scissors, 'file-lock': fileLock,
   'pointer': svg0,
   'pointer-x': svg1,
   'rectangle': svg2,
