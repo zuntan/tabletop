@@ -1,3 +1,4 @@
+import {rulerFor,rulerMoveOperations} from './ruler-layout';
 import {fileFor,fileMoveOperations} from './clear-files';
 import { clipMoveOperations, clipFor, clipDropTarget, clipTarget, clipGroup } from './clip-bundles';
 import { snapPinAttachment } from './pin-attachments';
@@ -39,6 +40,7 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
   if(gesture.mode!=='move'&&gesture.originals.some(o=>fileFor(gesture.scene,o.id)))return [];
   if (gesture.mode === 'move') {
     const filed=fileMoveOperations(gesture.scene,movable.map(o=>o.id),dx,dy);if(filed)return filed;
+    const ruled=rulerMoveOperations(gesture.scene,movable.map(o=>o.id),dx,dy,!!gesture.detach,point,zoom);if(ruled)return ruled;
     const bundled=clipMoveOperations(gesture.scene,gesture.detach&&gesture.anchorId?[gesture.anchorId]:movable.map(o=>o.id),dx,dy,!!gesture.detach);
     if(bundled) return bundled;
     if(movable.length===1 && !gesture.detach) {
@@ -47,7 +49,7 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
         const next={x:object.x+object.width/2+dx,y:object.y+object.height*.5+dy};
         const target=snap(next,gesture.scene.filter(o=>clipTarget(o)&&!o.locked&&!clipFor(gesture.scene,o.id)),24/zoom);
         if(target) return [{kind:'update',id:object.id,patch:{clipMembers:[target.binding.objectId],clipAnchor:target.binding.anchor as Exclude<typeof target.binding.anchor,'center'>}}];
-      } else if(clipTarget(object) && !clipFor(gesture.scene,object.id)) {
+      } else if(clipTarget(object) && !clipFor(gesture.scene,object.id)&&!rulerFor(gesture.scene,object.id)) {
         const clip=clipDropTarget(gesture.scene,point,zoom,[object.id]);
         if(clip) return [{kind:'update',id:clip.id,patch:{clipMembers:[...clip.clipMembers!,object.id]}}];
       }
@@ -138,6 +140,7 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
 export function gesturePreview(gesture: Gesture, point: Point, zoom: number): DeskObject[] {
   const operations = gestureOperations(gesture, point, zoom);
   const updates = new Map(operations.flatMap(op => op.kind === 'update' ? [[op.id, op.patch] as const] : []));
+  if(gesture.mode==='resize'&&gesture.originals.some(o=>o.type==='ruler'))return gesture.scene.map(o=>({...o,...updates.get(o.id)}));
   return resolveConnections(gesture.scene.map(o => ({ ...o, ...updates.get(o.id) })), gesture.scene);
 }
 export function endpointDragPoint(gesture: Gesture, point: Point): Point {

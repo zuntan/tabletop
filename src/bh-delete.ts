@@ -36,7 +36,7 @@ export class BhDeletion {
       }
       const scene=desk.snapshot(), selected=new Set(ids);
       // A member deletion also removes its clip; surviving papers are not deleted.
-      const disappearing=scene.filter(o=>selected.has(o.id)||o.type==='clip'&&o.clipMembers?.some(id=>selected.has(id)));
+      const disappearing=scene.filter(o=>selected.has(o.id)||(o.type==='clip'&&o.clipMembers?.some(id=>selected.has(id))||o.type==='ruler'&&o.rulerMembers?.some(m=>selected.has(m.id))));
       const frames: {image:HTMLImageElement;box:{x:number;y:number;width:number;height:number}}[]=[];
       const budget=Math.min(2_000_000,8_000_000/Math.max(1,disappearing.length));
       for(const object of disappearing){

@@ -1,3 +1,4 @@
+import {assertRulerOperation} from './ruler-layout';
 import {assertFileOperation,fileGroup,fileFor} from './clear-files';
 import { cutoutSchema, cutoutTarget, applyCutoutPatch, normalizeCutoutPatch } from './logical-cutout';
 import { clipGroup, clipFor } from './clip-bundles';
@@ -40,9 +41,14 @@ const bindingSchema = z.object({
 export const endpointShapeSchema = z.enum(['none', 'arrow', 'circle', 'diamond']);
 const objectFields = z.object({
   id: z.string().min(1).max(100),
-  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'file', 'web', 'link', 'label']),
+  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label']),
   cornerRadius: z.number().finite().min(0).max(100_000).default(16),
   padding: z.number().finite().min(0).max(100_000).optional(),
+  rulerMembers: z.array(z.object({id:z.string().min(1).max(100),side:z.enum(['before','after'])}).strict()).max(1999).optional(),
+  rulerMode:z.enum(['free','gap','center']).optional(),
+  rulerMaterial:z.enum(['acrylic','bamboo','steel']).optional(),
+  rulerThickness:z.union([z.literal(24),z.literal(36),z.literal(48)]).optional(),
+  rulerAxis:z.enum(['horizontal','vertical']).optional(),
   fileMembers: z.array(z.string().min(1).max(100)).max(1999).optional(),
   clipMembers: z.array(z.string().min(1).max(100)).optional(),
   clipAnchor: z.enum(['top','right','bottom','left','top-left','top-right','bottom-left','bottom-right']).optional(),
@@ -102,7 +108,7 @@ function normalizeLegacyConnector(input: unknown): unknown {
 export const objectSchema = z.preprocess(normalizeLegacyConnector, objectFields);
 export const patchSchema = objectFields.omit({ id: true, type: true }).partial();
 const addObjectFields = objectFields.partial().required({ id: true, type: true });
-const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'file', 'web', 'link', 'label']) })
+const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label']) })
   .transform(object => normalizeLegacyConnector(object) as z.input<typeof addObjectFields>);
 export const operationSchema = z.discriminatedUnion('kind', [
   ...settingsOperations,
@@ -140,6 +146,7 @@ type Entry = { replacement?:boolean; before: Snapshot; after: Snapshot; beforeSe
 
 function validateObject(object: unknown): DeskObject {
   const parsed = objectSchema.parse(object);
+  if(parsed.type!=='ruler'&&['rulerMembers','rulerMode','rulerMaterial','rulerThickness','rulerAxis'].some(key=>(parsed as Record<string,unknown>)[key]!==undefined))throw Error('Ruler fields belong only to rulers');
   if(parsed.type!=='file'&&parsed.fileMembers!==undefined)throw new Error('File members belong only to files');
   if(parsed.type!=='clip' && ['clipMembers','clipAnchor','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipStyle'].some(key=>(parsed as Record<string,unknown>)[key]!==undefined)) throw new Error('Clip fields belong only to clips');
   if(parsed.stickers && !stickerTarget(parsed)) throw new Error('Stickers require text, shape or media cards');
@@ -271,6 +278,7 @@ export class Desk {
         continue;
       }
       if (operation.kind === 'add') {
+        if(operation.object.type==='ruler'&&operation.object.rulerMembers?.some(m=>fileFor(after,m.id)||batch.actor==='human'&&after.find(o=>o.id===m.id)?.locked))throw Error('ファイル内やロック中のカードは定規へ追加できません');
         if(operation.object.type==='clip'&&operation.object.clipMembers?.some(id=>{const owner=fileFor(after,id);return owner&&before.some(o=>o.id===owner.id);}))throw new Error('ファイル内ではクリップの追加・組み替えはできません');
         if (after.some(o => o.id === operation.object.id)) throw new Error(`Duplicate ID: ${operation.object.id}`);
         if (after.length >= 2000) throw new Error('Object limit reached');
@@ -292,6 +300,8 @@ export class Desk {
           !bundle?.clipMembers?.includes(id) && after.find(object => object.id === id)?.locked))
           throw new Error('ロック中の紙はクリップへ追加できません');
       }
+      assertRulerOperation(after,operation,batch.actor);
+      if(operation.kind==='update'&&operation.patch.rulerMembers?.some(m=>{const previous=after.find(o=>o.id===operation.id)?.rulerMembers;return !previous?.some(p=>p.id===m.id)&&(fileFor(after,m.id)||batch.actor==='human'&&after.find(o=>o.id===m.id)?.locked);}))throw Error('ファイル内やロック中のカードは定規へ追加できません');
       assertFileOperation(after,operation);
       if (operation.kind === 'update') {
         if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'attachment', 'description', 'reactions', 'locked'].includes(key))) {
@@ -450,7 +460,7 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, text
     case 'lock': {
       if (request.expectedRevision !== undefined && request.expectedRevision !== desk.revision) throw new Error('Revision conflict: refresh before editing');
       const scene = desk.snapshot();
-      const ids = [...new Set(desk.pointed().flatMap(id => clipGroup(scene, id).map(object => object.id)))];
+      const ids = [...new Set(desk.pointed().flatMap(id => fileGroup(scene, id).map(object => object.id)))];
       const operations = lockOperations(ids.map(id => desk.get(id)), request.locked);
       const result = operations.length ? desk.execute({ operations, actor: request.actor, expectedRevision: request.expectedRevision }) : desk.summary();
       return { ...result, ids, locked: request.locked };

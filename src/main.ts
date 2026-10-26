@@ -1,3 +1,5 @@
+import {rulerCreateOperations,rulerFor,rulerDropTarget,rulerTarget} from './ruler-layout';
+import {drawRuler} from './ruler-drawing';
 import {pagesMode} from './runtime-mode';
 import {pagesFileRequest} from './pages-desk';
 import './pages-mode.css';
@@ -142,6 +144,9 @@ app.innerHTML = `
           <label hidden>内側の余白<input name="padding" type="number" min="0" step="any"></label>
           <label hidden>文字サイズ調整<select name="textFit" disabled><option value="fixed" hidden>指定サイズ（既存）</option><option value="auto">完全自動</option><option value="shrink">縮小のみ</option></select></label>
           <label hidden>吹き出し<select name="calloutMode" disabled><option value="none">なし</option><option value="speech">三角</option><option value="thought">考え事</option><option value="leader">引き出し線</option></select></label>
+          <label hidden>配置方式<select name="rulerMode"><option value="free">自由</option><option value="gap">均等</option><option value="center">中心均等</option></select></label>
+          <label hidden>定規の素材<select name="rulerMaterial"><option value="acrylic">アクリル</option><option value="bamboo">竹</option><option value="steel">ステンレス</option></select></label>
+          <label hidden>定規の幅<select name="rulerThickness"><option value="24">24</option><option value="36">36</option><option value="48">48</option></select></label>
           <label hidden>間隔の指定<select name="clipOffsetMode"><option value="fixed">固定距離</option><option value="percent">割合（直前の紙）</option><option value="base-short-side">割合（1枚目の短辺）</option></select></label>
           <label hidden>クリップの割合（%）<input name="clipOffsetPercent" type="number" min="0" step="any"></label>
           <label hidden>クリップの間隔<input name="clipOffset" type="number" min="0" step="any"></label>
@@ -199,6 +204,9 @@ const propertyEditor = createPropertyEditor(form, desk, (id, patch) => {
 }, message => notify(message, true));
 addFormNumberPresets(form);
 const clipMenuUpdates = ([
+  ['rulerMode','配置方式',{free:'自由',gap:'均等',center:'中心均等'}],
+  ['rulerMaterial','定規の素材',{acrylic:'アクリル',bamboo:'竹',steel:'ステンレス'}],
+  ['rulerThickness','定規の幅',{'24':'24','36':'36','48':'48'}],
   ['clipOffsetMode','間隔の指定',{'fixed':'固定距離','percent':'割合（直前の紙）','base-short-side':'割合（1枚目の短辺）'}],
   ['clipAutoSize','サイズ指定',{'false':'数値指定','true':'自動（1枚目に合わせる）'}],
   ['clipStyle','クリップの形',{binder:'ダブルクリップ',wire:'ゼムクリップ'}],
@@ -318,6 +326,8 @@ clipCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{
 app.querySelector('[data-add="text"]')!.after(clipCreate);
 const fileCreate=document.createElement('button');fileCreate.id='file-create';iconButton(fileCreate,'','クリアファイル');fileCreate.title='選択を配置ごとクリアファイルにまとめる';
 fileCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{const operations=fileCreateOperations(desk.snapshot(),desk.selected(),desk.settingsSnapshot().grid);execute(operations);const add=operations.find(op=>op.kind==='add');if(add?.kind==='add')desk.select([add.object.id]);});};clipCreate.after(fileCreate);
+const rulerCreate=document.createElement('button');rulerCreate.id='ruler-create';iconButton(rulerCreate,'','定規');rulerCreate.title='定規を置く。選択したカードや図形を右側へ並べます';
+rulerCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{const operations=rulerCreateOperations(desk.snapshot(),desk.selected(),newPartPoint());execute(operations,'exact');const op=operations[0];if(op.kind==='add')desk.select([op.object.id]);});};fileCreate.after(rulerCreate);
 const thinkingMode = createThinkingMode($('header'), () => { objectAnimator.finish(); cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
@@ -338,7 +348,7 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
   void rasterPointedCard(desk, id => drawnNodes.get(id)).then(raster => openBhPreview(raster.dataUrl))
     .catch(error => notify(error instanceof Error ? error.message : String(error), true));
 });
-const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'カード', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', file:'クリアファイル', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
+const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'カード', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', ruler:'定規', file:'クリアファイル', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
   if ($('#object-filter-files').getAttribute('aria-pressed')==='true'&&fileFor(renderedScene,object.id))return true;
@@ -524,6 +534,7 @@ function drawObjectRaw(object: DeskObject) {
     drawOpenLink(group, object, path=>{void deskFiles.open(path);});
   }
   if(object.type==='file'){drawClearFile(group,object);drawStamp(group,object,desk.selected().includes(object.id));}
+  if(object.type==='ruler')drawRuler(group,object);
   if(object.type==='clip') drawClip(group,object,renderedById.get(object.clipMembers?.[0] ?? ''));
   drawReactions(group, object, pinDescriptionVisible(object), camera.zoom);
   drawStickers(group, object, camera.zoom);
@@ -619,7 +630,7 @@ function render(rebuild = true) {
   if (ids.length === 1) {
     const object = desk.get(ids[0]);
     propertyEditor.sync(object);
-    if(fileFor(renderedScene,object.id))for(const name of ['width','height',...(object.type==='file'?[]:['x','y','x2','y2','calloutMode','clipOffset','clipOffsetMode','clipOffsetPercent','clipAnchor','clipSize','clipAutoSize','clipStyle'])]){const control=form.elements.namedItem(name) as HTMLInputElement|null;if(control)control.disabled=true;}
+    if(fileFor(renderedScene,object.id))for(const name of ['width','height',...(object.type==='file'?[]:['rulerMode','rulerMaterial','rulerThickness','x','y','x2','y2','calloutMode','clipOffset','clipOffsetMode','clipOffsetPercent','clipAnchor','clipSize','clipAutoSize','clipStyle'])]){const control=form.elements.namedItem(name) as HTMLInputElement|null;if(control)control.disabled=true;}
     clipMenuUpdates.forEach(update=>update());
     updateConnectorLineStyle();
     updateStartMarker(); updateEndMarker(); updateCallout(); updateTextFit();
@@ -842,6 +853,8 @@ function previewGesture(current: Gesture, point: { x: number; y: number }) {
   if(current.mode==='move'&&!current.detach&&current.originals.length===1) {
     const source=current.originals[0];
     const target=clipTarget(source)&&!fileFor(current.scene,source.id)&&!clipFor(current.scene,source.id)?clipDropTarget(current.scene,point,camera.zoom,[source.id]):null;
+    const rulerHit=rulerTarget(source)&&!fileFor(current.scene,source.id)&&!clipFor(current.scene,source.id)&&!rulerFor(current.scene,source.id)?rulerDropTarget(current.scene,point,camera.zoom,[source.id]):null;
+    if(rulerHit){const hint=svg('rect',{x:rulerHit.ruler.x,y:rulerHit.ruler.y,width:rulerHit.ruler.width,height:rulerHit.ruler.height,fill:'none',stroke:'#15803d','stroke-width':3/camera.zoom,'pointer-events':'none'});overlays.append(hint);}
     if(target){const text=svg('text',{x:target.x,y:target.y-12/camera.zoom,fill:'#15803d','font-size':14/camera.zoom,'pointer-events':'none'});text.textContent='クリップへ追加';overlays.append(text);}
     if(source.type==='clip'&&!source.clipMembers?.length) drawSnapTargets(overlays,current.scene.filter(o=>clipTarget(o)&&!o.locked&&!clipFor(current.scene,o.id)),{x:source.x+source.width/2+point.x-current.start.x,y:source.y+source.height*.5+point.y-current.start.y},camera.zoom);
   }
@@ -960,7 +973,7 @@ for (const kind of ['copy', 'cut'] as const) window.addEventListener(kind, event
   if(isConfirmDialogOpen()){event.preventDefault();return;}
   if (clipboardTextTarget(event.target) || !getSelection()?.isCollapsed || busy || gesture || !event.clipboardData) return;
   const scene=desk.snapshot();
-  const selected=new Set(desk.selected().flatMap(id=>['clip','file'].includes(desk.get(id).type)?fileGroup(scene,id).map(o=>o.id):[id]));
+  const selected=new Set(desk.selected().flatMap(id=>['clip','file','ruler'].includes(desk.get(id).type)?fileGroup(scene,id).map(o=>o.id):[id]));
   const objects = scene.filter(object => selected.has(object.id));
   if (!objects.length) return;
   event.preventDefault();

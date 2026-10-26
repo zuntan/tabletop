@@ -4,14 +4,15 @@ import type { DeskObject } from './model';
 import { isConnector } from './geometry';
 import { supportsFill, transparencyPercent, opacityFromPercent } from './fill-opacity';
 
-const fields = ['x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'url','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
-const numeric = new Set(['x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'junctionRounding', 'fontSize', 'cornerRadius', 'padding','clipOffset','clipOffsetPercent','clipSize']);
+const fields = ['rulerMode','rulerMaterial','rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'url','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
+const numeric = new Set(['rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'junctionRounding', 'fontSize', 'cornerRadius', 'padding','clipOffset','clipOffsetPercent','clipSize']);
 export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   const connector = isConnector(object);
   const meaningful = new Set<string>(objectPropertyNames(object));
   for (const name of fields) {
     const input = form.elements.namedItem(name) as HTMLInputElement;
     if (!input) continue;
+    if(name.startsWith('ruler')){input.disabled=object.type!=='ruler';input.closest('label')!.hidden=object.type!=='ruler';input.value=propertyValue(object,name);continue;}
     if(name.startsWith('clip')) {
       const percent=object.clipOffsetMode==='percent'||object.clipOffsetMode==='base-short-side';
       input.disabled=object.type!=='clip'||(name==='clipSize'&&!!object.clipAutoSize);
@@ -63,6 +64,9 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   }
 }
 export function propertyValue(object: DeskObject, key: string): string {
+  if(key==='rulerMode')return object.rulerMode??'free';
+  if(key==='rulerMaterial')return object.rulerMaterial??'acrylic';
+  if(key==='rulerThickness')return String(object.rulerThickness??36);
   if (key === 'clipOffsetMode') return object.clipOffsetMode ?? 'fixed';
   if (key === 'clipOffsetPercent') return String(object.clipOffsetPercent ?? 30);
   if (key === 'clipAutoSize') return String(object.clipAutoSize ?? false);

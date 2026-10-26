@@ -17,7 +17,7 @@ test('desk_help returns discoverable plain-text manuals without any browser; rej
     const guide=await callTestTool(client, {name:'desk_help',arguments:{topic:'mermaid-imitation'}});
     assert.notEqual(guide.isError,true);assert.match((guide.content as any)[0].text,/原本を残し/);
     assert.match((guide.content as any)[0].text,/再現できなかった/);
-    for(const [topic,title] of [['bell-conversation','ベル'],['desk-connections','机を開くこと'],['card-splitting','原本']] as const){
+    for(const [topic,title] of [['bell-conversation','ベル'],['desk-connections','机を開くこと'],['card-splitting','原本'],['rulers','定規']] as const){
       const result=await callTestTool(client, {name:'desk_help',arguments:{topic}});
       assert.notEqual(result.isError,true,topic);assert.ok((result.content as any)[0].text.includes(title),topic);
     }

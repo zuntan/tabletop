@@ -1,3 +1,4 @@
+import {rulerFor} from './ruler-layout';
 import {fileFor} from './clear-files';
 import { clipAppearance } from './clip-appearance';
 import type { DeskObject, Operation } from './model';
@@ -16,7 +17,7 @@ export function clipGroup(objects: DeskObject[], id: string): DeskObject[] {
   return clip ? [...(clip.clipMembers ?? []).map(id => objects.find(o => o.id === id)!),clip].filter(Boolean) : objects.filter(o=>o.id===id);
 }
 export function bundleOperations(objects: DeskObject[], ids: string[]): Operation[] {
-  const members = ids.filter(id => { const o=objects.find(o=>o.id===id);return o && clipTarget(o) && !o.locked && !clipFor(objects,id); });
+  const members = ids.filter(id => { const o=objects.find(o=>o.id===id);return o && clipTarget(o) && !o.locked && !clipFor(objects,id)&&!rulerFor(objects,id); });
   if (!members.length) return [];
   return [{kind:'add',object:{id:'clip-'+randomUuid(),type:'clip',clipMembers:members,clipAnchor:'top-left',clipOffset:32,clipSize:64,clipAutoSize:true,clipStyle:'binder',fill:'#26313d'}}];
 }
@@ -36,6 +37,7 @@ export function resolveClips(input: DeskObject[], before: DeskObject[] = []): De
     for(const id of members) {
       const member=map.get(id);
       if(!member || !clipTarget(member)) throw new Error('Clips require text/image/SVG/Mermaid/web/link cards');
+      if(rulerFor(input,id))throw Error('定規に所属するカードはクリップへ追加できません');
       if(owners.has(id)) throw new Error('A card can belong to only one clip; nesting is not supported');
       owners.set(id,clip.id);
     }

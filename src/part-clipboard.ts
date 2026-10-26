@@ -10,7 +10,7 @@ const escapeHtml = (text: string) => text.replace(/[&<>"']/g, char => ({ '&': '&
 /** External applications receive text only. Part identity never comes from plain text. */
 export function partClipboardText(objects: DeskObject[]): string {
   return objects.flatMap(object => {
-    if (object.type === 'image' || object.type === 'clip' || isConnector(object)) return [];
+    if (object.type === 'image' || object.type === 'clip' || object.type==='ruler' || isConnector(object)) return [];
     if (object.type === 'mermaid') return [object.mermaidSource ?? ''];
     if ((object.type === 'svg' || object.type === 'prop')) {
       const match = /^data:image\/svg\+xml;base64,([A-Za-z0-9+/=\s]+)$/.exec(object.src ?? '');
@@ -89,6 +89,7 @@ export class PartClipboard {
       } else {
         const copy = { ...object, id, x: object.x + offset.x, y: object.y + offset.y };
         if (object.type === 'file') copy.fileMembers=object.fileMembers?.filter(id=>ids.has(id)).map(id=>ids.get(id)!);
+        if(object.type==='ruler')copy.rulerMembers=object.rulerMembers?.filter(m=>ids.has(m.id)).map(m=>({...m,id:ids.get(m.id)!}));
         if (object.type === 'clip') copy.clipMembers = object.clipMembers?.filter(id=>ids.has(id)).map(id=>ids.get(id)!);
         if (object.callout) {
           const binding = object.callout.binding, target = binding && ids.get(binding.objectId);

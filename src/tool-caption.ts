@@ -6,7 +6,7 @@ const buttonIcons: Record<string, IconName> = {
   text: 'typography', image: 'photo', mermaid: 'rectangle', web: 'world', link: 'link', numbering: 'map-pin',
   'numbering-settings': 'map-pin', clipboard: 'clipboard', 'zoom-out': 'minus', 'zoom-in': 'plus',
   fit: 'maximize', 'grid-snap': 'grid-dots', 'label-descriptions': 'list-numbers',
-  'file-create':'file-lock', 'clip-create': 'paperclip', 'delete-animated': 'x', 'cutout-create': 'scissors',
+  'ruler-create':'ruler-2', 'file-create':'file-lock', 'clip-create': 'paperclip', 'delete-animated': 'x', 'cutout-create': 'scissors',
   front: 'arrow-bar-to-up', back: 'arrow-bar-to-down', 'mouse-lock': 'lock',
 };
 

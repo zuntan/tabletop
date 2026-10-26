@@ -12,6 +12,7 @@ export function objectPropertyNames(object: DeskObject): readonly (keyof DeskObj
   if (object.type === 'line') return [...common, 'x2', 'y2', 'stroke', 'strokeWidth', 'dash',
     'startMarker', 'endMarker', 'startBinding', 'endBinding', 'startJunction', 'endJunction', 'junctionRounding'];
   if (object.type === 'file') return [...common,...box,...paint,...text,'fileMembers','stamp'];
+  if(object.type==='ruler')return [...common,...box,'text','rulerMembers','rulerMode','rulerMaterial','rulerThickness','rulerAxis'];
   if (object.type === 'clip') return [...common,...box,'fill','clipMembers','clipAnchor','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipStyle'];
   if (object.type === 'prop') return [...common, ...box, 'text', 'src'];
   if (object.type === 'mermaid') return [...common, ...decoration, ...box, 'text', 'mermaidSource', 'cutout'];

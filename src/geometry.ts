@@ -1,3 +1,4 @@
+import {resolveRulers} from './ruler-layout';
 import {resolveFiles,freezeFileGeometry} from './clear-files';
 import { resolveClips, clipFollower } from './clip-bundles';
 import { isShapeType, isNewShape } from './shape-definitions';
@@ -12,7 +13,7 @@ export type Anchor = typeof anchorNames[number];
 export type Binding = { objectId: string; anchor: Anchor };
 export const anchors: readonly Anchor[] = anchorNames.slice(0, 8);
 export function anchorsFor(object: DeskObject, scene: DeskObject[] = []): readonly Anchor[] {
-  if (['clip','file'].includes(object.type) || clipFollower(scene,object.id)) return [];
+  if (['clip','file','ruler'].includes(object.type) || clipFollower(scene,object.id)) return [];
   if (object.type === 'prop') return [];
   return object.type === 'label' ? ['center'] : isNewShape(object.type) ? ['top', 'right', 'bottom', 'left'] : anchors;
 }
@@ -86,7 +87,7 @@ export function snap(point: Point, objects: DeskObject[], threshold: number) {
 export function resolveConnections(objects: DeskObject[], before: DeskObject[] = [], freeze=true): DeskObject[] {
   objects = resolveFiles(objects,before);
   const fixed=objects;
-  objects = resolveClips(objects,before);
+  objects = resolveRulers(resolveClips(objects,before),before);
   objects = resolvePinAttachments(objects, before);
   objects = resolveTextCallouts(objects, before);
   const map = new Map(objects.map(o => [o.id, o]));

@@ -275,3 +275,6 @@ text.calloutは{x,y,binding?:{objectId,anchor}|null}、null/省略で無効。�
 
 ## 長文カードの分割
 「分割して」と依頼された場合は `desk_help({topic:"card-splitting"})` を参照。意味単位で分け、原本は全文・付属物・接続とも保持する。分割先とクリップへハンコ・シール・リアクション・接続を複製しない。未指定は上留め・直前カード基準100%で縦並び、横指定なら左留め・同100%。専用UIや結合操作は追加しない。
+
+## 定規レイアウト
+`desk_help({topic:"rulers"})`に共通手順。type:rulerのrulerMembersが所属と順序を保持する。両側それぞれにfree/gap/centerで配置。素材acrylic/bamboo/steel、短辺24/36/48・長辺下限120・中心間隔下限4は机上単位。ファイルへは全束で収納し内部を凍結。詳細は[仕様](docs_devel/ruler-layout.md)。

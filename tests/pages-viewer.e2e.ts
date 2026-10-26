@@ -15,8 +15,10 @@ test('Pages serves from a repository subpath, opens a URL without MCP, and keeps
   {kind:'add',object:{id:'other',type:'link',text:'Other desk',deskPath:'other.tabletop',x:800,y:400}},
  ]});const bytes=await encodeDeskFile(guide);
  const other=new Desk();other.execute({operations:[{kind:'desk_rename',name:'Other product'},{kind:'add',object:{id:'other-note',type:'text',text:'other'}}]});const otherBytes=await encodeDeskFile(other);
+ const rulerDesk=new Desk();rulerDesk.execute({operations:[{kind:'add',object:{id:'ruler-note',type:'text',text:'Static ruler'}},{kind:'add',object:{id:'static-ruler',type:'ruler',x:0,y:0,width:36,height:480,rulerMaterial:'steel',rulerMode:'gap',rulerMembers:[{id:'ruler-note',side:'after'}]}}]});const rulerBytes=await encodeDeskFile(rulerDesk);
  const root=resolve('dist-pages'),requests:string[]=[];const types:Record<string,string>={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png'};
  const server=createServer(async(req,res)=>{const path=new URL(req.url!,'http://localhost').pathname;requests.push(path);try{
+  if(path.endsWith('/desks/ruler.tabletop')){res.end(rulerBytes);return;}
   if(path.endsWith('/desks/guide.tabletop')){res.end(bytes);return;}
   if(path.endsWith('/desks/other.tabletop')||path==='/another-product/guide.tabletop'){res.end(otherBytes);return;}
   const relative=path.startsWith('/tabletop/')?path.slice('/tabletop/'.length):path.slice(1);
@@ -70,6 +72,7 @@ test('Pages serves from a repository subpath, opens a URL without MCP, and keeps
   }
   await page.goto(base+'/tabletop/?desk=desks/guide.tabletop&pdf=');await page.waitForFunction(()=>document.querySelector('#desk-name')?.textContent==='Pages guide');assert.equal(await page.evaluate(()=>!!(window as any).__pdfBlob),false);
   await page.goto(base+'/tabletop/?desk=missing.tabletop&pdf=1');await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('HTTP 404'));assert.equal(await page.locator('#count').textContent(),'0');assert.equal(await page.evaluate(()=>!!(window as any).__pdfBlob),false);
+  await page.goto(base+'/tabletop/?desk=desks/ruler.tabletop&pdf=1');await page.waitForURL('**#pdf-captured');assert.equal(await page.locator('[data-ruler-body] pattern').count(),1);assert.equal(await page.locator('#count').textContent(),'2');
   await page.screenshot({path:'/tmp/tabletop-pages-viewer.png'});assert.deepEqual(errors,[]);assert.deepEqual(sockets,[]);
  }finally{await browser.close();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
 });

@@ -1,3 +1,4 @@
+import {rulerGroup,rulerFor} from './ruler-layout';
 import type {DeskObject,Operation} from './model';
 import {bounds,endpoints,isConnector} from './geometry';
 import {clipFor,clipGroup} from './clip-bundles';
@@ -8,7 +9,7 @@ import {randomUuid} from './portable-crypto';
 export const FILE_MARGIN=24, FILE_TITLE=34;
 export const fileFor=(objects:DeskObject[],id:string)=>objects.find(o=>o.type==='file'&&(o.id===id||o.fileMembers?.includes(id)));
 export const fileGroup=(objects:DeskObject[],id:string):DeskObject[]=>{
- const file=fileFor(objects,id);return file?[file,...objects.filter(o=>file.fileMembers?.includes(o.id))]:clipGroup(objects,id);
+ const file=fileFor(objects,id);return file?[file,...objects.filter(o=>file.fileMembers?.includes(o.id))]:rulerFor(objects,id)?rulerGroup(objects,id):clipGroup(objects,id);
 };
 const differs=(a:number|undefined,b:number|undefined)=>a===undefined||b===undefined?a!==b:Math.abs(a-b)>1e-8;
 const geometryKeys=['x','y','x2','y2','width','height','callout','startBinding','endBinding','startJunction','endJunction','cutout'] as const;
@@ -18,7 +19,7 @@ export function fileCreateOperations(objects:DeskObject[],ids:string[],grid?:Gri
  const selected=ids.map(id=>objects.find(o=>o.id===id)!);
  if(selected.some(o=>!o||['label','prop'].includes(o.type)))throw new Error('ピン・小物はクリアファイルに入れられません。選択から外してください');
  if(selected.some(o=>fileFor(objects,o.id)))throw new Error('クリアファイルの入れ子・結合はできません。先に解除してください');
- const members=new Set(ids.flatMap(id=>clipGroup(objects,id).map(o=>o.id)));
+ const members=new Set(ids.flatMap(id=>(rulerFor(objects,id)?rulerGroup(objects,id):clipGroup(objects,id)).map(o=>o.id)));
  const contents=objects.filter(o=>members.has(o.id));
  if(contents.some(o=>o.locked))throw new Error('ロックを解除してからクリアファイルへ入れてください');
  if(contents.some(o=>o.type==='clip'&&!o.clipMembers?.length))throw new Error('空のクリップはクリアファイルに入れられません');
@@ -37,12 +38,12 @@ export function assertFileOperation(scene:DeskObject[],operation:Operation){
  const file=fileFor(scene,operation.id);if(!file)return;
  const root=file.id===operation.id,object=scene.find(o=>o.id===operation.id)!;
  if(operation.kind==='delete'){
-  if(!root&&clipFor(scene,object.id))throw new Error('ファイル内のクリップと紙は削除できません。先にファイルを解除してください');return;
+  if(!root&&(clipFor(scene,object.id)||rulerFor(scene,object.id)))throw new Error('ファイル内のクリップと紙は削除できません。先にファイルを解除してください');return;
  }
  if(operation.kind==='reorder'&&!root)throw new Error('ファイル内の前後関係は変更できません。先に解除してください');
  if(operation.kind!=='update')return;
  const keys=Object.keys(operation.patch);
- if(keys.some(k=>k==='fileMembers'||k==='width'||k==='height'||(!root&&structuralClip.includes(k))))throw new Error('ファイル内のサイズ・束の構造は変更できません。先に解除してください');
+ if(keys.some(k=>k==='fileMembers'||k.startsWith('ruler')||k==='width'||k==='height'||(!root&&structuralClip.includes(k))))throw new Error('ファイル内のサイズ・束の構造は変更できません。先に解除してください');
  if(!root&&keys.some(k=>geometryKeys.includes(k as typeof geometryKeys[number]))) {
   // Dragging a member is a translation of its enclosing file, not a geometry edit.
   const patch=operation.patch;
@@ -67,6 +68,7 @@ export function resolveFiles(input:DeskObject[],before:DeskObject[]=[]):DeskObje
   if(new Set(members).size!==members.length)throw new Error('Duplicate file member');
   for(const id of members){const o=map.get(id)!;if(['file','prop','label'].includes(o.type))throw new Error('クリアファイルに入れられない種類です');if(owners.has(id))throw new Error('Multiple clear file ownership');owners.set(id,file.id);}
   for(const id of members){const c=clipFor(input,id);if(c&&(!c.clipMembers?.length||![c.id,...c.clipMembers].every(id=>members.includes(id))))throw new Error('クリップの束全体をクリアファイルへ入れてください');}
+  for(const id of members){const r=rulerFor(input,id);if(r&&![r.id,...r.rulerMembers?.map(m=>m.id)??[]].every(id=>members.includes(id)))throw Error('定規と所属カード全体をクリアファイルへ入れてください');}
   file.fileMembers=members;
   if(!old)continue;
   let dx=file.x-old.x,dy=file.y-old.y;

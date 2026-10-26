@@ -11,3 +11,6 @@ Additional icon: `scissors.svg`, retrieved from upstream `main` on 2026-10-21
 
 Additional icon: `file-lock.svg`, retrieved from upstream `main` on 2026-10-27
 (https://raw.githubusercontent.com/tabler/tabler-icons/main/icons/outline/file-lock.svg), same MIT license.
+
+Additional icon: `ruler-2.svg`, retrieved from upstream `main` on 2026-10-27
+(https://raw.githubusercontent.com/tabler/tabler-icons/main/icons/outline/ruler-2.svg), same MIT license.
