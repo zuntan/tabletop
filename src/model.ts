@@ -19,6 +19,7 @@ import { cameraAnimationFields, cameraMoveFields, cameraMoveSchema, type CameraB
 import { lockFields, lockOperations } from './object-lock';
 import { shareRead } from './share-read';
 import { stickerSchema, stickerTarget } from './sticker-values';
+import {wayfinderStartFields,wayfinderStartSchema} from './wayfinder-input';
 import { textMeasureFields, type TextMeasureBridge } from './text-measure';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
@@ -401,7 +402,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('camera_get') }).strict(),
   z.object({ method: z.literal('text_measure'), ...textMeasureFields }).strict(),
   z.object({ method: z.literal('camera_move'), ...cameraMoveFields }).strict(),
-  z.object({ method:z.literal('wayfinder_start'),id:z.string().min(1).max(100) }).strict(),
+  z.object({ method:z.literal('wayfinder_start'),...wayfinderStartFields }).strict(),
   z.object({ method: z.literal('changes'), sinceRevision: z.number().int().nonnegative(), limit: z.number().int().min(1).max(200).default(100) }),
   z.object({ method: z.literal('execute'), ...mcpBatchSchema.shape }),
   z.object({ method: z.literal('undo'), actor: z.string().min(1).max(100).default('agent-01') }),
@@ -481,7 +482,7 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, text
     }
     case 'wayfinder_start': {
       if(!camera?.wayfinderStart)throw new Error('Wayfinder controls unavailable; update the browser after saving the desk');
-      return camera.wayfinderStart(request.id);
+      const {method:_method,...start}=request;return camera.wayfinderStart(wayfinderStartSchema.parse(start));
     }
     case 'changes': return desk.getChanges(request.sinceRevision, request.limit);
     case 'execute': {

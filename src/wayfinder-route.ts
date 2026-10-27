@@ -5,63 +5,65 @@ import { buildJunctionRounding } from './junction-rounding';
 
 const opposite = (side: EndpointSide): EndpointSide => side === 'start' ? 'end' : 'start';
 const center = (o: DeskObject): Point => ({ x: o.x + o.width / 2, y: o.y + o.height / 2 });
-export type WayfinderRoute = { points: Point[]; lineIds: string[]; destinationId?: string };
+export type RouteChoice={lineId:string;from:EndpointSide};
+export type RouteBranch={point:Point;choices:RouteChoice[];incoming?:RouteChoice};
+export type WayfinderRoute = { points: Point[]; lineIds: string[]; destinationId?: string; branch?:RouteBranch; loop?:boolean };
+const choice=(p:{object:DeskObject;side:EndpointSide}):RouteChoice=>({lineId:p.object.id,from:p.side});
+function peersAt(scene:DeskObject[],junction:string){
+  return scene.filter(isConnector).flatMap(object=>(['start','end'] as const).filter(side=>object[junctionField(side)]===junction).map(side=>({object,side})));
+}
 
-/** Follow explicit bindings/junction IDs, never visual proximity or arrow directions. */
-export function wayfinderRoute(scene: DeskObject[], id: string): WayfinderRoute {
-  const source = scene.find(o => o.id === id && o.type === 'wayfinder');
-  if (!source) throw new Error('道しるべがありません');
-  const edges = scene.filter(isConnector);
-  const ports = (target: string) => edges.flatMap(object => (['start','end'] as const)
-    .filter(side => object[bindingField(side)]?.objectId === target).map(side => ({ object, side })));
-  const starts = ports(id);
-  if (starts.length !== 1) throw new Error('道しるべには上・左・右のどれかへ経路の線を1本つないでください');
-  const departureJunction=starts[0].object[junctionField(starts[0].side)];
-  if(departureJunction&&edges.some(line=>line.id!==starts[0].object.id&&[line.startJunction,line.endJunction].includes(departureJunction)))
-    throw new Error('出発点に分岐があります。初版では進路を選べないため発進しません');
-  const visited = new Set<string>(), steps: { object: DeskObject; side: EndpointSide }[] = [];
-  let current = starts[0], destination: DeskObject | undefined;
-  while (current) {
-    if (visited.has(current.object.id)) throw new Error('経路がループしています。初版は一本道だけをたどれます');
-    visited.add(current.object.id); steps.push(current);
-    const exit = opposite(current.side), binding = current.object[bindingField(exit)];
-    if (binding) {
-      const target = scene.find(o => o.id === binding.objectId);
-      if (!target) throw new Error('経路の接続先がありません');
-      if (target.id === id) throw new Error('経路が出発地点へ戻っています');
-      // A receiving wayfinder is not a station: continue to its attached card.
-      destination = target.type === 'wayfinder' && target.attachment
-        ? scene.find(o => o.id === target.attachment!.objectId) : target;
+/** Explicit line and departure end are also the entry used after a branch choice. */
+export function lineRoute(scene:DeskObject[],lineId:string,from:EndpointSide):WayfinderRoute{
+  const first=scene.find(o=>o.id===lineId&&isConnector(o));
+  if(!first)throw new Error('出発する線がありません');
+  const visited=new Set<string>(),steps:{object:DeskObject;side:EndpointSide}[]=[];
+  let current={object:first,side:from},destination:DeskObject|undefined,branch:RouteBranch|undefined,loop=false;
+  while(current){
+    if(visited.has(current.object.id)){loop=true;break;}
+    visited.add(current.object.id);steps.push(current);
+    const exit=opposite(current.side),binding=current.object[bindingField(exit)];
+    if(binding){
+      const target=scene.find(o=>o.id===binding.objectId);
+      if(!target)throw new Error('経路の接続先がありません');
+      destination=target.type==='wayfinder'&&target.attachment?scene.find(o=>o.id===target.attachment!.objectId):target;
       break;
     }
-    const junction = current.object[junctionField(exit)];
-    if (!junction) break;
-    const peers = edges.flatMap(object => (['start','end'] as const)
-      .filter(side => object[junctionField(side)] === junction).map(side => ({ object, side })));
-    if (peers.length > 2) throw new Error('経路に分岐があります。初版では進路を選べないため発進しません');
-    const next = peers.filter(p => p.object.id !== current.object.id);
-    if (!next.length) break;
-    current = next[0];
+    const junction=current.object[junctionField(exit)];if(!junction)break;
+    const next=peersAt(scene,junction).filter(p=>p.object.id!==current.object.id);
+    if(next.length>1){branch={point:endpoints(current.object)[exit],choices:next.map(choice),incoming:choice({object:current.object,side:exit})};break;}
+    if(!next.length)break;
+    current=next[0];
   }
-  const rounding = buildJunctionRounding(scene), points: Point[] = [center(source)];
-  const push = (p: Point) => { const last = points.at(-1)!; if (Math.hypot(p.x-last.x,p.y-last.y)>1e-8) points.push(p); };
-  const trimmed = (object: DeskObject, side: EndpointSide): Point => {
-    const e = endpoints(object), p = e[side], q = e[opposite(side)], d = rounding.get(object.id)?.[side] ?? 0;
-    const length = Math.hypot(q.x-p.x,q.y-p.y);
-    return !length ? p : {x:p.x+(q.x-p.x)*d/length,y:p.y+(q.y-p.y)*d/length};
+  const rounding=buildJunctionRounding(scene),points:Point[]=[endpoints(first)[from]];
+  const push=(p:Point)=>{const last=points.at(-1)!;if(Math.hypot(p.x-last.x,p.y-last.y)>1e-8)points.push(p);};
+  const trimmed=(object:DeskObject,side:EndpointSide):Point=>{
+    const e=endpoints(object),p=e[side],q=e[opposite(side)],d=rounding.get(object.id)?.[side]??0,length=Math.hypot(q.x-p.x,q.y-p.y);
+    return !length?p:{x:p.x+(q.x-p.x)*d/length,y:p.y+(q.y-p.y)*d/length};
   };
-  steps.forEach(({object,side}, index) => {
+  steps.forEach(({object,side},index)=>{
     push(trimmed(object,side));
-    const exit=opposite(side), end=trimmed(object,exit); push(end);
+    const exit=opposite(side),end=trimmed(object,exit);push(end);
     const next=steps[index+1];
-    if (next && (rounding.get(object.id)?.[exit] ?? 0)>0) {
-      const to=trimmed(next.object,next.side), control=endpoints(object)[exit];
-      // The same quadratic corner as the connector renderer, sampled for arc-length travel.
+    if(next&&(rounding.get(object.id)?.[exit]??0)>0){
+      const to=trimmed(next.object,next.side),control=endpoints(object)[exit];
       for(let n=1;n<=24;n++){const t=n/24,s=1-t;push({x:s*s*end.x+2*s*t*control.x+t*t*to.x,y:s*s*end.y+2*s*t*control.y+t*t*to.y});}
     }
   });
   if(destination)push(center(destination));
-  return {points,lineIds:[...visited],destinationId:destination?.id};
+  if(branch)push(branch.point);
+  return {points,lineIds:[...visited],destinationId:destination?.id,branch,loop};
+}
+
+/** Object attachment is separate from the road; arrows never choose travel direction. */
+export function wayfinderRoute(scene:DeskObject[],id:string):WayfinderRoute{
+  const source=scene.find(o=>o.id===id&&o.type==='wayfinder');if(!source)throw new Error('道しるべがありません');
+  const ports=scene.filter(isConnector).flatMap(object=>(['start','end'] as const).filter(side=>object[bindingField(side)]?.objectId===id).map(side=>({object,side})));
+  if(ports.length!==1)throw new Error('道しるべには上・左・右のどれかへ経路の線を1本つないでください');
+  const start=ports[0],junction=start.object[junctionField(start.side)],peers=junction?peersAt(scene,junction):[];
+  if(peers.length>1){const point=endpoints(start.object)[start.side];return {points:[center(source),point],lineIds:[],branch:{point,choices:peers.map(choice)}};}
+  const route=lineRoute(scene,start.object.id,start.side);
+  return {...route,points:[center(source),...route.points]};
 }
 
 /** Arc length makes speed independent of how many line segments describe a road. */

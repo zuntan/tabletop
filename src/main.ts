@@ -1,3 +1,4 @@
+import {createPinNavigation,pinNeighbours,pinRoot} from './pin-navigation';
 import {createLineInput} from './line-input';
 import {rulerCreateOperations,rulerFor,rulerDropTarget,rulerTarget} from './ruler-layout';
 import {drawRuler} from './ruler-drawing';
@@ -78,8 +79,10 @@ import './reactions.css';
 import { createDeskFileControls } from './desk-file-controls';
 import { IMAGE_TITLE_HEIGHT } from './image-geometry';
 import { headSelectedProp, propSelectionBounds } from './prop-selection';
-import { wayfinderRoute } from './wayfinder-route';
-import { WayfinderTravel } from './wayfinder-travel';
+import { wayfinderRoute,lineRoute,type WayfinderRoute } from './wayfinder-route';
+import {wayfinderStartSchema,type WayfinderStartInput} from './wayfinder-input';
+import {createWayfinderMap} from './wayfinder-map';
+import { WayfinderTravel,WayfinderCancelled,type WayfinderStopReason } from './wayfinder-travel';
 import { drawWayfinder } from './wayfinder-drawing';
 import { BrowserConnection } from './pairing-client';
 import { createDeskIdentityControls } from './desk-identity-controls';
@@ -242,15 +245,19 @@ const bhDeletion = new BhDeletion();
 const humanScroll = new HumanScrollGuard();
 const cameraAnimator = new CameraAnimator();
 const wayfinderTravel=new WayfinderTravel();
+const wayfinderMap=createWayfinderMap(canvas);
+const pinNavigation=createPinNavigation(canvas,startPinTravel);
+let navigation:undefined|{runId:number;status:'moving'|'waiting'|'completed'|'cancelled'|'failed';mode:'move'|'tour';reason?:string;message?:string;point?:{x:number;y:number};choices?:{lineId:string;from:'start'|'end'}[];id?:string;lineId?:string;from?:'start'|'end';pinId?:string};
+const cancelWayfinding=(reason:WayfinderStopReason='human')=>{wayfinderTravel.cancel(reason);wayfinderMap.cancel(reason);};
 const wayfinderMarker=svg('g',{'pointer-events':'none','aria-hidden':'true','data-wayfinder-marker':''});viewport.append(wayfinderMarker);
 const objectAnimator = new ObjectMoveAnimator();
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const stopCamera = () => { wayfinderTravel.cancel(); cameraAnimator.cancel('Human interaction or viewport change'); objectAnimator.finish(); };
+const stopCamera = (event?:Event) => { if(event&&wayfinderMap.contains(event.target))return;cancelWayfinding(document.hidden?'hidden':'human'); cameraAnimator.cancel('Human interaction or viewport change'); objectAnimator.finish(); };
 for (const event of ['pointerdown', 'touchstart', 'keydown', 'click', 'input']) {
   document.addEventListener(event, stopCamera, { capture: true, passive: true });
 }
 window.addEventListener('resize', stopCamera);
-new ResizeObserver(stopCamera).observe(canvas);
+new ResizeObserver(()=>stopCamera()).observe(canvas);
 document.addEventListener('visibilitychange', stopCamera);
 window.addEventListener('pagehide', stopCamera);
 reducedMotion.addEventListener('change', stopCamera);
@@ -259,7 +266,7 @@ app.addEventListener('wheel', () => { stopCamera(); humanScroll.record(); }, { c
 document.addEventListener('scroll', () => { stopCamera(); humanScroll.record(); }, { capture: true, passive: true });
 const cameraSize = () => ({ width: canvas.clientWidth, height: canvas.clientHeight });
 function animateCamera(target: typeof camera, options: AnimationOptions) {
-  wayfinderTravel.cancel();
+  cancelWayfinding('superseded');
   if (document.hidden) throw new Error('Camera action cancelled: desk is hidden; do not retry automatically.');
   return cameraAnimator.run({ ...camera }, target, cameraSize(), next => {
     Object.assign(camera, next);
@@ -267,12 +274,12 @@ function animateCamera(target: typeof camera, options: AnimationOptions) {
   }, reducedMotion.matches ? { durationMs: 0 } : options);
 }
 const cameraControls = {
-  wayfinderStart:(id:string)=>beginWayfinder(id),
-  get: () => cameraView(camera, cameraSize()),
+  wayfinderStart:(input:WayfinderStartInput)=>beginWayfinder(input),
+  get: () => ({...cameraView(camera,cameraSize()),...(navigation?{navigation:structuredClone(navigation)}:{})}),
   async move(input: CameraMove) {
     const next = movedCamera(camera, cameraSize(), input);
     await animateCamera(next.camera, input);
-    return { ...cameraView(camera, cameraSize()), zoomClamped: next.zoomClamped };
+    return { ...cameraView(camera, cameraSize()), ...(navigation?{navigation:structuredClone(navigation)}:{}),zoomClamped: next.zoomClamped };
   },
 };
 let space = false;
@@ -365,7 +372,7 @@ rulerCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{const operati
 const thinkingMode = createThinkingMode($('header'), () => { objectAnimator.finish(); cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);
-const deskFiles=createDeskFileControls($('header'), desk, () => { bhDeletion.stop();objectAnimator.finish();cameraAnimator.cancel('Desk contents replaced');partClipboard.clear(); render(); fitView(desk.selected()); },
+const deskFiles=createDeskFileControls($('header'), desk, () => { bhDeletion.stop();objectAnimator.finish();cancelWayfinding('changed');cameraAnimator.cancel('Desk contents replaced');partClipboard.clear(); render(); fitView(desk.selected()); },
   () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing(),
   () => {objectAnimator.finish();return deskPdf(desk,canvas,id=>pinDescriptionVisible(desk.get(id)));},
   request=>pagesMode?pagesFileRequest(request,desk.filePath??document.baseURI):recovery.fileRequest(request),
@@ -592,6 +599,9 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
   fit.querySelector('.tool-caption')!.textContent = hasSelection ? '選択範囲' : hasPointing ? 'AI指差し' : '全体';
   overlays.replaceChildren();
   const selected = preview ?? desk.selected().map(id => desk.get(id));
+  const pin=selected.length===1&&selected[0].type==='label'&&pinIsVisible(selected[0])?selected[0]:undefined;
+  const series=pin&&pinSeriesMap.get(pin.seriesId!);
+  pinNavigation.update(pin,series?pinNeighbours(scene??renderedScene,series,pin!.id):undefined,camera,navigation?.status==='moving'||navigation?.status==='waiting');
   drawClipMembershipGuides(overlays, scene ?? renderedScene, selected.map(object => object.id), camera.zoom, colors.selection);
   for (const object of desk.pointed().map(id => scene?.find(object => object.id === id) ?? desk.get(id)).filter(pinIsVisible))
     drawAiPointing(overlays, [connectorForView(object)], camera.zoom, pinDescriptionVisible(object), colors.pointing);
@@ -839,21 +849,58 @@ function focusObjects(ids: string[]) {
 function focusHumanSelection() { focusObjects(desk.selected()); }
 $('#fit').onclick = () => focusObjects(desk.selected().length ? desk.selected() : desk.pointed());
 let wayfinderRun=0;
-function beginWayfinder(id:string){
+function beginWayfinder(raw:WayfinderStartInput){
   if(busy||editor.isActive()||identityControls.isEditing()||isConfirmDialogOpen()||document.hidden)throw new Error('Human editing or hidden desk; no wayfinder movement was started');
-  const route=wayfinderRoute(desk.snapshot().map(connectorForView),id),revision=desk.revision,generation=desk.documentGeneration;
-  const run=++wayfinderRun,mode=desk.get(id).wayfinderMode??'move';
-  cameraAnimator.cancel('Wayfinder travel');objectAnimator.finish();
-  notify(mode==='tour'?'道しるべ：観光します（操作すると停止）':'道しるべ：経路をたどります（操作すると停止）');
-  void wayfinderTravel.run(route.points,camera,cameraSize,()=>desk.revision===revision&&desk.documentGeneration===generation,
-    (next,marker)=>{Object.assign(camera,next);cameraChanged();drawSelection();wayfinderMarker.replaceChildren();if(marker)wayfinderMarker.append(svg('circle',{cx:marker.x,cy:marker.y,r:5/camera.zoom,fill:'#f59e0b',stroke:'#fff','stroke-width':2/camera.zoom}));},reducedMotion.matches,mode)
-    .then(()=>{if(run===wayfinderRun)notify(route.destinationId?'道しるべ：到着しました':'道しるべ：線の端に到着しました');})
-    .catch(error=>{if(run!==wayfinderRun)return;if(error instanceof Error&&error.message==='Wayfinder cancelled'){notify('道しるべ：移動を中止しました');return;}notify(error instanceof Error?error.message:String(error),true);});
-  return {id,status:'started',mode,lineIds:route.lineIds,destinationId:route.destinationId};
+  const input=wayfinderStartSchema.parse(raw),scene=desk.snapshot().map(connectorForView);
+  const first=input.id?wayfinderRoute(scene,input.id):lineRoute(scene,input.lineId!,input.from!);
+  const mode=input.mode??(input.id?desk.get(input.id).wayfinderMode:undefined)??'move';
+  return launchNavigation(first,mode,input,scene);
 }
-function startWayfinder(id:string){
-  try{beginWayfinder(id);}catch(error){notify(error instanceof Error?error.message:String(error),true);}
+function startPinTravel(id:string,direction:'previous'|'next'){
+  try{
+    if(busy||editor.isActive()||identityControls.isEditing()||lineInput.isActive()||isConfirmDialogOpen()||document.hidden)throw new Error('編集中は移動できません');
+    const pin=desk.get(id),series=pinSeriesMap.get(pin.seriesId!);if(pin.type!=='label'||!series)return;
+    const target=pinNeighbours(desk.snapshot(),series,id)[direction];if(!target)return;
+    launchNavigation({points:[pinRoot(pin),pinRoot(target)],lineIds:[],destinationId:target.id},'move',{pinId:id},desk.snapshot());
+  }catch(error){notify(error instanceof Error?error.message:String(error),true);}
 }
+function launchNavigation(first:WayfinderRoute,mode:'move'|'tour',input:WayfinderStartInput&{pinId?:string},scene:DeskObject[]){
+  const label=input.pinId?'ピンの糸':'道しるべ';
+  const revision=desk.revision,generation=desk.documentGeneration,run=++wayfinderRun;
+  cancelWayfinding('superseded');cameraAnimator.cancel('Wayfinder travel');objectAnimator.finish();
+  const valid=()=>desk.revision===revision&&desk.documentGeneration===generation;
+  const updateMarker=(marker:{x:number;y:number}|null)=>{wayfinderMarker.replaceChildren();if(marker)wayfinderMarker.append(svg('circle',{cx:marker.x,cy:marker.y,r:5/camera.zoom,fill:'#f59e0b',stroke:'#fff','stroke-width':2/camera.zoom}));};
+  const reportStop=(reason:WayfinderStopReason)=>reason==='changed'?'経路が変更されたため中止しました':reason==='hidden'?'画面が非表示になったため中止しました':reason==='superseded'?'別の移動に切り替えました':reason==='timeout'?'移動の応答が止まったため中止しました':'操作により中止しました';
+  navigation={runId:run,status:'moving',mode,id:input.id,lineId:input.lineId,from:input.from,pinId:input.pinId};
+  drawSelection();
+  void(async()=>{
+    let route:WayfinderRoute=first;
+    while(run===wayfinderRun){
+      navigation={...navigation!,status:'moving',reason:undefined,point:undefined,choices:undefined};
+      notify(mode==='tour'?label+'：観光します（操作すると停止）':label+'：経路をたどります（操作すると停止）');
+      await wayfinderTravel.run(route.points,camera,cameraSize,valid,
+        (next,marker)=>{Object.assign(camera,next);cameraChanged();drawSelection();updateMarker(marker);},reducedMotion.matches,mode);
+      if(!valid())throw new WayfinderCancelled('changed');
+      if(route.branch){
+        navigation={...navigation!,status:'waiting',reason:'branch',point:route.branch.point,choices:route.branch.choices};
+        updateMarker(route.branch.point);notify('道しるべ：分岐です。進路を選んでください');
+        const choice=await wayfinderMap.choose(scene,route.branch,valid);
+        if(!valid())throw new WayfinderCancelled('changed');
+        updateMarker(null);route=lineRoute(scene,choice.lineId,choice.from);continue;
+      }
+      const reason=route.loop?'loop':route.destinationId?'arrived':'line-end';
+      navigation={...navigation!,status:'completed',reason,point:cameraView(camera,cameraSize()).center};
+      if(input.pinId&&route.destinationId){desk.select([route.destinationId]);render(false);}else drawSelection();
+      notify(route.loop?'道しるべ：ループを検出したため終了しました':route.destinationId?label+'：到着しました':'道しるべ：線の端に到着しました');return;
+    }
+  })().catch(error=>{
+    if(run!==wayfinderRun)return;updateMarker(null);
+    if(error instanceof WayfinderCancelled){navigation={...navigation!,status:'cancelled',reason:error.reason,choices:undefined,point:cameraView(camera,cameraSize()).center};drawSelection();notify(label+'：'+reportStop(error.reason));return;}
+    navigation={...navigation!,status:'failed',reason:'error',choices:undefined,message:error instanceof Error?error.message:String(error)};drawSelection();notify(navigation.message!,true);
+  });
+  return {id:input.id,lineId:input.lineId,from:input.from,runId:run,status:'started',mode,lineIds:first.lineIds,destinationId:first.destinationId};
+}
+function startWayfinder(id:string){try{beginWayfinder({id});}catch(error){notify(error instanceof Error?error.message:String(error),true);}}
 
 canvas.addEventListener('dblclick', event => {
   const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
@@ -1121,7 +1168,7 @@ const recovery = new BrowserConnection({
   beforeRelease: () => thinkingMode.assertAllowed('release'),
   handoff: url => { void connectionPanel.display(url); },
   handoffError: message => notify(message, true),
-  disconnected: () => { cancelConfirmDialog(); bhDeletion.stop(); activityLed.clear(); objectAnimator.finish(); cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
+  disconnected: () => { cancelWayfinding('changed');cancelConfirmDialog(); bhDeletion.stop(); activityLed.clear(); objectAnimator.finish(); cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
   status: (state, detail) => {
     bellControls.connected(state==='connected');
     if (state === 'connected') connectionPanel.hide();
@@ -1164,8 +1211,10 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if (['execute', 'lock', 'undo', 'redo', 'select', 'point', 'load_document', 'fit', 'camera_move', 'wayfinder_start', 'ui_set'].includes(message.request.method)) objectAnimator.finish();
       const beforeMove = message.request.method === 'execute' ? desk.snapshot() : null;
       let animatedMove = false;
-      if (message.request.method === 'load_document') cameraAnimator.cancel('Desk contents replaced');
+      if (message.request.method === 'load_document') {cancelWayfinding('changed');cameraAnimator.cancel('Desk contents replaced');}
+      const beforeRevision=desk.revision;
       let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid, scale => rasterPointedCard(desk, id => drawnNodes.get(id), scale));
+      if(desk.revision!==beforeRevision)cancelWayfinding('changed');
       if (['camera_move', 'mermaid_render', 'raster'].includes(message.request.method)) result = await result;
       if (message.request.method === 'fit') {
         const ids = desk.pointed();

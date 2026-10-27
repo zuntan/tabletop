@@ -72,3 +72,37 @@ test('wayfinder follows an off-screen bent route at fixed zoom, lands at its car
     assert.deepEqual(errors,[]);
   }finally{await close();}
 });
+
+test('branch map resumes raw line travel, preserves arrows and consumes outside cancellation', {timeout:60_000}, async()=>{
+ const {page,call,close,errors}=await openTestDesk('wayfinder-branch');
+ try{
+  await call('desk_execute',{operations:[
+   {kind:'add',object:{id:'road',type:'line',x:0,y:0,x2:600,y2:0,endJunction:'fork'}},
+   {kind:'add',object:{id:'up',type:'line',x:600,y:0,x2:600,y2:-2000,startJunction:'fork',endMarker:'arrow'}},
+   {kind:'add',object:{id:'right',type:'line',x:600,y:0,x2:2000,y2:0,startJunction:'fork',startMarker:'arrow'}},
+  ]});
+  await call('desk_wayfinder_start',{lineId:'road',from:'start'});
+  await page.waitForSelector('#wayfinder-map:not([hidden])');
+  const waiting=await call('desk_camera_get');assert.equal(waiting.navigation.status,'waiting');assert.equal(waiting.navigation.reason,'branch');assert.equal(waiting.navigation.choices.length,2);
+  await page.screenshot({path:'/tmp/tabletop-wayfinder-map.png'});
+  assert.equal(await page.locator('#wayfinder-map svg').getAttribute('data-map-scale'),'0.25');
+  assert.ok(await page.locator('#wayfinder-map .connector-marker').count()>=2);
+  await page.locator('#wayfinder-map [data-line-id="right"]').click();
+  await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('線の端に到着'));
+  assert.equal((await call('desk_camera_get')).navigation.reason,'line-end');
+  await call('desk_wayfinder_start',{lineId:'road',from:'start'});
+  await page.waitForSelector('#wayfinder-map:not([hidden])');
+  const selectedBefore=await call('desk_selection');
+  await page.locator('#canvas').click({position:{x:20,y:20}});
+  assert.deepEqual((await call('desk_selection')).ids,selectedBefore.ids);
+  await page.waitForSelector('#wayfinder-map[hidden]',{state:'attached'});
+  assert.equal((await call('desk_camera_get')).navigation.reason,'human');
+  await call('desk_wayfinder_start',{lineId:'road',from:'start'});
+  await page.waitForSelector('#wayfinder-map:not([hidden])');
+  await call('desk_execute',{operations:[{kind:'update',id:'right',patch:{x2:2100}}]});
+  await page.waitForTimeout(500);
+  assert.equal((await call('desk_camera_get')).navigation.reason,'changed',await page.locator('#message').textContent()??'');
+  assert.equal((await call('desk_camera_get')).navigation.reason,'changed');
+  assert.deepEqual(errors,[]);
+ }finally{await close();}
+});
