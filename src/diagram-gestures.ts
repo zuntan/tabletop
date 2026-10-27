@@ -1,3 +1,4 @@
+import {headSelectedProp} from './prop-selection';
 import {rulerFor,rulerMoveOperations} from './ruler-layout';
 import {fileFor,fileMoveOperations} from './clear-files';
 import { clipMoveOperations, clipFor, clipDropTarget, clipTarget, clipGroup } from './clip-bundles';
@@ -103,6 +104,7 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
       }
       if (sourceGroup && !gesture.detach) movingJunctions.add(sourceGroup);
     } else if (gesture.mode === 'resize') {
+      if(headSelectedProp(object))return;
       const corner = { x: object.x + object.width + dx, y: object.y + object.height + dy };
       const next = gesture.grid ? gridPoint(corner, gesture.gridSettings) : corner;
       patch = { width: Math.max(1, next.x - object.x), height: Math.max(1, next.y - object.y) };

@@ -77,6 +77,7 @@ import { createReactionControls, drawReactions } from './reactions';
 import './reactions.css';
 import { createDeskFileControls } from './desk-file-controls';
 import { IMAGE_TITLE_HEIGHT } from './image-geometry';
+import { headSelectedProp, propSelectionBounds } from './prop-selection';
 import { BrowserConnection } from './pairing-client';
 import { createDeskIdentityControls } from './desk-identity-controls';
 import './desk-identity.css';
@@ -145,6 +146,7 @@ app.innerHTML = `
           <label hidden>内側の余白<input name="padding" type="number" min="0" step="any"></label>
           <label hidden>文字サイズ調整<select name="textFit" disabled><option value="fixed" hidden>指定サイズ（既存）</option><option value="auto">完全自動</option><option value="shrink">縮小のみ</option></select></label>
           <label hidden>吹き出し<select name="calloutMode" disabled><option value="none">なし</option><option value="speech">三角</option><option value="thought">考え事</option><option value="leader">引き出し線</option></select></label>
+          <label hidden>ヘッド選択<select name="propSelection" hidden><option value="normal">通常選択</option><option value="head">ヘッド選択</option></select><button id="prop-head-selection" type="button" role="switch" aria-label="ヘッド選択" aria-checked="false"><span class="thinking-switch-track" aria-hidden="true"></span><span class="thinking-switch-state">OFF</span></button></label>
           <label hidden>配置方式<select name="rulerMode"><option value="free">自由</option><option value="gap">均等</option><option value="center">中心均等</option></select></label>
           <label hidden>定規の素材<select name="rulerMaterial"><option value="acrylic">アクリル</option><option value="bamboo">竹</option><option value="steel">ステンレス</option></select></label>
           <label hidden>定規の幅<select name="rulerThickness"><option value="24">24</option><option value="36">36</option><option value="48">48</option></select></label>
@@ -200,6 +202,11 @@ const pinSeriesMap = new Map<string, Series>();
 let renderedRounding = buildJunctionRounding([]);
 const renderedById = new Map<string, DeskObject>();
 const form = $<HTMLFormElement>('#properties');
+$('#prop-head-selection').onclick=()=>{
+  const control=form.elements.namedItem('propSelection') as HTMLSelectElement;
+  control.value=control.value==='head'?'normal':'head';
+  control.dispatchEvent(new Event('change',{bubbles:true}));
+};
 const propertyEditor = createPropertyEditor(form, desk, (id, patch) => {
   execute([{ kind: 'update', id, patch }]); render(); notify(`revision ${desk.revision} · ${desk.summary().count} オブジェクト`);
 }, message => notify(message, true));
@@ -489,7 +496,7 @@ function drawObjectRaw(object: DeskObject) {
   object = connectorForView(object);
   const { width: w, height: h } = object;
   const group = svg('g', { transform: object.type === 'label' ? pinTransform(object, camera.zoom) : `translate(${object.x} ${object.y})`,
-    'data-id': object.id, 'data-locked': String(!!object.locked) });
+    'data-id': object.id, 'data-locked': String(!!object.locked), ...(headSelectedProp(object)?{'pointer-events':'none'}:{}) });
   drawnNodes.set(object.id, group);
   if (isConnector(object)) {
     drawConnector(group, object, camera.zoom, renderedRounding.get(object.id)); drawReactions(group, object, pinDescriptionVisible(object), camera.zoom);
@@ -524,8 +531,8 @@ function drawObjectRaw(object: DeskObject) {
   }
   if (['link', 'web', 'image', 'svg', 'mermaid', 'prop'].includes(object.type)) {
     if (object.type === 'prop') {
-      // Retain the whole card as a hit target while letting the desk show through the artwork.
-      group.append(svg('rect', { width: w, height: h, fill: 'transparent', stroke: 'none', 'pointer-events': 'all', 'data-prop-body': '' }));
+      // Head mode leaves the artwork transparent to pointer hit testing.
+      group.append(svg('rect', { width: w, height: headSelectedProp(object)?Math.min(IMAGE_TITLE_HEIGHT,h):h, fill: 'transparent', stroke: 'none', 'pointer-events': 'all', 'data-prop-body': '' }));
       group.append(svg('rect', { width: w, height: Math.min(IMAGE_TITLE_HEIGHT, h), rx: 6, fill: '#ffffff', stroke: '#94a3b8', 'data-prop-title': '' }));
     } else group.append(svg('rect', { width: w, height: h, rx: 6, fill: '#ffffff', stroke: '#94a3b8' }));
     if(object.deskPath)drawDeskLinkIcon(group,object);
@@ -575,10 +582,11 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
     drawAiPointing(overlays, [connectorForView(object)], camera.zoom, pinDescriptionVisible(object), colors.pointing);
   for (const source of selected.filter(pinIsVisible)) {
     const object = connectorForView(source);
+    const selectionObject=headSelectedProp(object)?{...object,...propSelectionBounds(object)}:object;
     const filed=fileFor(scene??renderedScene,object.id);
-    if (object.locked && !filed) { drawLockedSelection(overlays, object, camera.zoom, pinDescriptionVisible(object), colors.selection); continue; }
+    if (object.locked && !filed) { drawLockedSelection(overlays, selectionObject, camera.zoom, pinDescriptionVisible(object), colors.selection); continue; }
     if (!filed && drawEndpointHandles(overlays, object, camera.zoom, selected.length === 1, colors.selection)) continue;
-    const visual = labelVisualBounds(object, pinDescriptionVisible(object), camera.zoom);
+    const visual = labelVisualBounds(selectionObject, pinDescriptionVisible(object), camera.zoom);
     overlays.append(svg('rect', { x: visual.x - 3 / camera.zoom, y: visual.y - 3 / camera.zoom,
       width: visual.width + 6 / camera.zoom, height: visual.height + 6 / camera.zoom,
       fill: 'none', stroke: colors.selection, 'stroke-width': 1.5 / camera.zoom, 'stroke-dasharray': `${5 / camera.zoom} ${3 / camera.zoom}`, 'pointer-events': 'none', 'data-human-selection': object.id }));
@@ -587,7 +595,7 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
       fill: object.callout.binding ? '#16a34a' : colors.selection, stroke: '#fff', 'stroke-width': 1.5 / camera.zoom,
       'data-callout-tip': object.id, class: 'endpoint-handle',
     }));
-    if (selected.length === 1 && !filed && object.type !== 'label' && object.type !== 'clip') overlays.append(svg('rect', {
+    if (selected.length === 1 && !filed && object.type !== 'label' && object.type !== 'clip' && !headSelectedProp(object)) overlays.append(svg('rect', {
       x: object.x + object.width - 5 / camera.zoom, y: object.y + object.height - 5 / camera.zoom,
       width: 10 / camera.zoom, height: 10 / camera.zoom, fill: colors.selection, stroke: '#fff',
       'stroke-width': 1 / camera.zoom, 'data-resize': object.id, class: 'resize-handle',
@@ -923,7 +931,7 @@ function endGesture(event: PointerEvent, cancel = false) {
       const x1 = Math.min(p.x, current.start.x), x2 = Math.max(p.x, current.start.x);
       const y1 = Math.min(p.y, current.start.y), y2 = Math.max(p.y, current.start.y);
       const selected = desk.snapshot().filter(pinIsVisible).filter(object => {
-        const o = object.type === 'label' ? labelVisualBounds(object, pinDescriptionVisible(object), camera.zoom) : bounds(object);
+        const o = object.type === 'label' ? labelVisualBounds(object, pinDescriptionVisible(object), camera.zoom) : headSelectedProp(object) ? propSelectionBounds(object) : bounds(object);
         return o.x >= x1 && o.y >= y1 && o.x + o.width <= x2 && o.y + o.height <= y2;
       }).map(o => o.id);
       desk.select([...new Set([...current.additive, ...selected])]);

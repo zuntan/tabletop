@@ -92,6 +92,9 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 6px 10px; padding-top: 6px;
 .pin-series-choices button { text-align: left; font-size: 12px; }
 .pin-series-choices button[aria-pressed="true"] { border-color: #2563eb; }
 #pin-series-new { width: 100%; font-size: 12px; }
+#prop-head-selection { display:flex; align-items:center; justify-content:center; gap:7px; padding:5px 8px; }
+#prop-head-selection[aria-checked="true"] .thinking-switch-track { background:#047857; border-color:#6ee7b7; }
+#prop-head-selection[aria-checked="true"] .thinking-switch-track::before { left:18px; }
 
 /* Two-line stationery name, within the standard toolbar button height. */
 .toolbar-group #file-create { gap: 1px; padding-top: 2px; padding-bottom: 2px; }

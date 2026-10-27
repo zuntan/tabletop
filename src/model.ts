@@ -59,6 +59,7 @@ const objectFields = z.object({
   clipAutoSize: z.boolean().optional(),
   clipStyle: z.enum(['binder','wire']).optional(),
   locked: z.boolean().optional(), // Mouse geometry protection only; not an authorization boundary.
+  propSelection: z.enum(['normal', 'head']).optional(),
   seriesId: z.string().min(1).max(100).optional(),
   number: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).optional(),
   labelShape: z.enum(['text', 'rect', 'ellipse', 'roundedRect', 'pin']).optional(),

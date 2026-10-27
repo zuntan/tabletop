@@ -2,9 +2,10 @@ import { objectPropertyNames } from './object-properties';
 import { isShapeType } from './shape-definitions';
 import type { DeskObject } from './model';
 import { isConnector } from './geometry';
+import { headSelectedProp } from './prop-selection';
 import { supportsFill, transparencyPercent, opacityFromPercent } from './fill-opacity';
 
-const fields = ['rulerMode','rulerMaterial','rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'url','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
+const fields = ['propSelection','rulerMode','rulerMaterial','rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'url','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
 const numeric = new Set(['rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'junctionRounding', 'fontSize', 'cornerRadius', 'padding','clipOffset','clipOffsetPercent','clipSize']);
 export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   const connector = isConnector(object);
@@ -12,6 +13,12 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   for (const name of fields) {
     const input = form.elements.namedItem(name) as HTMLInputElement;
     if (!input) continue;
+    if(name==='propSelection'){
+      input.disabled=object.type!=='prop';input.closest('label')!.hidden=object.type!=='prop';input.value=propertyValue(object,name);
+      const button=form.querySelector<HTMLButtonElement>('#prop-head-selection');
+      if(button){const head=headSelectedProp(object);button.disabled=input.disabled;button.setAttribute('aria-checked',String(head));button.querySelector('.thinking-switch-state')!.textContent=head?'ON':'OFF';}
+      continue;
+    }
     if(name.startsWith('ruler')){input.disabled=object.type!=='ruler';input.closest('label')!.hidden=object.type!=='ruler';input.value=propertyValue(object,name);continue;}
     if(name.startsWith('clip')) {
       const percent=object.clipOffsetMode==='percent'||object.clipOffsetMode==='base-short-side';
@@ -57,13 +64,14 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
     const size = name === 'width' || name === 'height';
     input.disabled = (object.type === 'label' && !['x', 'y', 'text'].includes(name)) ||
       (connector && (name === 'fontSize' || name === 'text')) ||
-      (endpoint && !connector) || (size && connector) || (name === 'fillOpacity' && !supportsFill(object)) ||
+      (endpoint && !connector) || (size && (connector || headSelectedProp(object))) || (name === 'fillOpacity' && !supportsFill(object)) ||
       (name === 'url' && !['web', 'link', 'image', 'svg'].includes(object.type));
     if (endpoint || size) input.closest('label')!.hidden = endpoint ? !connector : connector;
     if (name === 'fillOpacity' || name === 'fontSize' || name === 'text') input.closest('label')!.hidden = connector;
   }
 }
 export function propertyValue(object: DeskObject, key: string): string {
+  if(key==='propSelection')return object.propSelection??'normal';
   if(key==='rulerMode')return object.rulerMode??'free';
   if(key==='rulerMaterial')return object.rulerMaterial??'acrylic';
   if(key==='rulerThickness')return String(object.rulerThickness??36);
@@ -84,6 +92,11 @@ export function propertyValue(object: DeskObject, key: string): string {
 export function propertyFieldPatch(key: string, value: string, object: DeskObject): Partial<DeskObject> {
   if (!(fields as readonly string[]).includes(key)) throw new Error('Unknown property');
   if (value === propertyValue(object, key)) return {};
+  if(key==='propSelection'){
+    if(object.type!=='prop'||!['normal','head'].includes(value))throw new Error('Invalid prop selection mode');
+    return {propSelection:value as 'normal'|'head'};
+  }
+  if(headSelectedProp(object)&&['width','height'].includes(key))throw new Error('通常選択に戻すとリサイズできます');
   if(key==='clipOffsetMode'){
     if(object.type!=='clip'||!['fixed','percent','base-short-side'].includes(value))throw new Error('Invalid clip offset mode');
     return {clipOffsetMode:value as 'fixed'|'percent'|'base-short-side',...(value!=='fixed'&&object.clipOffsetPercent===undefined?{clipOffsetPercent:30}:{})};
