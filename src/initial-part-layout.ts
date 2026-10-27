@@ -4,6 +4,7 @@ export const initialTextSize = {width:744,height:480};
 export const initialLineDelta = {x:300,y:168};
 export function initialPartSize(type:string) {
   const {width,height}=initialPartContent;
+  if(type==='wayfinder')return {width:72,height:72};
   if(type==='text')return {...initialTextSize};
   if(type==='link')return {width,height:60};
   if(['image','svg','mermaid','web'].includes(type))return {width,height:height+34};

@@ -78,6 +78,9 @@ import './reactions.css';
 import { createDeskFileControls } from './desk-file-controls';
 import { IMAGE_TITLE_HEIGHT } from './image-geometry';
 import { headSelectedProp, propSelectionBounds } from './prop-selection';
+import { wayfinderRoute } from './wayfinder-route';
+import { WayfinderTravel } from './wayfinder-travel';
+import { drawWayfinder } from './wayfinder-drawing';
 import { BrowserConnection } from './pairing-client';
 import { createDeskIdentityControls } from './desk-identity-controls';
 import './desk-identity.css';
@@ -146,6 +149,7 @@ app.innerHTML = `
           <label hidden>内側の余白<input name="padding" type="number" min="0" step="any"></label>
           <label hidden>文字サイズ調整<select name="textFit" disabled><option value="fixed" hidden>指定サイズ（既存）</option><option value="auto">完全自動</option><option value="shrink">縮小のみ</option></select></label>
           <label hidden>吹き出し<select name="calloutMode" disabled><option value="none">なし</option><option value="speech">三角</option><option value="thought">考え事</option><option value="leader">引き出し線</option></select></label>
+          <label hidden>道しるべの動き<select name="wayfinderMode" hidden><option value="move">移動</option><option value="tour">観光</option></select><span class="wayfinder-mode" role="group" aria-label="道しるべの動き"><button type="button" data-wayfinder-mode="move" aria-pressed="true">移動</button><button type="button" data-wayfinder-mode="tour" aria-pressed="false">観光</button></span></label>
           <label hidden>ヘッド選択<select name="propSelection" hidden><option value="normal">通常選択</option><option value="head">ヘッド選択</option></select><button id="prop-head-selection" type="button" role="switch" aria-label="ヘッド選択" aria-checked="false"><span class="thinking-switch-track" aria-hidden="true"></span><span class="thinking-switch-state">OFF</span></button></label>
           <label hidden>配置方式<select name="rulerMode"><option value="free">自由</option><option value="gap">均等</option><option value="center">中心均等</option></select></label>
           <label hidden>定規の素材<select name="rulerMaterial"><option value="acrylic">アクリル</option><option value="bamboo">竹</option><option value="steel">ステンレス</option></select></label>
@@ -202,6 +206,9 @@ const pinSeriesMap = new Map<string, Series>();
 let renderedRounding = buildJunctionRounding([]);
 const renderedById = new Map<string, DeskObject>();
 const form = $<HTMLFormElement>('#properties');
+form.querySelectorAll<HTMLButtonElement>('[data-wayfinder-mode]').forEach(button=>button.onclick=()=>{
+  const control=form.elements.namedItem('wayfinderMode') as HTMLSelectElement;control.value=button.dataset.wayfinderMode!;control.dispatchEvent(new Event('change',{bubbles:true}));
+});
 $('#prop-head-selection').onclick=()=>{
   const control=form.elements.namedItem('propSelection') as HTMLSelectElement;
   control.value=control.value==='head'?'normal':'head';
@@ -234,9 +241,11 @@ const camera = { x: 60, y: 50, zoom: 1 };
 const bhDeletion = new BhDeletion();
 const humanScroll = new HumanScrollGuard();
 const cameraAnimator = new CameraAnimator();
+const wayfinderTravel=new WayfinderTravel();
+const wayfinderMarker=svg('g',{'pointer-events':'none','aria-hidden':'true','data-wayfinder-marker':''});viewport.append(wayfinderMarker);
 const objectAnimator = new ObjectMoveAnimator();
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const stopCamera = () => { cameraAnimator.cancel('Human interaction or viewport change'); objectAnimator.finish(); };
+const stopCamera = () => { wayfinderTravel.cancel(); cameraAnimator.cancel('Human interaction or viewport change'); objectAnimator.finish(); };
 for (const event of ['pointerdown', 'touchstart', 'keydown', 'click', 'input']) {
   document.addEventListener(event, stopCamera, { capture: true, passive: true });
 }
@@ -250,6 +259,7 @@ app.addEventListener('wheel', () => { stopCamera(); humanScroll.record(); }, { c
 document.addEventListener('scroll', () => { stopCamera(); humanScroll.record(); }, { capture: true, passive: true });
 const cameraSize = () => ({ width: canvas.clientWidth, height: canvas.clientHeight });
 function animateCamera(target: typeof camera, options: AnimationOptions) {
+  wayfinderTravel.cancel();
   if (document.hidden) throw new Error('Camera action cancelled: desk is hidden; do not retry automatically.');
   return cameraAnimator.run({ ...camera }, target, cameraSize(), next => {
     Object.assign(camera, next);
@@ -257,6 +267,7 @@ function animateCamera(target: typeof camera, options: AnimationOptions) {
   }, reducedMotion.matches ? { durationMs: 0 } : options);
 }
 const cameraControls = {
+  wayfinderStart:(id:string)=>beginWayfinder(id),
   get: () => cameraView(camera, cameraSize()),
   async move(input: CameraMove) {
     const next = movedCamera(camera, cameraSize(), input);
@@ -337,6 +348,9 @@ deskOptions.append($('#numbering-settings'),$('#label-descriptions'),$('#grid-sn
 formatGroup.append(...$('#authoring-tools').children);
 editActions.prepend($('#clipboard'));editActions.setAttribute('aria-label','貼り付け・重なり順・削除');
 $('#authoring-tools').append(formatGroup,editActions,deskOptions);
+const wayfinderCreate=document.createElement('button');wayfinderCreate.id='wayfinder-create';wayfinderCreate.type='button';iconButton(wayfinderCreate,'','道しるべ');
+$('#pin-series-menu').after(wayfinderCreate);
+wayfinderCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>newObject('wayfinder',{fill:'#dcfce7',fillOpacity:1,stroke:'#166534',text:'道しるべ'}));};
 const clipCreate=document.createElement('button');clipCreate.id='clip-create';iconButton(clipCreate, '', 'クリップ');clipCreate.title='選択を束ねる（Ctrl/⌘＋G）。未選択ならクリップを置く';
 clipCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{
   const operations=bundleOperations(desk.snapshot(),desk.selected());
@@ -368,7 +382,7 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
   void rasterPointedCard(desk, id => drawnNodes.get(id)).then(raster => openBhPreview(raster.dataUrl))
     .catch(error => notify(error instanceof Error ? error.message : String(error), true));
 });
-const labels: Record<DeskObject['type'], string> = { ...shapeNames, label: 'ピン', ellipse: '楕円', line: '線', text: 'カード', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', ruler:'定規', file:'クリアファイル', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
+const labels: Record<DeskObject['type'], string> = { ...shapeNames, wayfinder:'道しるべ', label: 'ピン', ellipse: '楕円', line: '線', text: 'カード', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', ruler:'定規', file:'クリアファイル', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
   if ($('#object-filter-files').getAttribute('aria-pressed')==='true'&&fileFor(renderedScene,object.id))return true;
@@ -553,6 +567,7 @@ function drawObjectRaw(object: DeskObject) {
     if (object.type === 'mermaid') drawMermaidCard(group, object);
     drawOpenLink(group, object, path=>{void deskFiles.open(path);});
   }
+  if(object.type==='wayfinder')drawWayfinder(group,object,()=>startWayfinder(object.id),renderedScene);
   if(object.type==='file'){drawClearFile(group,object);drawStamp(group,object,desk.selected().includes(object.id));}
   if(object.type==='ruler')drawRuler(group,object);
   if(object.type==='clip') drawClip(group,object,renderedById.get(object.clipMembers?.[0] ?? ''));
@@ -823,6 +838,23 @@ function focusObjects(ids: string[]) {
 }
 function focusHumanSelection() { focusObjects(desk.selected()); }
 $('#fit').onclick = () => focusObjects(desk.selected().length ? desk.selected() : desk.pointed());
+let wayfinderRun=0;
+function beginWayfinder(id:string){
+  if(busy||editor.isActive()||identityControls.isEditing()||isConfirmDialogOpen()||document.hidden)throw new Error('Human editing or hidden desk; no wayfinder movement was started');
+  const route=wayfinderRoute(desk.snapshot().map(connectorForView),id),revision=desk.revision,generation=desk.documentGeneration;
+  const run=++wayfinderRun,mode=desk.get(id).wayfinderMode??'move';
+  cameraAnimator.cancel('Wayfinder travel');objectAnimator.finish();
+  notify(mode==='tour'?'道しるべ：観光します（操作すると停止）':'道しるべ：経路をたどります（操作すると停止）');
+  void wayfinderTravel.run(route.points,camera,cameraSize,()=>desk.revision===revision&&desk.documentGeneration===generation,
+    (next,marker)=>{Object.assign(camera,next);cameraChanged();drawSelection();wayfinderMarker.replaceChildren();if(marker)wayfinderMarker.append(svg('circle',{cx:marker.x,cy:marker.y,r:5/camera.zoom,fill:'#f59e0b',stroke:'#fff','stroke-width':2/camera.zoom}));},reducedMotion.matches,mode)
+    .then(()=>{if(run===wayfinderRun)notify(route.destinationId?'道しるべ：到着しました':'道しるべ：線の端に到着しました');})
+    .catch(error=>{if(run!==wayfinderRun)return;if(error instanceof Error&&error.message==='Wayfinder cancelled'){notify('道しるべ：移動を中止しました');return;}notify(error instanceof Error?error.message:String(error),true);});
+  return {id,status:'started',mode,lineIds:route.lineIds,destinationId:route.destinationId};
+}
+function startWayfinder(id:string){
+  try{beginWayfinder(id);}catch(error){notify(error instanceof Error?error.message:String(error),true);}
+}
+
 canvas.addEventListener('dblclick', event => {
   const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
   if (target.closest('[data-open-url], [data-open-media], [data-open-desk], [data-markdown-link]')) return;
@@ -889,7 +921,7 @@ function previewGesture(current: Gesture, point: { x: number; y: number }) {
   if (!current.detach && current.mode === 'callout') drawSnapTargets(overlays,
     scene.filter(o=>!clipFollower(scene,o.id)).filter(pinIsVisible).filter(o => !isConnector(o) && o.id !== current.originals[0].id).map(o => pinScreenObject(o, camera.zoom)),
     { x: current.originals[0].callout!.x + point.x - current.start.x, y: current.originals[0].callout!.y + point.y - current.start.y }, camera.zoom);
-  if (!current.detach && current.mode === 'move' && current.originals.length === 1 && current.originals[0].type === 'label') {
+  if (!current.detach && current.mode === 'move' && current.originals.length === 1 && ['label','wayfinder'].includes(current.originals[0].type)) {
     const pin = scene.find(o => o.id === current.originals[0].id)!;
     drawSnapTargets(overlays, scene.filter(o=>isPinAttachmentTarget(o,scene)).filter(pinIsVisible),
       { x: pin.x + pin.width / 2, y: pin.y + pin.height }, camera.zoom);
@@ -1125,11 +1157,11 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if (typeof message.request?.method === 'string') activityLed.pulse(message.request.method);
       thinkingMode.assertAllowed(message.request?.method);
       if(deskFiles.isBusy()&& !['summary','get','list','state','context','settings','selection','changes','file_saved','camera_get','ui_get'].includes(message.request?.method))throw new Error('Human file operation in progress. No change was made.');
-      if(isConfirmDialogOpen()&&['execute','lock','undo','redo','select','point','load_document','fit','camera_move','ui_set'].includes(message.request?.method))throw new Error('Human confirmation in progress. No change was made; wait for the user.');
-      if (['fit', 'camera_move'].includes(message.request.method)) humanScroll.assertIdle();
+      if(isConfirmDialogOpen()&&['execute','lock','undo','redo','select','point','load_document','fit','camera_move','wayfinder_start','ui_set'].includes(message.request?.method))throw new Error('Human confirmation in progress. No change was made; wait for the user.');
+      if (['fit', 'camera_move','wayfinder_start'].includes(message.request.method)) humanScroll.assertIdle();
       if ((busy && message.request.method!=='camera_get') || (lineInput.isActive() && !['camera_get','summary','context','list','get','state','selection','settings','changes','file_saved','asset_read','ui_get','text_measure'].includes(message.request.method)) || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
-      if (['fit', 'camera_move'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing() || lineInput.isActive())) throw new Error('Human editing in progress. No camera change was made.');
-      if (['execute', 'lock', 'undo', 'redo', 'select', 'point', 'load_document', 'fit', 'camera_move', 'ui_set'].includes(message.request.method)) objectAnimator.finish();
+      if (['fit', 'camera_move','wayfinder_start'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing() || lineInput.isActive())) throw new Error('Human editing in progress. No camera change was made.');
+      if (['execute', 'lock', 'undo', 'redo', 'select', 'point', 'load_document', 'fit', 'camera_move', 'wayfinder_start', 'ui_set'].includes(message.request.method)) objectAnimator.finish();
       const beforeMove = message.request.method === 'execute' ? desk.snapshot() : null;
       let animatedMove = false;
       if (message.request.method === 'load_document') cameraAnimator.cancel('Desk contents replaced');

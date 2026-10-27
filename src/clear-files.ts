@@ -17,7 +17,7 @@ const structuralClip=['clipMembers','clipAnchor','clipOffset','clipOffsetMode','
 export function fileCreateOperations(objects:DeskObject[],ids:string[],grid?:GridSettings):Operation[]{
  if(!ids.length)throw new Error('クリアファイルに入れるものを選択してください');
  const selected=ids.map(id=>objects.find(o=>o.id===id)!);
- if(selected.some(o=>!o||['label','prop'].includes(o.type)))throw new Error('ピン・小物はクリアファイルに入れられません。選択から外してください');
+ if(selected.some(o=>!o||['label','prop','wayfinder'].includes(o.type)))throw new Error('ピン・小物・道しるべはクリアファイルに入れられません。選択から外してください');
  if(selected.some(o=>fileFor(objects,o.id)))throw new Error('クリアファイルの入れ子・結合はできません。先に解除してください');
  const members=new Set(ids.flatMap(id=>(rulerFor(objects,id)?rulerGroup(objects,id):clipGroup(objects,id)).map(o=>o.id)));
  const contents=objects.filter(o=>members.has(o.id));
@@ -66,7 +66,7 @@ export function resolveFiles(input:DeskObject[],before:DeskObject[]=[]):DeskObje
   });
   if(!members.length){if(old){map.delete(file.id);continue;}throw new Error('空のクリアファイルは作成できません');}
   if(new Set(members).size!==members.length)throw new Error('Duplicate file member');
-  for(const id of members){const o=map.get(id)!;if(['file','prop','label'].includes(o.type))throw new Error('クリアファイルに入れられない種類です');if(owners.has(id))throw new Error('Multiple clear file ownership');owners.set(id,file.id);}
+  for(const id of members){const o=map.get(id)!;if(['file','prop','label','wayfinder'].includes(o.type))throw new Error('クリアファイルに入れられない種類です');if(owners.has(id))throw new Error('Multiple clear file ownership');owners.set(id,file.id);}
   for(const id of members){const c=clipFor(input,id);if(c&&(!c.clipMembers?.length||![c.id,...c.clipMembers].every(id=>members.includes(id))))throw new Error('クリップの束全体をクリアファイルへ入れてください');}
   for(const id of members){const r=rulerFor(input,id);if(r&&![r.id,...r.rulerMembers?.map(m=>m.id)??[]].every(id=>members.includes(id)))throw Error('定規と所属カード全体をクリアファイルへ入れてください');}
   file.fileMembers=members;

@@ -20,7 +20,7 @@ export const cameraMoveSchema = z.object(cameraMoveFields).strict().superRefine(
 export type CameraMove = z.infer<typeof cameraMoveSchema>;
 export type Camera = { x: number; y: number; zoom: number };
 export type CameraSize = { width: number; height: number };
-export type CameraBridge = { get: () => unknown; move: (input: CameraMove) => unknown };
+export type CameraBridge = { get: () => unknown; move: (input: CameraMove) => unknown; wayfinderStart?: (id:string)=>unknown };
 
 /** World coordinates are independent of CSS pixels, device pixel ratio and page position. */
 export function cameraView(camera: Camera, size: CameraSize) {

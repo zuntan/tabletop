@@ -14,6 +14,7 @@ export function objectPropertyNames(object: DeskObject): readonly (keyof DeskObj
   if (object.type === 'file') return [...common,...box,...paint,...text,'fileMembers','stamp'];
   if(object.type==='ruler')return [...common,...box,'text','rulerMembers','rulerMode','rulerMaterial','rulerThickness','rulerAxis'];
   if (object.type === 'clip') return [...common,...box,'fill','clipMembers','clipAnchor','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipStyle'];
+  if(object.type==='wayfinder')return [...common,...box,...paint,'text','attachment','wayfinderMode'];
   if (object.type === 'prop') return [...common, ...box, 'text', 'src', 'propSelection'];
   if (object.type === 'mermaid') return [...common, ...decoration, ...box, 'text', 'mermaidSource', 'cutout'];
   if (object.type === 'text') return [...common, ...decoration, ...box, ...paint, ...text, 'cornerRadius', 'padding', 'callout', 'stamp', 'cutout'];

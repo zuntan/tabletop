@@ -88,6 +88,7 @@ export class PartClipboard {
           patch: { attachment: { ...object.attachment, objectId: ids.get(object.attachment.objectId)! } } });
       } else {
         const copy = { ...object, id, x: object.x + offset.x, y: object.y + offset.y };
+        if(object.type==='wayfinder'&&object.attachment)copy.attachment=ids.has(object.attachment.objectId)?{...object.attachment,objectId:ids.get(object.attachment.objectId)!}:null;
         if (object.type === 'file') copy.fileMembers=object.fileMembers?.filter(id=>ids.has(id)).map(id=>ids.get(id)!);
         if(object.type==='ruler')copy.rulerMembers=object.rulerMembers?.filter(m=>ids.has(m.id)).map(m=>({...m,id:ids.get(m.id)!}));
         if (object.type === 'clip') copy.clipMembers = object.clipMembers?.filter(id=>ids.has(id)).map(id=>ids.get(id)!);

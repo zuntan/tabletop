@@ -41,7 +41,7 @@ const bindingSchema = z.object({
 export const endpointShapeSchema = z.enum(['none', 'arrow', 'circle', 'diamond']);
 const objectFields = z.object({
   id: z.string().min(1).max(100),
-  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label']),
+  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label', 'wayfinder']),
   cornerRadius: z.number().finite().min(0).max(100_000).default(16),
   padding: z.number().finite().min(0).max(100_000).optional(),
   rulerMembers: z.array(z.object({id:z.string().min(1).max(100),side:z.enum(['before','after'])}).strict()).max(1999).optional(),
@@ -60,6 +60,7 @@ const objectFields = z.object({
   clipStyle: z.enum(['binder','wire']).optional(),
   locked: z.boolean().optional(), // Mouse geometry protection only; not an authorization boundary.
   propSelection: z.enum(['normal', 'head']).optional(),
+  wayfinderMode: z.enum(['move','tour']).optional(),
   seriesId: z.string().min(1).max(100).optional(),
   number: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).optional(),
   labelShape: z.enum(['text', 'rect', 'ellipse', 'roundedRect', 'pin']).optional(),
@@ -109,7 +110,7 @@ function normalizeLegacyConnector(input: unknown): unknown {
 export const objectSchema = z.preprocess(normalizeLegacyConnector, objectFields);
 export const patchSchema = objectFields.omit({ id: true, type: true }).partial();
 const addObjectFields = objectFields.partial().required({ id: true, type: true });
-const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label']) })
+const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label', 'wayfinder']) })
   .transform(object => normalizeLegacyConnector(object) as z.input<typeof addObjectFields>);
 export const operationSchema = z.discriminatedUnion('kind', [
   ...settingsOperations,
@@ -147,6 +148,7 @@ type Entry = { replacement?:boolean; before: Snapshot; after: Snapshot; beforeSe
 
 function validateObject(object: unknown): DeskObject {
   const parsed = objectSchema.parse(object);
+  if(parsed.type!=='wayfinder'&&parsed.wayfinderMode!==undefined)throw new Error('Wayfinder mode belongs only to wayfinders');
   if(parsed.type!=='ruler'&&['rulerMembers','rulerMode','rulerMaterial','rulerThickness','rulerAxis'].some(key=>(parsed as Record<string,unknown>)[key]!==undefined))throw Error('Ruler fields belong only to rulers');
   if(parsed.type!=='file'&&parsed.fileMembers!==undefined)throw new Error('File members belong only to files');
   if(parsed.type!=='clip' && ['clipMembers','clipAnchor','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipStyle'].some(key=>(parsed as Record<string,unknown>)[key]!==undefined)) throw new Error('Clip fields belong only to clips');
@@ -399,6 +401,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('camera_get') }).strict(),
   z.object({ method: z.literal('text_measure'), ...textMeasureFields }).strict(),
   z.object({ method: z.literal('camera_move'), ...cameraMoveFields }).strict(),
+  z.object({ method:z.literal('wayfinder_start'),id:z.string().min(1).max(100) }).strict(),
   z.object({ method: z.literal('changes'), sinceRevision: z.number().int().nonnegative(), limit: z.number().int().min(1).max(200).default(100) }),
   z.object({ method: z.literal('execute'), ...mcpBatchSchema.shape }),
   z.object({ method: z.literal('undo'), actor: z.string().min(1).max(100).default('agent-01') }),
@@ -475,6 +478,10 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, text
       if (!camera) throw new Error('Camera controls unavailable');
       const { method: _method, ...move } = request;
       return camera.move(cameraMoveSchema.parse(move));
+    }
+    case 'wayfinder_start': {
+      if(!camera?.wayfinderStart)throw new Error('Wayfinder controls unavailable; update the browser after saving the desk');
+      return camera.wayfinderStart(request.id);
     }
     case 'changes': return desk.getChanges(request.sinceRevision, request.limit);
     case 'execute': {

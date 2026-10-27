@@ -15,11 +15,12 @@ export const anchors: readonly Anchor[] = anchorNames.slice(0, 8);
 export function anchorsFor(object: DeskObject, scene: DeskObject[] = []): readonly Anchor[] {
   if (['clip','file','ruler'].includes(object.type) || clipFollower(scene,object.id)) return [];
   if (object.type === 'prop') return [];
+  if(object.type==='wayfinder')return ['top','right','left'];
   return object.type === 'label' ? ['center'] : isNewShape(object.type) ? ['top', 'right', 'bottom', 'left'] : anchors;
 }
 export const isConnector = (object: DeskObject) => object.type === 'line';
 export const isShape = (object: DeskObject) => isShapeType(object.type) || (object.type === 'label' && object.labelShape !== 'text');
-export const isConnectable = (object: DeskObject, scene: DeskObject[] = []) => !clipFollower(scene,object.id) && (isShape(object) || object.type === 'label' || object.type === 'text' || ['image', 'svg', 'mermaid','web','link'].includes(object.type));
+export const isConnectable = (object: DeskObject, scene: DeskObject[] = []) => !clipFollower(scene,object.id) && (isShape(object) || object.type === 'label' || object.type === 'text' || ['image', 'svg', 'mermaid','web','link','wayfinder'].includes(object.type));
 
 export function endpoints(object: DeskObject): { start: Point; end: Point } {
   if (object.x2 !== undefined && object.y2 !== undefined) {
@@ -92,6 +93,7 @@ export function resolveConnections(objects: DeskObject[], before: DeskObject[] =
   objects = resolveTextCallouts(objects, before);
   const map = new Map(objects.map(o => [o.id, o]));
   const previous = new Map(before.map(o => [o.id, o]));
+  const wayfinderPorts=new Map<string,number>();
   const resolved = objects.map(object => {
     if (!isConnector(object)) {
       if (object.x2 !== undefined || object.y2 !== undefined || object.startBinding || object.endBinding) {
@@ -114,6 +116,11 @@ export function resolveConnections(objects: DeskObject[], before: DeskObject[] =
         next[field] = null; // Target removed or no longer a shape: keep the cached endpoint.
       } else {
         if (!isConnectable(target,objects)) throw new Error('Connections require a connectable shape');
+        if(target.type==='wayfinder'){
+          if(!['top','right','left'].includes(binding.anchor))throw new Error('道しるべの下は対象への取り付け専用です。線は上・左・右へ接続してください');
+          const count=(wayfinderPorts.get(target.id)??0)+1;wayfinderPorts.set(target.id,count);
+          if(count>1)throw new Error('初版の道しるべに接続できる経路線は1本だけです');
+        }
         points[side] = anchorPoint(target, binding.anchor);
       }
     }

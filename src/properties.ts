@@ -5,7 +5,7 @@ import { isConnector } from './geometry';
 import { headSelectedProp } from './prop-selection';
 import { supportsFill, transparencyPercent, opacityFromPercent } from './fill-opacity';
 
-const fields = ['propSelection','rulerMode','rulerMaterial','rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'url','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
+const fields = ['wayfinderMode','propSelection','rulerMode','rulerMaterial','rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'url','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
 const numeric = new Set(['rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'junctionRounding', 'fontSize', 'cornerRadius', 'padding','clipOffset','clipOffsetPercent','clipSize']);
 export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   const connector = isConnector(object);
@@ -13,6 +13,11 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   for (const name of fields) {
     const input = form.elements.namedItem(name) as HTMLInputElement;
     if (!input) continue;
+    if(name==='wayfinderMode'){
+      input.disabled=object.type!=='wayfinder';input.closest('label')!.hidden=input.disabled;input.value=propertyValue(object,name);
+      for(const button of form.querySelectorAll<HTMLButtonElement>('[data-wayfinder-mode]')){button.disabled=input.disabled;button.setAttribute('aria-pressed',String(button.dataset.wayfinderMode===input.value));}
+      continue;
+    }
     if(name==='propSelection'){
       input.disabled=object.type!=='prop';input.closest('label')!.hidden=object.type!=='prop';input.value=propertyValue(object,name);
       const button=form.querySelector<HTMLButtonElement>('#prop-head-selection');
@@ -71,6 +76,7 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   }
 }
 export function propertyValue(object: DeskObject, key: string): string {
+  if(key==='wayfinderMode')return object.wayfinderMode??'move';
   if(key==='propSelection')return object.propSelection??'normal';
   if(key==='rulerMode')return object.rulerMode??'free';
   if(key==='rulerMaterial')return object.rulerMaterial??'acrylic';
@@ -92,6 +98,10 @@ export function propertyValue(object: DeskObject, key: string): string {
 export function propertyFieldPatch(key: string, value: string, object: DeskObject): Partial<DeskObject> {
   if (!(fields as readonly string[]).includes(key)) throw new Error('Unknown property');
   if (value === propertyValue(object, key)) return {};
+  if(key==='wayfinderMode'){
+    if(object.type!=='wayfinder'||!['move','tour'].includes(value))throw new Error('Invalid wayfinder mode');
+    return {wayfinderMode:value as 'move'|'tour'};
+  }
   if(key==='propSelection'){
     if(object.type!=='prop'||!['normal','head'].includes(value))throw new Error('Invalid prop selection mode');
     return {propSelection:value as 'normal'|'head'};

@@ -113,7 +113,7 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
       patch = { x: start.x + dx, y: start.y + dy, x2: end.x + dx, y2: end.y + dy, startBinding: object.startBinding && selected.has(object.startBinding.objectId) ? object.startBinding : null,
         endBinding: object.endBinding && selected.has(object.endBinding.objectId) ? object.endBinding : null };
       for (const side of ['start', 'end'] as const) if (object[junctionField(side)]) movingJunctions.add(object[junctionField(side)]!);
-    } else if (object.type === 'label') {
+    } else if (object.type === 'label' || object.type==='wayfinder') {
       const next = { x: object.x + object.width / 2 + dx, y: object.y + object.height + dy };
       if (object.attachment && selected.has(object.attachment.objectId)) {
         patch = { x: object.x + dx, y: object.y + dy };
