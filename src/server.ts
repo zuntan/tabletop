@@ -204,6 +204,12 @@ mcp.registerTool('desk_connection_info', {
 }) }] }));
 http.on('error', error => {
   console.error('[Tabletop] Cannot listen:', error.message);
+  if (!network.isChanging && (error as NodeJS.ErrnoException).code === 'EADDRINUSE') {
+    console.error(`[Tabletop] ポート${network.port}は使用中です。別のCodex・CopilotなどでTabletopが起動している可能性があります（他のアプリの場合もあります）。`);
+    console.error('[Tabletop] 既存のサーバーや机を勝手に終了しないでください。既存の机を継続する場合は、起動元のエージェントから操作してください。');
+    console.error('[Tabletop] 独立した机サーバーを起動する場合は、MCP起動設定の環境変数TABLETOP_PORTに別の空きポート（例: 4318）を指定し、このMCP接続だけを再起動してください。');
+    console.error('[Tabletop] このサーバーはMCPツールを公開する前に起動失敗しています。「ツールがない」ときもMCP起動ログを確認してください。詳細: README.md「MCPツールが見つからない・ポート使用中」');
+  }
   if (!network.isChanging) { process.exitCode = 1; void mcp.close(); }
 });
 await network.listen();
