@@ -36,7 +36,7 @@ export function colorOperations(objects: DeskObject[], role: Role, color: string
 }
 
 /** A thin adapter around Pickr's existing swatch picker, shared by all object types. */
-export function createColorControls(container: HTMLElement, apply: (operations: Operation[]) => void, prefix = '', options: { roles?: Role[]; names?: Partial<Record<Role, string>>; allowTransparent?: boolean } = {}) {
+export function createColorControls(container: HTMLElement, apply: (operations: Operation[]) => void, prefix = '', options: { roles?: Role[]; names?: Partial<Record<Role, string>>; allowTransparent?: boolean; popupContainer?:HTMLElement } = {}) {
   let objects: DeskObject[] = [];
   let selection = '';
   const compact = !!container.closest('nav');
@@ -56,7 +56,7 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
     container.append(row);
     let ready = false;
     const pickr = Pickr.create({
-      el: button, useAsButton: true, theme: 'nano', appClass: `tabletop-palette palette-${prefix}${role}`,
+      el: button, container:options.popupContainer??'body', useAsButton: true, theme: 'nano', appClass: `tabletop-palette palette-${prefix}${role}`,
       default: '#ffffff', defaultRepresentation: 'HEXA', swatches, comparison: false, closeOnScroll: true,
       components: { palette: false, preview: false, hue: false, opacity: false, interaction: {} },
       i18n: { 'ui:dialog': `${captions[role]}の色パレット`, 'btn:swatch': '色見本' },
@@ -94,7 +94,7 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
     }).on('swatchselect', (color: Pickr.HSVaColor) => change(color.toHEXA().toString().slice(0, 7).toLowerCase()))
       .on('show', () => button.setAttribute('aria-expanded', 'true'))
       .on('hide', () => button.setAttribute('aria-expanded', 'false'));
-    return { sync, hide: () => pickr.hide() };
+    return { sync, hide: () => pickr.hide(), destroy:()=>pickr.destroyAndRemove() };
   });
   return {
     update(selected: DeskObject[]) {
@@ -104,6 +104,7 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
       container.hidden = !objects.some(o => isShape(o) || isConnector(o) || o.type === 'text' || o.type === 'file' || o.type === 'label' || o.type === 'wayfinder');
       controls.forEach(control => control.sync());
     },
+    destroy:()=>controls.forEach(control=>control.destroy()),
     isOpen: () => !!document.querySelector('.tabletop-palette.visible'),
   };
 }

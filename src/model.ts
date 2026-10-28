@@ -316,6 +316,7 @@ export class Desk {
       if(operation.kind==='update'&&operation.patch.rulerMembers?.some(m=>{const previous=after.find(o=>o.id===operation.id)?.rulerMembers;return !previous?.some(p=>p.id===m.id)&&(fileFor(after,m.id)||batch.actor==='human'&&after.find(o=>o.id===m.id)?.locked);}))throw Error('ファイル内やロック中のカードは定規へ追加できません');
       assertFileOperation(after,operation);
       if (operation.kind === 'update') {
+        if(after[index].doodle&&operation.patch.src!==undefined&&operation.patch.doodle===undefined)throw Error('Update doodle originals instead of replacing their generated SVG source');
         if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'attachment', 'description', 'reactions', 'locked'].includes(key))) {
           throw new Error('Labels allow only position, attachment, description, reaction and mouse lock updates; use series_update for shared appearance');
         }
