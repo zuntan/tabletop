@@ -566,6 +566,8 @@ function drawObjectRaw(object: DeskObject) {
       // Head mode leaves the artwork transparent to pointer hit testing.
       group.append(svg('rect', { width: w, height: headSelectedProp(object)?Math.min(IMAGE_TITLE_HEIGHT,h):h, fill: 'transparent', stroke: 'none', 'pointer-events': 'all', 'data-prop-body': '' }));
       group.append(svg('rect', { width: w, height: Math.min(IMAGE_TITLE_HEIGHT, h), rx: 6, fill: '#ffffff', stroke: '#94a3b8', 'data-prop-title': '' }));
+    } else if(object.doodle){
+      group.append(svg('rect',{width:w,height:h,rx:6,fill:'transparent',stroke:'#94a3b8','data-doodle-frame':''}),svg('rect',{width:w,height:Math.min(h,IMAGE_TITLE_HEIGHT),fill:'#ffffff','data-doodle-title':''}));
     } else group.append(svg('rect', { width: w, height: h, rx:isUrlLink(object)&&object.linkDisplay!=='qr'?Math.min(object.cornerRadius,w/2,h/2):6, ...(isUrlLink(object)&&object.linkDisplay!=='qr'?style:{fill:'#ffffff',stroke:'#94a3b8'}) }));
     if(object.deskPath)drawDeskLinkIcon(group,object);
     const title = svg('text', { x: object.deskPath?42:isUrlLink(object)?36:12, y: 23, 'font-size': 14, fill: '#1d4ed8' });

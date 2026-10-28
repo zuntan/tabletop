@@ -1,13 +1,14 @@
 import type {DeskObject} from './model';
 import {doodleSchema,doodleSource,emptyDoodle,type Doodle} from './doodle-values';
+import {createIcon} from './icons';
 import {createColorControls} from './color-controls';
 import './doodle-editor.css';
 export function createDoodleEditor(commit:(id:string,patch:Partial<DeskObject>)=>void,report:(text:string,error?:boolean)=>void){
  let active=false;
+ const sizeSlots=[2,4,32],colors=['#111827','#ef4444','#2563eb'];
  function open(object:DeskObject){
   if(active||!object.doodle)return;active=true;
-  let data=structuredClone(object.doodle),title=object.text,tool:'pen'|'eraser'|'move'='pen',size=4,index=0;
-  const colors=['#111827','#ef4444','#2563eb'];
+  let data=structuredClone(object.doodle),title=object.text,tool:'pen'|'eraser'|'move'='pen',size=sizeSlots[1],index=0,sizeIndex=1;
   type State={data:Doodle;title:string};const past:State[]=[],future:State[]=[];
   const snapshot=():State=>({data:structuredClone(data),title});
   const restore=(s:State)=>{data=structuredClone(s.data);title=s.title;titleInput.value=title;transparent.checked=data.background===null;paperColor.value=data.background&&/^#[0-9a-f]{6}$/i.test(data.background)?data.background:'#ffffff';refresh();};
@@ -19,7 +20,20 @@ export function createDoodleEditor(commit:(id:string,patch:Partial<DeskObject>)=
   toolbar.append(titleInput);
   const button=(caption:string,action:()=>void)=>{const b=document.createElement('button');b.type='button';b.textContent=caption;b.onclick=action;toolbar.append(b);return b;};
   const tools=(['pen','eraser','move'] as const).map((v,i)=>{const b=button(['ペン','消しゴム','絵全体を移動'][i],()=>{tool=v;sync();});b.dataset.doodleTool=v;return b;});
-  const sizes=[2,4,8,16,32];for(const n of sizes){const b=button(String(n),()=>{size=n;sync();});b.dataset.doodleSize=String(n);b.title=`太さ ${n}`;}
+  tools[0].prepend(createIcon('pencil'));
+  const eraserIcon=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  for(const [key,value]of Object.entries({viewBox:'0 0 24 24',width:'18',height:'18',fill:'none',stroke:'currentColor','stroke-width':'1.75','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true'}))eraserIcon.setAttribute(key,value);
+  const eraserPath=document.createElementNS(eraserIcon.namespaceURI,'path');eraserPath.setAttribute('d','M4 14l9 -10a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-8 9H9l-5 -4a2 2 0 0 1 0 -3ZM8 10l9 8M13 21h8');eraserIcon.append(eraserPath);tools[1].prepend(eraserIcon);
+  const sizeButtons:HTMLButtonElement[]=[];
+  sizeSlots.forEach((value,i)=>{
+    const wrap=document.createElement('span');wrap.className='doodle-size-slot';
+    const choose=document.createElement('button');choose.type='button';choose.dataset.doodleSizeSlot=String(i);choose.onclick=()=>{sizeIndex=i;size=sizeSlots[i];sync();};
+    const arrow=document.createElement('button');arrow.type='button';arrow.textContent='▾';arrow.className='doodle-size-arrow';arrow.setAttribute('aria-label',`太さ${i+1}を変更`);
+    const menu=document.createElement('div');menu.className='doodle-size-menu';menu.popover='auto';menu.setAttribute('aria-label',`太さ${i+1}の候補`);arrow.popoverTargetElement=menu;
+    for(const n of [2,4,8,16,32,64]){const item=document.createElement('button');item.type='button';item.textContent=String(n);item.dataset.doodleSizeChoice=String(n);item.onclick=()=>{sizeSlots[i]=n;sizeIndex=i;size=n;menu.hidePopover();sync();};menu.append(item);}
+    menu.addEventListener('toggle',()=>{if(menu.matches(':popover-open')){const r=wrap.getBoundingClientRect();menu.style.left=`${Math.max(8,Math.min(r.left,innerWidth-menu.offsetWidth-8))}px`;menu.style.top=`${Math.max(8,Math.min(r.bottom+4,innerHeight-menu.offsetHeight-8))}px`;}});
+    wrap.append(choose,arrow);toolbar.append(wrap);dialog.append(menu);sizeButtons.push(choose);
+  });
   const swatches=colors.map((color,i)=>{const b=button('',()=>{index=i;if(tool!=='pen')tool='pen';sync();});b.dataset.doodleColor=String(i);b.setAttribute('aria-label',`色${i+1}`);b.style.background=color;return b;});
   const picker=document.createElement('div');picker.className='doodle-picker';toolbar.append(picker);
   const palette=createColorControls(picker,ops=>{for(const op of ops)if(op.kind==='update'&&op.patch.stroke)colors[index]=op.patch.stroke;sync();},'doodle-',{roles:['stroke'],names:{stroke:'色を変更'},allowTransparent:false,popupContainer:dialog});
@@ -33,6 +47,8 @@ export function createDoodleEditor(commit:(id:string,patch:Partial<DeskObject>)=
   const stage=document.createElement('div');stage.className='doodle-stage';
   const view=document.createElementNS('http://www.w3.org/2000/svg','svg');view.id='doodle-surface';view.setAttribute('tabindex','0');stage.append(view);
   const paper=document.createElementNS(view.namespaceURI,'image') as SVGImageElement;paper.setAttribute('width',String(width));paper.setAttribute('height',String(height));paper.setAttribute('class','doodle-paper');
+  const defs=document.createElementNS(view.namespaceURI,'defs'),pattern=document.createElementNS(view.namespaceURI,'pattern');pattern.id='doodle-transparency-grid';pattern.setAttribute('width','16');pattern.setAttribute('height','16');pattern.setAttribute('patternUnits','userSpaceOnUse');
+  for(const [x,y,w,h,fill]of [[0,0,16,16,'#ffffff'],[0,0,8,8,'#e5e7eb'],[8,8,8,8,'#e5e7eb']] as const){const tile=document.createElementNS(view.namespaceURI,'rect');for(const [k,v]of Object.entries({x,y,width:w,height:h,fill}))tile.setAttribute(k,String(v));pattern.append(tile);}defs.append(pattern);view.append(defs);
   const backing=document.createElementNS(view.namespaceURI,'rect');backing.setAttribute('width',String(width));backing.setAttribute('height',String(height));backing.setAttribute('fill','#f1f5f9');backing.setAttribute('stroke','#94a3b8');view.append(backing,paper);
   const hint=document.createElement('div');hint.className='doodle-hint';hint.textContent='ドラッグ：描く／Space＋ドラッグ・中ボタン：表示を移動／ホイール：拡大縮小';
   const footer=document.createElement('div');footer.className='doodle-footer';footer.append(hint);
@@ -43,8 +59,8 @@ export function createDoodleEditor(commit:(id:string,patch:Partial<DeskObject>)=
   type Gesture={id:number;kind:'pan'|'move'|'stroke';x:number;y:number;pan:{x:number;y:number};offset:{x:number;y:number};stroke?:Doodle['strokes'][number]};let gesture:Gesture|undefined;
   const transform=()=>view.setAttribute('viewBox',`${-pan.x/zoom} ${-pan.y/zoom} ${stage.clientWidth/zoom} ${stage.clientHeight/zoom}`);
   const point=(e:PointerEvent)=>{const r=view.getBoundingClientRect();return{x:(e.clientX-r.left-pan.x)/zoom,y:(e.clientY-r.top-pan.y)/zoom};};
-  function sync(){tools.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.doodleTool===tool)));toolbar.querySelectorAll<HTMLButtonElement>('[data-doodle-size]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.doodleSize)===size)));swatches.forEach((b,i)=>{b.style.background=colors[i];b.setAttribute('aria-pressed',String(i===index));});palette.update([{...object,type:'line',stroke:colors[index]}]);view.dataset.tool=tool;}
-  function refresh(){paper.setAttribute('href',doodleSource(data,width,height));undo.disabled=!past.length;redo.disabled=!future.length;}
+  function sync(){tools.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.doodleTool===tool)));sizeButtons.forEach((b,i)=>{b.textContent=String(sizeSlots[i]);b.setAttribute('aria-label',`太さ${i+1}：${sizeSlots[i]}`);b.setAttribute('aria-pressed',String(i===sizeIndex));});swatches.forEach((b,i)=>{b.style.background=colors[i];b.setAttribute('aria-pressed',String(i===index));});palette.update([{...object,type:'line',stroke:colors[index]}]);view.dataset.tool=tool;}
+  function refresh(){backing.setAttribute('fill',data.background===null?'url(#doodle-transparency-grid)':data.background);paper.setAttribute('href',doodleSource(data,width,height));undo.disabled=!past.length;redo.disabled=!future.length;}
   view.onpointerdown=e=>{if(gesture||![0,1].includes(e.button))return;e.preventDefault();view.focus();const p=point(e),kind=e.button===1||space?'pan':tool==='move'?'move':'stroke';
    if(kind==='stroke'&&(p.x<0||p.y<0||p.x>width||p.y>height))return;if(kind!=='pan')remember();gesture={id:e.pointerId,kind,x:e.clientX,y:e.clientY,pan:{...pan},offset:{...data.offset}};
    if(kind==='stroke'){if(data.strokes.length>=512||data.strokes.reduce((n,s)=>n+s.points.length,0)>=100000){past.pop();gesture=undefined;report('線が多いため、別の落書きに続きを描いてください',true);return;}gesture.stroke={tool:tool==='eraser'?'eraser':'pen',color:colors[index],width:size,points:[{x:p.x-data.offset.x,y:p.y-data.offset.y}]};data.strokes.push(gesture.stroke);refresh();}view.setPointerCapture(e.pointerId);
