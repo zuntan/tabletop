@@ -1,3 +1,4 @@
+import {additionalStampArtwork} from './additional-stamp-artwork';
 import type { DeskObject } from './model';
 import { element as svg } from './diagram-drawing';
 import { stampPattern, type Stamp } from './stamp-values';
@@ -12,6 +13,7 @@ export function stampLayout(width: number, height: number, compact: boolean, sha
     y: compact ? height - h * .58 - Math.min(4, height * .04) : height / 2 };
 }
 export function stampArtwork(stamp: Stamp) {
+  const additional=additionalStampArtwork(stamp.designId,stamp.text);if(additional)return additional;
   const pattern = stampPattern(stamp.designId), rectangular = pattern.shape === 'square';
   const g = svg('g', { fill: 'none', stroke: pattern.color, opacity: pattern.opacity,
     'stroke-width': 3, 'stroke-linejoin': 'round', 'pointer-events': 'none' });

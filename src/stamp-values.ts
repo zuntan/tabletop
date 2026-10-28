@@ -16,6 +16,23 @@ export const stampPatterns = [
   { id: 'smile_ja', caption: 'ニコニコ', title: '', shape: 'smile', style: '花の輪郭とオリジナルの笑顔' },
   { id: 'keep_going_ja', caption: 'がんばりましょう', title: 'がんばりましょう', shape: 'words', style: '桜の花びらの縁取りと励ましの大きな文字' },
   { id: 'well_done_ja', caption: 'よくできました', title: 'たいへんよくできました', shape: 'words', style: '大きなごほうび文字と桜の花びらの縁取り' },
+  {id:"physical_checked_ja",caption:"現物確認",title:"現物確認",shape:"round",style:'追加図案：用途別の朱印'},
+  {id:"do_not_remove_ja",caption:"門外不出",title:"門外不出",shape:"square",style:'追加図案：用途別の朱印'},
+  {id:"confidential_ja",caption:"秘密／㊙",title:"秘密／㊙",shape:"round",style:'追加図案：用途別の朱印'},
+  {id:"confidential_en",caption:"CONFIDENTIAL",title:"CONFIDENTIAL",shape:"square",style:'追加図案：用途別の朱印'},
+  {id:"unread_ja",caption:"未読",title:"未読",shape:"round",style:'追加図案：用途別の朱印'},
+  {id:"unread_en",caption:"UNREAD",title:"UNREAD",shape:"squareBadge",style:'追加図案：用途別の朱印'},
+  {id:"read_ja",caption:"既読",title:"既読",shape:"round",style:'追加図案：用途別の朱印'},
+  {id:"read_en",caption:"READ",title:"READ",shape:"squareBadge",style:'追加図案：用途別の朱印'},
+  {id:"copy_paste_only_ja",caption:"コピペしただけ",title:"コピペしただけ",shape:"squareBadge",style:'追加図案：用途別の朱印'},
+  {id:"copy_paste_only_en",caption:"COPY & PASTE ONLY",title:"COPY & PASTE ONLY",shape:"square",style:'追加図案：用途別の朱印'},
+  {id:"wanted_ja",caption:"欲しい…",title:"欲しい…",shape:"squareBadge",style:'追加図案：用途別の朱印'},
+  {id:"wanted_en",caption:"WANTED",title:"WANTED",shape:"square",style:'追加図案：用途別の朱印'},
+  {id:"keep_secret_ja",caption:"他言無用",title:"他言無用",shape:"round",style:'追加図案：用途別の朱印'},
+  {id:"fail_ja",caption:"不合格",title:"不合格",shape:"round",style:'追加図案：用途別の朱印'},
+  {id:"fail_en",caption:"FAIL",title:"FAIL",shape:"round",style:'追加図案：用途別の朱印'},
+  {id:"pass_ja",caption:"合格",title:"合格",shape:"round",style:'追加図案：用途別の朱印'},
+  {id:"pass_en",caption:"PASS",title:"PASS",shape:"round",style:'追加図案：用途別の朱印'},
 ].map(pattern => ({ ...pattern, color: '#c93428', opacity: 0.9 }));
 export const fallbackStamp = { id: 'fallback', caption: '未知ID用', title: '', shape: 'round', style: '基本文字なしの代替印', color: '#c93428', opacity: 0.9 };
 export type Stamp = { designId: string; text: string; angle: number };
