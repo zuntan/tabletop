@@ -20,7 +20,7 @@ export function anchorsFor(object: DeskObject, scene: DeskObject[] = []): readon
 }
 export const isConnector = (object: DeskObject) => object.type === 'line';
 export const isShape = (object: DeskObject) => isShapeType(object.type) || (object.type === 'label' && object.labelShape !== 'text');
-export const isConnectable = (object: DeskObject, scene: DeskObject[] = []) => !clipFollower(scene,object.id) && (isShape(object) || object.type === 'label' || object.type === 'text' || ['image', 'svg', 'mermaid','web','link','wayfinder'].includes(object.type));
+export const isConnectable = (object: DeskObject, scene: DeskObject[] = []) => !clipFollower(scene,object.id) && (isShape(object) || object.type === 'label' || object.type === 'text' || ['image', 'svg', 'mermaid', 'qrcode','web','link','wayfinder'].includes(object.type));
 
 export function endpoints(object: DeskObject): { start: Point; end: Point } {
   if (object.x2 !== undefined && object.y2 !== undefined) {

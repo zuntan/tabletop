@@ -1,3 +1,7 @@
+import {updateQrCardLayout} from './qr-card';
+import {drawLinkDisplay,isUrlLink} from './link-display';
+import {drawQrCard} from './qr-card';
+import {defaultQrText,renderQrCode} from './qr-code';
 import {createPinNavigation,pinNeighbours,pinRoot} from './pin-navigation';
 import {createLineInput} from './line-input';
 import {rulerCreateOperations,rulerFor,rulerDropTarget,rulerTarget} from './ruler-layout';
@@ -115,7 +119,7 @@ app.innerHTML = `
   <nav aria-label="追加ツール">
     <button data-add="rect">▭ 矩形</button><button data-add="roundedRect">▢ 角丸矩形</button><button data-add="ellipse">◯ 楕円</button>
     <button data-add="line">╱ 線</button><button data-add="arrow">↗ 矢印</button>
-    <button data-add="text">T カード</button><button id="image">画像 / SVG</button><button data-add="mermaid">Mermaid</button>
+    <button data-add="text">T カード</button><button id="image">画像 / SVG</button><button data-add="mermaid">Mermaid</button><button data-add="qrcode">QRコード</button>
     <button id="clipboard" title="クリップボードから追加" aria-label="クリップボードから追加">▣ クリップボードから追加</button>
     <button data-add="web">Web資料</button><button data-add="link">リンク</button>
     <button id="numbering">ピン</button><div id="authoring-tools"></div>
@@ -152,6 +156,7 @@ app.innerHTML = `
           <label hidden>内側の余白<input name="padding" type="number" min="0" step="any"></label>
           <label hidden>文字サイズ調整<select name="textFit" disabled><option value="fixed" hidden>指定サイズ（既存）</option><option value="auto">完全自動</option><option value="shrink">縮小のみ</option></select></label>
           <label hidden>吹き出し<select name="calloutMode" disabled><option value="none">なし</option><option value="speech">三角</option><option value="thought">考え事</option><option value="leader">引き出し線</option></select></label>
+          <label class="wide" hidden>リンクの表示<select name="linkDisplay" hidden><option value="url">URL文字</option><option value="qr">QRコード</option></select><span class="wayfinder-mode" role="group" aria-label="リンクの表示"><button type="button" data-link-display="url" aria-pressed="true">URL文字</button><button type="button" data-link-display="qr" aria-pressed="false">QRコード</button></span></label>
           <label hidden>道しるべの動き<select name="wayfinderMode" hidden><option value="move">移動</option><option value="tour">観光</option></select><span class="wayfinder-mode" role="group" aria-label="道しるべの動き"><button type="button" data-wayfinder-mode="move" aria-pressed="true">移動</button><button type="button" data-wayfinder-mode="tour" aria-pressed="false">観光</button></span></label>
           <label hidden>ヘッド選択<select name="propSelection" hidden><option value="normal">通常選択</option><option value="head">ヘッド選択</option></select><button id="prop-head-selection" type="button" role="switch" aria-label="ヘッド選択" aria-checked="false"><span class="thinking-switch-track" aria-hidden="true"></span><span class="thinking-switch-state">OFF</span></button></label>
           <label hidden>配置方式<select name="rulerMode"><option value="free">自由</option><option value="gap">均等</option><option value="center">中心均等</option></select></label>
@@ -165,6 +170,7 @@ app.innerHTML = `
           <label hidden>留め位置<select name="clipAnchor"><option value="top-left">左上</option><option value="top">上</option><option value="top-right">右上</option><option value="right">右</option><option value="bottom-right">右下</option><option value="bottom">下</option><option value="bottom-left">左下</option><option value="left">左</option></select></label>
           <label hidden>クリップの形<select name="clipStyle"><option value="binder">ダブルクリップ</option><option value="wire">ゼムクリップ</option></select></label>
           <label class="wide">テキスト<textarea name="text" rows="3"></textarea></label>
+          <label class="wide" hidden>QRコードの内容<textarea name="qrText" rows="8" spellcheck="false" disabled></textarea></label>
           <label class="wide" hidden>Mermaidソース<textarea name="mermaidSource" rows="8" spellcheck="false" disabled></textarea></label>
           <label class="wide">URL<input name="url" type="url"></label>
         </form>
@@ -212,6 +218,7 @@ const form = $<HTMLFormElement>('#properties');
 form.querySelectorAll<HTMLButtonElement>('[data-wayfinder-mode]').forEach(button=>button.onclick=()=>{
   const control=form.elements.namedItem('wayfinderMode') as HTMLSelectElement;control.value=button.dataset.wayfinderMode!;control.dispatchEvent(new Event('change',{bubbles:true}));
 });
+form.querySelectorAll<HTMLButtonElement>('[data-link-display]').forEach(button=>button.onclick=()=>{const control=form.elements.namedItem('linkDisplay') as HTMLSelectElement;control.value=button.dataset.linkDisplay!;control.dispatchEvent(new Event('change',{bubbles:true}));});
 $('#prop-head-selection').onclick=()=>{
   const control=form.elements.namedItem('propSelection') as HTMLSelectElement;
   control.value=control.value==='head'?'normal':'head';
@@ -389,7 +396,7 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
   void rasterPointedCard(desk, id => drawnNodes.get(id)).then(raster => openBhPreview(raster.dataUrl))
     .catch(error => notify(error instanceof Error ? error.message : String(error), true));
 });
-const labels: Record<DeskObject['type'], string> = { ...shapeNames, wayfinder:'道しるべ', label: 'ピン', ellipse: '楕円', line: '線', text: 'カード', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', ruler:'定規', file:'クリアファイル', mermaid: 'Mermaid', web: 'Web資料', link: 'リンク' };
+const labels: Record<DeskObject['type'], string> = { ...shapeNames, wayfinder:'道しるべ', label: 'ピン', ellipse: '楕円', line: '線', text: 'カード', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', ruler:'定規', file:'クリアファイル', mermaid: 'Mermaid', qrcode:'QRコード', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
   if ($('#object-filter-files').getAttribute('aria-pressed')==='true'&&fileFor(renderedScene,object.id))return true;
@@ -397,7 +404,7 @@ function objectListIncludes(object: DeskObject) {
   const category = object.type==='file'?'files':object.type === 'clip' ? 'clips' : object.type === 'label' ? 'pins' : object.type === 'text' ? 'text'
     : isShapeType(object.type) ? 'shapes'
       : object.type === 'line' ? 'lines'
-        : ['image', 'svg', 'mermaid', 'prop'].includes(object.type) ? 'images' : 'other';
+        : ['image', 'svg', 'mermaid', 'qrcode', 'prop'].includes(object.type) ? 'images' : 'other';
   return $(`#object-filter-${category}`).getAttribute('aria-pressed') === 'true';
 }
 
@@ -481,6 +488,7 @@ function refreshPinPresentation() {
       node.replaceChildren(); drawConnector(node, visual, camera.zoom, renderedRounding.get(object.id));
     }
     drawReactions(node, connectorForView(object), pinDescriptionVisible(object), camera.zoom);
+    updateQrCardLayout(node,object,camera.zoom);
     drawStickers(node, object, camera.zoom);
   }
 }
@@ -550,15 +558,15 @@ function drawObjectRaw(object: DeskObject) {
     drawMarkdown(group, object);
     drawStamp(group, object, desk.selected().includes(object.id));
   }
-  if (['link', 'web', 'image', 'svg', 'mermaid', 'prop'].includes(object.type)) {
+  if (['link', 'web', 'image', 'svg', 'mermaid', 'qrcode', 'prop'].includes(object.type)) {
     if (object.type === 'prop') {
       // Head mode leaves the artwork transparent to pointer hit testing.
       group.append(svg('rect', { width: w, height: headSelectedProp(object)?Math.min(IMAGE_TITLE_HEIGHT,h):h, fill: 'transparent', stroke: 'none', 'pointer-events': 'all', 'data-prop-body': '' }));
       group.append(svg('rect', { width: w, height: Math.min(IMAGE_TITLE_HEIGHT, h), rx: 6, fill: '#ffffff', stroke: '#94a3b8', 'data-prop-title': '' }));
-    } else group.append(svg('rect', { width: w, height: h, rx: 6, fill: '#ffffff', stroke: '#94a3b8' }));
+    } else group.append(svg('rect', { width: w, height: h, rx:isUrlLink(object)&&object.linkDisplay!=='qr'?Math.min(object.cornerRadius,w/2,h/2):6, ...(isUrlLink(object)&&object.linkDisplay!=='qr'?style:{fill:'#ffffff',stroke:'#94a3b8'}) }));
     if(object.deskPath)drawDeskLinkIcon(group,object);
-    const title = svg('text', { x: object.deskPath?42:12, y: 23, 'font-size': 14, fill: '#1d4ed8' });
-    title.textContent = (object.text || object.deskPath || object.url || '').slice(0, Math.max(0, Math.floor((w - (object.deskPath?82:52)) / 8))); group.append(title);
+    const title = svg('text', { x: object.deskPath?42:isUrlLink(object)?36:12, y: 23, 'font-size': 14, fill: '#1d4ed8' });
+    title.textContent = (object.text || object.deskPath || object.url || '').slice(0, Math.max(0, Math.floor((w - (object.deskPath?82:isUrlLink(object)?76:52)) / 8))); group.append(title);
     if (['image', 'svg', 'prop'].includes(object.type) && h > IMAGE_TITLE_HEIGHT) {
       // SVG stays in an image context, never inserted as executable markup.
       group.append(svg('image', { y: IMAGE_TITLE_HEIGHT, width: w, height: h - IMAGE_TITLE_HEIGHT, href: object.src!, preserveAspectRatio: 'xMidYMid meet' }));
@@ -572,6 +580,8 @@ function drawObjectRaw(object: DeskObject) {
       foreign.append(iframe); group.append(foreign);
     }
     if (object.type === 'mermaid') drawMermaidCard(group, object);
+    if(object.type==='qrcode')drawQrCard(group,object,camera.zoom);
+    if(isUrlLink(object))drawLinkDisplay(group,object,camera.zoom);
     drawOpenLink(group, object, path=>{void deskFiles.open(path);});
   }
   if(object.type==='wayfinder')drawWayfinder(group,object,()=>startWayfinder(object.id),renderedScene);
@@ -757,11 +767,12 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
     ...(isShapeType(type) ? { textFit: 'shrink' } : {}),
     ...formatControls.appearance(type, desk.settingsSnapshot().defaults),
     ...initialPartSize(type),
+    ...(type === 'qrcode'?{text:'QRコード',qrText:defaultQrText}:{}),
     ...(type === 'mermaid' ? { text: 'Mermaid', mermaidSource: defaultMermaidSource } : {}),
     ...(['line', 'arrow'].includes(type) ? {...initialLinePoints(center),...selectedConnection(desk.selected().map(id => desk.get(id)),desk.snapshot(),initialLineDelta)} : {}),
     ...extra });
   if(!isConnector(object))Object.assign(object,gridPosition({x:center.x-object.width/2,y:center.y-object.height/2}));
-  if (['text', 'web', 'link', 'mermaid'].includes(type)) { editor.open(object, true); return; }
+  if (['text', 'web', 'link', 'mermaid', 'qrcode'].includes(type)) { editor.open(object, true); return; }
   execute([{ kind: 'add', object }], 'desk'); desk.select([object.id]);
 }
 app.querySelectorAll<HTMLButtonElement>('[data-add]').forEach(button => button.onclick = () => {
@@ -908,7 +919,7 @@ canvas.addEventListener('dblclick', event => {
   const id = target.closest('[data-id]')?.getAttribute('data-id');
   if (!id || busy || editor.isActive() || lineInput.isActive()) return;
   const object = desk.get(id);
-  if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg', 'mermaid', 'prop', 'file'].includes(object.type)) editor.open(object);
+  if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg', 'mermaid', 'qrcode', 'prop', 'file'].includes(object.type)) editor.open(object);
 });
 canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture) zoom(Math.exp(-event.deltaY * 0.001), screen(event)); }, { passive: false });
 // Middle-button release can paste the Linux primary selection after the pan ends.
@@ -1213,9 +1224,9 @@ async function connect(token: string, port: string, manual = false, host = '127.
       let animatedMove = false;
       if (message.request.method === 'load_document') {cancelWayfinding('changed');cameraAnimator.cancel('Desk contents replaced');}
       const beforeRevision=desk.revision;
-      let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid, scale => rasterPointedCard(desk, id => drawnNodes.get(id), scale));
+      let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid, scale => rasterPointedCard(desk, id => drawnNodes.get(id), scale),renderQrCode);
       if(desk.revision!==beforeRevision)cancelWayfinding('changed');
-      if (['camera_move', 'mermaid_render', 'raster'].includes(message.request.method)) result = await result;
+      if (['camera_move', 'mermaid_render', 'qr_render', 'raster'].includes(message.request.method)) result = await result;
       if (message.request.method === 'fit') {
         const ids = desk.pointed();
         await fitView(ids, { durationMs: message.request.durationMs });

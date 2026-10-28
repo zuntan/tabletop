@@ -11,6 +11,7 @@ const escapeHtml = (text: string) => text.replace(/[&<>"']/g, char => ({ '&': '&
 export function partClipboardText(objects: DeskObject[]): string {
   return objects.flatMap(object => {
     if (object.type === 'image' || object.type === 'clip' || object.type==='ruler' || isConnector(object)) return [];
+    if(object.type==='qrcode')return [object.qrText??''];
     if (object.type === 'mermaid') return [object.mermaidSource ?? ''];
     if ((object.type === 'svg' || object.type === 'prop')) {
       const match = /^data:image\/svg\+xml;base64,([A-Za-z0-9+/=\s]+)$/.exec(object.src ?? '');

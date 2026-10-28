@@ -170,8 +170,8 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
       pdfBusy=true;pdf.disabled=true;report('机全体をPDFにしています…');
       try{
         const deadline=Date.now()+30_000;
-        while(document.querySelector('#canvas [data-mermaid-status="loading"]')){
-          if(Date.now()>deadline)throw new Error('Mermaidの描画が時間内に完了しませんでした');
+        while(document.querySelector('#canvas [data-mermaid-status="loading"],#canvas [data-qr-status="loading"]')){
+          if(Date.now()>deadline)throw new Error('図の描画が時間内に完了しませんでした');
           await new Promise(resolve=>setTimeout(resolve,50));
         }
         if(desk.documentGeneration!==generation||desk.revision!==revision||!canLoad())throw new Error('机が変更されたためPDF表示を中止しました');

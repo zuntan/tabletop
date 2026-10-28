@@ -1,3 +1,4 @@
+import {isStyledLink} from './link-values';
 import Pickr from '@simonwep/pickr';
 import '@simonwep/pickr/dist/themes/nano.min.css';
 import type { DeskObject, Operation } from './model';
@@ -17,9 +18,9 @@ export const swatches = Array.from({ length: 6 }, (_, shade) => families.map(fam
 const names = { fill: '塗り', stroke: '輪郭', text: '文字' };
 function field(object: DeskObject, role: Role): 'fill' | 'stroke' | 'textColor' | null {
   if (object.type === 'label') return role === 'text' ? 'textColor' : role;
-  if (role === 'fill') return object.type === 'clip' || object.type === 'wayfinder' || isShape(object) || ['text','file'].includes(object.type) ? 'fill' : null;
-  if (role === 'stroke') return isShape(object) || isConnector(object) || ['text','file'].includes(object.type) ? 'stroke' : null;
-  return isShape(object) || ['text','file'].includes(object.type) ? 'textColor' : null;
+  if (role === 'fill') return object.type === 'clip' || object.type === 'wayfinder' || isShape(object) || (['text','file'].includes(object.type)||isStyledLink(object)) ? 'fill' : null;
+  if (role === 'stroke') return isShape(object) || isConnector(object) || (['text','file'].includes(object.type)||isStyledLink(object)) ? 'stroke' : null;
+  return isShape(object) || (['text','file'].includes(object.type)||isStyledLink(object)) || (object.type==='link'&&!object.deskPath&&object.linkDisplay!=='qr') ? 'textColor' : null;
 }
 export function colorOperations(objects: DeskObject[], role: Role, color: string): Operation[] {
   const seen = new Set<string>();

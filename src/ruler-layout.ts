@@ -2,7 +2,7 @@ import type {DeskObject,Operation} from './model';
 import {isShapeType} from './shape-definitions';
 import {randomUuid} from './portable-crypto';
 
-export const rulerTarget=(o:DeskObject)=>isShapeType(o.type)||['text','image','svg','mermaid','web','link'].includes(o.type);
+export const rulerTarget=(o:DeskObject)=>isShapeType(o.type)||['text','image','svg','mermaid', 'qrcode','web','link'].includes(o.type);
 export const rulerFor=(scene:DeskObject[],id:string)=>scene.find(o=>o.type==='ruler'&&(o.id===id||o.rulerMembers?.some(m=>m.id===id)));
 export function rulerGroup(scene:DeskObject[],id:string):DeskObject[]{const r=rulerFor(scene,id);return r?[...scene.filter(o=>r.rulerMembers?.some(m=>m.id===o.id)),r]:scene.filter(o=>o.id===id);}
 export const rulerVertical=(r:DeskObject)=>r.rulerAxis==='vertical';

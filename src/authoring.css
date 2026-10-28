@@ -112,3 +112,5 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 6px 10px; padding-top: 6px;
 .wayfinder-mode { display:flex; gap:4px; }
 .wayfinder-mode button { flex:1; }
 .wayfinder-mode button[aria-pressed="true"] { background:var(--ui-selected,#dbeafe); border-color:#2563eb; }
+
+[data-link-display] { white-space:nowrap; }

@@ -33,8 +33,8 @@ export function registerAssetTools(mcp: McpServer, forDesk: DeskRequestFactory) 
     try {
       const request=forDesk(deskId);
       const object = await request({ method: 'get', id }) as DeskObject;
-      if (object.type === 'mermaid') {
-        const rendered = await request({ method: 'mermaid_render', id }) as { svg: string; revision: number; mermaidSource: string };
+      if (object.type === 'mermaid'||object.type==='qrcode'||(object.type==='link'&&!object.deskPath&&object.linkDisplay==='qr')) {
+        const rendered = await request({ method:object.type==='mermaid'?'mermaid_render':'qr_render', id }) as { svg: string; revision: number; mermaidSource?: string; qrText?:string;status?:string };
         const asset = assetFromBytes(Buffer.from(rendered.svg, 'utf8'));
         return json({ id, mimeType: 'image/svg+xml', byteLength: asset.bytes.length, ...rendered,
           ...(exportFile ? { path: await exportAsset(asset) } : {}) });

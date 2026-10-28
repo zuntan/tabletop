@@ -23,6 +23,7 @@ export function readFormatMemory(value: string | null): FormatMemory {
 }
 export function supportsFormat(type: string) { return type === 'line' || stickerTarget({type}); }
 export function formatKeys(type: string): (keyof FormatStyle)[] {
+  if(type==='link')return ['stickers','fill','fillOpacity','stroke','strokeWidth','fontSize','textColor','cornerRadius'];
   if (type === 'line') return ['stroke','strokeWidth','dash','startMarker','endMarker','junctionRounding'];
   if (type !== 'text' && !isShapeType(type)) return stickerTarget({type}) ? ['stickers'] : [];
   return ['stickers','fill','fillOpacity','stroke','strokeWidth','textColor','fontSize',

@@ -1,3 +1,4 @@
+import {isUrlLink} from './link-values';
 import { objectPropertyNames } from './object-properties';
 import { isShapeType } from './shape-definitions';
 import type { DeskObject } from './model';
@@ -5,7 +6,7 @@ import { isConnector } from './geometry';
 import { headSelectedProp } from './prop-selection';
 import { supportsFill, transparencyPercent, opacityFromPercent } from './fill-opacity';
 
-const fields = ['wayfinderMode','propSelection','rulerMode','rulerMaterial','rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'url','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
+const fields = ['linkDisplay','wayfinderMode','propSelection','rulerMode','rulerMaterial','rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'qrText', 'url','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
 const numeric = new Set(['rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'junctionRounding', 'fontSize', 'cornerRadius', 'padding','clipOffset','clipOffsetPercent','clipSize']);
 export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   const connector = isConnector(object);
@@ -13,6 +14,11 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   for (const name of fields) {
     const input = form.elements.namedItem(name) as HTMLInputElement;
     if (!input) continue;
+    if(name==='linkDisplay'){
+      input.disabled=!isUrlLink(object);input.closest('label')!.hidden=input.disabled;input.value=propertyValue(object,name);
+      for(const button of form.querySelectorAll<HTMLButtonElement>('[data-link-display]')){button.disabled=input.disabled;button.setAttribute('aria-pressed',String(button.dataset.linkDisplay===input.value));}
+      continue;
+    }
     if(name==='wayfinderMode'){
       input.disabled=object.type!=='wayfinder';input.closest('label')!.hidden=input.disabled;input.value=propertyValue(object,name);
       for(const button of form.querySelectorAll<HTMLButtonElement>('[data-wayfinder-mode]')){button.disabled=input.disabled;button.setAttribute('aria-pressed',String(button.dataset.wayfinderMode===input.value));}
@@ -33,6 +39,7 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
       if(name==='clipSize')input.title=object.clipAutoSize?'数値指定へ戻したときのサイズを保持しています':'';
       continue;
     }
+    if(name==='qrText'){input.disabled=object.type!=='qrcode';input.closest('label')!.hidden=input.disabled;input.value=object.qrText??'';continue;}
     if (name === 'mermaidSource') {
       input.disabled = object.type !== 'mermaid'; input.closest('label')!.hidden = object.type !== 'mermaid';
       input.value = object.mermaidSource ?? ''; continue;
@@ -55,13 +62,15 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
       continue;
     }
     if (!meaningful.has(name) || object.type==='clip' && (name==='width'||name==='height')) { input.disabled = true; input.closest('label')!.hidden = true; continue; }
+    if(isUrlLink(object)&&object.linkDisplay==='qr'&&['fill','fillOpacity','stroke','strokeWidth','cornerRadius','fontSize'].includes(name)){input.disabled=true;input.closest('label')!.hidden=true;continue;}
     if (name === 'padding' || name === 'cornerRadius') {
-      const applicable = object.type === 'text' || name === 'cornerRadius' && object.type === 'roundedRect';
+      const applicable = object.type === 'text' || name === 'cornerRadius' && (object.type === 'roundedRect'||isUrlLink(object));
       input.disabled = !applicable; input.closest('label')!.hidden = !applicable;
       input.value = String(name === 'padding' ? object.padding ?? 6 : object.cornerRadius);
       continue;
     }
-    if (name === 'text') input.closest('label')!.firstChild!.textContent = object.type === 'label' ? '説明文' : ['image', 'svg', 'mermaid', 'prop','file'].includes(object.type) ? 'タイトル' : 'テキスト';
+    if(name==='fontSize'&&isUrlLink(object)&&object.linkDisplay==='qr'){input.disabled=true;input.closest('label')!.hidden=true;continue;}
+    if (name === 'text') input.closest('label')!.firstChild!.textContent = object.type === 'label' ? '説明文' : ['image', 'svg', 'mermaid', 'qrcode', 'prop','file','link'].includes(object.type) ? 'タイトル' : 'テキスト';
     if (name === 'url') input.closest('label')!.firstChild!.textContent = ['image', 'svg'].includes(object.type) ? 'URL（任意）' : 'URL';
     input.value = name === 'fillOpacity' ? String(transparencyPercent(object.fillOpacity))
       : String(object.type === 'label' && name === 'text' ? object.description ?? '' : object[name] ?? '');
@@ -76,6 +85,7 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   }
 }
 export function propertyValue(object: DeskObject, key: string): string {
+  if(key==='linkDisplay')return object.linkDisplay??'url';
   if(key==='wayfinderMode')return object.wayfinderMode??'move';
   if(key==='propSelection')return object.propSelection??'normal';
   if(key==='rulerMode')return object.rulerMode??'free';
@@ -98,6 +108,7 @@ export function propertyValue(object: DeskObject, key: string): string {
 export function propertyFieldPatch(key: string, value: string, object: DeskObject): Partial<DeskObject> {
   if (!(fields as readonly string[]).includes(key)) throw new Error('Unknown property');
   if (value === propertyValue(object, key)) return {};
+  if(key==='linkDisplay'){if(!isUrlLink(object)||!['url','qr'].includes(value))throw new Error('Invalid link display');return {linkDisplay:value as 'url'|'qr'};}
   if(key==='wayfinderMode'){
     if(object.type!=='wayfinder'||!['move','tour'].includes(value))throw new Error('Invalid wayfinder mode');
     return {wayfinderMode:value as 'move'|'tour'};

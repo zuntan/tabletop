@@ -6,7 +6,7 @@ const relative=z.number().finite().min(-1e9).max(1e9);
 export const cutoutSchema=z.object({enabled:z.boolean(),path:z.string().min(1).max(20_000),
   source:z.object({x:relative,y:relative,width:size,height:size}).strict(),
   layout:z.object({width:size,height:size}).strict()}).strict();
-export const cutoutTarget=(object:DeskObject)=>['text','image','svg','mermaid','web'].includes(object.type);
+export const cutoutTarget=(object:DeskObject)=>['text','image','svg','mermaid', 'qrcode','web'].includes(object.type);
 export const cutoutTitle=(object:DeskObject)=>object.type==='text'?0:34;
 export function bodyRect(object:DeskObject){const title=cutoutTitle(object);return{x:object.x,y:object.y+title,width:object.width,height:Math.max(0,object.height-title)};}
 /** Actual source rectangle, in world units, even while only its window is visible. */

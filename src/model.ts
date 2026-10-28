@@ -42,7 +42,7 @@ const bindingSchema = z.object({
 export const endpointShapeSchema = z.enum(['none', 'arrow', 'circle', 'diamond']);
 const objectFields = z.object({
   id: z.string().min(1).max(100),
-  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label', 'wayfinder']),
+  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'mermaid', 'qrcode', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label', 'wayfinder']),
   cornerRadius: z.number().finite().min(0).max(100_000).default(16),
   padding: z.number().finite().min(0).max(100_000).optional(),
   rulerMembers: z.array(z.object({id:z.string().min(1).max(100),side:z.enum(['before','after'])}).strict()).max(1999).optional(),
@@ -95,6 +95,8 @@ const objectFields = z.object({
   textFit: z.enum(['auto', 'shrink']).optional(),
   fontSize: z.number().finite().min(1).max(1000).default(24),
   mermaidSource: z.string().max(100_000).optional(),
+  qrText: z.string().max(100_000).optional(),
+  linkDisplay:z.enum(['url','qr']).optional(),
   src: source.optional(),
   deskPath: z.string().min(1).max(4096).refine(value=>!/[\x00-\x1f]/.test(value)&&value.endsWith('.tabletop')).optional(),
   url: z.string().max(4096).refine(value => value === '' || safeUrl(value), 'Expected an HTTP(S) URL').optional(),
@@ -111,7 +113,7 @@ function normalizeLegacyConnector(input: unknown): unknown {
 export const objectSchema = z.preprocess(normalizeLegacyConnector, objectFields);
 export const patchSchema = objectFields.omit({ id: true, type: true }).partial();
 const addObjectFields = objectFields.partial().required({ id: true, type: true });
-const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label', 'wayfinder']) })
+const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'qrcode', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label', 'wayfinder']) })
   .transform(object => normalizeLegacyConnector(object) as z.input<typeof addObjectFields>);
 export const operationSchema = z.discriminatedUnion('kind', [
   ...settingsOperations,
@@ -154,6 +156,9 @@ function validateObject(object: unknown): DeskObject {
   if(parsed.type!=='file'&&parsed.fileMembers!==undefined)throw new Error('File members belong only to files');
   if(parsed.type!=='clip' && ['clipMembers','clipAnchor','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipStyle'].some(key=>(parsed as Record<string,unknown>)[key]!==undefined)) throw new Error('Clip fields belong only to clips');
   if(parsed.stickers && !stickerTarget(parsed)) throw new Error('Stickers require text, shape or media cards');
+  if(parsed.linkDisplay!==undefined&&(parsed.type!=='link'||parsed.deskPath))throw new Error('Link display belongs only to ordinary URL links');
+  if(parsed.type==='qrcode'&&parsed.qrText===undefined)throw new Error('QR text required');
+  if(parsed.type!=='qrcode'&&parsed.qrText!==undefined)throw new Error('QR text belongs only to QR cards');
   if (parsed.type === 'mermaid' && parsed.mermaidSource === undefined) throw new Error('Mermaid source required');
   if (['image', 'svg', 'prop'].includes(parsed.type) && !parsed.src) throw new Error('Image source required');
   if (parsed.deskPath && (parsed.type!=='link'||parsed.url)) throw new Error('Desk links require type link, deskPath and no URL');
@@ -385,6 +390,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('state') }),
   z.object({ method: z.literal('raster'), scale: z.number().finite().min(.1).max(3).default(1) }).strict(),
   z.object({ method: z.literal('mermaid_render'), id: z.string() }).strict(),
+  z.object({method:z.literal('qr_render'),id:z.string()}).strict(),
   z.object({ method: z.literal('file_snapshot'), includeGeneration:z.literal(true).optional() }).strict(),
   z.object({ method: z.literal('file_saved'), expectedSessionId:z.string().uuid(), expectedRevision:z.number().int().nonnegative(), expectedGeneration:z.string().uuid().optional(),filePath:z.string().max(4096).optional() }).strict(),
   z.object({ method: z.literal('load_document'), document: z.unknown(), confirm: z.literal(true), filePath:z.string().max(4096).optional(),
@@ -409,7 +415,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('redo'), actor: z.string().min(1).max(100).default('agent-01') }),
 ]);
 export type Request = z.input<typeof requestSchema>;
-export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge, ui?: { get(): { theme: 'light' | 'dark' }; set(theme: 'light' | 'dark'): { theme: 'light' | 'dark' } }, mermaid?: (source: string) => Promise<{ svg: string }>, raster?: (scale: number) => Promise<unknown>): unknown {
+export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge, ui?: { get(): { theme: 'light' | 'dark' }; set(theme: 'light' | 'dark'): { theme: 'light' | 'dark' } }, mermaid?: (source: string) => Promise<{ svg: string }>, raster?: (scale: number) => Promise<unknown>, qr?: (text:string)=>Promise<{svg:string;status:string}>): unknown {
   const request = requestSchema.parse(input);
   switch (request.method) {
     case 'raster': {
@@ -417,6 +423,12 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, text
       return raster(request.scale);
     }
     case 'share_read': return shareRead(desk, request.tool, request.expectedSessionId, request.id);
+    case 'qr_render': {
+      const object=desk.get(request.id);if((object.type!=='qrcode'&&!(object.type==='link'&&!object.deskPath&&object.linkDisplay==='qr'))||!qr)throw new Error('QR rendering requires a compatible browser and QR object');
+      const source=object.type==='qrcode'?object.qrText??'':object.url??'';
+      const stamp={id:object.id,revision:desk.revision,qrText:source};
+      return qr(source).then(({svg,status})=>({...stamp,svg,status}));
+    }
     case 'mermaid_render': {
       const object = desk.get(request.id);
       if (object.type !== 'mermaid' || !mermaid) throw new Error('Mermaid rendering requires a compatible browser and Mermaid object');

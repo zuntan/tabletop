@@ -81,6 +81,7 @@ export async function cloneSvgForRaster<T extends SVGElement>(source:T):Promise<
     }
     if (element instanceof SVGTextElement) copy.setAttribute('font-family', getComputedStyle(element).fontFamily);
   });
+  if(source.dataset.qrStatus==='loading'||source.querySelector('[data-qr-status="loading"]'))throw new Error('QRコードを描画中です。表示されてから再実行してください');
   if(source.dataset.mermaidStatus === 'loading'||source.querySelector('[data-mermaid-status="loading"]')) throw new Error('Mermaidを描画中です。表示されてから再実行してください');
   // Embedded media must be self-contained before SVG is decoded as an image.
   for (const media of clone.querySelectorAll('image')) {

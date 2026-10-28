@@ -115,3 +115,27 @@ test('rectangular shapes use text-frame sizing and keep their editor border arou
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });
+
+test('media/link editor resize keeps the title, URL/source and panel aligned without drift',{timeout:60000},async()=>{
+ const {page,call,close,errors}=await openTestDesk('media-editor-resize');
+ try{
+  for(const [id,type,extra]of [['link','link',{url:'https://example.com/'}],['qr','qrcode',{qrText:'こんにちは'}],['m','mermaid',{mermaidSource:'flowchart LR\nA-->B'}]] as const){
+   await call('desk_execute',{operations:[{kind:'add',object:{id,type,x:300,y:250,width:250,height:160,text:'タイトル',...extra}}]});
+   await call('desk_camera_move',{center:{x:300,y:250},zoom:.17,durationMs:0});
+   const before=await call('desk_get',{id});await page.locator(`[data-id="${id}"]`).dispatchEvent('dblclick',{clientX:-1,clientY:-1});
+   const field=page.locator('[data-inline-text]');await field.evaluate(el=>{el.style.width='480px';el.style.height='180px';});
+   await page.waitForFunction(()=>{
+    const p=document.querySelector('.inline-editor')!,t=p.querySelector('textarea')!,other=p.querySelector('input,textarea:not([data-inline-text])');
+    const box=p.getBoundingClientRect(),a=t.getBoundingClientRect(),b=other!.getBoundingClientRect();return a.right<=box.right-5&&Math.abs(a.width-b.width)<1;
+   });
+   const samples=await page.locator('.inline-editor').evaluate(async p=>{const widths:number[]=[];for(let i=0;i<10;i++){await new Promise(requestAnimationFrame);widths.push(p.getBoundingClientRect().width);}return widths;});
+   assert.ok(Math.max(...samples)-Math.min(...samples)<1);
+   if(type!=='link'){
+    await page.locator('[data-inline-qr],[data-inline-mermaid]').evaluate(el=>{el.style.width='550px';});
+    await page.waitForFunction(()=>Math.abs(document.querySelector('[data-inline-text]')!.getBoundingClientRect().width-550)<1);
+   }
+   await field.press('Escape');assert.deepEqual(await call('desk_get',{id}),before);
+  }
+  assert.deepEqual(errors,[]);
+ }finally{await close();}
+});

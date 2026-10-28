@@ -1,3 +1,4 @@
+import {renderQrCode} from './qr-code';
 import type { DeskObject } from './model';
 import { renderMermaid } from './mermaid-card';
 
@@ -19,7 +20,9 @@ export function openMedia(object: DeskObject) {
     image.onload = () => message.remove(); image.onerror = () => { message.textContent = '画像を表示できませんでした。'; };
     doc.body.append(image); image.src = src;
   };
-  if (object.type === 'mermaid') {
+  if(object.type==='qrcode'){
+    void renderQrCode(object.qrText??'').then(result=>show(result.src)).catch(()=>{if(!popup.closed)message.textContent='QRコードを表示できませんでした';});
+  }else if (object.type === 'mermaid') {
     void renderMermaid(object.mermaidSource ?? '').then(result => show(result.src)).catch(error => {
       if (!popup.closed) message.textContent = `図を表示できませんでした：${error instanceof Error ? error.message : String(error)}`;
     });

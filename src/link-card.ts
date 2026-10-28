@@ -25,7 +25,7 @@ export function drawOpenLink(group: SVGGElement, object: DeskObject, openDesk?:(
     control.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openDesk?.(object.deskPath!);}});
     group.append(control);return;
   }
-  const media = ['image', 'svg', 'mermaid'].includes(object.type);
+  const media = ['image', 'svg', 'mermaid', 'qrcode'].includes(object.type);
   if (object.url && ['link', 'web', 'image', 'svg'].includes(object.type)) drawControl(group, object, false, 0);
   if (media) drawControl(group, object, true, object.url ? 32 : 0);
 }

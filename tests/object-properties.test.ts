@@ -27,7 +27,8 @@ test('every part kind publishes only its effective appearance/content properties
     const output = publishObject(object);
     assert.equal(output.type, type);
     if (['image','svg','web','link'].includes(type)) {
-      for (const key of ['fill','stroke','fontSize','textColor','cornerRadius','fillOpacity']) assert.equal(Object.hasOwn(output, key), false, type+key);
+      for (const key of ['fill','stroke','fillOpacity']) assert.equal(Object.hasOwn(output,key),type==='link',type+key);
+      for(const key of ['fontSize','textColor','cornerRadius'])assert.equal(Object.hasOwn(output,key),type==='link',type+key);
       assert.equal(output.text, 'title'); assert.equal(output.url, 'https://example.com/');
     } else {
       assert.equal(Object.hasOwn(output, 'src'), false);

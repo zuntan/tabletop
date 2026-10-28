@@ -24,10 +24,10 @@ export function groupToolbar(nav: HTMLElement) {
   const icons: Record<string, [string, string]> = {
     rect: ['▭', '矩形'], roundedRect: ['▢', '角丸矩形'], ellipse: ['◯', '楕円'],
     line: ['╱', '線'], arrow: ['↗', '矢印'], text: ['T', 'カード'],
-    image: ['▧', '画像 / SVG'], mermaid: ['▧', 'Mermaid'], web: ['◎', 'Web資料'], link: ['↗▤', 'リンク'], numbering: ['📍', 'ピンを配置'],
+    image: ['▧', '画像 / SVG'], mermaid: ['▧', 'Mermaid'], qrcode:['▦','QRコード'], web: ['◎', 'Web資料'], link: ['↗▤', 'リンク'], numbering: ['📍', 'ピンを配置'],
     clipboard: ['▣', 'クリップボードから追加'],
   };
-  const partOrder = ['rect', 'roundedRect', 'ellipse', 'line', 'arrow', 'numbering', 'text', 'image', 'mermaid', 'web', 'link', 'clipboard'];
+  const partOrder = ['rect', 'roundedRect', 'ellipse', 'line', 'arrow', 'numbering', 'text', 'image', 'mermaid', 'qrcode', 'web', 'link', 'clipboard'];
   partOrder.forEach(key => {
     const button = nav.querySelector<HTMLButtonElement>(`[data-add="${key}"], #${key}`)!;
     const [icon, label] = icons[key];

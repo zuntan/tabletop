@@ -5,7 +5,7 @@ import type { DeskObject, Operation } from './model';
 import { anchorPoint, type Anchor, type Point } from './geometry';
 import { randomUuid } from './portable-crypto';
 
-export const clipTarget = (object: DeskObject) => ['text','image','svg','mermaid','web','link'].includes(object.type);
+export const clipTarget = (object: DeskObject) => ['text','image','svg','mermaid', 'qrcode','web','link'].includes(object.type);
 export function clipFor(objects: DeskObject[], id: string) {
   return objects.find(o => o.type === 'clip' && (o.id === id || o.clipMembers?.includes(id)));
 }
