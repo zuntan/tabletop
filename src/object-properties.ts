@@ -26,7 +26,7 @@ export function objectPropertyNames(object: DeskObject): readonly (keyof DeskObj
     ...(object.labelShape === 'text' ? [] : paint),
     ...(object.labelShape === 'roundedRect' ? ['cornerRadius' as const] : [])];
   // Media/link cards currently use fixed decoration; only their content and geometry are configurable.
-  return [...common, ...decoration, ...box, 'text', ...(object.deskPath?['deskPath' as const]:['url' as const]), ...(['image','svg','web'].includes(object.type)?['cutout' as const]:[]), ...(['image', 'svg'].includes(object.type) ? ['src' as const] : [])];
+  return [...common, ...decoration, ...box, 'text', ...(object.deskPath?['deskPath' as const]:['url' as const]), ...(['image','svg','web'].includes(object.type)?['cutout' as const]:[]), ...(['image', 'svg'].includes(object.type) ? ['src' as const] : []), ...(object.doodle?['doodle' as const]:[])];
 }
 /** Publish meaningful fields, including explicit zero/default values. Never mutate runtime state. */
 export function publishObject(object: DeskObject): PublishedObject {

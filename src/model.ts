@@ -1,3 +1,4 @@
+import {doodleSchema,doodleSource} from './doodle-values';
 import {assertRulerOperation} from './ruler-layout';
 import {assertFileOperation,fileGroup,fileFor} from './clear-files';
 import { cutoutSchema, cutoutTarget, applyCutoutPatch, normalizeCutoutPatch } from './logical-cutout';
@@ -96,6 +97,7 @@ const objectFields = z.object({
   fontSize: z.number().finite().min(1).max(1000).default(24),
   mermaidSource: z.string().max(100_000).optional(),
   qrText: z.string().max(100_000).optional(),
+  doodle:doodleSchema.optional(),
   linkDisplay:z.enum(['url','qr']).optional(),
   src: source.optional(),
   deskPath: z.string().min(1).max(4096).refine(value=>!/[\x00-\x1f]/.test(value)&&value.endsWith('.tabletop')).optional(),
@@ -151,6 +153,7 @@ type Entry = { replacement?:boolean; before: Snapshot; after: Snapshot; beforeSe
 
 function validateObject(object: unknown): DeskObject {
   const parsed = objectSchema.parse(object);
+  if(parsed.doodle){if(parsed.type!=='svg')throw Error('Doodle belongs only to SVG cards');parsed.src=doodleSource(parsed.doodle,parsed.width,Math.max(1,parsed.height-34));}
   if(parsed.type!=='wayfinder'&&parsed.wayfinderMode!==undefined)throw new Error('Wayfinder mode belongs only to wayfinders');
   if(parsed.type!=='ruler'&&['rulerMembers','rulerMode','rulerMaterial','rulerThickness','rulerAxis'].some(key=>(parsed as Record<string,unknown>)[key]!==undefined))throw Error('Ruler fields belong only to rulers');
   if(parsed.type!=='file'&&parsed.fileMembers!==undefined)throw new Error('File members belong only to files');
