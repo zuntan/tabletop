@@ -78,9 +78,9 @@ export function drawEndpointHandles(layer: SVGGElement, object: DeskObject, zoom
   }
   return true;
 }
-export function drawSnapTargets(layer: SVGGElement, objects: DeskObject[], point: Point, zoom: number) {
-  const candidate = snap(point, objects, 18 / zoom);
-  const line = snapConnectorEndpoint(point, objects, 18 / zoom, '');
+export function drawSnapTargets(layer: SVGGElement, objects: DeskObject[], point: Point, zoom: number, resolved?: {shape: ReturnType<typeof snap>; line: ReturnType<typeof snapConnectorEndpoint>}) {
+  const candidate = resolved ? resolved.shape : snap(point, objects, 18 / zoom);
+  const line = resolved ? resolved.line : snapConnectorEndpoint(point, objects, 18 / zoom, '');
   for (const object of objects.filter(isConnector)) {
     const points = endpoints(object);
     for (const side of ['start', 'end'] as const) {

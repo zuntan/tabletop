@@ -45,3 +45,28 @@ test('mouse joins endpoints symmetrically; normal drag follows and Alt drag deta
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });
+
+test('mouse drag away and back joins coincident endpoints, but a click does not', {timeout: 30_000}, async () => {
+  const {page, call, close, errors} = await openTestDesk('junction-return');
+  try {
+    await call('desk_execute', {operations: [
+      {kind: 'grid_update', patch: {enabled: false}},
+      {kind: 'add', object: {id: 'a', type: 'line', x: 100, y: 200, x2: 300, y2: 200}},
+      {kind: 'add', object: {id: 'b', type: 'line', x: 300, y: 200, x2: 500, y2: 300}},
+    ]});
+    await call('desk_select', {ids: ['b']});
+    const handle = page.locator('[data-connector=b][data-endpoint=start]');
+    await handle.click();
+    assert.ok(!(await call('desk_get', {id: 'b'})).startJunction);
+    const box = (await handle.boundingBox())!;
+    const x = box.x + box.width / 2, y = box.y + box.height / 2;
+    await page.mouse.move(x, y); await page.mouse.down();
+    await page.mouse.move(x, y + 60, {steps: 4});
+    await page.mouse.move(x, y, {steps: 4});
+    assert.equal(await page.locator('.snap-target.active').count(), 1);
+    await page.mouse.up();
+    const a = await call('desk_get', {id: 'a'}), b = await call('desk_get', {id: 'b'});
+    assert.ok(a.endJunction); assert.equal(a.endJunction, b.startJunction);
+    assert.deepEqual(errors, []);
+  } finally { await close(); }
+});

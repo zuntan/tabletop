@@ -58,7 +58,7 @@ import { createColorControls } from './color-controls';
 import { buildJunctionRounding } from './junction-rounding';
 import { drawMermaidCard, defaultMermaidSource, renderMermaid } from './mermaid-card';
 import { drawConnector, drawShapeText, drawEndpointHandles, drawSnapTargets, updateScenePreview } from './diagram-drawing';
-import { gestureOperations, gesturePreview, endpointDragPoint, type Gesture } from './diagram-gestures';
+import { gestureOperations, gesturePreview, endpointSnap, endpointDragPoint, type Gesture } from './diagram-gestures';
 import { createPropertyEditor } from './property-editor';
 import { frameColors } from './frame-colors';
 import { createUiThemeButton, getUiTheme, setUiTheme } from './ui-theme';
@@ -1012,12 +1012,17 @@ function previewGesture(current: Gesture, point: { x: number; y: number }) {
     drawSnapTargets(overlays, scene.filter(o=>isPinAttachmentTarget(o,scene)).filter(pinIsVisible),
       { x: pin.x + attachmentOffset(pin).x, y: pin.y + attachmentOffset(pin).y }, camera.zoom);
   }
-  if (!current.detach && (current.mode === 'start' || current.mode === 'end')) drawSnapTargets(overlays, scene.filter(o=>!clipFollower(scene,o.id)).filter(pinIsVisible).filter(object => !current.originals.some(o => o.id === object.id)).map(object => pinScreenObject(object, camera.zoom)), endpointDragPoint(current, point), camera.zoom);
+  if (!current.detach && (current.mode === 'start' || current.mode === 'end')) {
+    const pointOnLine = endpointDragPoint(current, point);
+    const resolved = endpointSnap(current, current.originals[0], pointOnLine, camera.zoom);
+    drawSnapTargets(overlays, resolved.objects, pointOnLine, camera.zoom, resolved);
+  }
 }
 canvas.addEventListener('pointermove', event => {
   desk.pointer = world(event);
   if (!gesture) return;
   gesture.detach = event.altKey;
+  if ((gesture.mode === 'start' || gesture.mode === 'end') && Math.hypot(world(event).x - gesture.start.x, world(event).y - gesture.start.y) * camera.zoom > 2) gesture.endpointMoved = true;
   const p = world(event), delta = { x: p.x - gesture.start.x, y: p.y - gesture.start.y };
   if (gesture.mode !== 'pan' && gesture.mode !== 'marquee') { previewGesture(gesture, p); return; }
   if (gesture.mode === 'pan') {

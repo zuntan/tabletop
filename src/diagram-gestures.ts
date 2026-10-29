@@ -27,10 +27,30 @@ export type Gesture = {
   anchorId?: string;
   detach?: boolean;
   junctionId?: string;
+  endpointMoved?: boolean;
 };
+/** Shared by endpoint preview highlights and the committed operation. */
+export function endpointSnap(gesture: Gesture, object: DeskObject, point: Point, zoom: number) {
+  const side = gesture.mode === 'start' ? 'start' : 'end';
+  const sourceGroup = object[junctionField(side)];
+  const objects = (gesture.snapScene ?? gesture.scene)
+    .filter(o => o.id !== object.id && !clipFor(gesture.scene,o.id)?.clipMembers?.slice(1).includes(o.id))
+    .map(o => pinScreenObject(o, zoom));
+  let shape = gesture.detach ? null : snap(point, objects, 18 / zoom);
+  let line = gesture.detach ? null : snapConnectorEndpoint(point, objects, 18 / zoom, object.id, sourceGroup ?? undefined);
+  if (line && (!shape || Math.hypot(point.x-line.point.x, point.y-line.point.y) < Math.hypot(point.x-shape.point.x, point.y-shape.point.y))) {
+    shape = null;
+    const targetGroup = line.object[junctionField(line.side)];
+    const members = [...(sourceGroup ? junctionMembers(gesture.scene, sourceGroup) : [{object, side}]),
+      ...(targetGroup ? junctionMembers(gesture.scene, targetGroup) : [{object: line.object, side: line.side}])];
+    const unique = [...new Map(members.map(m => [m.object.id + ':' + m.side, m])).values()];
+    if (new Set(unique.map(m => m.object.id)).size !== unique.length) line = null;
+  } else line = null;
+  return {objects, shape, line};
+}
 export function gestureOperations(gesture: Gesture, point: Point, zoom: number): Operation[] {
   let dx = point.x - gesture.start.x, dy = point.y - gesture.start.y;
-  if (dx === 0 && dy === 0) return []; // Selecting a connected line must not detach it.
+  if (dx === 0 && dy === 0 && !(gesture.endpointMoved && (gesture.mode === 'start' || gesture.mode === 'end'))) return []; // A click alone must not change connections.
   const movable = gesture.originals.filter(object => !object.locked);
   const selectedAnchor = movable.find(object => object.id === gesture.anchorId) ?? movable[0];
   const anchor=selectedAnchor?(fileFor(gesture.scene,selectedAnchor.id)??selectedAnchor):undefined;
@@ -73,11 +93,7 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
       const next = { x: points[side].x + dx, y: points[side].y + dy };
       const jf = junctionField(side), bf = bindingField(side);
       const sourceGroup = object[jf];
-      const candidates = (gesture.snapScene ?? gesture.scene).filter(o => o.id !== object.id && !clipFor(gesture.scene,o.id)?.clipMembers?.slice(1).includes(o.id)).map(o => pinScreenObject(o, zoom));
-      const shape = gesture.detach ? null : snap(next, candidates, 18 / zoom);
-      const line = gesture.detach ? null : snapConnectorEndpoint(next, candidates, 18 / zoom, object.id, sourceGroup ?? undefined);
-      // Prefer the closest anchor; shapes win an exact tie.
-      const candidate = line && (!shape || Math.hypot(next.x-line.point.x, next.y-line.point.y) < Math.hypot(next.x-shape.point.x, next.y-shape.point.y)) ? line : null;
+      const {shape, line: candidate} = endpointSnap(gesture, object, next, zoom);
       const position = candidate?.point ?? shape?.point ?? (gesture.grid ? gridPoint(next, gesture.gridSettings) : next);
       patch = side === 'start' ? { x: position.x, y: position.y } : { x2: position.x, y2: position.y };
       patch[bf] = candidate ? null : shape?.binding ?? null;

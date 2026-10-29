@@ -2,7 +2,7 @@ import { publishObject } from '../src/object-properties';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Desk, type DeskObject } from '../src/model';
-import { gestureOperations, gesturePreview, type Gesture } from '../src/diagram-gestures';
+import { gestureOperations, gesturePreview, endpointSnap, type Gesture } from '../src/diagram-gestures';
 import { encodeDeskFile, decodeDeskFile } from '../src/desk-file';
 import { PartClipboard, partClipboardType } from '../src/part-clipboard';
 
@@ -122,4 +122,35 @@ test('an attachment that would put both ends of a line in the same group simply 
   drag(desk, ['a'], 'start', 100, 0);
   assert.equal(desk.get('a').startJunction, undefined);
   assert.equal(desk.get('a').endJunction, desk.get('b').startJunction);
+});
+
+test('returning an endpoint after dragging can join; clicking alone cannot', () => {
+  const desk = scene(), g = gesture(desk, ['b'], 'start');
+  assert.deepEqual(gestureOperations(g, {x: 0, y: 0}, 2), []);
+  g.endpointMoved = true;
+  desk.execute({operations: gestureOperations(g, {x: 0, y: 0}, 2), snap: 'exact'});
+  assert.ok(desk.get('a').endJunction);
+  assert.equal(desk.get('a').endJunction, desk.get('b').startJunction);
+});
+
+test('endpoint highlight resolver rejects joining both ends of one line', () => {
+  const desk = scene(), g = gesture(desk, ['a'], 'start');
+  const resolved = endpointSnap(g, desk.get('a'), {x: 100, y: 0}, 1);
+  // a end is excluded as a self target; joining b is still legal here.
+  assert.equal(resolved.line?.object.id, 'b');
+  join(desk);
+  const joined = gesture(desk, ['a'], 'start');
+  assert.equal(endpointSnap(joined, desk.get('a'), {x: 100, y: 0}, 1).line, null);
+});
+
+test('endpoint preview picks only the nearest target, preferring a shape on a tie', () => {
+  const desk = scene();
+  desk.execute({operations: [{kind: 'add', object: {id: 'card', type: 'text', x: 100, y: -50, width: 100, height: 100}}]});
+  const g = gesture(desk, ['c'], 'start');
+  const target = endpointSnap(g, desk.get('c'), {x: 100, y: 0}, 1);
+  assert.equal(target.shape?.binding.objectId, 'card');
+  assert.equal(target.line, null);
+  const joinedDesk = scene(); join(joinedDesk);
+  const own = gesture(joinedDesk, ['b'], 'start');
+  assert.equal(endpointSnap(own, joinedDesk.get('b'), {x: 100, y: 0}, 1).line, null);
 });
