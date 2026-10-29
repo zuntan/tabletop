@@ -5,18 +5,19 @@ import { openTestDesk } from './desk-browser';
 test('human palette and AI read-only preset IF place embedded props, including custom SVGs, without open controls', { timeout: 60_000 }, async () => {
   const { page, call, client, close, errors } = await openTestDesk('props');
   try {
-    const catalog = await call('desk_prop_list'); assert.equal(catalog.presets.length, 11);
+    const catalog = await call('desk_prop_list'); assert.equal(catalog.presets.length, 12);
     for (const item of catalog.presets) {
       const source = await call('desk_prop_get', { id: item.id }); assert.match(source.svg, /<svg/);
     }
     const preset = await call('desk_prop_get', { id: 'teacup' }); assert.match(preset.svg, /<svg/);
     const bad = await callTestTool(client, { name: 'desk_prop_get', arguments: { id: '../server.ts' } }); assert.equal(bad.isError, true);
-    assert.equal(await page.locator('#prop-palette img').count(), 11);
+    assert.equal(await page.locator('#prop-palette img').count(), 12);
     await page.locator('#prop-palette img').evaluateAll(images => Promise.all(images.map(image => (image as HTMLImageElement).decode())));
     const before = await call('desk_summary');
-    await page.locator('#prop-open').click(); await page.locator('[data-prop-preset="teacup"]').click();
+    await page.locator('#prop-open').click(); await page.locator('[data-prop-preset="senpai-robot"]').click();
     await page.locator('[data-id^="prop-"]').first().waitFor();
     const state = await call('desk_state'); const prop = state.objects.find((o: {type:string}) => o.type === 'prop'); assert.ok(prop);
+    assert.equal(prop.text,'ロボット');
     assert.equal(state.revision, before.revision + 1); assert.match(prop.src, /^data:image\/svg\+xml;base64,/);
     assert.equal(await page.locator(`[data-id="${prop.id}"] image`).count(), 1);
     assert.equal(await page.locator(`[data-id="${prop.id}"] [data-prop-body]`).getAttribute('fill'), 'transparent');

@@ -8,6 +8,7 @@ export const propPresets = [
   { id: 'envelope', name: '封蝋の封筒', description: 'おっさん作。クリーム色の封筒と赤い封蝋。', filename: 'envelope.svg', width: 240, height: 274 },
   { id: 'antique-key', name: '真鍮の鍵', description: 'おっさん作。少し傾いた古風な真鍮の鍵。', filename: 'antique-key.svg', width: 210, height: 308 },
   { id: 'desk-bell', name: '卓上ベル', description: 'おっさん作。銀色のベルと濃い色の台座。音は鳴らない小物。', filename: 'desk-bell.svg', width: 240, height: 274 },
+  { id: 'senpai-robot', name: 'ロボット', description: 'ミント色の小さなロボット。ウインクしながら、センパイの代わりに机をこっそり見守ります。特別な機能は持たない小物。', filename: 'senpai-robot.svg', width: 240, height: 292 },
   { id: 'vacant-lot', name: '空き地', description: '緑の枠と空き地の看板、小さな草と双葉。中央は透明。枠だけ伸縮し、看板や文字は大きさを保つ。', filename: 'vacant-lot.svg', width: 480, height: 354, responsive: true },
   { id: 'work-in-progress', name: '作業中', description: '控えめな枠と、中央の木製・脚付き看板。看板以外は透明。枠だけ伸縮し、看板や文字は大きさを保つ。', filename: 'work-in-progress.svg', width: 480, height: 354, responsive: true },
   { id: 'temporary-area', name: '仮置き場', description: '青灰色の浅いトレー風の枠と仮置き場の看板。中央は透明。枠だけ伸縮し、看板や文字は大きさを保つ。', filename: 'temporary-area.svg', width: 480, height: 354, responsive: true },
