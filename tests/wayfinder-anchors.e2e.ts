@@ -22,12 +22,23 @@ test('downward signpost has selectable artwork and a fixed screen-size launch po
   await call('desk_camera_move',{center:{x:320,y:350},zoom:.25,durationMs:0});
   const small=await page.locator('#wayfinder-navigation button').boundingBox();assert.ok(small);assert.equal(small.width,first.width);assert.equal(small.height,first.height);
   await page.locator('#wayfinder-navigation button').click();
-  await page.waitForSelector('[data-wayfinder-marker] circle');assert.equal(await page.locator('#wayfinder-navigation').isVisible(),false);
+  await page.waitForSelector('[data-wayfinder-marker] circle');assert.deepEqual((await call('desk_selection')).ids,[]);assert.equal(await page.locator('#wayfinder-navigation').isVisible(),false);
   await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('到着'),{timeout:10000});
+  assert.deepEqual((await call('desk_selection')).ids,['b']);
   await call('desk_select',{ids:[]});assert.equal(await page.locator('#wayfinder-navigation').isVisible(),false);
   await call('desk_select',{ids:['go','a']});assert.equal(await page.locator('#wayfinder-navigation').isVisible(),false);
   await call('desk_select',{ids:['go']});await call('desk_camera_move',{center:{x:320,y:350},zoom:1,durationMs:0});
   await page.screenshot({path:'/tmp/tabletop-wayfinder-downward.png'});
+  await call('desk_execute',{operations:[{kind:'update',id:'road',patch:{endBinding:null,x2:320,y2:900}}]});
+  await page.locator('#wayfinder-navigation button').click();
+  assert.deepEqual((await call('desk_selection')).ids,[]);
+  await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('線の端に到着'));
+  assert.deepEqual((await call('desk_selection')).ids,[]);
+  await call('desk_select',{ids:['go']});await call('desk_camera_move',{center:{x:320,y:350},durationMs:0});
+  await page.locator('#wayfinder-navigation button').click();await page.waitForSelector('[data-wayfinder-marker] circle');
+  await call('desk_select',{ids:['a']});await page.keyboard.press('ArrowRight');
+  await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('中止しました'));
+  assert.deepEqual((await call('desk_selection')).ids,['a'],'cancellation preserves a subsequent human selection');
   assert.deepEqual(errors,[]);
  }finally{await close();}
 });
