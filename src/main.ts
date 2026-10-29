@@ -1,3 +1,4 @@
+import {MAX_PDF_EXPORT_BYTES} from './pdf-export';
 import {createStrokeWidthMode} from './stroke-width-mode';
 import {createWayfinderNavigation} from './wayfinder-navigation';
 import {captureBounds} from './desk-capture';
@@ -1244,7 +1245,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if(deskFiles.isBusy()&& !['summary','get','list','state','context','settings','selection','changes','file_saved','camera_get','ui_get'].includes(message.request?.method))throw new Error('Human file operation in progress. No change was made.');
       if((isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())&&['pin_fit','execute','lock','undo','redo','select','point','load_document','fit','camera_move','wayfinder_start','ui_set'].includes(message.request?.method))throw new Error('Human confirmation in progress. No change was made; wait for the user.');
       if (['fit', 'camera_move','wayfinder_start'].includes(message.request.method)) humanScroll.assertIdle();
-      if ((busy && message.request.method!=='camera_get') || (lineInput.isActive() && !['camera_get','summary','context','list','get','state','selection','settings','changes','file_saved','asset_read','ui_get','text_measure','raster'].includes(message.request.method)) || ((editor.isActive() || identityControls.isEditing()) && ['pin_fit', 'execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
+      if ((busy && message.request.method!=='camera_get') || (lineInput.isActive() && !['camera_get','summary','context','list','get','state','selection','settings','changes','file_saved','asset_read','ui_get','text_measure','raster','pdf_export'].includes(message.request.method)) || ((editor.isActive() || identityControls.isEditing()) && ['pin_fit', 'execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       if (['fit', 'camera_move','wayfinder_start'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing() || lineInput.isActive())) throw new Error('Human editing in progress. No camera change was made.');
       if (['pin_fit', 'execute', 'lock', 'undo', 'redo', 'select', 'point', 'load_document', 'fit', 'camera_move', 'wayfinder_start', 'ui_set'].includes(message.request.method)) objectAnimator.finish();
       const beforeMove = message.request.method === 'execute' ? desk.snapshot() : null;
@@ -1252,6 +1253,15 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if (message.request.method === 'load_document') {cancelWayfinding('changed');cameraAnimator.cancel('Desk contents replaced');}
       const beforeRevision=desk.revision;
       let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid, scale => rasterPointedCard(desk, id => drawnNodes.get(id), scale),renderQrCode,{
+        pdf:async()=>{
+          const r=await deskPdf(desk,canvas,id=>pinDescriptionVisible(desk.get(id)));
+          if(r.bytes.length>MAX_PDF_EXPORT_BYTES)throw new Error('PDF exceeds 14 MiB transfer limit');
+          const base64=await new Promise<string>((resolve,reject)=>{
+            const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(new Error('PDF encoding failed'));
+            reader.readAsDataURL(new Blob([r.bytes.slice().buffer],{type:'application/pdf'}));
+          });
+          return{sessionId:desk.sessionId,revision:r.revision,bounds:r.bounds,raster:r.raster,webCount:r.webCount,base64};
+        },
         capture:async input=>{
           const bounds=captureBounds(desk,input);
           const r=await deskSceneRaster(desk,canvas,id=>pinDescriptionVisible(desk.get(id)),bounds,input.scale);
@@ -1264,7 +1274,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
         },
       });
       if(desk.revision!==beforeRevision)cancelWayfinding('changed');
-      if (['camera_move', 'mermaid_render', 'qr_render', 'raster'].includes(message.request.method)) result = await result;
+      if (['camera_move', 'mermaid_render', 'qr_render', 'raster', 'pdf_export'].includes(message.request.method)) result = await result;
       if (message.request.method === 'fit') {
         const ids = desk.pointed();
         await fitView(ids, { durationMs: message.request.durationMs });

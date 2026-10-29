@@ -130,6 +130,7 @@ AI向けの使い方・接続線・ピンシリーズ・画像／SVGの受け渡
 | `desk_state` | 全状態。大きくなるため必要時だけ使用 |
 | `desk_context` | 状態・接続関係・ピンシリーズのメンバー・履歴を一回で取得（画像データなし） |
 | `desk_save` | サーバー上の `.tabletop` へ保存。path指定と明示的なoverwriteに対応（旧filenameは新規作成のみ） |
+| `desk_pdf` | 机全体を1ページのPDFとしてサーバー上へ保存。path・明示的なoverwrite・任意のexpectedRevisionに対応。別タブは開かない |
 | `desk_load` | 明示確認とsession／revisionガード付きで読込。共通Undo対応。[詳細](./docs_devel/mcp-save-load.md) |
 | `desk_asset_read` | 画像をMCP imageブロック、SVGをソースで取得。任意で一時ファイル出力 |
 | `desk_asset_import` | ファイル・SVGコード・data URLから追加／画像だけ差し替え |

@@ -1,3 +1,4 @@
+import {registerPdfTools} from './pdf-tools.js';
 import {pinFitFields} from './pin-fit';
 import {wayfinderStartFields,wayfinderStartSchema} from './wayfinder-input';
 import {DeskConnections,type DeskConnection} from './desk-connections';
@@ -180,6 +181,7 @@ registerPortTools(mcp,async target=>{
 registerHelpTools(mcp);registerStampTools(mcp);registerPropTools(mcp);
 registerAssetTools(mcp,deskId=>{const request=desks.bind(deskId);return payload=>compatibleRequest(request,payload);});
 registerDeskFileTools(mcp,deskId=>desks.bind(deskId));
+registerPdfTools(mcp,deskId=>{const request=desks.bind(deskId);return payload=>compatibleRequest(request,payload);});
 registerShareTools(mcp,deskId=>{const d=desks.get(deskId);d.bind();return d.sharing;});
 registerPairingTools(mcp,desks,releaseDesk);
 registerNetworkTools(mcp,async enabled=>{

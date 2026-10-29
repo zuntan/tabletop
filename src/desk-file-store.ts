@@ -13,9 +13,9 @@ export function validateDeskFilename(name: string): string {
 }
 /** The configured root and its parents must be trusted, local directories. */
 export class DeskFileStore {
-  constructor(private root = process.env.TABLETOP_SAVE_ROOT ?? join(homedir(), '.tabletop', 'saves')) {}
+  constructor(private root = process.env.TABLETOP_SAVE_ROOT ?? join(homedir(), '.tabletop', 'saves'), private extension = '.tabletop') {}
   async reference(value: string): Promise<string> {
-    if (!value || value.length > 4096 || /[\x00-\x1f]/.test(value) || !value.endsWith('.tabletop')) throw new Error('保存先には.tabletopファイルのパスを指定してください');
+    if (!value || value.length > 4096 || /[\x00-\x1f]/.test(value) || !value.endsWith(this.extension)) throw new Error(`保存先には${this.extension}ファイルのパスを指定してください`);
     if (!isAbsolute(value) && basename(value) !== value) throw new Error('相対指定はファイル名のみ使用できます。別の場所は絶対パスで指定してください');
     const path = isAbsolute(value) ? resolve(value) : resolve(this.root, value);
     if (!isAbsolute(value)) await mkdir(resolve(this.root), {recursive:true,mode:0o700});
