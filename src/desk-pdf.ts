@@ -24,7 +24,7 @@ function union(boxes:Rect[]):Rect{
 }
 
 /** Snapshot the entire rendered scene at canonical 100% scale, not the current camera. */
-export async function deskSceneRaster(desk:Desk,canvas:SVGSVGElement,descriptions:(id:string)=>boolean,capture?:Rect){
+export async function deskSceneRaster(desk:Desk,canvas:SVGSVGElement,descriptions:(id:string)=>boolean,capture?:Rect,captureScale=1){
  const revision=desk.revision,objects=desk.snapshot(),name=desk.settingsSnapshot().name;
  if(document.fonts.status!=='loaded'){
   let timer:ReturnType<typeof setTimeout>|undefined;
@@ -87,7 +87,7 @@ export async function deskSceneRaster(desk:Desk,canvas:SVGSVGElement,description
   axes.setAttribute('stroke',desk.settingsSnapshot().background.originAxesColor??'#94a3b8');axes.setAttribute('stroke-width','2');axes.setAttribute('fill','none');
   root.querySelector('#viewport')?.before(axes);
  }
- const raster=capture?captureRasterSize(box.width,box.height):pdfRasterSize(box.width,box.height);
+ const raster=capture?captureRasterSize(box.width,box.height,captureScale):pdfRasterSize(box.width,box.height);
  root.setAttribute('viewBox',`${box.x} ${box.y} ${box.width} ${box.height}`);root.setAttribute('width',String(raster.width));root.setAttribute('height',String(raster.height));root.setAttribute('preserveAspectRatio','none');
  const image=new Image();image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(root));
  let timer:ReturnType<typeof setTimeout>|undefined;
@@ -98,9 +98,9 @@ export async function deskSceneRaster(desk:Desk,canvas:SVGSVGElement,description
  return{bitmap,revision,bounds:box,raster,webCount,name};
 }
 
-export function captureRasterSize(width:number,height:number){
+export function captureRasterSize(width:number,height:number,requestedScale=1){
  if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)throw new Error('撮影範囲が不正です');
- const scale=Math.min(1,8192/Math.max(width,height),Math.sqrt(16_000_000/(width*height)));
+ const scale=Math.min(requestedScale,8192/Math.max(width,height),Math.sqrt(16_000_000/(width*height)));
  return{width:Math.max(1,Math.floor(width*scale)),height:Math.max(1,Math.floor(height*scale)),scale};
 }
 

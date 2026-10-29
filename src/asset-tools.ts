@@ -1,3 +1,4 @@
+import {captureFields} from './desk-capture';
 import {deskTargetFields,deskTargetDescription,type DeskRequestFactory} from './desk-target';
 import { sharedReadDescriptions } from './read-tool-descriptions';
 import { z } from 'zod';
@@ -10,13 +11,14 @@ const json = (value: unknown): CallToolResult => ({ content: [{ type: 'text', te
 const failure = (error: unknown): CallToolResult => ({ isError: true, content: [{ type: 'text', text: error instanceof Error ? error.message : String(error) }] });
 export function registerAssetTools(mcp: McpServer, forDesk: DeskRequestFactory) {
   mcp.registerTool('desk_raster', {
-    description: deskTargetDescription+'Experimental browser-side transparent PNG capture of exactly one AI-pointed text card. Read-only; no deletion, camera or selection change. Includes current rendered Markdown, frame, stamp and reactions; excludes attached parts, wallpaper and pointing frames. Returns image and exported local path for desk_asset_import, dimensions, world bounds, revision and browser raster/PNG timings. Approximate system-font rendering; max 4096 per side and 8M pixels. Point at one card first. Multiple cards and other types are not yet supported.',
-    inputSchema: { ...deskTargetFields, scale: z.number().finite().min(.1).max(3).default(1) },
+    description:deskTargetDescription+'Render PNG and return the image plus reusable local path. With ids OR bounds: capture that world rectangle (or union of object rectangles), including wallpaper and all intersecting objects, using the human Camera renderer. Not an object-only extraction. Excludes selection/pointing/handles, and renders selected stamps at full size. Without ids/bounds: preserve the legacy transparent capture of exactly one AI-pointed text card. No camera, selection, document or clipboard changes. scale defaults to 1; region output is capped at 8192px per side/16M pixels, legacy at4096px/8M. Region Web iframe bodies become placeholders (webCount); external images need CORS. Existing 5MB asset/20MB transfer limits apply; reduce scale/range if exceeded. Optional expectedRevision guards the snapshot. Never specify both ids and bounds.',
+    inputSchema:{...deskTargetFields,...captureFields},
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-  }, async ({ deskId, scale }): Promise<CallToolResult> => {
+  }, async ({ deskId, ...input }): Promise<CallToolResult> => {
     try {
       const request=forDesk(deskId);
-      const rendered = await request({ method: 'raster', scale }) as { dataUrl: string; [key: string]: unknown };
+      if(input.ids&&input.bounds)throw new Error('Specify at most one of ids or bounds');
+      const rendered = await request({ method: 'raster', ...input }) as { dataUrl: string; [key: string]: unknown };
       const { dataUrl, ...metadata } = rendered;
       const asset = embeddedAsset(dataUrl);
       const path = await exportAsset(asset);

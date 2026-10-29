@@ -1,9 +1,10 @@
+import {tightFrame} from './pin-shape';
 import {isStyledLink} from './link-values';
 import { objectSchema, type Desk, type DeskObject, type Operation } from './model';
 import { colorOperations, createColorControls } from './color-controls';
 import { isConnector, isShape } from './geometry';
 import { formatSchema, type Series } from './settings';
-import { tightFrame } from './pin-shape';
+import { browserPinFitOperations } from './pin-fit';
 import { opacityOperations, transparencyPercent, opacityFromPercent } from './fill-opacity';
 import { iconButton } from './toolbar';
 import { randomUuid } from './portable-crypto';
@@ -12,7 +13,7 @@ import { addNumberPresets, addFormNumberPresets, numberPresets } from './number-
 import { createLineStylePicker } from './line-style-picker';
 
 export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLElement, button: HTMLButtonElement,
-  selectButton: HTMLButtonElement, apply: (operations: Operation[], selectId?: string) => void, placementPoint: () => {x:number;y:number}) {
+  selectButton: HTMLButtonElement, apply: (operations: Operation[], selectId?: string) => void, placementPoint: () => {x:number;y:number},report:(message:string,error?:boolean)=>void) {
   let chosen = 'series-1', selection = '';
   toolbar.innerHTML = '<div id="default-colors"></div><label title="線幅">線幅<input id="default-width" type="number" min="0" max="100" step="any"></label><button id="numbering-settings" title="ピンシリーズ" aria-label="ピンシリーズ">⚑⚙</button>';
   const settingsButton = toolbar.querySelector<HTMLButtonElement>('#numbering-settings')!;
@@ -139,13 +140,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
   settingsButton.onclick = () => { panel.hidden = !panel.hidden; update(); };
   choice.onchange = () => { chosen = choice.value; update(); };
   form.querySelector<HTMLButtonElement>('#series-fit')!.onclick = () => {
-    const current = series();
-    const texts = desk.snapshot().filter(object => object.type === 'label' && object.seriesId === chosen).map(object => object.text);
-    texts.push(desk.listSettings().series.find(item => item.id === chosen)!.nextText);
-    const context = document.createElement('canvas').getContext('2d');
-    if (context) context.font = `${current.fontSize}px sans-serif`;
-    const frame = tightFrame(current.fontSize, current.shape, texts, context ? text => context.measureText(text).width : undefined);
-    apply([{ kind: 'series_update', id: chosen, patch: frame }]);
+    try { apply(browserPinFitOperations(desk,[chosen])); } catch(error) { report(error instanceof Error?error.message:String(error),true); }
   };
   form.onsubmit = event => event.preventDefault();
   form.onchange = event => {

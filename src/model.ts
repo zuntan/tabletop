@@ -1,3 +1,5 @@
+import {captureFields,type CaptureInput} from './desk-capture';
+import {pinFitFields} from './pin-fit';
 import {doodleSchema,doodleSource} from './doodle-values';
 import {assertRulerOperation} from './ruler-layout';
 import {assertFileOperation,fileGroup,fileFor} from './clear-files';
@@ -392,7 +394,8 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('list') }),
   z.object({ method: z.literal('get'), id: z.string() }),
   z.object({ method: z.literal('state') }),
-  z.object({ method: z.literal('raster'), scale: z.number().finite().min(.1).max(3).default(1) }).strict(),
+  z.object({method:z.literal('pin_fit'),...pinFitFields}).strict(),
+  z.object({method:z.literal('raster'),...captureFields}).strict(),
   z.object({ method: z.literal('mermaid_render'), id: z.string() }).strict(),
   z.object({method:z.literal('qr_render'),id:z.string()}).strict(),
   z.object({ method: z.literal('file_snapshot'), includeGeneration:z.literal(true).optional() }).strict(),
@@ -419,10 +422,16 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('redo'), actor: z.string().min(1).max(100).default('agent-01') }),
 ]);
 export type Request = z.input<typeof requestSchema>;
-export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge, ui?: { get(): { theme: 'light' | 'dark' }; set(theme: 'light' | 'dark'): { theme: 'light' | 'dark' } }, mermaid?: (source: string) => Promise<{ svg: string }>, raster?: (scale: number) => Promise<unknown>, qr?: (text:string)=>Promise<{svg:string;status:string}>): unknown {
+export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge, ui?: { get(): { theme: 'light' | 'dark' }; set(theme: 'light' | 'dark'): { theme: 'light' | 'dark' } }, mermaid?: (source: string) => Promise<{ svg: string }>, raster?: (scale: number) => Promise<unknown>, qr?: (text:string)=>Promise<{svg:string;status:string}>,extra?:{capture?:(input:CaptureInput)=>Promise<unknown>;pinFit?:(input:{seriesIds:string[];expectedRevision?:number;actor:string})=>unknown}): unknown {
   const request = requestSchema.parse(input);
   switch (request.method) {
+    case 'pin_fit': {
+      if(!extra?.pinFit)throw new Error('Pin fitting requires a compatible browser');
+      return extra.pinFit(request);
+    }
     case 'raster': {
+      if(request.expectedRevision!==undefined&&request.expectedRevision!==desk.revision)throw new Error('Revision conflict; read the desk again');
+      if(request.ids||request.bounds){if(!extra?.capture)throw new Error('Region raster requires a compatible browser');return extra.capture(request);}
       if (!raster) throw new Error('Raster capture requires a compatible browser');
       return raster(request.scale);
     }

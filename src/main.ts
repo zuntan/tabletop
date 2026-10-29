@@ -1,3 +1,6 @@
+import {captureBounds} from './desk-capture';
+import {deskSceneRaster} from './desk-pdf';
+import {browserPinFitOperations} from './pin-fit';
 import {createCaptureCamera} from './capture-camera';
 import {createDoodleEditor} from './doodle-editor';
 import {emptyDoodle,doodleSource} from './doodle-values';
@@ -314,7 +317,7 @@ const editor = createInlineEditor($('#workspace'), viewport, (object, patch, fre
 });
 const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'), $<HTMLButtonElement>('#numbering'), $<HTMLButtonElement>('#selection-mode'), (operations, selectId) => {
   if (!busy && !editor.isActive()) attempt(() => { execute(operations, selectId ? 'desk' : 'exact'); if (selectId) desk.select([selectId]); });
-}, newPartPoint);
+}, newPartPoint,notify);
 const formatControls = createFormatControls(desk, $('#authoring-tools'), operations => {
   if (busy || editor.isActive()) throw new Error('編集中の操作を終えてから書式を使ってください');
   execute(operations); render();
@@ -1227,16 +1230,27 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if (typeof message.request?.method === 'string') activityLed.pulse(message.request.method);
       thinkingMode.assertAllowed(message.request?.method);
       if(deskFiles.isBusy()&& !['summary','get','list','state','context','settings','selection','changes','file_saved','camera_get','ui_get'].includes(message.request?.method))throw new Error('Human file operation in progress. No change was made.');
-      if((isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())&&['execute','lock','undo','redo','select','point','load_document','fit','camera_move','wayfinder_start','ui_set'].includes(message.request?.method))throw new Error('Human confirmation in progress. No change was made; wait for the user.');
+      if((isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())&&['pin_fit','execute','lock','undo','redo','select','point','load_document','fit','camera_move','wayfinder_start','ui_set'].includes(message.request?.method))throw new Error('Human confirmation in progress. No change was made; wait for the user.');
       if (['fit', 'camera_move','wayfinder_start'].includes(message.request.method)) humanScroll.assertIdle();
-      if ((busy && message.request.method!=='camera_get') || (lineInput.isActive() && !['camera_get','summary','context','list','get','state','selection','settings','changes','file_saved','asset_read','ui_get','text_measure'].includes(message.request.method)) || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
+      if ((busy && message.request.method!=='camera_get') || (lineInput.isActive() && !['camera_get','summary','context','list','get','state','selection','settings','changes','file_saved','asset_read','ui_get','text_measure','raster'].includes(message.request.method)) || ((editor.isActive() || identityControls.isEditing()) && ['pin_fit', 'execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       if (['fit', 'camera_move','wayfinder_start'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing() || lineInput.isActive())) throw new Error('Human editing in progress. No camera change was made.');
-      if (['execute', 'lock', 'undo', 'redo', 'select', 'point', 'load_document', 'fit', 'camera_move', 'wayfinder_start', 'ui_set'].includes(message.request.method)) objectAnimator.finish();
+      if (['pin_fit', 'execute', 'lock', 'undo', 'redo', 'select', 'point', 'load_document', 'fit', 'camera_move', 'wayfinder_start', 'ui_set'].includes(message.request.method)) objectAnimator.finish();
       const beforeMove = message.request.method === 'execute' ? desk.snapshot() : null;
       let animatedMove = false;
       if (message.request.method === 'load_document') {cancelWayfinding('changed');cameraAnimator.cancel('Desk contents replaced');}
       const beforeRevision=desk.revision;
-      let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid, scale => rasterPointedCard(desk, id => drawnNodes.get(id), scale),renderQrCode);
+      let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid, scale => rasterPointedCard(desk, id => drawnNodes.get(id), scale),renderQrCode,{
+        capture:async input=>{
+          const bounds=captureBounds(desk,input);
+          const r=await deskSceneRaster(desk,canvas,id=>pinDescriptionVisible(desk.get(id)),bounds,input.scale);
+          return{sessionId:desk.sessionId,revision:r.revision,bounds:r.bounds,width:r.raster.width,height:r.raster.height,scale:r.raster.scale,webCount:r.webCount,dataUrl:r.bitmap.toDataURL('image/png')};
+        },
+        pinFit:input=>{
+          const operations=browserPinFitOperations(desk,input.seriesIds);
+          const result=desk.execute({actor:input.actor,expectedRevision:input.expectedRevision,snap:'exact',operations});
+          return{...result,frames:operations.map(op=>op.kind==='series_update'?{seriesId:op.id,...op.patch}:null)};
+        },
+      });
       if(desk.revision!==beforeRevision)cancelWayfinding('changed');
       if (['camera_move', 'mermaid_render', 'qr_render', 'raster'].includes(message.request.method)) result = await result;
       if (message.request.method === 'fit') {
@@ -1257,7 +1271,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
       ws.send(JSON.stringify({ id, result }));
       // Read-only requests must not rebuild iframes or steal form edits.
       if (message.request.method === 'point') drawSelection();
-      if (!animatedMove && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method)) render();
+      if (!animatedMove && ['pin_fit', 'execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method)) render();
       if (message.request.method === 'load_document') { bhDeletion.stop();partClipboard.clear(); if(desk.filePath)deskFiles.record(desk.filePath);fitView(desk.selected()); }
       if(message.request.method==='file_saved'&&desk.filePath&&(!message.request.expectedGeneration||message.request.expectedGeneration===desk.documentGeneration))deskFiles.record(desk.filePath);
     } catch (error) { ws.send(JSON.stringify({ id, error: error instanceof Error ? error.message : String(error) })); }
