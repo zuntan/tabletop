@@ -1,3 +1,4 @@
+import {createCaptureCamera} from './capture-camera';
 import {createDoodleEditor} from './doodle-editor';
 import {emptyDoodle,doodleSource} from './doodle-values';
 import {updateQrCardLayout} from './qr-card';
@@ -337,6 +338,9 @@ const lockControls = createLockControls($('#grid-snap'), form, () => {
     if (operations.length) execute(operations);
   });
 });
+const captureCamera=createCaptureCamera(desk,canvas,camera,()=>{cameraChanged();drawSelection();},id=>pinDescriptionVisible(desk.get(id)),notify);
+const captureButton=document.createElement('button');captureButton.id='camera-capture';captureButton.type='button';iconButton(captureButton,'▣','カメラ');$('#mouse-lock').after(captureButton);
+captureButton.onclick=()=>{if(busy||gesture||editor.isActive()||identityControls.isEditing()||doodleEditor.isActive()||lineInput.isActive()||isConfirmDialogOpen())return;stopCamera();captureCamera.open();};
 $('#numbering-settings').after($('#label-descriptions'));
 $('main').append($('.toolbar-view'));
 const activityLed = createActivityLed($('footer'));
@@ -361,7 +365,7 @@ createPropControls(propContainer, (preset, src) => {
 $('#clipboard').before(stampContainer, $('#reaction-controls'), propContainer);
 const formatGroup=document.createElement('div');formatGroup.className='toolbar-format-group';formatGroup.setAttribute('role','group');formatGroup.setAttribute('aria-label','色・線幅・書式');
 const deskOptions=document.createElement('div');deskOptions.className='toolbar-options-group';deskOptions.setAttribute('role','group');deskOptions.setAttribute('aria-label','ピン・スナップ・ロック');
-deskOptions.append($('#numbering-settings'),$('#label-descriptions'),$('#grid-snap'),$('#mouse-lock'));
+deskOptions.append($('#numbering-settings'),$('#label-descriptions'),$('#grid-snap'),$('#mouse-lock'),captureButton);
 formatGroup.append(...$('#authoring-tools').children);
 editActions.prepend($('#clipboard'));editActions.setAttribute('aria-label','貼り付け・重なり順・削除');
 $('#authoring-tools').append(formatGroup,editActions,deskOptions);
@@ -868,7 +872,7 @@ function focusHumanSelection() { focusObjects(desk.selected()); }
 $('#fit').onclick = () => focusObjects(desk.selected().length ? desk.selected() : desk.pointed());
 let wayfinderRun=0;
 function beginWayfinder(raw:WayfinderStartInput){
-  if(busy||editor.isActive()||identityControls.isEditing()||(isConfirmDialogOpen()||doodleEditor.isActive())||document.hidden)throw new Error('Human editing or hidden desk; no wayfinder movement was started');
+  if(busy||editor.isActive()||identityControls.isEditing()||(isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())||document.hidden)throw new Error('Human editing or hidden desk; no wayfinder movement was started');
   const input=wayfinderStartSchema.parse(raw),scene=desk.snapshot().map(connectorForView);
   const first=input.id?wayfinderRoute(scene,input.id):lineRoute(scene,input.lineId!,input.from!);
   const mode=input.mode??(input.id?desk.get(input.id).wayfinderMode:undefined)??'move';
@@ -876,7 +880,7 @@ function beginWayfinder(raw:WayfinderStartInput){
 }
 function startPinTravel(id:string,direction:'previous'|'next'){
   try{
-    if(busy||editor.isActive()||identityControls.isEditing()||lineInput.isActive()||(isConfirmDialogOpen()||doodleEditor.isActive())||document.hidden)throw new Error('編集中は移動できません');
+    if(busy||editor.isActive()||identityControls.isEditing()||lineInput.isActive()||(isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())||document.hidden)throw new Error('編集中は移動できません');
     const pin=desk.get(id),series=pinSeriesMap.get(pin.seriesId!);if(pin.type!=='label'||!series)return;
     const target=pinNeighbours(desk.snapshot(),series,id)[direction];if(!target)return;
     launchNavigation({points:[pinRoot(pin),pinRoot(target)],lineIds:[],destinationId:target.id},'move',{pinId:id},desk.snapshot());
@@ -1041,7 +1045,7 @@ canvas.addEventListener('pointercancel', event => endGesture(event, true));
 canvas.addEventListener('lostpointercapture', event => { if (gesture) endGesture(event, true); });
 window.addEventListener('blur', () => { space = false; if (gesture) { gesture = null; busy = false; render(); } });
 window.addEventListener('keydown', event => {
-  if((isConfirmDialogOpen()||doodleEditor.isActive()))return;
+  if((isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive()))return;
   if (editor.isActive()) return;
   if ((event.target as Element).closest('input,textarea,select') || colorControls.isOpen()) return;
   if (event.code === 'Space') { space = true; event.preventDefault(); }
@@ -1089,7 +1093,7 @@ function clipboardTextTarget(target: EventTarget | null) {
     || target instanceof Element && !!target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"])');
 }
 for (const kind of ['copy', 'cut'] as const) window.addEventListener(kind, event => {
-  if((isConfirmDialogOpen()||doodleEditor.isActive())){event.preventDefault();return;}
+  if((isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())){event.preventDefault();return;}
   if (clipboardTextTarget(event.target) || !getSelection()?.isCollapsed || busy || gesture || !event.clipboardData) return;
   const scene=desk.snapshot();
   const selected=new Set(desk.selected().flatMap(id=>['clip','file','ruler'].includes(desk.get(id).type)?fileGroup(scene,id).map(o=>o.id):[id]));
@@ -1116,7 +1120,7 @@ async function pasteClipboard(content: ClipboardContent) {
     const revision=desk.revision,generation=desk.documentGeneration;
     let remote:unknown=null;
     try{remote=await recovery.clipboardRequest(token);}catch{/* Best effort: ordinary paste remains available. */}
-    if(desk.revision!==revision||desk.documentGeneration!==generation||(isConfirmDialogOpen()||doodleEditor.isActive())||editor.isActive()||identityControls.isEditing()||gesture)throw new Error('読み取り中に机の状態が変わりました。もう一度貼り付けてください');
+    if(desk.revision!==revision||desk.documentGeneration!==generation||(isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())||editor.isActive()||identityControls.isEditing()||gesture)throw new Error('読み取り中に机の状態が変わりました。もう一度貼り付けてください');
     const parsed=clipboardTransferSchema.safeParse(remote);
     if(parsed.success&&parsed.data.token===token){
       const frames=parsed.data.objects.map(bounds),left=Math.min(...frames.map(b=>b.x)),top=Math.min(...frames.map(b=>b.y));
@@ -1169,7 +1173,7 @@ window.addEventListener('pointerdown', event => {
 }, true);
 window.addEventListener('keydown', () => { middleCanvasPaste = false; }, true);
 window.addEventListener('paste', event => {
-  if((isConfirmDialogOpen()||doodleEditor.isActive())){event.preventDefault();return;}
+  if((isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())){event.preventDefault();return;}
   if (middleCanvasPaste) { event.preventDefault(); return; }
   if (clipboardTextTarget(event.target) || busy || gesture || !event.clipboardData) return;
   const data = event.clipboardData;
@@ -1223,7 +1227,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if (typeof message.request?.method === 'string') activityLed.pulse(message.request.method);
       thinkingMode.assertAllowed(message.request?.method);
       if(deskFiles.isBusy()&& !['summary','get','list','state','context','settings','selection','changes','file_saved','camera_get','ui_get'].includes(message.request?.method))throw new Error('Human file operation in progress. No change was made.');
-      if((isConfirmDialogOpen()||doodleEditor.isActive())&&['execute','lock','undo','redo','select','point','load_document','fit','camera_move','wayfinder_start','ui_set'].includes(message.request?.method))throw new Error('Human confirmation in progress. No change was made; wait for the user.');
+      if((isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())&&['execute','lock','undo','redo','select','point','load_document','fit','camera_move','wayfinder_start','ui_set'].includes(message.request?.method))throw new Error('Human confirmation in progress. No change was made; wait for the user.');
       if (['fit', 'camera_move','wayfinder_start'].includes(message.request.method)) humanScroll.assertIdle();
       if ((busy && message.request.method!=='camera_get') || (lineInput.isActive() && !['camera_get','summary','context','list','get','state','selection','settings','changes','file_saved','asset_read','ui_get','text_measure'].includes(message.request.method)) || ((editor.isActive() || identityControls.isEditing()) && ['execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       if (['fit', 'camera_move','wayfinder_start'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing() || lineInput.isActive())) throw new Error('Human editing in progress. No camera change was made.');
@@ -1302,7 +1306,7 @@ if (location.hash&&!standaloneStartup) {
   void connectUrl(initialUrl, false).catch(error => notify(error instanceof Error ? error.message : String(error), true));
 }
 const lineInput=createLineInput(canvas,viewport,$<HTMLButtonElement>('[data-add="line"]'),desk,world,()=>camera.zoom,
- ()=>formatControls.appearance('line',desk.settingsSnapshot().defaults),()=>render(),()=>!busy&&!gesture&&!editor.isActive()&&!identityControls.isEditing()&&!(isConfirmDialogOpen()||doodleEditor.isActive()),notify,()=>desk.snapshot().filter(pinIsVisible).map(o=>pinScreenObject(o,camera.zoom)));
+ ()=>formatControls.appearance('line',desk.settingsSnapshot().defaults),()=>render(),()=>!busy&&!gesture&&!editor.isActive()&&!identityControls.isEditing()&&!(isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive()),notify,()=>desk.snapshot().filter(pinIsVisible).map(o=>pinScreenObject(o,camera.zoom)));
 render();
 
 if(pagesMode){

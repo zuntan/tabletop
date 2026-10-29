@@ -1,7 +1,7 @@
 import { createIcon, type IconName } from './icons';
 
 const buttonIcons: Record<string, IconName> = {
-  'selection-mode': 'pointer', 'clear-ai-pointing': 'pointer-x',
+  'camera-capture':'camera', 'selection-mode': 'pointer', 'clear-ai-pointing': 'pointer-x',
   rect: 'rectangle', roundedRect: 'square-rounded', ellipse: 'circle', line: 'line', arrow: 'arrow-up-right',
   text: 'typography', image: 'photo', mermaid: 'rectangle', qrcode:'qr-code', web: 'world', link: 'link', numbering: 'map-pin',
   'numbering-settings': 'map-pin', clipboard: 'clipboard', 'zoom-out': 'minus', 'zoom-in': 'plus',

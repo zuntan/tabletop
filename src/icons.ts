@@ -1,3 +1,4 @@
+import cameraIcon from './assets/camera.svg?raw';
 import qrTool from './assets/qr-tool.svg?raw';
 import crosshair from './vendor/tabler/crosshair.svg?raw';
 import strokeDynamic from './vendor/tabler/stroke-dynamic.svg?raw';
@@ -38,6 +39,7 @@ import svg27 from './vendor/tabler/folder-open.svg?raw';
 import svg28 from './vendor/tabler/pencil.svg?raw';
 
 const sources = {
+  camera:cameraIcon,
   'qr-code':qrTool, crosshair, 'stroke-dynamic': strokeDynamic, 'ruler-2':rulerIcon, moon, sun, paperclip, scissors, 'file-lock': fileLock,
   'pointer': svg0,
   'pointer-x': svg1,

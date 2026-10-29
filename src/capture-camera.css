@@ -1,0 +1,9 @@
+#capture-camera{position:fixed;inset:0;z-index:3000;outline:none;}
+#capture-camera[hidden]{display:none;}
+#capture-surface{position:fixed;overflow:hidden;touch-action:none;cursor:crosshair;}
+#capture-frame{fill:#2563eb08;stroke:#2563eb;stroke-width:1.5;stroke-dasharray:6 4;cursor:move;}
+#capture-surface [data-corner]{fill:white;stroke:#2563eb;stroke-width:1.5;}
+#capture-surface [data-corner=nw],#capture-surface [data-corner=se]{cursor:nwse-resize;}
+#capture-surface [data-corner=ne],#capture-surface [data-corner=sw]{cursor:nesw-resize;}
+#capture-actions{position:fixed;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 16px);flex-wrap:wrap;padding:8px;background:var(--ui-panel,#fff);color:var(--ui-text,#334155);border:1px solid var(--ui-border,#cbd5e1);border-radius:8px;box-shadow:0 4px 16px #0002;}
+#capture-actions span{font-size:12px;}#capture-actions button{min-height:32px;padding:4px 12px;}

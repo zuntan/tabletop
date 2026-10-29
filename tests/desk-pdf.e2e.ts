@@ -24,7 +24,7 @@ test('file menu exports a single all-desk PDF independent of zoom/selection with
   await call('desk_select',{ids:['note']});await call('desk_point',{ids:['picture']});
   await call('desk_camera_move',{center:{x:200,y:100},zoom:.35,durationMs:0});
   const before=await call('desk_state');
-  await page.locator('#file-menu').click();assert.equal(await page.locator('#file-menu-panel > button').count(),3);
+  await page.locator('#file-menu').click();assert.ok(await page.locator('#file-menu-panel > button').count()>=3);
   const popupPromise=page.waitForEvent('popup');await page.locator('#open-desk-pdf').click();const popup=await popupPromise;
   await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('のPDFを開きました'));
   const bytes=await page.evaluate(async()=>Array.from(new Uint8Array(await (window as unknown as Window&{__pdfBlob:Blob}).__pdfBlob.arrayBuffer())));

@@ -24,7 +24,7 @@ function union(boxes:Rect[]):Rect{
 }
 
 /** Snapshot the entire rendered scene at canonical 100% scale, not the current camera. */
-export async function deskPdf(desk:Desk,canvas:SVGSVGElement,descriptions:(id:string)=>boolean){
+export async function deskSceneRaster(desk:Desk,canvas:SVGSVGElement,descriptions:(id:string)=>boolean,capture?:Rect){
  const revision=desk.revision,objects=desk.snapshot(),name=desk.settingsSnapshot().name;
  if(document.fonts.status!=='loaded'){
   let timer:ReturnType<typeof setTimeout>|undefined;
@@ -38,7 +38,7 @@ export async function deskPdf(desk:Desk,canvas:SVGSVGElement,descriptions:(id:st
  root.setAttribute('color',getComputedStyle(canvas).color);
  root.querySelector('#origin-guides')?.remove();root.querySelector('#origin-guide-mask')?.remove();
  root.querySelector('[data-line-input-preview]')?.remove();
- root.querySelector('#overlays')?.remove();root.querySelectorAll('.open-link,.connector-hit').forEach(n=>n.remove());
+ root.querySelector('#overlays')?.remove();root.querySelector('[data-wayfinder-marker]')?.remove();root.querySelectorAll('.open-link,.connector-hit').forEach(n=>n.remove());
  root.querySelector('#viewport')?.removeAttribute('transform');
  for(const pattern of root.querySelectorAll('pattern'))pattern.removeAttribute('patternTransform');
  const rounding=buildJunctionRounding(objects);
@@ -49,7 +49,7 @@ export async function deskPdf(desk:Desk,canvas:SVGSVGElement,descriptions:(id:st
   if(object.type==='line'){
     group.setAttribute('transform',`translate(${object.x} ${object.y})`);group.replaceChildren();drawConnector(group,object,1,rounding.get(object.id));
   }
-  if(object.type==='text'){
+  if(object.type==='text'||object.type==='file'){
     const source=object.cutout?group.querySelector<SVGGElement>('[data-cutout-source]'):group;
     if(source)drawStamp(source,object.cutout?cutoutSourceObject(object):object,false);
     if(!object.cutout&&object.callout){group.querySelector('.text-callout')?.setAttribute('d',calloutPath(object));drawCalloutLeader(group,object);}
@@ -75,13 +75,19 @@ export async function deskPdf(desk:Desk,canvas:SVGSVGElement,descriptions:(id:st
    const world=transformedBox(group,b),pad=Math.max(2,object.strokeWidth/2);
    boxes.push({x:world.x-pad,y:world.y-pad,width:world.width+pad*2,height:world.height+pad*2});
   }
-  const bounds=union(boxes);box={x:bounds.x-24,y:bounds.y-24,width:bounds.width+48,height:bounds.height+48};
+  const bounds=union(boxes);box=capture??{x:bounds.x-24,y:bounds.y-24,width:bounds.width+48,height:bounds.height+48};
  }finally{host.remove();}
  for(const id of ['desk-underlay','desk-background','desk-wallpaper','desk-grid']){
   const rect=root.querySelector(`#${id}`);if(!rect)continue;
   for(const [key,value]of Object.entries(box))rect.setAttribute(key,String(value));
  }
- const raster=pdfRasterSize(box.width,box.height);
+ if(capture&&desk.settingsSnapshot().background.originAxes){
+  const axes=document.createElementNS('http://www.w3.org/2000/svg','path');
+  axes.setAttribute('d',`M ${box.x} 0 H ${box.x+box.width} M 0 ${box.y} V ${box.y+box.height}`);
+  axes.setAttribute('stroke',desk.settingsSnapshot().background.originAxesColor??'#94a3b8');axes.setAttribute('stroke-width','2');axes.setAttribute('fill','none');
+  root.querySelector('#viewport')?.before(axes);
+ }
+ const raster=capture?captureRasterSize(box.width,box.height):pdfRasterSize(box.width,box.height);
  root.setAttribute('viewBox',`${box.x} ${box.y} ${box.width} ${box.height}`);root.setAttribute('width',String(raster.width));root.setAttribute('height',String(raster.height));root.setAttribute('preserveAspectRatio','none');
  const image=new Image();image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(root));
  let timer:ReturnType<typeof setTimeout>|undefined;
@@ -89,6 +95,17 @@ export async function deskPdf(desk:Desk,canvas:SVGSVGElement,descriptions:(id:st
  const bitmap=document.createElement('canvas');bitmap.width=raster.width;bitmap.height=raster.height;
  const ctx=bitmap.getContext('2d');if(!ctx)throw new Error('PDF画像を作成できません');
  ctx.fillStyle='#fff';ctx.fillRect(0,0,bitmap.width,bitmap.height);ctx.drawImage(image,0,0,bitmap.width,bitmap.height);
+ return{bitmap,revision,bounds:box,raster,webCount,name};
+}
+
+export function captureRasterSize(width:number,height:number){
+ if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)throw new Error('撮影範囲が不正です');
+ const scale=Math.min(1,8192/Math.max(width,height),Math.sqrt(16_000_000/(width*height)));
+ return{width:Math.max(1,Math.floor(width*scale)),height:Math.max(1,Math.floor(height*scale)),scale};
+}
+
+export async function deskPdf(desk:Desk,canvas:SVGSVGElement,descriptions:(id:string)=>boolean){
+ const {bitmap,revision,bounds:box,raster,webCount,name}=await deskSceneRaster(desk,canvas,descriptions);
  const data=bitmap.toDataURL('image/jpeg',.95);if(!data.startsWith('data:image/jpeg;'))throw new Error('画像サイズがブラウザの上限を超えています');
  const jpeg=Uint8Array.from(atob(data.split(',')[1]),c=>c.charCodeAt(0));
  const bytes=jpegPagePdf(jpeg,raster.width,raster.height,name||'Tabletop',{width:box.width,height:box.height});
