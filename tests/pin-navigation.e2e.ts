@@ -20,6 +20,7 @@ test('selected pin offers adjacent trips, lands at the root and selects the dest
   assert.equal(await popup.locator('[data-direction=previous]').isDisabled(),true);
   assert.equal(await popup.locator('[data-direction=next]').isEnabled(),true);
   await popup.locator('[data-direction=next]').click();
+  assert.deepEqual((await call('desk_selection')).ids,[],'departure clears the source pin selection');
   await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('到着しました'));
   const arrived=await call('desk_camera_get');assert.deepEqual(arrived.center,root(b));assert.equal(arrived.zoom,.7);
   assert.deepEqual((await call('desk_selection')).ids,['p2']);assert.equal((await call('desk_summary')).revision,revision);
@@ -30,6 +31,7 @@ test('selected pin offers adjacent trips, lands at the root and selects the dest
   await popup.locator('[data-direction=previous]').click();
   await page.waitForSelector('[data-wayfinder-marker] circle');await page.keyboard.press('Escape');
   await page.waitForTimeout(150);
+  assert.deepEqual((await call('desk_selection')).ids,[],'cancelled trip does not reselect its departure pin');
   assert.equal((await call('desk_camera_get')).navigation.reason,'human',await page.locator('#message').textContent()??'');
   await call('desk_select',{ids:['p1','p2']});assert.equal(await popup.isVisible(),false);
   await call('desk_select',{ids:['memo']});assert.equal(await popup.isVisible(),false);

@@ -906,7 +906,8 @@ function launchNavigation(first:WayfinderRoute,mode:'move'|'tour',input:Wayfinde
   const updateMarker=(marker:{x:number;y:number}|null)=>{wayfinderMarker.replaceChildren();if(marker)wayfinderMarker.append(svg('circle',{cx:marker.x,cy:marker.y,r:5/camera.zoom,fill:'#f59e0b',stroke:'#fff','stroke-width':2/camera.zoom}));};
   const reportStop=(reason:WayfinderStopReason)=>reason==='changed'?'経路が変更されたため中止しました':reason==='hidden'?'画面が非表示になったため中止しました':reason==='superseded'?'別の移動に切り替えました':reason==='timeout'?'移動の応答が止まったため中止しました':'操作により中止しました';
   navigation={runId:run,status:'moving',mode,id:input.id,lineId:input.lineId,from:input.from,pinId:input.pinId};
-  if(input.id){desk.select(desk.selected().filter(id=>id!==input.id));render(false);}else drawSelection();
+  const departureId=input.id??input.pinId;
+  if(departureId){desk.select(desk.selected().filter(id=>id!==departureId));render(false);}else drawSelection();
   void(async()=>{
     let route:WayfinderRoute=first;
     while(run===wayfinderRun){
