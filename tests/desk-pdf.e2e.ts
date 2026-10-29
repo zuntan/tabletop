@@ -17,8 +17,10 @@ test('file menu exports a single all-desk PDF independent of zoom/selection with
    {kind:'update',id:'mold',patch:{x:1000,y:450}},
    {kind:'add',object:{id:'far',type:'diamond',x:1700,y:850,width:400,height:240,text:'画面外の終点',fill:'#d8b4fe',fillOpacity:1}},
    {kind:'add',object:{id:'mermaid',type:'mermaid',x:750,y:-150,width:500,height:330,text:'Mermaid',mermaidSource:'flowchart LR\nA[開始]-->B{判断}-->C[完了]'}},
+   {kind:'series_update',id:'series-1',patch:{thread:{enabled:true,visible:true,fixedWidth:true}}},
    {kind:'label_add',id:'pin',seriesId:'series-1',x:80,y:350},
-   {kind:'add',object:{id:'line',type:'line',x:0,y:0,x2:1900,y2:970,startBinding:{objectId:'pin',anchor:'center'},endBinding:{objectId:'far',anchor:'left'},strokeWidth:5,stroke:'#ef4444',endMarker:'arrow'}}
+   {kind:'label_add',id:'pin2',seriesId:'series-1',x:400,y:700},
+   {kind:'add',object:{id:'line',type:'line',fixedWidth:true,x:0,y:0,x2:1900,y2:970,startBinding:{objectId:'pin',anchor:'center'},endBinding:{objectId:'far',anchor:'left'},strokeWidth:5,stroke:'#ef4444',endMarker:'arrow'}}
   ]});
   await page.waitForFunction(()=>document.querySelector('[data-id="mermaid"]')?.getAttribute('data-mermaid-status')==='ready');
   await call('desk_select',{ids:['note']});await call('desk_point',{ids:['picture']});

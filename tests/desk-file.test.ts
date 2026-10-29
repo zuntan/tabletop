@@ -50,7 +50,7 @@ test('older files without pin visibility and thread settings decode with compati
   const result = await decodeDeskFile(bytes);
   assert.equal(result.settings.series[0].visibility, 'all');
   assert.deepEqual(result.settings.series[0].thread, {
-    enabled: true, visible: false, color: '#64748b', width: 2, opacity: 1, dash: 'solid',
+    enabled: true, visible: false, color: '#64748b', width: 2, opacity: 1, dash: 'solid', fixedWidth:false,
   });
   assert.equal(result.objects.find(object => object.id === 'pin')?.text, 'A');
 });

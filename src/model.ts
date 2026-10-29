@@ -80,6 +80,7 @@ const objectFields = z.object({
   y2: coordinate.optional(),
   callout: z.object({ x: coordinate, y: coordinate, style: z.enum(['speech', 'thought', 'leader']).optional(), binding: bindingSchema.nullable().optional() }).strict().nullable().optional(),
   attachment: bindingSchema.nullable().optional(),
+  fixedWidth:z.boolean().optional(),
   junctionRounding: z.number().finite().min(0).max(100000).optional(),
   startJunction: z.string().min(1).max(200).nullable().optional(),
   endJunction: z.string().min(1).max(200).nullable().optional(),
@@ -157,6 +158,7 @@ type Entry = { replacement?:boolean; before: Snapshot; after: Snapshot; beforeSe
 function validateObject(object: unknown): DeskObject {
   const parsed = objectSchema.parse(object);
   if(parsed.doodle){if(parsed.type!=='svg')throw Error('Doodle belongs only to SVG cards');parsed.src=doodleSource(parsed.doodle,parsed.width,Math.max(1,parsed.height-34));}
+  if(parsed.type!=='line'&&parsed.fixedWidth!==undefined)throw new Error('Fixed width belongs only to lines');
   if(parsed.type!=='wayfinder'&&parsed.attachmentAnchor!==undefined)throw new Error('Attachment anchor belongs only to wayfinders');
   if(parsed.type!=='wayfinder'&&parsed.wayfinderMode!==undefined)throw new Error('Wayfinder mode belongs only to wayfinders');
   if(parsed.type!=='ruler'&&['rulerMembers','rulerMode','rulerMaterial','rulerThickness','rulerAxis'].some(key=>(parsed as Record<string,unknown>)[key]!==undefined))throw Error('Ruler fields belong only to rulers');

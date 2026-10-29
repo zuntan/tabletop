@@ -1,3 +1,4 @@
+import {createStrokeWidthMode} from './stroke-width-mode';
 import {tightFrame} from './pin-shape';
 import {isStyledLink} from './link-values';
 import { objectSchema, type Desk, type DeskObject, type Operation } from './model';
@@ -59,12 +60,14 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     <fieldset><legend>糸</legend>
       <button id="thread-visible" type="button" role="switch" aria-label="糸を表示"><span>糸を表示</span><span class="thinking-switch-track" aria-hidden="true"></span><span class="thinking-switch-state" aria-hidden="true"></span></button>
       <div id="thread-colors"></div>
+      <label>太さの扱い<input name="thread.fixedWidth" type="hidden" value="false"></label>
       <label>線幅<input name="thread.width" type="number" min="0" max="100" step="any"></label>
       <label>塗り透過（%）<input name="thread.opacity" type="number" min="0" max="100"></label>
       <label>線種<select name="thread.dash"><option value="solid">実線</option><option value="dashed">破線</option><option value="dotted">点線</option></select></label>
     </fieldset></form>`;
   const choice = panel.querySelector<HTMLSelectElement>('#series-choice')!;
   const form = panel.querySelector<HTMLFormElement>('#series-settings')!;
+  const updateThreadWidthMode=createStrokeWidthMode(form.elements.namedItem('thread.fixedWidth') as HTMLInputElement,'ピンの糸の太さ固定');
   const updateLineStyle = createLineStylePicker(form.elements.namedItem('thread.dash') as HTMLSelectElement);
   addFormNumberPresets(form);
   addNumberPresets(form.elements.namedItem('thread.width') as HTMLInputElement, numberPresets.strokeWidth, '線幅');
@@ -147,7 +150,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     const input = event.target as HTMLInputElement;
     if (input.name.startsWith('thread.')) {
       const key = input.name.slice(7) as keyof Series['thread'];
-      const value = input.type === 'checkbox' ? input.checked : key === 'width' ? Number(input.value)
+      const value = key==='fixedWidth'?input.value==='true':input.type === 'checkbox' ? input.checked : key === 'width' ? Number(input.value)
         : key === 'opacity' ? opacityFromPercent(input.value) : input.value;
       apply([{ kind: 'series_update', id: chosen, patch: { thread: { [key]: value } } }]);
       return;
@@ -189,7 +192,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
         ? String(transparencyPercent(current.fillOpacity)) : String(current[input.name as keyof Series]);
     }
     const { name: _name, format: _format, shape: _shape, visibility: _visibility, thread: _thread, ...appearance } = current;
-    updateLineStyle();
+    updateLineStyle();updateThreadWidthMode();
     colors.update([objectSchema.parse({ ...appearance, type: 'rect' })]);
     const info = desk.listSettings().series.find(item => item.id === chosen)!;
     panel.querySelector('#series-info')!.textContent = `次：${info.nextText} · ${info.count} 個（色・形はシリーズ全体に適用）`;

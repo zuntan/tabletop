@@ -16,10 +16,11 @@ export function drawConnector(group: SVGGElement, object: DeskObject, zoom: numb
   const dx = end.x - start.x, dy = end.y - start.y;
   const length = Math.hypot(dx, dy);
   const attrs = { x1: 0, y1: 0, x2: dx, y2: dy };
+  const hitWidth=Math.max(14,object.strokeWidth*(object.fixedWidth?1:zoom));
   // Only a narrow strip around the visible line is interactive, even when invisible.
-  group.append(element('line', { ...attrs, stroke: 'transparent', 'stroke-width': 14,
+  group.append(element('line', { ...attrs, stroke: 'transparent', 'stroke-width': hitWidth,
     'vector-effect': 'non-scaling-stroke', 'pointer-events': 'stroke', class: 'connector-hit' }));
-  const size = Math.min(Math.max(15, object.strokeWidth * 3.75), length / 3);
+  const size = Math.min(Math.max(15, object.strokeWidth * 3.75)/(object.fixedWidth?zoom:1), length / 3);
   const inset = (shape: DeskObject['startMarker']) => !shape || shape === 'none' ? 0 : size * (shape === 'circle' ? .4 : .5);
   const ux = length ? dx / length : 0, uy = length ? dy / length : 0;
   // Tuck the visible shaft inside each filled marker; logical endpoints and hit targets stay fixed.
@@ -27,16 +28,18 @@ export function drawConnector(group: SVGGElement, object: DeskObject, zoom: numb
   const line = element('line', { x1: ux * from, y1: uy * from, x2: dx - ux * to, y2: dy - uy * to,
     stroke: object.stroke, 'stroke-width': object.strokeWidth,
     'stroke-linecap': 'round', 'pointer-events': 'none', class: 'connector-line' });
+  if(object.fixedWidth)line.setAttribute('vector-effect','non-scaling-stroke');
   if (object.dash && object.dash !== 'solid') line.setAttribute('stroke-dasharray', object.dash === 'dashed'
     ? `${object.strokeWidth * 4} ${object.strokeWidth * 3}` : `${object.strokeWidth} ${object.strokeWidth * 2}`);
   group.append(line);
   for (const curve of rounding?.curves ?? []) {
     const local = (p: Point) => `${p.x - object.x} ${p.y - object.y}`;
     const d = `M ${local(curve.from)} Q ${local(curve.control)} ${local(curve.to)}`;
-    group.append(element('path', { d, fill: 'none', stroke: 'transparent', 'stroke-width': 14,
+    group.append(element('path', { d, fill: 'none', stroke: 'transparent', 'stroke-width': hitWidth,
       'vector-effect': 'non-scaling-stroke', 'pointer-events': 'stroke', class: 'junction-hit' }));
     const path = element('path', { d, fill: 'none', stroke: object.stroke, 'stroke-width': object.strokeWidth,
       'stroke-linecap': 'round', 'pointer-events': 'none', class: 'junction-curve', 'data-junction-rounding': curve.id });
+    if(object.fixedWidth)path.setAttribute('vector-effect','non-scaling-stroke');
     if (line.hasAttribute('stroke-dasharray')) path.setAttribute('stroke-dasharray', line.getAttribute('stroke-dasharray')!);
     group.append(path);
   }

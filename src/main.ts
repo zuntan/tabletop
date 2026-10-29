@@ -1,3 +1,4 @@
+import {createStrokeWidthMode} from './stroke-width-mode';
 import {createWayfinderNavigation} from './wayfinder-navigation';
 import {captureBounds} from './desk-capture';
 import {deskSceneRaster} from './desk-pdf';
@@ -156,6 +157,7 @@ app.innerHTML = `
           <label hidden>塗り<input name="fill" type="text"></label><label hidden>線<input name="stroke" type="text"></label>
           <label>塗り透過（%）<input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
           <label>線幅<input name="strokeWidth" type="number" min="0" step="any"></label><label>文字サイズ<input name="fontSize" type="number" min="1"></label>
+          <label hidden>太さの扱い<input name="fixedWidth" type="hidden" value="false"></label>
           <label hidden>接合部の丸め<input name="junctionRounding" type="number" min="0" max="100000" step="any" disabled></label>
           <label hidden>線種<select name="dash" disabled><option value="solid">実線</option><option value="dashed">破線</option><option value="dotted">点線</option></select></label>
           <label hidden>始点形状<select name="startMarker" disabled><option value="none">なし</option><option value="arrow">矢印</option><option value="circle">丸</option><option value="diamond">ひし形</option></select></label>
@@ -250,6 +252,7 @@ const clipMenuUpdates = ([
   for(const button of choices.querySelectorAll<HTMLButtonElement>('button')) {button.textContent=(labels as Record<string,string>)[button.dataset.value!];button.setAttribute('aria-label',button.textContent);}
   return ()=>{menu.textContent=(labels as Record<string,string>)[input.value]??'';};
 });
+const updateStrokeWidthMode=createStrokeWidthMode(form.elements.namedItem('fixedWidth') as HTMLInputElement,'線の太さ固定');
 const updateConnectorLineStyle = createLineStylePicker(form.elements.namedItem('dash') as HTMLSelectElement);
 const updateStartMarker = createEndpointPicker(form.elements.namedItem('startMarker') as HTMLSelectElement, '始点形状', 'start');
 const updateTextFit = createTextFitPicker(form.elements.namedItem('textFit') as HTMLSelectElement);
@@ -489,7 +492,6 @@ function connectorForView(object: DeskObject): DeskObject {
   return { ...object, x: points.start.x, y: points.start.y, x2: points.end.x, y2: points.end.y };
 }
 function refreshPinPresentation() {
-  const previousRounding = renderedRounding;
   renderedRounding = buildJunctionRounding(renderedScene.map(connectorForView));
   for (const object of renderedScene) {
     const node = drawnNodes.get(object.id);
@@ -500,7 +502,7 @@ function refreshPinPresentation() {
       path?.setAttribute('d', calloutPath(visual)); drawCalloutLeader(node, visual);
     }
     if (object.type === 'label') node.setAttribute('transform', pinTransform(object, camera.zoom));
-    else if (isConnector(object) && (object.startBinding || object.endBinding || renderedRounding.has(object.id) || previousRounding.has(object.id))) {
+    else if (isConnector(object)) {
       const visual = connectorForView(object);
       node.setAttribute('transform', `translate(${visual.x} ${visual.y})`);
       node.replaceChildren(); drawConnector(node, visual, camera.zoom, renderedRounding.get(object.id));
@@ -523,7 +525,7 @@ function drawPinThreads(scene: DeskObject[]) {
     const points = pins.map(object => `${object.x + object.width / 2},${object.y + object.height}`).join(' ');
     const path = svg('polyline', { points, fill: 'none', stroke: thread.color, 'stroke-width': thread.width,
       'stroke-opacity': thread.opacity, 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
-      'vector-effect': 'non-scaling-stroke', 'pointer-events': 'none', 'data-pin-thread': series.id });
+      ...(thread.fixedWidth?{'vector-effect':'non-scaling-stroke'}:{}), 'pointer-events': 'none', 'data-pin-thread': series.id });
     if (thread.dash !== 'solid') path.setAttribute('stroke-dasharray', thread.dash === 'dashed'
       ? `${thread.width * 4} ${thread.width * 3}` : `${thread.width} ${thread.width * 2}`);
     objectsLayer.insertBefore(path, before);
@@ -709,7 +711,7 @@ function render(rebuild = true) {
     propertyEditor.sync(object);
     if(fileFor(renderedScene,object.id))for(const name of ['width','height',...(object.type==='file'?[]:['rulerMode','rulerMaterial','rulerThickness','x','y','x2','y2','calloutMode','clipOffset','clipOffsetMode','clipOffsetPercent','clipAnchor','clipSize','clipAutoSize','clipStyle'])]){const control=form.elements.namedItem(name) as HTMLInputElement|null;if(control)control.disabled=true;}
     clipMenuUpdates.forEach(update=>update());
-    updateConnectorLineStyle();
+    updateConnectorLineStyle();updateStrokeWidthMode();
     updateStartMarker(); updateEndMarker(); updateCallout(); updateTextFit();
     if (object.url&&!object.deskPath) { link.href = object.url; link.hidden = false; }
   }

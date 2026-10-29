@@ -32,6 +32,7 @@ export const pinThreadSchema = z.object({
   color: colorSchema.default('#64748b'), width: z.number().finite().min(0).max(100).default(2),
   opacity: z.number().finite().min(0).max(1).default(1),
   dash: z.enum(['solid', 'dashed', 'dotted']).default('solid'),
+  fixedWidth:z.boolean().default(false),
 }).strict();
 export const seriesSchema = appearanceSchema.extend({
   visibility: pinVisibilitySchema.default('all'),

@@ -9,7 +9,7 @@ const paint = ['fill', 'fillOpacity', 'stroke', 'strokeWidth'] as const;
 const text = ['text', 'textColor', 'fontSize'] as const;
 export function objectPropertyNames(object: DeskObject): readonly (keyof DeskObject)[] {
   const decoration = stickerTarget(object) ? ['stickers' as const] : [];
-  if (object.type === 'line') return [...common, 'x2', 'y2', 'stroke', 'strokeWidth', 'dash',
+  if (object.type === 'line') return [...common, 'x2', 'y2', 'stroke', 'strokeWidth', 'fixedWidth', 'dash',
     'startMarker', 'endMarker', 'startBinding', 'endBinding', 'startJunction', 'endJunction', 'junctionRounding'];
   if (object.type === 'file') return [...common,...box,...paint,...text,'fileMembers','stamp'];
   if(object.type==='ruler')return [...common,...box,'text','rulerMembers','rulerMode','rulerMaterial','rulerThickness','rulerAxis'];

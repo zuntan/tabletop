@@ -1,0 +1,6 @@
+.width-mode-field{grid-column:1 / -1;min-width:0;}
+.stroke-width-mode{display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:11px;}
+.stroke-width-mode button{display:flex;align-items:center;justify-content:center;padding:3px;min-height:28px;border:none;background:transparent;}
+.stroke-width-mode button[aria-checked=true] .thinking-switch-track{background:#047857;border-color:#6ee7b7;}
+.stroke-width-mode button[aria-checked=true] .thinking-switch-track::before{left:18px;}
+.stroke-width-mode[data-fixed=false]>span:first-child,.stroke-width-mode[data-fixed=true]>span:last-child{font-weight:700;}

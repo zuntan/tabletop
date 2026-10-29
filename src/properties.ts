@@ -6,7 +6,7 @@ import { isConnector } from './geometry';
 import { headSelectedProp } from './prop-selection';
 import { supportsFill, transparencyPercent, opacityFromPercent } from './fill-opacity';
 
-const fields = ['linkDisplay','wayfinderMode','propSelection','rulerMode','rulerMaterial','rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'qrText', 'url','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
+const fields = ['fixedWidth','linkDisplay','wayfinderMode','propSelection','rulerMode','rulerMaterial','rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'qrText', 'url','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
 const numeric = new Set(['rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'junctionRounding', 'fontSize', 'cornerRadius', 'padding','clipOffset','clipOffsetPercent','clipSize']);
 export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   const connector = isConnector(object);
@@ -14,6 +14,7 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   for (const name of fields) {
     const input = form.elements.namedItem(name) as HTMLInputElement;
     if (!input) continue;
+    if(name==='fixedWidth'){input.disabled=!connector;input.closest('label')!.hidden=!connector;input.value=String(object.fixedWidth??false);continue;}
     if(name==='linkDisplay'){
       input.disabled=!isUrlLink(object);input.closest('label')!.hidden=input.disabled;input.value=propertyValue(object,name);
       for(const button of form.querySelectorAll<HTMLButtonElement>('[data-link-display]')){button.disabled=input.disabled;button.setAttribute('aria-pressed',String(button.dataset.linkDisplay===input.value));}
@@ -85,6 +86,7 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   }
 }
 export function propertyValue(object: DeskObject, key: string): string {
+  if(key==='fixedWidth')return String(object.fixedWidth??false);
   if(key==='linkDisplay')return object.linkDisplay??'url';
   if(key==='wayfinderMode')return object.wayfinderMode??'move';
   if(key==='propSelection')return object.propSelection??'normal';
@@ -108,6 +110,7 @@ export function propertyValue(object: DeskObject, key: string): string {
 export function propertyFieldPatch(key: string, value: string, object: DeskObject): Partial<DeskObject> {
   if (!(fields as readonly string[]).includes(key)) throw new Error('Unknown property');
   if (value === propertyValue(object, key)) return {};
+  if(key==='fixedWidth'){if(object.type!=='line'||!['true','false'].includes(value))throw new Error('Invalid fixed width');return{fixedWidth:value==='true'};}
   if(key==='linkDisplay'){if(!isUrlLink(object)||!['url','qr'].includes(value))throw new Error('Invalid link display');return {linkDisplay:value as 'url'|'qr'};}
   if(key==='wayfinderMode'){
     if(object.type!=='wayfinder'||!['move','tour'].includes(value))throw new Error('Invalid wayfinder mode');

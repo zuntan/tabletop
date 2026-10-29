@@ -9,6 +9,7 @@ const styleSchema = appearanceSchema.partial().extend({
   cornerRadius: z.number().finite().min(0).max(100000).optional(),
   padding: z.number().finite().min(0).max(100000).optional(),
   textFit: z.enum(['fixed','auto','shrink']).optional(),
+  fixedWidth:z.boolean().optional(),
   dash: z.enum(['solid','dashed','dotted']).optional(),
   startMarker: z.enum(['none','arrow','circle','diamond']).optional(),
   endMarker: z.enum(['none','arrow','circle','diamond']).optional(),
@@ -24,14 +25,14 @@ export function readFormatMemory(value: string | null): FormatMemory {
 export function supportsFormat(type: string) { return type === 'line' || stickerTarget({type}); }
 export function formatKeys(type: string): (keyof FormatStyle)[] {
   if(type==='link')return ['stickers','fill','fillOpacity','stroke','strokeWidth','fontSize','textColor','cornerRadius'];
-  if (type === 'line') return ['stroke','strokeWidth','dash','startMarker','endMarker','junctionRounding'];
+  if (type === 'line') return ['stroke','strokeWidth','fixedWidth','dash','startMarker','endMarker','junctionRounding'];
   if (type !== 'text' && !isShapeType(type)) return stickerTarget({type}) ? ['stickers'] : [];
   return ['stickers','fill','fillOpacity','stroke','strokeWidth','textColor','fontSize',
     ...(type === 'text' ? ['cornerRadius','padding'] as const : ['textFit'] as const),
     ...(type === 'roundedRect' ? ['cornerRadius'] as const : [])];
 }
 export function extractFormat(object: DeskObject): FormatStyle {
-  const defaults = { stickers: null, padding: 6, textFit: 'fixed', dash: 'solid', startMarker: 'none', endMarker: 'none', junctionRounding: 0 };
+  const defaults = { fixedWidth:false, stickers: null, padding: 6, textFit: 'fixed', dash: 'solid', startMarker: 'none', endMarker: 'none', junctionRounding: 0 };
   return styleSchema.parse(Object.fromEntries(formatKeys(object.type).map(key => [key, object[key as keyof DeskObject] ?? defaults[key as keyof typeof defaults]])));
 }
 export function formatPatch(style: FormatStyle, type: string): Partial<DeskObject> {
