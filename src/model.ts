@@ -65,6 +65,7 @@ const objectFields = z.object({
   locked: z.boolean().optional(), // Mouse geometry protection only; not an authorization boundary.
   propSelection: z.enum(['normal', 'head']).optional(),
   wayfinderMode: z.enum(['move','tour']).optional(),
+  attachmentAnchor:z.enum(['top','right','bottom','left']).optional(),
   seriesId: z.string().min(1).max(100).optional(),
   number: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).optional(),
   labelShape: z.enum(['text', 'rect', 'ellipse', 'roundedRect', 'pin']).optional(),
@@ -156,6 +157,7 @@ type Entry = { replacement?:boolean; before: Snapshot; after: Snapshot; beforeSe
 function validateObject(object: unknown): DeskObject {
   const parsed = objectSchema.parse(object);
   if(parsed.doodle){if(parsed.type!=='svg')throw Error('Doodle belongs only to SVG cards');parsed.src=doodleSource(parsed.doodle,parsed.width,Math.max(1,parsed.height-34));}
+  if(parsed.type!=='wayfinder'&&parsed.attachmentAnchor!==undefined)throw new Error('Attachment anchor belongs only to wayfinders');
   if(parsed.type!=='wayfinder'&&parsed.wayfinderMode!==undefined)throw new Error('Wayfinder mode belongs only to wayfinders');
   if(parsed.type!=='ruler'&&['rulerMembers','rulerMode','rulerMaterial','rulerThickness','rulerAxis'].some(key=>(parsed as Record<string,unknown>)[key]!==undefined))throw Error('Ruler fields belong only to rulers');
   if(parsed.type!=='file'&&parsed.fileMembers!==undefined)throw new Error('File members belong only to files');

@@ -1,3 +1,4 @@
+import {createWayfinderNavigation} from './wayfinder-navigation';
 import {captureBounds} from './desk-capture';
 import {deskSceneRaster} from './desk-pdf';
 import {browserPinFitOperations} from './pin-fit';
@@ -46,7 +47,7 @@ import { createShapePicker, createTextFitPicker } from './shape-picker';
 import { shapeNames, isShapeType, shapePaths } from './shape-definitions';
 import { createCalloutPicker } from './callout-picker';
 import { calloutPath, drawCalloutLeader } from './text-callouts';
-import { isPinAttachmentTarget } from './pin-attachments';
+import { isPinAttachmentTarget,attachmentOffset } from './pin-attachments';
 import { createDeskMenu } from './desk-menu';
 import './style.css';
 import { Desk, dispatch, objectSchema, type DeskObject, type Operation } from './model';
@@ -261,12 +262,19 @@ const cameraAnimator = new CameraAnimator();
 const wayfinderTravel=new WayfinderTravel();
 const wayfinderMap=createWayfinderMap(canvas);
 const pinNavigation=createPinNavigation(canvas,startPinTravel);
+const wayfinderNavigation=createWayfinderNavigation(canvas,startWayfinder);
 let navigation:undefined|{runId:number;status:'moving'|'waiting'|'completed'|'cancelled'|'failed';mode:'move'|'tour';reason?:string;message?:string;point?:{x:number;y:number};choices?:{lineId:string;from:'start'|'end'}[];id?:string;lineId?:string;from?:'start'|'end';pinId?:string};
 const cancelWayfinding=(reason:WayfinderStopReason='human')=>{wayfinderTravel.cancel(reason);wayfinderMap.cancel(reason);};
 const wayfinderMarker=svg('g',{'pointer-events':'none','aria-hidden':'true','data-wayfinder-marker':''});viewport.append(wayfinderMarker);
 const objectAnimator = new ObjectMoveAnimator();
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const stopCamera = (event?:Event) => { if(event&&wayfinderMap.contains(event.target))return;cancelWayfinding(document.hidden?'hidden':'human'); cameraAnimator.cancel('Human interaction or viewport change'); objectAnimator.finish(); };
+const stopCamera = (event?:Event) => {
+  if(event&&wayfinderMap.contains(event.target))return;
+  const escapeTravel=event instanceof KeyboardEvent&&event.key==='Escape'&&(navigation?.status==='moving'||navigation?.status==='waiting');
+  cancelWayfinding(document.hidden?'hidden':'human');cameraAnimator.cancel('Human interaction or viewport change');objectAnimator.finish();
+  // Escape stops a journey once; do not then clear selection and overwrite the stop notice.
+  if(escapeTravel)event!.stopPropagation();
+};
 for (const event of ['pointerdown', 'touchstart', 'keydown', 'click', 'input']) {
   document.addEventListener(event, stopCamera, { capture: true, passive: true });
 }
@@ -596,7 +604,7 @@ function drawObjectRaw(object: DeskObject) {
     if(isUrlLink(object))drawLinkDisplay(group,object,camera.zoom);
     drawOpenLink(group, object, path=>{void deskFiles.open(path);});
   }
-  if(object.type==='wayfinder')drawWayfinder(group,object,()=>startWayfinder(object.id),renderedScene);
+  if(object.type==='wayfinder')drawWayfinder(group,object,renderedScene);
   if(object.type==='file'){drawClearFile(group,object);drawStamp(group,object,desk.selected().includes(object.id));}
   if(object.type==='ruler')drawRuler(group,object);
   if(object.type==='clip') drawClip(group,object,renderedById.get(object.clipMembers?.[0] ?? ''));
@@ -624,6 +632,7 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
   const pin=selected.length===1&&selected[0].type==='label'&&pinIsVisible(selected[0])?selected[0]:undefined;
   const series=pin&&pinSeriesMap.get(pin.seriesId!);
   pinNavigation.update(pin,series?pinNeighbours(scene??renderedScene,series,pin!.id):undefined,camera,navigation?.status==='moving'||navigation?.status==='waiting');
+  wayfinderNavigation.update(selected.length===1&&selected[0].type==='wayfinder'?selected[0]:undefined,scene??renderedScene,camera,navigation?.status==='moving'||navigation?.status==='waiting');
   drawClipMembershipGuides(overlays, scene ?? renderedScene, selected.map(object => object.id), camera.zoom, colors.selection);
   for (const object of desk.pointed().map(id => scene?.find(object => object.id === id) ?? desk.get(id)).filter(pinIsVisible))
     drawAiPointing(overlays, [connectorForView(object)], camera.zoom, pinDescriptionVisible(object), colors.pointing);
@@ -997,7 +1006,7 @@ function previewGesture(current: Gesture, point: { x: number; y: number }) {
   if (!current.detach && current.mode === 'move' && current.originals.length === 1 && ['label','wayfinder'].includes(current.originals[0].type)) {
     const pin = scene.find(o => o.id === current.originals[0].id)!;
     drawSnapTargets(overlays, scene.filter(o=>isPinAttachmentTarget(o,scene)).filter(pinIsVisible),
-      { x: pin.x + pin.width / 2, y: pin.y + pin.height }, camera.zoom);
+      { x: pin.x + attachmentOffset(pin).x, y: pin.y + attachmentOffset(pin).y }, camera.zoom);
   }
   if (!current.detach && (current.mode === 'start' || current.mode === 'end')) drawSnapTargets(overlays, scene.filter(o=>!clipFollower(scene,o.id)).filter(pinIsVisible).filter(object => !current.originals.some(o => o.id === object.id)).map(object => pinScreenObject(object, camera.zoom)), endpointDragPoint(current, point), camera.zoom);
 }

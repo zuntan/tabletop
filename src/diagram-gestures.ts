@@ -2,7 +2,7 @@ import {headSelectedProp} from './prop-selection';
 import {rulerFor,rulerMoveOperations} from './ruler-layout';
 import {fileFor,fileMoveOperations} from './clear-files';
 import { clipMoveOperations, clipFor, clipDropTarget, clipTarget, clipGroup } from './clip-bundles';
-import { snapPinAttachment } from './pin-attachments';
+import { snapPinAttachment,snapWayfinderAttachment } from './pin-attachments';
 import { randomUuid } from './portable-crypto';
 import { junctionMembers, junctionField, bindingField, snapConnectorEndpoint } from './connector-junctions';
 import { pinScreenObject } from './pin-series';
@@ -113,7 +113,15 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
       patch = { x: start.x + dx, y: start.y + dy, x2: end.x + dx, y2: end.y + dy, startBinding: object.startBinding && selected.has(object.startBinding.objectId) ? object.startBinding : null,
         endBinding: object.endBinding && selected.has(object.endBinding.objectId) ? object.endBinding : null };
       for (const side of ['start', 'end'] as const) if (object[junctionField(side)]) movingJunctions.add(object[junctionField(side)]!);
-    } else if (object.type === 'label' || object.type==='wayfinder') {
+    } else if(object.type==='wayfinder'){
+      const moved={...object,x:object.x+dx,y:object.y+dy};
+      if(object.attachment&&selected.has(object.attachment.objectId))patch={x:moved.x,y:moved.y};
+      else{
+        const targets=(gesture.snapScene??gesture.scene).filter(o=>!selected.has(o.id)&&!clipFor(gesture.scene,o.id)?.clipMembers?.slice(1).includes(o.id));
+        const candidate=movable.length===1&&!gesture.detach?snapWayfinderAttachment(moved,targets,18/zoom):undefined;
+        patch={x:moved.x,y:moved.y,...(candidate?{attachment:candidate.binding,attachmentAnchor:candidate.sourceAnchor}:object.attachment?{attachment:null}:{})};
+      }
+    } else if (object.type === 'label') {
       const next = { x: object.x + object.width / 2 + dx, y: object.y + object.height + dy };
       if (object.attachment && selected.has(object.attachment.objectId)) {
         patch = { x: object.x + dx, y: object.y + dy };

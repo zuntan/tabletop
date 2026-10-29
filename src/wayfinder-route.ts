@@ -59,7 +59,7 @@ export function lineRoute(scene:DeskObject[],lineId:string,from:EndpointSide):Wa
 export function wayfinderRoute(scene:DeskObject[],id:string):WayfinderRoute{
   const source=scene.find(o=>o.id===id&&o.type==='wayfinder');if(!source)throw new Error('道しるべがありません');
   const ports=scene.filter(isConnector).flatMap(object=>(['start','end'] as const).filter(side=>object[bindingField(side)]?.objectId===id).map(side=>({object,side})));
-  if(ports.length!==1)throw new Error('道しるべには上・左・右のどれかへ経路の線を1本つないでください');
+  if(ports.length!==1)throw new Error('道しるべには上下左右のどれかへ経路の線を1本つないでください');
   const start=ports[0],junction=start.object[junctionField(start.side)],peers=junction?peersAt(scene,junction):[];
   if(peers.length>1){const point=endpoints(start.object)[start.side];return {points:[center(source),point],lineIds:[],branch:{point,choices:peers.map(choice)}};}
   const route=lineRoute(scene,start.object.id,start.side);

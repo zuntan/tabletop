@@ -15,7 +15,7 @@ export const anchors: readonly Anchor[] = anchorNames.slice(0, 8);
 export function anchorsFor(object: DeskObject, scene: DeskObject[] = []): readonly Anchor[] {
   if (['clip','file','ruler'].includes(object.type) || clipFollower(scene,object.id)) return [];
   if (object.type === 'prop') return [];
-  if(object.type==='wayfinder')return ['top','right','left'];
+  if(object.type==='wayfinder')return ['top','right','bottom','left'];
   return object.type === 'label' ? ['center'] : isNewShape(object.type) ? ['top', 'right', 'bottom', 'left'] : anchors;
 }
 export const isConnector = (object: DeskObject) => object.type === 'line';
@@ -117,7 +117,7 @@ export function resolveConnections(objects: DeskObject[], before: DeskObject[] =
       } else {
         if (!isConnectable(target,objects)) throw new Error('Connections require a connectable shape');
         if(target.type==='wayfinder'){
-          if(!['top','right','left'].includes(binding.anchor))throw new Error('道しるべの下は対象への取り付け専用です。線は上・左・右へ接続してください');
+          if(!['top','right','bottom','left'].includes(binding.anchor))throw new Error('道しるべの線は上下左右の4点へ接続してください');
           const count=(wayfinderPorts.get(target.id)??0)+1;wayfinderPorts.set(target.id,count);
           if(count>1)throw new Error('初版の道しるべに接続できる経路線は1本だけです');
         }

@@ -22,7 +22,7 @@ test('wayfinder follows an off-screen bent route at fixed zoom, lands at its car
       },16);
       (window as unknown as {wayfinderSamples:{samples:typeof samples;timer:ReturnType<typeof setInterval>}}).wayfinderSamples={samples,timer};
     });
-    await page.locator('[data-wayfinder-run="go"]').click();
+    await call('desk_select',{ids:['go']});await page.locator('[data-wayfinder-run="go"]').click();
     await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('到着しました'),null,{timeout:12_000});
     const arrived=await call('desk_camera_get');
     assert.equal(arrived.zoom,view.zoom);assert.deepEqual(arrived.center,{x:3100,y:1560});
@@ -32,7 +32,7 @@ test('wayfinder follows an off-screen bent route at fixed zoom, lands at its car
     assert.equal((await call('desk_context')).revision,before.revision,'travel is not a document edit');
     assert.equal(await page.locator('[data-wayfinder-marker] circle').count(),0);
     await call('desk_camera_move',{center:{x:300,y:324},durationMs:0});
-    await page.locator('[data-wayfinder-run="go"]').click();
+    await call('desk_select',{ids:['go']});await page.locator('[data-wayfinder-run="go"]').click();
     await page.waitForSelector('[data-wayfinder-marker] circle');
     await page.keyboard.press('Escape');
     await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('中止しました'));
@@ -51,7 +51,7 @@ test('wayfinder follows an off-screen bent route at fixed zoom, lands at its car
     assert.equal((await call('desk_get',{id:'go'})).wayfinderMode,'tour');
     assert.equal(await page.getByRole('button',{name:'観光',exact:true}).getAttribute('aria-pressed'),'true');
     await call('desk_camera_move',{center:{x:300,y:324},durationMs:0});
-    await page.locator('[data-wayfinder-run="go"]').click();
+    await call('desk_select',{ids:['go']});await page.locator('[data-wayfinder-run="go"]').click();
     await page.waitForSelector('[data-wayfinder-marker] circle');
     const speed:number[]=await page.evaluate(`(async()=>{
       const sample=()=>{const m=document.querySelector('#viewport').transform.baseVal.consolidate().matrix;return {x:m.e,y:m.f,t:performance.now()};};

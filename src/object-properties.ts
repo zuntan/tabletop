@@ -14,7 +14,7 @@ export function objectPropertyNames(object: DeskObject): readonly (keyof DeskObj
   if (object.type === 'file') return [...common,...box,...paint,...text,'fileMembers','stamp'];
   if(object.type==='ruler')return [...common,...box,'text','rulerMembers','rulerMode','rulerMaterial','rulerThickness','rulerAxis'];
   if (object.type === 'clip') return [...common,...box,'fill','clipMembers','clipAnchor','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipStyle'];
-  if(object.type==='wayfinder')return [...common,...box,...paint,'text','attachment','wayfinderMode'];
+  if(object.type==='wayfinder')return [...common,...box,...paint,'text','attachment','attachmentAnchor','wayfinderMode'];
   if (object.type === 'prop') return [...common, ...box, 'text', 'src', 'propSelection'];
   if(object.type==='link'&&!object.deskPath)return [...common,...decoration,...box,...paint,'text','url','linkDisplay','fontSize','textColor','cornerRadius'];
   if(object.type==='qrcode')return [...common,...decoration,...box,'text','qrText','cutout'];

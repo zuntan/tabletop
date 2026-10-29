@@ -16,8 +16,8 @@ function fixture(){const desk=new Desk();desk.execute({operations:[
   {kind:'add',object:{id:'l2',type:'line',x:700,y:150,x2:1200,y2:650,startJunction:'j',endBinding:{objectId:'b',anchor:'left'},junctionRounding:48}},
 ]});return desk;}
 
-test('wayfinder bottom attachment follows its card; only three ports and one line are allowed',()=>{
-  const desk=fixture(),go=desk.get('go');assert.deepEqual(anchorsFor(go),['top','right','left']);
+test('wayfinder bottom attachment follows its card; four ports share one route line',()=>{
+  const desk=fixture(),go=desk.get('go');assert.deepEqual(anchorsFor(go),['top','right','bottom','left']);
   assert.deepEqual(anchorPoint(go,'bottom'),anchorPoint(desk.get('a'),'right'));
   assert.equal(wayfinderDirection(desk.snapshot(),'go'),'right');
   desk.execute({operations:[{kind:'update',id:'l1',patch:{startBinding:{objectId:'go',anchor:'top'}}}]});
@@ -27,7 +27,9 @@ test('wayfinder bottom attachment follows its card; only three ports and one lin
   desk.execute({operations:[{kind:'update',id:'a',patch:{x:50,width:300}}]});
   assert.deepEqual(anchorPoint(desk.get('go'),'bottom'),anchorPoint(desk.get('a'),'right'));
   assert.throws(()=>desk.execute({operations:[{kind:'add',object:{id:'bad',type:'line',startBinding:{objectId:'go',anchor:'top'}}}]}),/1本/);
-  assert.throws(()=>desk.execute({operations:[{kind:'update',id:'l1',patch:{startBinding:{objectId:'go',anchor:'bottom'}}}]}),/取り付け専用/);
+  desk.execute({operations:[{kind:'update',id:'l1',patch:{startBinding:{objectId:'go',anchor:'bottom'}}}]});
+  assert.equal(wayfinderDirection(desk.snapshot(),'go'),'bottom');
+  assert.throws(()=>desk.execute({operations:[{kind:'update',id:'l1',patch:{startBinding:{objectId:'go',anchor:'top-left'}}}]}),/4点/);
   assert.throws(()=>desk.execute({operations:[{kind:'add',object:{id:'file',type:'file',fileMembers:['go']}}]}),/入れられない/);
   desk.execute({operations:[{kind:'delete',id:'a'}]});assert.equal(desk.get('go').attachment,null);
 });
@@ -89,14 +91,14 @@ test('tour moves at constant screen speed without the move time cap',()=>{
 
 test('wayfinder attachments and routes survive copy, archive and Undo',async()=>{
   const desk=fixture(),clipboard=new PartClipboard(),values=new Map<string,string>();
-  desk.execute({operations:[{kind:'update',id:'go',patch:{wayfinderMode:'tour'}}]});
+  desk.execute({operations:[{kind:'update',id:'go',patch:{wayfinderMode:'tour',attachmentAnchor:'top'}}]});
   assert.throws(()=>desk.execute({operations:[{kind:'update',id:'a',patch:{wayfinderMode:'tour'}}]}),/only to wayfinders/);
   clipboard.write({setData:(k,v)=>{values.set(k,v);},getData:k=>values.get(k)??''},desk.snapshot());
   const ids=clipboard.paste(desk),go=ids.map(id=>desk.get(id)).find(o=>o.type==='wayfinder')!;
   assert.ok(go.attachment&&go.attachment.objectId!=='a');assert.ok(wayfinderRoute(desk.snapshot(),go.id).destinationId!=='b');
   assert.equal(go.wayfinderMode,'tour');
   const decoded=await decodeDeskFile(await encodeDeskFile(desk));
-  assert.deepEqual(decoded.objects.find(o=>o.id===go.id)?.attachment,go.attachment);
+  assert.deepEqual(decoded.objects.find(o=>o.id===go.id)?.attachment,go.attachment);assert.equal(decoded.objects.find(o=>o.id===go.id)?.attachmentAnchor,'top');
   assert.equal(decoded.objects.find(o=>o.id===go.id)?.wayfinderMode,'tour');
   desk.undo();assert.throws(()=>desk.get(go.id));
   clipboard.write({setData:(k,v)=>{values.set(k,v);},getData:k=>values.get(k)??''},[desk.get('go')]);
@@ -117,4 +119,19 @@ test('raw line travel starts at either endpoint and validates ambiguous inputs',
  const camera={get:()=>({}),move:()=>({}),wayfinderStart:(input:unknown)=>input};
  assert.deepEqual(dispatch(desk,{method:'wayfinder_start',lineId:'l1',from:'end',mode:'tour'},camera),{lineId:'l1',from:'end',mode:'tour'});
  for(const input of [{},{id:'go',lineId:'l1',from:'start'},{lineId:'l1'},{id:'go',from:'end'}])assert.throws(()=>dispatch(desk,{method:'wayfinder_start',...input},camera));
+});
+
+test('all four source anchors attach to any target side, including a shared route port, and follow resizing',()=>{
+ for(const source of ['top','right','bottom','left'] as const)for(const target of ['top','right','bottom','left'] as const){
+  const d=new Desk();d.execute({snap:'exact',operations:[
+   {kind:'add',object:{id:'card',type:'text',x:100,y:200,width:300,height:200}},
+   {kind:'add',object:{id:'go',type:'wayfinder',width:72,height:72,attachment:{objectId:'card',anchor:target},attachmentAnchor:source}},
+   {kind:'add',object:{id:'road',type:'line',startBinding:{objectId:'go',anchor:source},x2:900,y2:1000}}
+  ]});
+  assert.deepEqual(anchorPoint(d.get('go'),source),anchorPoint(d.get('card'),target));
+  assert.deepEqual({x:d.get('road').x,y:d.get('road').y},anchorPoint(d.get('card'),target));
+  d.execute({operations:[{kind:'update',id:'card',patch:{x:200,width:500}},{kind:'update',id:'go',patch:{width:100,height:120}}]});
+  assert.deepEqual(anchorPoint(d.get('go'),source),anchorPoint(d.get('card'),target));
+  assert.equal(wayfinderDirection(d.snapshot(),'go'),source);
+ }
 });
