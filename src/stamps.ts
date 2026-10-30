@@ -27,6 +27,11 @@ export function stampArtwork(stamp: Stamp) {
     }
     g.append(node);
   };
+  const footerDate=()=>{
+    text(stamp.text,63,8,65,'monospace');g.lastElementChild!.setAttribute('data-stamp-date','footer');
+    // Preserve the artwork proportions while fitting its separate date into the same footprint.
+    g.setAttribute('transform','translate(0 -6) scale(.86)');
+  };
   if (pattern.shape === 'care') {
     g.append(svg('rect', { x: -46, y: -46, width: 92, height: 92, rx: 4 }),
       svg('rect', { x: -41, y: -41, width: 82, height: 82, rx: 1, 'stroke-width': 1 }));
@@ -73,7 +78,7 @@ export function stampArtwork(stamp: Stamp) {
         return `${i ? 'L' : 'M'}${Math.cos(angle) * r},${Math.sin(angle) * r}`;
       }).join(' ');
       g.append(svg('path', { d: spiral, 'stroke-width': 3.5, 'stroke-linecap': 'round' }));
-      if (stamp.text) text(stamp.text, 43, 8, 56, 'monospace');
+      if (stamp.text) footerDate();
     } else if (pattern.shape === 'smile') {
       const points = Array.from({ length: 240 }, (_, i) => {
         const a = i * Math.PI / 120, r = 44 + 4 * Math.cos(a * 12);
@@ -82,7 +87,7 @@ export function stampArtwork(stamp: Stamp) {
       g.append(svg('path', { d: points + ' Z' }), svg('circle', { r: 38, 'stroke-width': 1 }));
       g.append(svg('path', { d: 'M -22 -5 Q -15 -17 -8 -5 M 8 -5 Q 15 -17 22 -5 M -22 8 Q 0 35 22 8',
         'stroke-width': 4, 'stroke-linecap': 'round' }));
-      if (stamp.text) text(stamp.text, 29, 8, 52, 'monospace');
+      if (stamp.text) footerDate();
     } else if (pattern.shape === 'words') {
       // Five broad cherry-blossom petals; each tip has a small inward notch.
       const polar = (radius: number, degrees: number) => {
@@ -104,7 +109,7 @@ export function stampArtwork(stamp: Stamp) {
         text('よくでき', 1, 19, 76, 'sans-serif');
         text('ました', 22, 19, 64, 'sans-serif');
       }
-      if (stamp.text) text(stamp.text, 35, 7, 52, 'monospace');
+      if (stamp.text) footerDate();
     } else {
       g.append(svg('circle', { r: 46 }), svg('circle', { r: 41, 'stroke-width': 1 }));
       text(pattern.title, stamp.text ? -9 : 2, pattern.title.length === 1 ? 49 : 32, 74);

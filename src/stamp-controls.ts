@@ -10,6 +10,9 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
   panel.setAttribute('aria-label', 'ハンコ一覧');
   trigger.popoverTargetElement = panel;
   const dated = document.createElement('input'); dated.type = 'checkbox'; dated.id = 'stamp-dated';
+  const datedKey='tabletop.stamp.dated';
+  try{dated.checked=localStorage.getItem(datedKey)==='true';}catch{/* Keep an in-memory preference when storage is unavailable. */}
+  last.dated=dated.checked;repeat.title=`ハンコ：済${dated.checked?'（日付付き）':''}を適用`;
   const label = document.createElement('label'); label.append(dated, ' 日付付き');
   const choices = document.createElement('div'); choices.className = 'stamp-choices';
   const categories = [
@@ -28,7 +31,7 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
     sample.replaceChildren(stampArtwork(createStamp(pattern.id,dated.checked)));sampleName.textContent=pattern.caption;
     for(const button of choices.querySelectorAll<HTMLButtonElement>('[data-stamp-design]'))button.classList.toggle('stamp-previewed',button.dataset.stampDesign===pattern.id);
   };
-  dated.onchange=()=>show(active);
+  dated.onchange=()=>{try{localStorage.setItem(datedKey,String(dated.checked));}catch{/* Applying stamps still works without storage. */}show(active);};
   const press=(designId:string,withDate:boolean)=>{
     const targets=selected().filter(o=>['text','file'].includes(o.type));if(!targets.length)return;
     const stamp=createStamp(designId,withDate);
