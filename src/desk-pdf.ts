@@ -1,6 +1,6 @@
 import type { Desk } from './model';
 import { cloneSvgForRaster } from './part-raster';
-import { jpegPagePdf, pdfRasterSize } from './pdf-document';
+import { jpegPagePdf, pdfRasterSize, pdfOuterBounds } from './pdf-document';
 import { drawStamp } from './stamps';
 import { cutoutSourceObject } from './logical-cutout';
 import { drawReactions } from './reactions';
@@ -75,7 +75,7 @@ export async function deskSceneRaster(desk:Desk,canvas:SVGSVGElement,description
    const world=transformedBox(group,b),pad=Math.max(2,object.strokeWidth/2);
    boxes.push({x:world.x-pad,y:world.y-pad,width:world.width+pad*2,height:world.height+pad*2});
   }
-  const bounds=union(boxes);box=capture??{x:bounds.x-24,y:bounds.y-24,width:bounds.width+48,height:bounds.height+48};
+  const bounds=union(boxes);box=capture??pdfOuterBounds(bounds);
  }finally{host.remove();}
  for(const id of ['desk-underlay','desk-background','desk-wallpaper','desk-grid']){
   const rect=root.querySelector(`#${id}`);if(!rect)continue;

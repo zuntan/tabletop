@@ -27,6 +27,11 @@ export function jpegPagePdf(jpeg:Uint8Array,width:number,height:number,title='Ta
  const result=new Uint8Array(chunks.reduce((sum,c)=>sum+c.length,0));let cursor=0;for(const chunk of chunks){result.set(chunk,cursor);cursor+=chunk.length;}
  return result;
 }
+/** Equal outer breathing room, still visible when exporting a very large desk. */
+export function pdfOuterBounds(bounds:{x:number;y:number;width:number;height:number}){
+ const margin=Math.max(24,Math.min(bounds.width,bounds.height)*.03);
+ return{x:bounds.x-margin,y:bounds.y-margin,width:bounds.width+2*margin,height:bounds.height+2*margin};
+}
 export function pdfRasterSize(width:number,height:number){
  if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)throw new Error('Invalid desk bounds');
  const scale=Math.min(2,8192/Math.max(width,height),Math.sqrt(32_000_000/(width*height)));
