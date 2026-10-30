@@ -326,7 +326,7 @@ const editor = createInlineEditor($('#workspace'), viewport, (object, patch, fre
   execute([fresh ? { kind: 'add', object: { ...object, ...patch } } : { kind: 'update', id: object.id, patch }], fresh ? 'desk' : 'exact');
   if (fresh) desk.select([object.id]);
   render();
-});
+}, () => drawSelection());
 const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'), $<HTMLButtonElement>('#numbering'), $<HTMLButtonElement>('#selection-mode'), (operations, selectId) => {
   if (!busy && !editor.isActive()) attempt(() => { execute(operations, selectId ? 'desk' : 'exact'); if (selectId) desk.select([selectId]); });
 }, newPartPoint,notify);
@@ -634,7 +634,7 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
   const selected = preview ?? desk.selected().map(id => desk.get(id));
   const pin=selected.length===1&&selected[0].type==='label'&&pinIsVisible(selected[0])?selected[0]:undefined;
   const series=pin&&pinSeriesMap.get(pin.seriesId!);
-  pinNavigation.update(pin,series?pinNeighbours(scene??renderedScene,series,pin!.id):undefined,camera,navigation?.status==='moving'||navigation?.status==='waiting');
+  pinNavigation.update(editor.isActive()?undefined:pin,series?pinNeighbours(scene??renderedScene,series,pin!.id):undefined,camera,navigation?.status==='moving'||navigation?.status==='waiting');
   wayfinderNavigation.update(selected.length===1&&selected[0].type==='wayfinder'?selected[0]:undefined,scene??renderedScene,camera,navigation?.status==='moving'||navigation?.status==='waiting');
   drawClipMembershipGuides(overlays, scene ?? renderedScene, selected.map(object => object.id), camera.zoom, colors.selection);
   for (const object of desk.pointed().map(id => scene?.find(object => object.id === id) ?? desk.get(id)).filter(pinIsVisible))

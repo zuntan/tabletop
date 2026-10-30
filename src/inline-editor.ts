@@ -5,14 +5,15 @@ import type { DeskObject } from './model';
 type EditorPatch = { text?: string; description?: string; url?: string; deskPath?:string; qrText?:string; mermaidSource?: string };
 
 export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement,
-  save: (object: DeskObject, patch: EditorPatch, fresh: boolean) => void) {
+  save: (object: DeskObject, patch: EditorPatch, fresh: boolean) => void,
+  onActiveChange: () => void = () => {}) {
   let active: { object: DeskObject; fresh: boolean; panel: HTMLDivElement; text: HTMLTextAreaElement; url?: HTMLInputElement; source?: HTMLTextAreaElement; error: HTMLElement; resizeObserver?: ResizeObserver; disposePreview?: () => void } | null = null;
   let composing = false;
   const textFrameTypes = new Set(['text', ...shapeTypes]);
   let submitMode: 'enter' | 'mod-enter' = 'enter';
   try { if (localStorage.getItem('tabletop.editor.submit-key') === 'mod-enter') submitMode = 'mod-enter'; }
   catch { /* Keep the in-memory preference when browser storage is unavailable. */ }
-  function close() { active?.disposePreview?.(); active?.resizeObserver?.disconnect(); active?.panel.remove(); active = null; composing = false; }
+  function close() { const wasActive = !!active; active?.disposePreview?.(); active?.resizeObserver?.disconnect(); active?.panel.remove(); active = null; composing = false; if (wasActive) onActiveChange(); }
   function reposition() {
     if (!active) return;
     const matrix = viewport.getScreenCTM(); if (!matrix) return;
@@ -127,7 +128,7 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
         }
         reposition();
       });
-      active = { object, fresh, panel, text, url, source, error, resizeObserver, disposePreview }; workspace.append(panel);
+      active = { object, fresh, panel, text, url, source, error, resizeObserver, disposePreview }; workspace.append(panel); onActiveChange();
       if(object.type==='text'){
         const overhead=panel.getBoundingClientRect().height-text.getBoundingClientRect().height;
         text.style.height=`${Math.max(1,Math.min(text.getBoundingClientRect().height,availableHeight-overhead))}px`;
