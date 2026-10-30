@@ -1,3 +1,4 @@
+import {createDeskOverview} from './desk-overview';
 import {createTopbarCollapse} from './topbar-collapse';
 import {MAX_PDF_EXPORT_BYTES} from './pdf-export';
 import {createStrokeWidthMode} from './stroke-width-mode';
@@ -466,6 +467,7 @@ function cameraChanged() {
   $('#zoom-reset .tool-icon').textContent = `${Math.round(camera.zoom * 100)}%`;
   refreshPinPresentation();
   editor.reposition();
+  deskOverview.cameraChanged();
 }
 function zoom(factor: number, center = { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 }) {
   const old = camera.zoom;
@@ -689,6 +691,7 @@ function render(rebuild = true) {
     objects.forEach(drawObject);
     drawPinThreads(objects);
   }
+  deskOverview.setObjects(renderedScene.filter(pinIsVisible));
   gridEnabled = desk.settingsSnapshot().grid.enabled;
   $('#grid-snap').setAttribute('aria-pressed', String(gridEnabled));
   $('#empty').hidden = desk.summary().count > 0;
@@ -1351,6 +1354,7 @@ if (location.hash&&!standaloneStartup) {
 }
 const lineInput=createLineInput(canvas,viewport,$<HTMLButtonElement>('[data-add="line"]'),desk,world,()=>camera.zoom,
  ()=>formatControls.appearance('line',desk.settingsSnapshot().defaults),()=>render(),()=>!busy&&!gesture&&!editor.isActive()&&!identityControls.isEditing()&&!(isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive()),notify,()=>desk.snapshot().filter(pinIsVisible).map(o=>pinScreenObject(o,camera.zoom)));
+const deskOverview=createDeskOverview($('#workspace'),canvas,$('#message'),camera);
 createTopbarCollapse(app,()=>!busy&&!gesture&&!editor.isActive()&&!identityControls.isEditing()&&!doodleEditor.isActive()&&!captureCamera.isActive()&&!lineInput.isActive()&&!isConfirmDialogOpen(),()=>{stopCamera();drawSelection();editor.reposition();});
 render();
 
