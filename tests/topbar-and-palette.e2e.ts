@@ -55,7 +55,7 @@ test('two sticker rows and reaction size edit independently with shared Undo', {
  try{
   await call('desk_execute',{operations:[{kind:'add',object:{id:'note',type:'text',text:'Two rows',x:100,y:100,width:600,height:360,reactions:['✔']}}]});
   await call('desk_select',{ids:['note']});
-  await page.locator('#sticker-add').click();await page.locator('#sticker-add-2').click();
+  await page.locator('#sticker-open').click();await page.locator('#sticker-add').click();await page.locator('#sticker-add-2').click();
   let note=await call('desk_get',{id:'note'});assert.equal(note.stickers.items.length,1);assert.equal(note.stickers.items2.length,1);assert.equal(note.stickers.origin,'bottom-right');
   assert.equal(await page.locator('[data-stickers="note"] svg').count(),2);
   await page.locator('#sticker-clear').click();note=await call('desk_get',{id:'note'});

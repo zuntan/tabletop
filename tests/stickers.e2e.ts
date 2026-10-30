@@ -14,6 +14,12 @@ test('sticker controls append repeated colors, wrap/reflow, configure mixed targ
   ]});
   await call('desk_select',{ids:['note']});
   const panel=page.locator('#sticker-controls');assert.equal(await panel.isVisible(),true);
+  assert.equal(await panel.locator('#sticker-add').count(),0);
+  assert.equal(await page.locator('#stamp-controls + #sticker-toolbar').count(),1);
+  const iconCenters=await page.evaluate(()=>['stamp-open','sticker-open','reaction-more','prop-open'].map(id=>{const r=document.getElementById(id)!.querySelector('svg')!.getBoundingClientRect();return r.y+r.height/2;}));
+  assert.ok(Math.max(...iconCenters)-Math.min(...iconCenters)<1);
+  const openStickers=async()=>{if(!await page.locator('#sticker-palette').evaluate(e=>e.matches(':popover-open')))await page.locator('#sticker-open').click();};
+  await openStickers();
   for(let i=0;i<7;i++)await page.locator('#sticker-add').click();
   let stickers=(await call('desk_get',{id:'note'})).stickers;assert.equal(stickers.items.length,7);assert.ok(stickers.items.every((c:{color:string})=>c.color==='#ef4444'));assert.equal(stickers.diameter,36);assert.equal(stickers.fixed,false);
   await mkdir('tmp/stickers',{recursive:true});await panel.screenshot({path:'tmp/stickers/controls.png'});
@@ -26,7 +32,7 @@ test('sticker controls append repeated colors, wrap/reflow, configure mixed targ
   await page.getByRole('dialog',{name:'シールの配置起点の候補',exact:true}).getByRole('button',{name:'右下',exact:true}).click();
   assert.equal(await circles.nth(0).getAttribute('x'),'12');assert.equal(await circles.nth(0).getAttribute('y'),'-8');assert.ok(Number(await circles.nth(6).getAttribute('y'))<0);
   await page.locator('#sticker-fixed').check();assert.equal(await circles.nth(0).getAttribute('width'),'72');await page.locator('#sticker-fixed').uncheck();
-  await page.locator('[data-color-role="sticker-fill"]').click();await page.getByRole('button',{name:'シール #3b82f6',exact:true}).click();await page.locator('#sticker-add').click();
+  await openStickers();await page.locator('[data-color-role="sticker-fill"]').click();await page.getByRole('button',{name:'シール #3b82f6',exact:true}).click();await page.locator('#sticker-add').click();
   assert.equal((await call('desk_get',{id:'note'})).stickers.items.at(-1).color,'#3b82f6');
   await page.locator('#sticker-shape-menu').click();await page.locator('.sticker-shape-palette:popover-open').getByRole('button',{name:'星',exact:true}).click();assert.equal(await page.locator('[data-color-role="sticker-fill"] svg').getAttribute('data-sticker-shape'),'star');await call('desk_select',{ids:['note','shape','line']});await page.locator('#sticker-add').click();
   assert.equal((await call('desk_get',{id:'shape'})).stickers.items[0].shape,'star');assert.equal(await page.locator('[data-id="shape"] > [data-stickers] > svg[data-sticker-shape="star"]').count(),1);assert.equal((await call('desk_get',{id:'line'})).stickers,undefined);
@@ -50,7 +56,14 @@ test('sticker controls append repeated colors, wrap/reflow, configure mixed targ
     return {view:[view.x,view.y,view.width,view.height],bounds:[bounds.x,bounds.y,bounds.width,bounds.height]};
   }));
   for(const glyph of glyphs)for(let i=0;i<4;i++)assert.ok(Math.abs(glyph.view[i]-glyph.bounds[i])<.001);
-  await panel.screenshot({path:'tmp/stickers/controls.png'});
+  await page.locator('#sticker-add-2').click();
+  assert.equal((await call('desk_get',{id:'icons'})).stickers.items2.length,1);
+  await page.locator('#sticker-clear-2').click();
+  assert.equal((await call('desk_get',{id:'icons'})).stickers.items2.length,0);
+  await call('desk_undo');assert.equal((await call('desk_get',{id:'icons'})).stickers.items2.length,1);
+  await page.locator('#sticker-palette').screenshot({path:'tmp/stickers/toolbar.png'});
+  await call('desk_select',{ids:[]});assert.equal(await page.locator('#sticker-add').isDisabled(),true);
+  await page.keyboard.press('Escape');assert.equal(await page.locator('#sticker-palette').evaluate(e=>e.matches(':popover-open')),false);
   assert.deepEqual(errors,[]);
  }finally{await close();}
 });

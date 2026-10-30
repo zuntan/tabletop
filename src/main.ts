@@ -837,10 +837,11 @@ const cutoutControls=createCutoutControls($('#image'),form,()=>desk.selected().m
   if(busy||gesture||editor.isActive())return;
   attempt(()=>execute(operations));
 },id=>drawnNodes.get(id),notify);
+const stickerContainer=document.createElement('div');stickerContainer.id='sticker-toolbar';stampContainer.after(stickerContainer);
 const stickerControls=createStickerControls(form,()=>desk.selected().map(id=>desk.get(id)),operations=>{
   if(busy||gesture||editor.isActive())throw new Error('編集中の操作を終えてからシールを使ってください');
   execute(operations);render();notify('シールを更新しました');
-},notify);
+},notify,stickerContainer);
 $('#front').onclick = () => attempt(() => execute(desk.selected().map(id => ({ kind: 'reorder', id, index: desk.summary().count - 1 }))));
 $('#back').onclick = () => attempt(() => execute(desk.selected().slice().reverse().map(id => ({ kind: 'reorder', id, index: 0 }))));
 $('#text-measure').onclick = () => {
