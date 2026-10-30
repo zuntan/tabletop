@@ -86,6 +86,7 @@ export class PartClipboard {
         const decoration = {
           ...(object.locked || object.reactions?.length ? {locked:!!object.locked,reactions:[...object.reactions??[]]} : {}),
           ...(object.reactionSize!==undefined?{reactionSize:object.reactionSize}:{}),
+          ...(object.reactionFixed!==undefined?{reactionFixed:object.reactionFixed}:{}),
           ...(object.reactionPlacement!==undefined?{reactionPlacement:object.reactionPlacement}:{}),
         };
         if(Object.keys(decoration).length)operations.push({kind:'update',id,patch:decoration});

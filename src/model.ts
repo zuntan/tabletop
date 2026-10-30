@@ -76,6 +76,7 @@ const objectFields = z.object({
   stamp: z.object({ designId: z.string().min(1).max(200), text: z.string().max(10000), angle: z.number().finite().min(-360).max(360) }).strict().nullable().optional(),
   reactions: z.array(z.enum(reactions)).max(reactionChoices.length).refine(values => new Set(values.map(canonicalReaction)).size === values.length, 'Duplicate reactions are not allowed').optional(),
   reactionPlacement: z.enum(reactionPlacements).optional(),
+  reactionFixed: z.boolean().optional(),
   reactionSize: z.number().finite().min(1).max(100000).optional(),
   stickers: stickerSchema.nullable().optional(),
   x: coordinate.default(0),
@@ -327,7 +328,7 @@ export class Desk {
       assertFileOperation(after,operation);
       if (operation.kind === 'update') {
         if(after[index].doodle&&operation.patch.src!==undefined&&operation.patch.doodle===undefined)throw Error('Update doodle originals instead of replacing their generated SVG source');
-        if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'attachment', 'description', 'reactions', 'reactionSize', 'reactionPlacement', 'locked'].includes(key))) {
+        if (after[index].type === 'label' && Object.keys(operation.patch).some(key => !['x', 'y', 'attachment', 'description', 'reactions', 'reactionSize', 'reactionPlacement', 'reactionFixed', 'locked'].includes(key))) {
           throw new Error('Labels allow only position, attachment, description, reaction and mouse lock updates; use series_update for shared appearance');
         }
         after[index] = validateObject({ ...after[index], ...normalizeCutoutPatch(after[index],operation.patch) });

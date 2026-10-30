@@ -3,7 +3,7 @@ import { isShapeType } from './shape-definitions';
 import { stickerTarget } from './sticker-values';
 
 export type PublishedObject = Pick<DeskObject, 'id' | 'type' | 'x' | 'y'> & Partial<Omit<DeskObject, 'id' | 'type' | 'x' | 'y'>>;
-const common = ['id', 'type', 'x', 'y', 'locked', 'reactions', 'reactionSize', 'reactionPlacement'] as const;
+const common = ['id', 'type', 'x', 'y', 'locked', 'reactions', 'reactionSize', 'reactionPlacement', 'reactionFixed'] as const;
 const box = ['width', 'height'] as const;
 const paint = ['fill', 'fillOpacity', 'stroke', 'strokeWidth'] as const;
 const text = ['text', 'textColor', 'fontSize'] as const;
