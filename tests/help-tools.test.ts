@@ -1,3 +1,4 @@
+import {paletteColors,swatches} from '../src/color-palettes';
 import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -21,6 +22,18 @@ test('desk_help returns discoverable plain-text manuals without any browser; rej
       const result=await callTestTool(client, {name:'desk_help',arguments:{topic}});
       assert.notEqual(result.isError,true,topic);assert.ok((result.content as any)[0].text.includes(title),topic);
     }
+    const colors=await callTestTool(client,{name:'desk_help',arguments:{topic:'colors'}});
+    assert.notEqual(colors.isError,true);
+    const body=(colors.content as any)[0].text;
+    assert.match(body,/利用者の色指定/);assert.match(body,/既存の配色/);
+    const palettes=JSON.parse(body.match(/```json\n([\s\S]*?)\n```/)[1]);
+    for(const role of ['fill','stroke','text','sticker'] as const){
+      assert.deepEqual(palettes.recommended[role],paletteColors(role));
+      assert.equal(palettes.recommended[role].length,14);
+    }
+    assert.deepEqual(palettes.all,swatches);
+    assert.equal(palettes.recommended.stroke[0],'#ffffff');assert.equal(palettes.recommended.stroke[7],'#000000');
+    assert.match((index.content as any)[0].text,/colors/);
     const invalid=await callTestTool(client, {name:'desk_help',arguments:{topic:'../../etc/passwd'}});assert.equal(invalid.isError,true);
   }finally{await client.close();await server.close();}
 });
