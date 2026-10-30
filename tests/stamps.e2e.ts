@@ -10,7 +10,7 @@ test('stamp palette, arbitrary fallback text, selection retreat, resize and shar
     assert.equal(patterns.patterns.length, 33); assert.equal(patterns.fallback.internalOnly, true);
     await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'memo', type: 'text', x: 200, y: 150, width: 400, height: 280, text: 'ハンコのメモ' } }] });
     await page.locator('[data-id="memo"]').first().click({ position: { x: 100, y: 60 } });
-    await page.locator('#stamp-open').click();
+    await page.locator('#stamp-menu').click();
     assert.equal(await page.locator('[data-stamp-design]').count(),32);
     assert.equal(await page.locator('.stamp-choices h3').count(),0);
     await page.screenshot({path:'/tmp/stamp-compact.png'});const paletteBox=await page.locator('#stamp-palette').boundingBox();assert.ok(paletteBox!.width<410);assert.ok(paletteBox!.height<350,JSON.stringify(paletteBox));
@@ -49,7 +49,7 @@ test('stamp palette, arbitrary fallback text, selection retreat, resize and shar
     assert.match(stamp.text, /^\d{4}\.\d{2}\.\d{2}$/); assert.ok(stamp.angle <= -3 && stamp.angle >= -9);
     const ink = page.locator('[data-id="memo"] [data-stamp]');
     await page.waitForFunction(() => document.querySelector('[data-id="memo"] [data-stamp]')?.getAttribute('data-compact') === 'true');
-    await page.locator('#stamp-open').click();
+    await page.locator('#stamp-menu').click();
     await page.mouse.click(850, 700);
     await page.waitForFunction(() => document.querySelector('[data-id="memo"] [data-stamp]')?.getAttribute('data-compact') === 'false');
     const normal = await ink.getAttribute('transform');
@@ -59,7 +59,7 @@ test('stamp palette, arbitrary fallback text, selection retreat, resize and shar
     await call('desk_execute', { operations: [{ kind: 'update', id: 'memo', patch: { stamp: { designId: 'future-id', text: '<script>へんてこ</script>', angle: -8 } } }] });
     assert.ok((await ink.textContent())?.includes('<script>へんてこ</script>')); assert.equal(await ink.locator('script').count(), 0);
     await page.locator('[data-id="memo"]').first().click({ position: { x: 100, y: 60 } });
-    await page.locator('#stamp-open').click(); await page.locator('#stamp-clear').click();
+    await page.locator('#stamp-menu').click(); await page.locator('#stamp-clear').click();
     assert.equal((await call('desk_get', { id: 'memo' })).stamp, null);
     await call('desk_undo'); assert.equal((await call('desk_get', { id: 'memo' })).stamp.designId, 'future-id');
     assert.deepEqual(errors, []);

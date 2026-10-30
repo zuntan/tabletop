@@ -16,7 +16,7 @@ test('clear files preserve layouts, disable individual geometry, support editing
   assert.deepEqual(file.fileMembers,['a','b','line']);assert.equal((await call('desk_get',{id:'a'})).x,160);
   assert.equal(await page.locator(`[data-id="${id}"] [data-file-inner]`).count(),1);assert.equal(await page.locator(`[data-id="${id}"] [data-file-title]`).textContent(),'クリアファイル');
   await page.locator('[name="text"]').fill('配置のファイル');await page.locator('[name="text"]').dispatchEvent('change');assert.equal((await call('desk_get',{id})).text,'配置のファイル');
-  await page.locator('#stamp-open').click();await page.locator('[data-stamp-design="done_ja"]').click();assert.equal((await call('desk_get',{id})).stamp.designId,'done_ja');await page.locator('#stamp-open').click();
+  await page.locator('#stamp-menu').click();await page.locator('[data-stamp-design="done_ja"]').click();assert.equal((await call('desk_get',{id})).stamp.designId,'done_ja');await page.locator('#stamp-menu').click();
   assert.equal(await page.locator('#properties [name="width"]').isDisabled(),true);
   await call('desk_select',{ids:['a']});assert.equal(await page.locator('[name="x"]').isDisabled(),true);assert.equal(await page.locator('[data-resize="a"]').count(),0);
   assert.equal(await page.locator('#front').isDisabled(),true);

@@ -18,8 +18,20 @@ test('sticker controls append repeated colors, wrap/reflow, configure mixed targ
   assert.equal(await page.locator('#stamp-controls + #sticker-toolbar').count(),1);
   const iconCenters=await page.evaluate(()=>['stamp-open','sticker-open','reaction-more','prop-open'].map(id=>{const r=document.getElementById(id)!.querySelector('svg')!.getBoundingClientRect();return r.y+r.height/2;}));
   assert.ok(Math.max(...iconCenters)-Math.min(...iconCenters)<1);
-  const openStickers=async()=>{if(!await page.locator('#sticker-palette').evaluate(e=>e.matches(':popover-open')))await page.locator('#sticker-open').click();};
+  const openStickers=async()=>{if(!await page.locator('#sticker-palette').evaluate(e=>e.matches(':popover-open')))await page.locator('#sticker-menu').click();};
   await openStickers();
+  assert.equal((await page.locator('#sticker-add').textContent())?.trim(),'');
+  await page.locator('#sticker-shape-menu').click();
+  const chooser=page.locator('.sticker-choice-palette:popover-open');
+  assert.equal(await chooser.getByRole('tab').count(),3);
+  assert.equal(await chooser.locator('.sticker-choice-grid button').count(),stickerShapeIds.length);
+  assert.equal(await chooser.getByRole('tab').first().textContent(),'シールの型');
+  await chooser.getByRole('tab',{name:'おすすめカラー',exact:true}).click();
+  assert.equal(await chooser.locator('.sticker-choice-grid button').count(),14);
+  await chooser.getByRole('tab',{name:'全色カラー',exact:true}).click();assert.equal(await chooser.locator('.sticker-choice-grid button').count(),42);
+  await chooser.getByRole('tab',{name:'シールの型',exact:true}).click();assert.equal(await chooser.locator('.sticker-choice-grid button').count(),stickerShapeIds.length);
+  await chooser.screenshot({path:'/tmp/tabletop-sticker-three-tabs.png'});
+  await page.keyboard.press('Escape');
   for(let i=0;i<7;i++)await page.locator('#sticker-add').click();
   let stickers=(await call('desk_get',{id:'note'})).stickers;assert.equal(stickers.items.length,7);assert.ok(stickers.items.every((c:{color:string})=>c.color==='#ef4444'));assert.equal(stickers.diameter,36);assert.equal(stickers.fixed,false);
   await mkdir('tmp/stickers',{recursive:true});await panel.screenshot({path:'tmp/stickers/controls.png'});
@@ -32,9 +44,9 @@ test('sticker controls append repeated colors, wrap/reflow, configure mixed targ
   await page.getByRole('dialog',{name:'シールの配置起点の候補',exact:true}).getByRole('button',{name:'右下',exact:true}).click();
   assert.equal(await circles.nth(0).getAttribute('x'),'12');assert.equal(await circles.nth(0).getAttribute('y'),'-8');assert.ok(Number(await circles.nth(6).getAttribute('y'))<0);
   await page.locator('#sticker-fixed').check();assert.equal(await circles.nth(0).getAttribute('width'),'72');await page.locator('#sticker-fixed').uncheck();
-  await openStickers();await page.locator('[data-color-role="sticker-fill"]').click();await page.getByRole('button',{name:'シール #3b82f6',exact:true}).click();await page.locator('#sticker-add').click();
+  await openStickers();await page.locator('#sticker-shape-menu').click();await page.locator('.sticker-choice-palette:popover-open').getByRole('tab',{name:'おすすめカラー',exact:true}).click();await page.getByRole('button',{name:'シール #3b82f6',exact:true}).click();assert.equal(await chooser.isVisible(),true);await page.keyboard.press('Escape');await page.locator('#sticker-add').click();
   assert.equal((await call('desk_get',{id:'note'})).stickers.items.at(-1).color,'#3b82f6');
-  await page.locator('#sticker-shape-menu').click();await page.locator('.sticker-shape-palette:popover-open').getByRole('button',{name:'星',exact:true}).click();assert.equal(await page.locator('[data-color-role="sticker-fill"] svg').getAttribute('data-sticker-shape'),'star');await call('desk_select',{ids:['note','shape','line']});await page.locator('#sticker-add').click();
+  await page.locator('#sticker-shape-menu').click();await page.locator('.sticker-choice-palette:popover-open').getByRole('tab',{name:'シールの型',exact:true}).click();await page.locator('.sticker-shape-palette:popover-open').getByRole('button',{name:'星',exact:true}).click();assert.equal(await chooser.isVisible(),true);await page.keyboard.press('Escape');assert.equal(await page.locator('#sticker-add svg').getAttribute('data-sticker-shape'),'star');await call('desk_select',{ids:['note','shape','line']});await page.locator('#sticker-add').click();
   assert.equal((await call('desk_get',{id:'shape'})).stickers.items[0].shape,'star');assert.equal(await page.locator('[data-id="shape"] > [data-stickers] > svg[data-sticker-shape="star"]').count(),1);assert.equal((await call('desk_get',{id:'line'})).stickers,undefined);
   await page.locator('#sticker-clear').click();assert.equal((await call('desk_get',{id:'note'})).stickers.items.length,0);assert.equal((await call('desk_get',{id:'note'})).stickers.origin,'bottom-right');
   await call('desk_undo');assert.equal((await call('desk_get',{id:'note'})).stickers.items.length,9);
@@ -46,8 +58,10 @@ test('sticker controls append repeated colors, wrap/reflow, configure mixed targ
   await call('desk_select',{ids:['icons']});
   for(const id of stickerShapeIds){
     await page.locator('#sticker-shape-menu').click();
+    await page.locator('.sticker-choice-palette:popover-open').getByRole('tab',{name:'シールの型',exact:true}).click();
     await page.locator('.sticker-shape-palette:popover-open').getByRole('button',{name:stickerShapeNames[id],exact:true}).click();
-    assert.equal(await page.locator('[data-color-role="sticker-fill"] svg').getAttribute('data-sticker-shape'),id);
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('#sticker-add svg').getAttribute('data-sticker-shape'),id);
     await page.locator('#sticker-add').click();
   }
   assert.deepEqual((await call('desk_get',{id:'icons'})).stickers.items.map((item:{shape:string})=>item.shape),stickerShapeIds);

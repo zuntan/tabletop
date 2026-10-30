@@ -368,12 +368,26 @@ centerViewButton.onclick=()=>{void cameraControls.move({center:{x:0,y:0}}).catch
 });};
 const bellControls=createBellControls(centerViewButton,$('footer'),note=>recovery.ringBell(desk.selected(),note),notify);
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
-  if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
+  if(!busy&&!gesture&&!editor.isActive()&&operations.length)try{execute(operations);renderDecorations(operations.map(op=>'id' in op?op.id:''));notify('リアクションを更新しました');}catch(error){notify(error instanceof Error?error.message:String(error),true);}
 });
 const reactionSizeControls=createReactionSizeControls(form,()=>desk.selected().map(id=>desk.get(id)),operations=>{if(!busy&&!editor.isActive())attempt(()=>execute(operations));},notify);
 const stampContainer = document.createElement('div'); stampContainer.id = 'stamp-controls'; editActions.insertBefore(stampContainer, $('#reaction-controls'));
+let stampPressIds=new Set<string>(),stampPressGeneration='',stampPressTimer:ReturnType<typeof setTimeout>|undefined,stampPressSerial=0;
+const compactStamp=(id:string)=>desk.selected().includes(id)&&!(stampPressGeneration===desk.documentGeneration&&stampPressIds.has(id));
 const stampControls = createStampControls(stampContainer, () => desk.selected().map(id => desk.get(id)), operations => {
-  if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
+  if(busy||gesture||editor.isActive()||!operations.length)return false;
+  try{
+    execute(operations);
+    const previousPressIds=[...stampPressIds];
+    clearTimeout(stampPressTimer);stampPressIds=new Set(operations.flatMap(op=>op.kind==='update'&&op.patch.stamp?[op.id]:[]));stampPressGeneration=desk.documentGeneration;
+    const serial=++stampPressSerial,ids=[...stampPressIds],generation=stampPressGeneration;
+    renderDecorations([...previousPressIds,...operations.map(op=>'id' in op?op.id:'')]);
+    if(ids.length)requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(serial!==stampPressSerial||generation!==desk.documentGeneration)return;
+      stampPressTimer=setTimeout(()=>{stampPressIds.clear();if(!gesture&&generation===desk.documentGeneration)renderDecorations(ids);},1600);
+    }));
+    notify('ハンコを更新しました');return true;
+  }catch(error){notify(error instanceof Error?error.message:String(error),true);return false;}
 });
 const propContainer = document.createElement('div'); propContainer.id = 'prop-controls'; $('#reaction-controls').after(propContainer);
 createPropControls(propContainer, (preset, src) => {
@@ -582,7 +596,7 @@ function drawObjectRaw(object: DeskObject) {
       : svg('rect', { width: w, height: h, rx: Math.min(object.cornerRadius, w / 2, h / 2), ...style }));
     if (object.callout) drawCalloutLeader(group, object);
     drawMarkdown(group, object);
-    drawStamp(group, object, desk.selected().includes(object.id));
+    drawStamp(group, object, compactStamp(object.id));
   }
   if (['link', 'web', 'image', 'svg', 'mermaid', 'qrcode', 'prop'].includes(object.type)) {
     if (object.type === 'prop') {
@@ -613,7 +627,7 @@ function drawObjectRaw(object: DeskObject) {
     drawOpenLink(group, object, path=>{void deskFiles.open(path);});
   }
   if(object.type==='wayfinder')drawWayfinder(group,object,renderedScene);
-  if(object.type==='file'){drawClearFile(group,object);drawStamp(group,object,desk.selected().includes(object.id));}
+  if(object.type==='file'){drawClearFile(group,object);drawStamp(group,object,compactStamp(object.id));}
   if(object.type==='ruler')drawRuler(group,object);
   if(object.type==='clip') drawClip(group,object,renderedById.get(object.clipMembers?.[0] ?? ''));
   drawReactions(group, object, pinDescriptionVisible(object), camera.zoom);
@@ -621,12 +635,11 @@ function drawObjectRaw(object: DeskObject) {
   objectsLayer.append(group);
 }
 function drawSelection(preview?: DeskObject[], scene = preview) {
-  const stampSelection = new Set(desk.selected());
   for (const object of scene ?? renderedScene) {
     const node = drawnNodes.get(object.id);
     if (node && ['text','file'].includes(object.type) && (object.stamp || node.querySelector('[data-stamp]'))) {
       const source=object.cutout?node.querySelector<SVGGElement>('[data-cutout-source]'):node;
-      if(source)drawStamp(source,object.cutout?cutoutSourceObject(object):object,stampSelection.has(object.id));
+      if(source)drawStamp(source,object.cutout?cutoutSourceObject(object):object,compactStamp(object.id));
     }
   }
   const colors = frameColors(desk.settingsSnapshot().background);
@@ -677,6 +690,24 @@ function drawMoveFrame(scene: DeskObject[]) {
   updateScenePreview(objectsLayer, scene, previous, drawObject, hadRounding || renderedRounding.size > 0);
   refreshPinPresentation(); drawPinThreads(scene);
   drawSelection(scene.filter(object => desk.selected().includes(object.id)), scene);
+}
+/** Decoration edits preserve every card body and unrelated rendered object. */
+function renderDecorations(ids:string[]){
+  const updates=new Map<string,DeskObject>();
+  for(const id of new Set(ids)){
+    if(!id||!renderedById.has(id))continue;
+    const object=desk.get(id),node=drawnNodes.get(id);updates.set(id,object);renderedById.set(id,object);
+    if(!node)continue;
+    const source=object.cutout?node.querySelector<SVGGElement>('[data-cutout-source]'):node;
+    if(source)drawStamp(source,object.cutout?cutoutSourceObject(object):object,compactStamp(id));
+    drawReactions(node,object,pinDescriptionVisible(object),camera.zoom);drawStickers(node,object,camera.zoom);
+  }
+  renderedScene=renderedScene.map(object=>updates.get(object.id)??object);
+  $('#revision').textContent=`rev. ${desk.revision}`;
+  $<HTMLButtonElement>('#undo').disabled=!desk.summary().canUndo;$<HTMLButtonElement>('#redo').disabled=!desk.summary().canRedo;
+  const selected=desk.selected().map(id=>desk.get(id));
+  reactionControls.update(selected);stampControls.update(selected);stickerControls.update();
+  refreshHistory();
 }
 function render(rebuild = true) {
   pinSeriesMap.clear();
@@ -766,6 +797,9 @@ function render(rebuild = true) {
       }
     }
   }
+  refreshHistory();
+}
+function refreshHistory(){
   $('#history').replaceChildren();
   const changes = desk.getChanges(Math.max(0, desk.revision - 50), 50).changes.reverse();
   for (const change of changes) {
@@ -840,7 +874,7 @@ const cutoutControls=createCutoutControls($('#image'),form,()=>desk.selected().m
 const stickerContainer=document.createElement('div');stickerContainer.id='sticker-toolbar';stampContainer.after(stickerContainer);
 const stickerControls=createStickerControls(form,()=>desk.selected().map(id=>desk.get(id)),operations=>{
   if(busy||gesture||editor.isActive())throw new Error('編集中の操作を終えてからシールを使ってください');
-  execute(operations);render();notify('シールを更新しました');
+  execute(operations);renderDecorations(operations.map(op=>'id' in op?op.id:''));notify('シールを更新しました');
 },notify,stickerContainer);
 $('#front').onclick = () => attempt(() => execute(desk.selected().map(id => ({ kind: 'reorder', id, index: desk.summary().count - 1 }))));
 $('#back').onclick = () => attempt(() => execute(desk.selected().slice().reverse().map(id => ({ kind: 'reorder', id, index: 0 }))));

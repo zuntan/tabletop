@@ -1,12 +1,11 @@
 import type { DeskObject, Operation } from './model';
 import { createStamp, stampPatterns } from './stamp-values';
 import { stampArtwork } from './stamps';
-import { stationeryButton } from './stationery-button';
+import { stationerySplitButton } from './stationery-split-button';
 
-export function createStampControls(container: HTMLElement, selected: () => DeskObject[], apply: (ops: Operation[]) => void) {
-  const trigger = document.createElement('button'); trigger.id = 'stamp-open'; trigger.textContent = 'ハンコ ▾';
-  trigger.type = 'button'; trigger.setAttribute('aria-label', 'ハンコ一覧');
-  stationeryButton(trigger, 'stamp', 'ハンコ一覧');
+export function createStampControls(container: HTMLElement, selected: () => DeskObject[], apply: (ops: Operation[]) => void | boolean) {
+  const {button:repeat,menu:trigger}=stationerySplitButton('stamp','ハンコ');
+  let last={designId:'done_ja',dated:false};repeat.title='ハンコ：済を適用';
   const panel = document.createElement('div'); panel.id = 'stamp-palette'; panel.popover = 'auto';
   panel.setAttribute('aria-label', 'ハンコ一覧');
   trigger.popoverTargetElement = panel;
@@ -30,6 +29,13 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
     for(const button of choices.querySelectorAll<HTMLButtonElement>('[data-stamp-design]'))button.classList.toggle('stamp-previewed',button.dataset.stampDesign===pattern.id);
   };
   dated.onchange=()=>show(active);
+  const press=(designId:string,withDate:boolean)=>{
+    const targets=selected().filter(o=>['text','file'].includes(o.type));if(!targets.length)return;
+    const stamp=createStamp(designId,withDate);
+    if(apply(targets.map(o=>({kind:'update',id:o.id,patch:{stamp}})))===false)return;
+    last={designId,dated:withDate};repeat.title=`ハンコ：${stampPatterns.find(p=>p.id===designId)?.caption??designId}${withDate?'（日付付き）':''}を適用`;
+  };
+  repeat.onclick=()=>press(last.designId,last.dated);
   const buttons = palettePatterns.map(pattern => {
     const button = document.createElement('button'); button.type = 'button'; button.dataset.stampDesign = pattern.id;
     button.title = pattern.caption; button.setAttribute('aria-label', `${pattern.caption}を押す`);
@@ -40,15 +46,14 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
     button.onpointerenter=()=>show(pattern);button.onfocus=()=>show(pattern);
     button.onclick = () => {
       show(pattern);
-      const stamp = createStamp(pattern.id, dated.checked);
-      apply(selected().filter(o => ['text','file'].includes(o.type)).map(o => ({ kind: 'update', id: o.id, patch: { stamp } })));
+      press(pattern.id,dated.checked);
     };
     return button;
   });
   const clear = document.createElement('button'); clear.id = 'stamp-clear'; clear.type = 'button'; clear.textContent = '取り消し';
   clear.onclick = () => apply(selected().filter(o => ['text','file'].includes(o.type) && o.stamp).map(o => ({ kind: 'update', id: o.id, patch: { stamp: null } })));
   const actions=document.createElement('div');actions.className='stamp-actions';actions.append(label,clear);detail.append(actions);show(active);
-  panel.append(choices, detail); container.append(trigger, panel);
+  panel.append(choices, detail); container.append(repeat, trigger, panel);
   const position = () => {
     const rect = trigger.getBoundingClientRect();
     panel.style.left = `${Math.max(8, Math.min(rect.left, innerWidth - panel.offsetWidth - 8))}px`;
@@ -59,6 +64,7 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
   container.addEventListener('keydown', event => { if (event.code === 'Space') event.stopPropagation(); });
   return { update(objects: DeskObject[]) {
     const texts = objects.filter(o => ['text','file'].includes(o.type));
+    repeat.disabled=!texts.length;
     buttons.forEach(button => { button.disabled = !texts.length; });
     clear.disabled = !texts.some(o => o.stamp);
   } };
