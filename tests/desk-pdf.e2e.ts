@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {writeFile,mkdir} from 'node:fs/promises';
 import {openTestDesk} from './desk-browser';
 
-const capture=`window.__pdfBlob=null; const originalCreateObjectURL=URL.createObjectURL.bind(URL); URL.createObjectURL=function(blob){if(blob.type==='application/pdf')window.__pdfBlob=blob;return originalCreateObjectURL(blob);};`;
+const capture=`window.__pdfBlob=null;window.__pngBlob=null; const originalCreateObjectURL=URL.createObjectURL.bind(URL); URL.createObjectURL=function(blob){if(blob.type==='application/pdf')window.__pdfBlob=blob;if(blob.type==='image/png')window.__pngBlob=blob;return originalCreateObjectURL(blob);};`;
 test('file menu exports a single all-desk PDF independent of zoom/selection without editing',{timeout:60000},async()=>{
  const {page,call,close,errors}=await openTestDesk('desk-pdf',capture);
  try{
@@ -32,13 +32,21 @@ test('file menu exports a single all-desk PDF independent of zoom/selection with
   const bytes=await page.evaluate(async()=>Array.from(new Uint8Array(await (window as unknown as Window&{__pdfBlob:Blob}).__pdfBlob.arrayBuffer())));
   await mkdir('output/pdf',{recursive:true});await writeFile('output/pdf/tabletop-desk-export-test.pdf',Buffer.from(bytes));
   assert.equal((await call('desk_summary')).revision,before.revision);assert.deepEqual((await call('desk_state')).objects,before.objects);
-  assert.match(Buffer.from(bytes).toString('latin1'),/\/Count 1/);assert.match(Buffer.from(bytes).toString('latin1'),/\/DCTDecode/);
+  assert.match(Buffer.from(bytes).toString('latin1'),/\/Count 1/);assert.match(Buffer.from(bytes).toString('latin1'),/\/FlateDecode/);
   await popup.close();
   await call('desk_camera_move',{center:{x:1800,y:1000},zoom:1.4,durationMs:0});await call('desk_select',{ids:[]});await call('desk_point',{ids:[]});
   await page.locator('#file-menu').click();const second=page.waitForEvent('popup');await page.locator('#open-desk-pdf').click();const next=await second;
   await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('のPDFを開きました'));
   const again=await page.evaluate(async()=>Array.from(new Uint8Array(await (window as unknown as Window&{__pdfBlob:Blob}).__pdfBlob.arrayBuffer())));
   assert.deepEqual(Buffer.from(again),Buffer.from(bytes));await next.close();
+  await page.locator('#file-menu').click();
+  assert.equal(await page.locator('#open-desk-pdf + #open-desk-png').count(),1);
+  const pngPopupPromise=page.waitForEvent('popup');await page.locator('#open-desk-png').click();const pngPopup=await pngPopupPromise;
+  await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('のPNGを開きました'));
+  const png=await page.evaluate(async()=>Array.from(new Uint8Array(await (window as any).__pngBlob.arrayBuffer())));
+  assert.deepEqual(png.slice(0,8),[137,80,78,71,13,10,26,10]);
+  await writeFile('output/pdf/tabletop-desk-export-test.png',Buffer.from(png));
+  assert.deepEqual((await call('desk_state')).objects,before.objects);await pngPopup.close();
   await page.evaluate(()=>{window.open=()=>null;});await page.locator('#file-menu').click();await page.locator('#open-desk-pdf').click();
   await page.waitForFunction(()=>document.querySelector('#message.error')?.textContent?.includes('ポップアップ'));
   assert.deepEqual(errors,[]);

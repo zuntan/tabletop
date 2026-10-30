@@ -29,7 +29,7 @@ import {drawClearFile} from './clear-file-drawing';
 import {createDeskToast} from './desk-toast';
 import { createBellControls } from './bell-controls';
 import { initialPartSize, initialImageSize, centeredPartPoint, initialLinePoints, initialLineDelta } from './initial-part-layout';
-import { deskPdf } from './desk-pdf';
+import { deskPdf, deskPng } from './desk-pdf';
 import { createCutoutControls } from './cutout-controls';
 import { drawCutout } from './cutout-drawing';
 import { cutoutTarget, cutoutSourceObject } from './logical-cutout';
@@ -408,7 +408,8 @@ const deskFiles=createDeskFileControls($('header'), desk, () => { bhDeletion.sto
   () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing(),
   () => {objectAnimator.finish();return deskPdf(desk,canvas,id=>pinDescriptionVisible(desk.get(id)));},
   request=>pagesMode?pagesFileRequest(request,desk.filePath??document.baseURI):recovery.fileRequest(request),
-  (path,name)=>newObject('link',{deskPath:path,text:name,width:360,height:72}),pagesMode);
+  (path,name)=>newObject('link',{deskPath:path,text:name,width:360,height:72}),pagesMode,
+  () => {objectAnimator.finish();return deskPng(desk,canvas,id=>pinDescriptionVisible(desk.get(id)));});
 createUiThemeButton($('header'));
 const deskMenu = createDeskMenu($('header'), desk, patch => {
   if (busy || gesture || editor.isActive()) { notify('操作が終わってから設定を変更してください', true); deskMenu.refresh(); return; }

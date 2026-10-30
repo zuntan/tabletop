@@ -1,8 +1,11 @@
-/** Minimal one-page PDF with a single composited JPEG. No print layout or document editor. */
-export function jpegPagePdf(jpeg:Uint8Array,width:number,height:number,title='Tabletop',page={width,height}) {
+import { zlibSync } from 'fflate';
+
+/** Minimal one-page PDF with a single losslessly compressed RGB image. No print layout or document editor. */
+export function rgbPagePdf(rgb:Uint8Array,width:number,height:number,title='Tabletop',page={width,height}) {
  if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0||width>32768||height>32768)throw new Error('Invalid PDF image dimensions');
  if(!Number.isFinite(page.width)||!Number.isFinite(page.height)||page.width<=0||page.height<=0)throw new Error('Invalid PDF page dimensions');
- if(jpeg[0]!==0xff||jpeg[1]!==0xd8)throw new Error('Expected JPEG');
+ if(rgb.length!==width*height*3)throw new Error('Expected RGB pixels');
+ const compressed=zlibSync(rgb);
  // PDF 1.4 readers commonly cap a page at 14,400 pt. Uniform scaling preserves aspect.
  const factor=Math.min(.75,14400/Math.max(page.width,page.height));
  const pw=Number((page.width*factor).toFixed(6)),ph=Number((page.height*factor).toFixed(6));
@@ -13,7 +16,7 @@ export function jpegPagePdf(jpeg:Uint8Array,width:number,height:number,title='Ta
   [text('<< /Type /Catalog /Pages 2 0 R >>')],
   [text('<< /Type /Pages /Kids [3 0 R] /Count 1 >>')],
   [text(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /DeskImage 4 0 R >> >> /Contents 5 0 R >>`)],
-  [text(`<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`),jpeg,text('\nendstream')],
+  [text(`<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length ${compressed.length} >>\nstream\n`),compressed,text('\nendstream')],
   [text(`<< /Length ${content.length} >>\nstream\n`),content,text('endstream')],
   [text(`<< /Title <${metadata}> /Creator (Tabletop) /Producer (Tabletop raster export) >>`)],
  ];

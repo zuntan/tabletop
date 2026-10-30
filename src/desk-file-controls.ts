@@ -8,7 +8,7 @@ import { createIcon } from './icons';
 import { headerIcon } from './header-icon';
 import { confirmAction, confirmUnsavedChanges, isConfirmDialogOpen } from './confirm-dialog';
 
-export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh: () => void, canLoad: () => boolean, exportPdf?: () => Promise<{bytes:Uint8Array;revision:number;webCount:number}>, remote?:(request:unknown)=>Promise<any>, addDeskLink?:(path:string,name:string)=>void, pages=false) {
+export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh: () => void, canLoad: () => boolean, exportPdf?: () => Promise<{bytes:Uint8Array;revision:number;webCount:number}>, remote?:(request:unknown)=>Promise<any>, addDeskLink?:(path:string,name:string)=>void, pages=false, exportPng?: () => Promise<{bytes:Uint8Array;revision:number;webCount:number}>) {
   const save = document.createElement('button');
   save.id = 'download-desk'; headerIcon(save, 'save', '保存');
   const load = document.createElement('button');
@@ -19,9 +19,10 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
   trigger.append(createIcon('folder-open',18),document.createTextNode('ファイル ▾'));trigger.title='ファイル';trigger.setAttribute('aria-label','ファイル');trigger.setAttribute('aria-haspopup','menu');trigger.setAttribute('aria-expanded','false');
   const menu=document.createElement('div');menu.id='file-menu-panel';menu.popover='auto';menu.setAttribute('role','menu');menu.setAttribute('aria-label','ファイル操作');trigger.popoverTargetElement=menu;
   const pdf=document.createElement('button');pdf.id='open-desk-pdf';pdf.type='button';pdf.textContent='PDFで開く';pdf.disabled=!exportPdf;
-  for(const [button,label]of [[save,'ダウンロード'],[load,'アップロード'],[pdf,'PDFで開く']] as const){
+  const png=document.createElement('button');png.id='open-desk-png';png.type='button';png.textContent='PNGで開く';png.disabled=!exportPng;
+  for(const [button,label]of [[save,'ダウンロード'],[load,'アップロード'],[pdf,'PDFで開く'],[png,'PNGで開く']] as const){
     button.type='button';button.classList.remove('header-icon');button.classList.add('file-menu-item');button.setAttribute('role','menuitem');
-    if(button!==pdf){const text=document.createElement('span');text.textContent=label;button.append(text);}menu.append(button);
+    if(button!==pdf&&button!==png){const text=document.createElement('span');text.textContent=label;button.append(text);}menu.append(button);
   }
   const normalSave=document.createElement('button');normalSave.id='save-desk';normalSave.textContent='SAVE（保存）';
   const saveAs=document.createElement('button');saveAs.id='save-desk-as';saveAs.textContent='SAVE AS（名前を付けて保存）';
@@ -129,20 +130,20 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
   });
   load.addEventListener('click', () => { menu.hidePopover();if (canLoad()) input.click(); });
   let pdfBusy=false;
-  pdf.addEventListener('click',()=>{
-    menu.hidePopover();if(pdfBusy||!exportPdf)return;
-    if(!canLoad()){report('編集や操作が終わってからPDFを開いてください',true);return;}
+  for(const [button,exportImage,format,mime] of [[pdf,exportPdf,'PDF','application/pdf'],[png,exportPng,'PNG','image/png']] as const)button.addEventListener('click',()=>{
+    menu.hidePopover();if(pdfBusy||!exportImage)return;
+    if(!canLoad()){report(`編集や操作が終わってから${format}を開いてください`,true);return;}
     const popup=window.open('about:blank','_blank');
-    if(!popup){report('PDFタブを開けませんでした。ポップアップを許可して再実行してください',true);return;}
-    popup.opener=null;popup.document.title='PDFを生成しています…';popup.document.body.textContent='机全体のPDFを生成しています…';
-    pdfBusy=true;pdf.disabled=true;report('机全体をPDFにしています…');
-    void exportPdf().then(result=>{
-      if(popup.closed){report('PDFタブが閉じられたため表示を中止しました');return;}
-      const url=URL.createObjectURL(new Blob([new Uint8Array(result.bytes).buffer],{type:'application/pdf'}));
+    if(!popup){report(`${format}タブを開けませんでした。ポップアップを許可して再実行してください`,true);return;}
+    popup.opener=null;popup.document.title=`${format}を生成しています…`;popup.document.body.textContent=`机全体の${format}を生成しています…`;
+    pdfBusy=true;pdf.disabled=true;png.disabled=true;report(`机全体を${format}にしています…`);
+    void exportImage().then(result=>{
+      if(popup.closed){report(`${format}タブが閉じられたため表示を中止しました`);return;}
+      const url=URL.createObjectURL(new Blob([new Uint8Array(result.bytes).buffer],{type:mime}));
       popup.location.replace(url);const cleanup=setInterval(()=>{if(popup.closed){clearInterval(cleanup);URL.revokeObjectURL(url);}},10_000);
-      report(`revision ${result.revision} のPDFを開きました${result.webCount?'（Web資料の本文は代替表示）':''}`);
-    }).catch(error=>{if(!popup.closed)popup.close();report(`PDF生成失敗: ${error instanceof Error?error.message:String(error)}`,true);})
-      .finally(()=>{pdfBusy=false;pdf.disabled=false;});
+      report(`revision ${result.revision} の${format}を開きました${result.webCount?'（Web資料の本文は代替表示）':''}`);
+    }).catch(error=>{if(!popup.closed)popup.close();report(`${format}生成失敗: ${error instanceof Error?error.message:String(error)}`,true);})
+      .finally(()=>{pdfBusy=false;pdf.disabled=!exportPdf;png.disabled=!exportPng;});
   });
   input.addEventListener('change', async () => {
     const file = input.files?.[0]; input.value = '';

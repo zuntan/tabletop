@@ -1,6 +1,6 @@
 import type { Desk } from './model';
 import { cloneSvgForRaster } from './part-raster';
-import { jpegPagePdf, pdfRasterSize, pdfOuterBounds } from './pdf-document';
+import { rgbPagePdf, pdfRasterSize, pdfOuterBounds } from './pdf-document';
 import { drawStamp } from './stamps';
 import { cutoutSourceObject } from './logical-cutout';
 import { drawReactions } from './reactions';
@@ -106,8 +106,15 @@ export function captureRasterSize(width:number,height:number,requestedScale=1){
 
 export async function deskPdf(desk:Desk,canvas:SVGSVGElement,descriptions:(id:string)=>boolean){
  const {bitmap,revision,bounds:box,raster,webCount,name}=await deskSceneRaster(desk,canvas,descriptions);
- const data=bitmap.toDataURL('image/jpeg',.95);if(!data.startsWith('data:image/jpeg;'))throw new Error('画像サイズがブラウザの上限を超えています');
- const jpeg=Uint8Array.from(atob(data.split(',')[1]),c=>c.charCodeAt(0));
- const bytes=jpegPagePdf(jpeg,raster.width,raster.height,name||'Tabletop',{width:box.width,height:box.height});
+ const rgba=bitmap.getContext('2d')!.getImageData(0,0,raster.width,raster.height).data;
+ const rgb=new Uint8Array(raster.width*raster.height*3);
+ for(let i=0,j=0;i<rgba.length;i+=4){rgb[j++]=rgba[i];rgb[j++]=rgba[i+1];rgb[j++]=rgba[i+2];}
+ const bytes=rgbPagePdf(rgb,raster.width,raster.height,name||'Tabletop',{width:box.width,height:box.height});
  return{bytes,revision,bounds:box,raster,webCount};
+}
+
+export async function deskPng(desk:Desk,canvas:SVGSVGElement,descriptions:(id:string)=>boolean){
+ const {bitmap,revision,webCount}=await deskSceneRaster(desk,canvas,descriptions);
+ const blob=await new Promise<Blob>((resolve,reject)=>bitmap.toBlob(blob=>blob?resolve(blob):reject(new Error('PNGを作成できません')),'image/png'));
+ return{bytes:new Uint8Array(await blob.arrayBuffer()),revision,webCount};
 }
