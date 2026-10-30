@@ -1,4 +1,6 @@
-import {addNumberPresets} from './number-presets';
+import {reactionPositions,defaultReactionPlacement} from './reaction-layout';
+import {createReactionPlacementPicker} from './reaction-placement-picker';
+import {addNumberPresets,numberPresets} from './number-presets';
 import type { DeskObject, Operation } from './model';
 import { reactionChoices, hasReaction, canonicalReaction, type Reaction } from './reaction-values';
 import { createReactionButtons } from './reaction-picker';
@@ -37,7 +39,7 @@ export function createReactionControls(container: HTMLElement, selected: () => D
   };
 }
 
-/** Badges are inert and sit below the object, away from media open controls. */
+/** Badges remain inert and belong to their parent layer; placement never changes stacking. */
 export function drawReactions(group: SVGGElement, object: DeskObject, descriptionsVisible: boolean, zoom = 1) {
   group.querySelector('[data-reactions]')?.remove();
   const active = reactionChoices.filter(reaction => hasReaction(object.reactions, reaction));
@@ -45,12 +47,11 @@ export function drawReactions(group: SVGGElement, object: DeskObject, descriptio
   const visual = isConnector(object) ? bounds(object) : labelVisualBounds(object, descriptionsVisible);
   // Pins cancel camera zoom for their own glyph; restore it for the attached marks.
   const scale = (object.type === 'label' ? zoom : 1) * (object.reactionSize ?? 24) / 24;
-  const x = visual.x - object.x + Math.max(0, visual.width - Math.min(active.length, 7) * 28 * scale);
-  const y = visual.y - object.y + visual.height + 8 * scale;
+  const positions=reactionPositions(visual.width/scale,visual.height/scale,active.length,object.reactionPlacement);
   const badges = element('g', { 'data-reactions': object.id, 'pointer-events': 'none', 'aria-hidden': 'true',
-    transform: `translate(${x} ${y}) scale(${scale})` });
+    transform: `translate(${visual.x-object.x} ${visual.y-object.y}) scale(${scale})` });
   active.forEach((reaction, index) => {
-    const bx = index % 7 * 28, by = Math.floor(index / 7) * 28;
+    const {x:bx,y:by}=positions[index];
     badges.append(element('rect', { x: bx, y: by, width: 24, height: 24, rx: 8,
       fill: '#ffffff', stroke: '#cbd5e1', 'stroke-width': 1 }));
     const text = element('text', { x: bx + 12, y: by + 17, 'font-size': 16,
@@ -66,11 +67,13 @@ export function createReactionSizeControls(form:HTMLElement, selected:()=>DeskOb
   const legend=document.createElement('legend');legend.textContent='リアクション';
   const label=document.createElement('label');label.textContent='大きさ';
   const input=document.createElement('input');input.id='reaction-size';input.type='number';input.min='1';input.max='100000';input.step='any';input.setAttribute('aria-label','リアクションの大きさ');
-  label.append(input);box.append(legend,label);form.after(box);
-  addNumberPresets(input,[16,24,36,48,64,80,100],'リアクションの大きさ');
+  const row=document.createElement('div');row.className='reaction-settings-row';
+  label.append(input);row.append(label);box.append(legend,row);form.after(box);
+  addNumberPresets(input,numberPresets.fontSize.map(value=>value*2),'リアクションの大きさ');
   input.onchange=()=>{try{const size=Number(input.value);if(!input.value||!input.checkValidity())throw new Error('大きさを確認してください');apply(selected().map(object=>({kind:'update',id:object.id,patch:{reactionSize:size}})));}catch(error){report(error instanceof Error?error.message:String(error),true);}update();};
+  const placement=createReactionPlacementPicker(row,value=>{try{apply(selected().map(object=>({kind:'update',id:object.id,patch:{reactionPlacement:value}})));}catch(error){report(error instanceof Error?error.message:String(error),true);}update();});
   input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();input.blur();}});
   box.addEventListener('keydown',event=>event.stopPropagation());
-  function update(){const objects=selected();box.hidden=!objects.length;const sizes=objects.map(o=>o.reactionSize??24);input.value=sizes.length&&sizes.every(s=>s===sizes[0])?String(sizes[0]):'';input.placeholder='複数';}
+  function update(){const objects=selected();box.hidden=!objects.length;const sizes=objects.map(o=>o.reactionSize??24);input.value=sizes.length&&sizes.every(s=>s===sizes[0])?String(sizes[0]):'';input.placeholder='複数';const values=objects.map(o=>o.reactionPlacement??defaultReactionPlacement);placement.update(values.length&&values.every(value=>value===values[0])?values[0]:undefined);}
   return {update};
 }

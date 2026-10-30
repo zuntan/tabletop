@@ -4,7 +4,7 @@ export const numberPresets = {
   clipOffsetPercent: [10,30,60,90,100],
   junctionRounding: [0, 48, 96, 192, 384],
   strokeWidth: [1, 2, 4, 8, 16],
-  fontSize: [12, 16, 24, 32, 48],
+  fontSize: [12, 16, 24, 32, 48, 64],
   fillOpacity: [100, 90, 70, 50, 30],
   cornerRadius: [0, 4, 8, 16, 24],
   padding: [0, 8, 16, 24, 32],

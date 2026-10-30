@@ -1,3 +1,4 @@
+import {PartClipboard} from '../src/part-clipboard';
 import {encodeDeskFile,decodeDeskFile} from '../src/desk-file';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -89,4 +90,16 @@ test('reaction size is an individual attribute, retained with archive and Undo',
  desk.undo();assert.equal(desk.get('a').reactionSize,undefined);desk.redo();
  const file=await decodeDeskFile(await encodeDeskFile(desk));assert.equal(file.objects.find(o=>o.id==='a')?.reactionSize,64);
  assert.equal(objectSchema.safeParse({id:'invalid',type:'text',reactionSize:0}).success,false);
+});
+
+test('reaction placement persists per object through archive, copy and Undo',async()=>{
+ const desk=new Desk();desk.execute({operations:[{kind:'label_add',id:'a',seriesId:'series-1',x:0,y:0},{kind:'label_add',id:'b',seriesId:'series-1',x:100,y:0}]});
+ desk.execute({operations:[{kind:'update',id:'a',patch:{reactionPlacement:'top-left-down',reactionSize:64}}]});
+ assert.equal(desk.get('a').reactionPlacement,'top-left-down');assert.equal(desk.get('b').reactionPlacement,undefined);
+ desk.undo();assert.equal(desk.get('a').reactionPlacement,undefined);desk.redo();
+ const file=await decodeDeskFile(await encodeDeskFile(desk));assert.equal(file.objects.find(o=>o.id==='a')?.reactionPlacement,'top-left-down');
+ const clipboard=new PartClipboard(),values=new Map<string,string>();
+ clipboard.write({setData:(k,v)=>{values.set(k,v);},getData:k=>values.get(k)??''},[desk.get('a')]);
+ const copies=clipboard.paste(desk);assert.equal(desk.get(copies[0]).reactionPlacement,'top-left-down');assert.equal(desk.get(copies[0]).reactionSize,64);
+ assert.equal(objectSchema.safeParse({id:'invalid',type:'text',reactionPlacement:'center'}).success,false);
 });
