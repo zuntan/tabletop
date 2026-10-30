@@ -2,7 +2,7 @@ import {reactionPositions,defaultReactionPlacement} from './reaction-layout';
 import {createReactionPlacementPicker} from './reaction-placement-picker';
 import {addNumberPresets,numberPresets} from './number-presets';
 import type { DeskObject, Operation } from './model';
-import { reactionChoices, reactionColor, hasReaction, canonicalReaction, type Reaction } from './reaction-values';
+import { reactionChoices, reactionColor, isReactionMoon, hasReaction, canonicalReaction, type Reaction } from './reaction-values';
 import { createReactionButtons } from './reaction-picker';
 import { bounds, isConnector } from './geometry';
 import { labelVisualBounds } from './label-description';
@@ -53,7 +53,7 @@ export function drawReactions(group: SVGGElement, object: DeskObject, descriptio
   active.forEach((reaction, index) => {
     const {x:bx,y:by}=positions[index];
     badges.append(element('rect', { x: bx, y: by, width: 24, height: 24, rx: 8,
-      fill: '#ffffff', stroke: '#cbd5e1', 'stroke-width': 1 }));
+      fill: isReactionMoon(reaction)?'#cbd5e1':'#ffffff', stroke: '#cbd5e1', 'stroke-width': 1 }));
     const text = element('text', { x: bx + 12, y: by + 17, 'font-size': 16,
       'text-anchor': 'middle', 'font-family': 'sans-serif',...(reactionColor(reaction)?{fill:reactionColor(reaction)!}:{}) });
     text.textContent = reaction; badges.append(text);

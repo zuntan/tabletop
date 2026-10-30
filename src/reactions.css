@@ -31,6 +31,8 @@
 .reaction-level-strip { grid-column:1 / -1;display:grid;gap:4px;border-top:1px solid #e2e8f0;padding-top:6px;margin-top:2px; }
 .reaction-bars { grid-template-columns:repeat(8,minmax(0,1fr)); }
 #reaction-palette .reaction-bars button { width:100%;min-width:0;color:#15803d;font-family:monospace; }
-.reaction-moons { grid-template-columns:repeat(5,28px);justify-content:center; }
+.reaction-moons { grid-template-columns:repeat(7,28px);justify-content:center; }
+#reaction-palette .reaction-moons button { background:#cbd5e1; }
+#reaction-palette .reaction-moons button[aria-pressed=true] { background:#cbd5e1; }
 #reaction-size-controls .reaction-fixed { margin-top:8px; }
 #reaction-size-controls .reaction-fixed input { width:auto; }
