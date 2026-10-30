@@ -1,17 +1,19 @@
 #app { height: 100dvh; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; }
 main { position: relative; height: auto; min-height: 0; }
 nav { flex-wrap: wrap; align-items: flex-start; gap: 6px 10px; padding-top: 6px; padding-bottom: 6px; }
-.toolbar-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 8px; max-width: 100%; }
+.toolbar-group { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 8px; max-width: 100%; }
 .toolbar-parts, #authoring-tools { flex: 1 1 100%; min-width: 0; }
 .toolbar-parts, #authoring-tools.toolbar-group { padding-top: 2px; padding-bottom: 2px; }
 .toolbar-group .tool-button { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 34px; height: 46px; padding: 4px 6px; white-space: nowrap; }
 .toolbar-parts .tool-button { min-width: 40px; }
+.toolbar-group .tool-button.compact-caption { min-width:34px; padding-left:3px; padding-right:3px; }
+.toolbar-parts .tool-button.compact-caption { min-width:38px; }
 .tool-icon { font-size: 18px; line-height: 1; }
 .ui-icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
 .tool-caption { display: block; font-size: 10px; line-height: 1.1; font-weight: normal; }
-.toolbar-format-group, .toolbar-edit-actions, .toolbar-options-group { display: flex; flex-wrap: wrap; max-width: 100%; flex: none; align-items: center; gap: 6px; }
+.toolbar-format-group, .toolbar-edit-actions, .toolbar-options-group { display: flex; flex-wrap: wrap; max-width: 100%; flex: none; align-items: center; gap: 3px; }
 .toolbar-edit-actions, .toolbar-options-group { padding-left: 10px; border-left: 1px solid var(--ui-border, #cbd5e1); }
-.toolbar-view { position: absolute; right: 12px; bottom: 12px; z-index: 4; flex-wrap: nowrap; gap: 4px; padding: 4px; background: #fffffff2; box-shadow: 0 2px 10px #0f172a26; }
+.toolbar-view { position: absolute; right: 12px; bottom: 12px; z-index: 4; flex-wrap: nowrap; gap: 3px; padding: 4px; background: #fffffff2; box-shadow: 0 2px 10px #0f172a26; }
 .toolbar-view .tool-button { min-width: 40px; }
 #workspace > .hint { max-width: calc(100% - 36px); }
 .sidebar-hidden #workspace > .hint { max-width: max(80px, calc(100% - 240px)); }
@@ -87,7 +89,7 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 6px 10px; padding-top: 6px;
 .prop-responsive-preview img { position: absolute; left: 50%; top: 50%; max-width: none; }
 #pin-series-palette .pin-order-help { margin: 8px 0 0; font-size: 11px; color: var(--ui-muted,#64748b); }
 
-#pin-series-menu { min-width: 20px; width: 20px; height: 46px; padding: 4px 2px; align-self: center; margin-left: -5px; color: #64748b; }
+#pin-series-menu { min-width: 20px; width: 20px; height: 46px; padding: 4px 2px; align-self: center; margin-left: -3px; color: #64748b; }
 #pin-series-palette { min-width: 230px; max-height: min(440px, 70vh); overflow-y: auto; }
 .pin-series-choices { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
 .pin-series-choices button { text-align: left; font-size: 12px; }
@@ -102,7 +104,7 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 6px 10px; padding-top: 6px;
 #file-create .tool-icon { height: 16px; line-height: 16px; }
 #file-create .ui-icon { width: 16px; height: 16px; }
 #file-create .tool-caption { white-space: pre-line; line-height: 10px; }
-.line-input-tools { display: inline-flex; align-items: stretch; gap: 2px; }
+.line-input-tools { display: inline-flex; align-items: stretch; gap: 0; }
 .line-input-tools #line-input-open { min-width: 20px; width: 20px; padding: 0; height: 46px; color: #64748b; }
 #line-input-open[data-active] { background: #dbeafe; border-color: #2563eb; }
 #canvas[data-line-input] { cursor: crosshair; }

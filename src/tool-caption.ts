@@ -27,5 +27,6 @@ export function toolButtonContent(button: HTMLButtonElement, icon: string, label
   symbol.setAttribute('aria-hidden', 'true');
   const caption = document.createElement('small'); caption.className = 'tool-caption';
   caption.textContent = shortCaptions[button.dataset.add ?? button.id] ?? label;
+  button.classList.toggle('compact-caption', [...caption.textContent.replace(/\s/g,'')].length >= 2);
   button.classList.add('tool-button'); button.replaceChildren(symbol, caption);
 }
