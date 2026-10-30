@@ -10,7 +10,10 @@ export function reactionPositions(width:number,height:number,count:number,placem
  const top=placement.startsWith('top'),left=placement.includes('-left-');
  const horizontal=placement.endsWith('-right')||placement.endsWith('-left');
  return Array.from({length:count},(_,i)=>{
-  const along=i%7,band=Math.floor(i/7);
+  const band=Math.floor(i/7),within=i%7;
+  // Keep each visible band in list order even when its corner grows left/up.
+  const reverse=horizontal?!left:!top;
+  const along=reverse?Math.min(7,count-band*7)-1-within:within;
   return horizontal
    ?{x:left?along*28:width-24-along*28,y:top?-32-band*28:height+8+band*28}
    :{x:left?-32-band*28:width+8+band*28,y:top?along*28:height-24-along*28};
