@@ -1,11 +1,11 @@
 import { stickerGlyph } from './sticker-glyphs';
 import type { DeskObject } from './model';
 import { element } from './diagram-drawing';
-import { stickerPoints } from './sticker-values';
+import { stickerPoints, stickerItems } from './sticker-values';
 export function drawStickers(group: SVGGElement, object: DeskObject, zoom = 1) {
   group.querySelector(':scope > [data-stickers]')?.remove();
   const stickers = object.stickers;
-  if (!stickers?.items.length) return;
+  if ((!stickers || !stickerItems(stickers).length)) return;
   const layer = element('g', { 'data-stickers': object.id, 'pointer-events': 'none', 'aria-hidden': 'true' });
   for(const point of stickerPoints(object.width,object.height,stickers,zoom)) {
     const glyph=stickerGlyph(point.shape,point.color);

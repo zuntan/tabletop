@@ -31,7 +31,7 @@ test('browser format memory validates imported local values and preserves three 
 });
 
 test('format snapshots retain independent sticker rows across media, memory, creation and Undo without leaking onto lines',()=>{
- const desk=new Desk();const stickers:Stickers={items:[{color:'red',shape:'heart'},{color:'blue',shape:'paw'}],origin:'bottom-right',diameter:64,fixed:true};
+ const desk=new Desk();const stickers:Stickers={items:[{color:'red',shape:'heart'},{color:'blue',shape:'paw'}],items2:[{color:'green',shape:'star'}],origin:'bottom-right',diameter:64,fixed:true};
  desk.execute({operations:[{kind:'add',object:{id:'sample',type:'text',stickers}},{kind:'add',object:{id:'media',type:'image',text:'keep',src:'https://example.com/image.png'}}]});
  const style=extractFormat(desk.get('sample'));
  assert.deepEqual(style.stickers,stickers);

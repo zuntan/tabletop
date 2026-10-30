@@ -33,6 +33,8 @@ test('QR sticker clearance reserves one diameter on both sides, independent of r
  const o=d.get('qr');assert.deepEqual(qrCardLayout(o),{y:34,height:300});
  o.stickers={items:Array.from({length:20},()=>({color:'#ff0000',shape:'circle' as const})),origin:'top-right',diameter:36,fixed:false};
  assert.deepEqual(qrCardLayout(o),{y:70,height:228});
+ o.stickers.items2=o.stickers.items;o.stickers.items=[];
+ assert.deepEqual(qrCardLayout(o),{y:70,height:228});
  o.stickers.fixed=true;assert.deepEqual(qrCardLayout(o,.5),{y:106,height:156});
  o.height=60;assert.deepEqual(qrCardLayout(o,.5),{y:47,height:0});
 });

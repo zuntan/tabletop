@@ -21,7 +21,8 @@ export function createDeskIdentityControls(header: HTMLElement, desk: Desk, canE
     if (!canEdit()) { report('編集中の操作を終えてから名前を変更してください', true); return; }
     expectedRevision = desk.revision; input.value = desk.settingsSnapshot().name;
     const frame = name.getBoundingClientRect();
-    form.style.width = `${Math.max(48, frame.width)}px`; form.style.minHeight = `${frame.height}px`;
+    const minimumWidth = 8 * parseFloat(getComputedStyle(input).fontSize) + 16;
+    form.style.width = `${Math.max(minimumWidth, frame.width)}px`; form.style.minHeight = `${frame.height}px`;
     form.hidden = false; name.hidden = true; edit.hidden = true; input.focus(); input.select();
   };
   cancel.onclick = finish;

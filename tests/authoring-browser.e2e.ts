@@ -25,6 +25,7 @@ test('defaults, inline editing and independent numbering systems work through UI
   }
   async function color(role: string, value: string) {
     await page.locator(`[data-color-role="${role}"]`).click();
+    await page.locator(`.palette-${role}`).getByRole('button',{name:'全色',exact:true}).click();
     await page.locator(`.palette-${role} .pcr-swatches button[title="${value}"]`).click();
   }
   async function point(x: number, y: number) {

@@ -1,3 +1,4 @@
+import {stickerItems} from './sticker-values';
 import type {DeskObject} from './model';
 import {element} from './diagram-drawing';
 import {IMAGE_TITLE_HEIGHT} from './image-geometry';
@@ -5,7 +6,7 @@ import {renderQrCode} from './qr-code';
 
 export function qrCardLayout(object:DeskObject,zoom=1){
   const available=Math.max(0,object.height-IMAGE_TITLE_HEIGHT);
-  const margin=object.stickers?.items.length?object.stickers.diameter/(object.stickers.fixed?zoom:1):0;
+  const margin=(object.stickers&&stickerItems(object.stickers).length)?object.stickers.diameter/(object.stickers.fixed?zoom:1):0;
   const inset=Math.min(margin,available/2);
   return {y:IMAGE_TITLE_HEIGHT+inset,height:Math.max(0,available-2*inset)};
 }

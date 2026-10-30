@@ -1,0 +1,23 @@
+#topbar-toggle { flex:0 0 28px; width:28px; height:28px; padding:0; font-size:12px; }
+#app.topbar-collapsed { grid-template-rows:32px minmax(0,1fr) auto; }
+#app.topbar-collapsed > nav { display:none; }
+#app.topbar-collapsed > header { min-height:32px; height:32px; padding:2px 8px; gap:6px; flex-wrap:nowrap; overflow:hidden; }
+#app.topbar-collapsed > header > :not(.brand):not(#connection):not(#undo):not(#redo):not(#mouse-lock):not(#topbar-toggle) { display:none; }
+#app.topbar-collapsed header .brand { font-size:0; letter-spacing:0; flex:1 1 0; flex-wrap:nowrap; min-width:0; gap:0; }
+#app.topbar-collapsed header .brand > small { display:none; }
+#app.topbar-collapsed .desk-identity { display:block; width:100%; max-width:100%; margin:0; }
+#app.topbar-collapsed .desk-identity > :not(#desk-name) { display:none; }
+#app.topbar-collapsed #desk-name { display:block; font-size:14px; line-height:26px; padding:0; border:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#app.topbar-collapsed #connection { font-size:10px; padding:2px 6px; }
+#app.topbar-collapsed header :is(#undo,#redo,#mouse-lock,#topbar-toggle) { flex:0 0 28px; width:28px; height:28px; min-width:28px; padding:4px; display:inline-flex; align-items:center; justify-content:center; }
+#app.topbar-collapsed header :is(#undo,#redo,#mouse-lock) svg { width:16px; height:16px; }
+#app.topbar-collapsed #mouse-lock .tool-caption { display:none; }
+#app.topbar-collapsed #mouse-lock[aria-pressed="true"] { background:#1d4ed8; border-color:#93c5fd; }
+/* Expanded header actions use the same compact height as the collapse control. */
+#app > header > :is(.header-icon,.file-menu-trigger,#thinking-mode) { height:28px; padding-top:3px; padding-bottom:3px; }
+#app > header > .header-icon { flex-basis:28px; width:28px; padding:4px; }
+#app > header > :is(.header-icon,.file-menu-trigger) svg { width:16px; height:16px; }
+#app > header { column-gap:6px; }
+#app:not(.topbar-collapsed) > header { min-height:48px; padding-top:4px; padding-bottom:4px; }
+#topbar-toggle { display:inline-flex; align-items:center; justify-content:center; }
+#app > header { padding-right:8px; }

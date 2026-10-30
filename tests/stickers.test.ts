@@ -64,3 +64,17 @@ test('removed sticker design loads as a circle and resaves without the legacy ID
  assert.equal(saved.objects[0].stickers.items[0].shape,'circle');
  assert.throws(()=>stickerSchema.parse({items:[{color:'red',shape:'not-a-shape'}]}));
 });
+
+test('two sticker columns concatenate for drawing but append and clear independently',async()=>{
+ const desk=new Desk();desk.execute({operations:[{kind:'add',object:{id:'note',type:'text',stickers:{items:[{color:'red',shape:'circle'}],origin:'top-right',diameter:36,fixed:false}}}]});
+ desk.execute({operations:stickerOperations([desk.get('note')],{kind:'append',column:2,color:'blue',shape:'star'})});
+ let config=desk.get('note').stickers!;
+ assert.equal(config.origin,'top-right');assert.equal(config.items.length,1);assert.equal(config.items2?.length,1);
+ assert.deepEqual(stickerPoints(300,200,config).map(p=>p.color),['red','blue']);
+ desk.execute({operations:stickerOperations([desk.get('note')],{kind:'clear',column:1})});config=desk.get('note').stickers!;
+ assert.deepEqual(config.items,[]);assert.equal(config.items2?.[0].color,'blue');
+ assert.equal(stickerLayout(300,config).rows,1);
+ const saved=await decodeDeskFile(await encodeDeskFile(desk));assert.deepEqual(saved.objects[0].stickers,config);
+ desk.undo();assert.equal(desk.get('note').stickers?.items.length,1);
+ assert.equal(stickerSchema.parse({}).origin,'bottom-right');
+});

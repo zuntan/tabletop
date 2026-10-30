@@ -19,3 +19,7 @@
 #canvas .open-link { cursor: pointer; }
 #canvas .open-link:hover rect, #canvas .open-link:focus-visible rect { fill: #dbeafe; stroke: #2563eb; }
 #canvas .open-link:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.tabletop-palette .palette-modes { display:flex; gap:4px; margin-bottom:8px; }
+.tabletop-palette .palette-modes button { flex:1; padding:4px 6px; font-size:12px; }
+.tabletop-palette .palette-modes button[aria-pressed="true"] { border-color:#2563eb; background:#eff6ff; color:#1e40af; }
+.pcr-app.tabletop-palette { max-height:calc(100dvh - 16px); overflow:auto; }

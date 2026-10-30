@@ -13,7 +13,7 @@ test('a single toolbar trigger keeps the reaction palette open across target cha
     assert.equal(await page.locator('nav .toolbar-parts #reaction-controls').count(), 1);
     assert.equal(await page.locator('aside #reaction-controls').count(), 0);
     assert.equal(await page.locator('.reaction-quick [data-reaction]').count(), 0);
-    assert.equal(await more.innerText(), 'リアクション ▾');
+    assert.equal(await more.locator('svg').count(), 1);
     assert.equal(await more.isDisabled(), false); assert.equal(await palette.isVisible(), false);
     await call('desk_execute', { operations: [{ kind: 'add', object: {
       id: 'memo', type: 'text', text: 'Memo', x: 200, y: 160, reactions: ['✅', '💡'],
@@ -22,7 +22,7 @@ test('a single toolbar trigger keeps the reaction palette open across target cha
     assert.equal(await palette.locator('[data-reaction="✔"]').getAttribute('aria-pressed'), 'true');
     assert.deepEqual((await call('desk_get', { id: 'memo' })).reactions, ['✅', '💡']);
     await more.click(); await palette.waitFor({ state: 'visible' });
-    assert.equal(await palette.locator('[data-reaction]').count(), 18);
+    assert.equal(await palette.locator('[data-reaction]').count(), reactionChoices.length);
     assert.deepEqual(await palette.locator('[data-reaction]').allTextContents(), [...reactionChoices]);
     assert.equal(await palette.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length), 7);
     const first = (await palette.locator('[data-reaction="👍"]').boundingBox())!;
@@ -57,7 +57,7 @@ test('a single toolbar trigger keeps the reaction palette open across target cha
     assert.ok(box.y >= 0 && box.y + box.height <= 844);
     await call('desk_select', { ids: [] }); assert.equal(await palette.isVisible(), true);
     assert.equal(await more.isDisabled(), false);
-    assert.equal(await palette.locator('[data-reaction]:disabled').count(), 18);
+    assert.equal(await palette.locator('[data-reaction]:disabled').count(), reactionChoices.length);
     await more.click(); await palette.waitFor({ state: 'hidden' });
     assert.deepEqual(errors, []);
   } finally { await close(); }

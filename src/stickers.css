@@ -27,3 +27,4 @@
 #sticker-controls .sticker-actions > button { flex:0 0 auto; white-space:nowrap; }
 #sticker-controls .sticker-appearance { align-items:center; }
 #sticker-controls .color-trigger svg { display:block; }
+.sticker-column-number { flex:0 0 10px; color:var(--ui-muted,#64748b); font-size:11px; }

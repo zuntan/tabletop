@@ -9,3 +9,7 @@
 #reaction-controls button[aria-pressed="true"] { background: #dcfce7; border-color: #15803d; }
 #reaction-controls button[aria-pressed="mixed"] { background: #fef9c3; border-style: dashed; }
 #reaction-controls button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+#reaction-size-controls { margin-top:12px; padding:8px; border:1px solid #cbd5e1; border-radius:8px; }
+#reaction-size-controls legend { padding:0 4px; font-size:12px; }
+#reaction-size-controls label { display:flex; align-items:center; gap:8px; font-size:11px; }
+#reaction-size-controls input { min-width:0; width:100%; }

@@ -1,3 +1,4 @@
+import {createTopbarCollapse} from './topbar-collapse';
 import {MAX_PDF_EXPORT_BYTES} from './pdf-export';
 import {createStrokeWidthMode} from './stroke-width-mode';
 import {createWayfinderNavigation} from './wayfinder-navigation';
@@ -87,7 +88,7 @@ import { createSidebar } from './sidebar';
 import './sidebar.css';
 import { selectedConnection } from './connection-creation';
 import { drawAiPointing } from './ai-pointing';
-import { createReactionControls, drawReactions } from './reactions';
+import { createReactionControls, createReactionSizeControls, drawReactions } from './reactions';
 import './reactions.css';
 import { createDeskFileControls } from './desk-file-controls';
 import { IMAGE_TITLE_HEIGHT } from './image-geometry';
@@ -123,7 +124,7 @@ const app = document.querySelector<HTMLDivElement>('#app')!;
 document.documentElement.dataset.appMode=pagesMode?'pages':'desk';
 app.innerHTML = `
   <header><div class="brand">Tabletop <small>人間とAIの共有作業机</small></div>
-    <span id="connection" class="badge">未接続</span><span id="revision">revision 0</span>
+    <span id="connection" class="badge">未接続</span><span id="revision">rev. 0</span>
     <button id="undo">元に戻す</button><button id="redo">やり直す</button>
   </header>
   <nav aria-label="追加ツール">
@@ -368,6 +369,7 @@ const bellControls=createBellControls(centerViewButton,$('footer'),note=>recover
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
 });
+const reactionSizeControls=createReactionSizeControls(form,()=>desk.selected().map(id=>desk.get(id)),operations=>{if(!busy&&!editor.isActive())attempt(()=>execute(operations));},notify);
 const stampContainer = document.createElement('div'); stampContainer.id = 'stamp-controls'; editActions.insertBefore(stampContainer, $('#reaction-controls'));
 const stampControls = createStampControls(stampContainer, () => desk.selected().map(id => desk.get(id)), operations => {
   if (!busy && !editor.isActive() && operations.length) attempt(() => execute(operations));
@@ -691,12 +693,13 @@ function render(rebuild = true) {
   $('#grid-snap').setAttribute('aria-pressed', String(gridEnabled));
   $('#empty').hidden = desk.summary().count > 0;
   cameraChanged(); drawSelection();
-  $('#revision').textContent = `revision ${desk.revision}`;
+  $('#revision').textContent = `rev. ${desk.revision}`;
   $<HTMLButtonElement>('#undo').disabled = !desk.summary().canUndo;
   $<HTMLButtonElement>('#redo').disabled = !desk.summary().canRedo;
   const ids = desk.selected();
   colorControls.update(ids.map(id => desk.get(id)));
   reactionControls.update(ids.map(id => desk.get(id)));
+  reactionSizeControls.update();
   stampControls.update(ids.map(id => desk.get(id)));
   authoring.update();
   formatControls.update();
@@ -1348,6 +1351,7 @@ if (location.hash&&!standaloneStartup) {
 }
 const lineInput=createLineInput(canvas,viewport,$<HTMLButtonElement>('[data-add="line"]'),desk,world,()=>camera.zoom,
  ()=>formatControls.appearance('line',desk.settingsSnapshot().defaults),()=>render(),()=>!busy&&!gesture&&!editor.isActive()&&!identityControls.isEditing()&&!(isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive()),notify,()=>desk.snapshot().filter(pinIsVisible).map(o=>pinScreenObject(o,camera.zoom)));
+createTopbarCollapse(app,()=>!busy&&!gesture&&!editor.isActive()&&!identityControls.isEditing()&&!doodleEditor.isActive()&&!captureCamera.isActive()&&!lineInput.isActive()&&!isConfirmDialogOpen(),()=>{stopCamera();drawSelection();editor.reposition();});
 render();
 
 if(pagesMode){

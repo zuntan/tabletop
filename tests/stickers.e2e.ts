@@ -18,8 +18,8 @@ test('sticker controls append repeated colors, wrap/reflow, configure mixed targ
   let stickers=(await call('desk_get',{id:'note'})).stickers;assert.equal(stickers.items.length,7);assert.ok(stickers.items.every((c:{color:string})=>c.color==='#ef4444'));assert.equal(stickers.diameter,36);assert.equal(stickers.fixed,false);
   await mkdir('tmp/stickers',{recursive:true});await panel.screenshot({path:'tmp/stickers/controls.png'});
   const circles=page.locator('[data-id="note"] > [data-stickers] > svg');
-  assert.equal(await circles.count(),7);assert.equal(Number(await circles.nth(3).getAttribute('y')),121.6);
-  assert.ok(Number(await circles.nth(6).getAttribute('y'))>20);assert.equal(await circles.nth(0).getAttribute('width'),'36');
+  assert.equal(await circles.count(),7);assert.equal(Number(await circles.nth(3).getAttribute('y')),-137.6);
+  assert.ok(Number(await circles.nth(6).getAttribute('y'))<0);assert.equal(await circles.nth(0).getAttribute('width'),'36');
   const rev=(await call('desk_summary')).revision;
   await call('desk_camera_move',{zoom:.5,durationMs:0});assert.equal(await circles.nth(0).getAttribute('width'),'36');assert.equal(await circles.nth(2).getAttribute('x'),'12');assert.equal((await call('desk_summary')).revision,rev);
   await page.getByRole('button',{name:'シールの配置起点の候補',exact:true}).click();
@@ -28,7 +28,7 @@ test('sticker controls append repeated colors, wrap/reflow, configure mixed targ
   await page.locator('#sticker-fixed').check();assert.equal(await circles.nth(0).getAttribute('width'),'72');await page.locator('#sticker-fixed').uncheck();
   await page.locator('[data-color-role="sticker-fill"]').click();await page.getByRole('button',{name:'シール #3b82f6',exact:true}).click();await page.locator('#sticker-add').click();
   assert.equal((await call('desk_get',{id:'note'})).stickers.items.at(-1).color,'#3b82f6');
-  await page.locator('#sticker-shape-menu').click();await page.getByRole('dialog',{name:'シールの形の候補',exact:true}).getByRole('button',{name:'星',exact:true}).click();assert.equal(await page.locator('[data-color-role="sticker-fill"] svg').getAttribute('data-sticker-shape'),'star');await call('desk_select',{ids:['note','shape','line']});await page.locator('#sticker-add').click();
+  await page.locator('#sticker-shape-menu').click();await page.locator('.sticker-shape-palette:popover-open').getByRole('button',{name:'星',exact:true}).click();assert.equal(await page.locator('[data-color-role="sticker-fill"] svg').getAttribute('data-sticker-shape'),'star');await call('desk_select',{ids:['note','shape','line']});await page.locator('#sticker-add').click();
   assert.equal((await call('desk_get',{id:'shape'})).stickers.items[0].shape,'star');assert.equal(await page.locator('[data-id="shape"] > [data-stickers] > svg[data-sticker-shape="star"]').count(),1);assert.equal((await call('desk_get',{id:'line'})).stickers,undefined);
   await page.locator('#sticker-clear').click();assert.equal((await call('desk_get',{id:'note'})).stickers.items.length,0);assert.equal((await call('desk_get',{id:'note'})).stickers.origin,'bottom-right');
   await call('desk_undo');assert.equal((await call('desk_get',{id:'note'})).stickers.items.length,9);
@@ -40,7 +40,7 @@ test('sticker controls append repeated colors, wrap/reflow, configure mixed targ
   await call('desk_select',{ids:['icons']});
   for(const id of stickerShapeIds){
     await page.locator('#sticker-shape-menu').click();
-    await page.getByRole('dialog',{name:'シールの形の候補',exact:true}).getByRole('button',{name:stickerShapeNames[id],exact:true}).click();
+    await page.locator('.sticker-shape-palette:popover-open').getByRole('button',{name:stickerShapeNames[id],exact:true}).click();
     assert.equal(await page.locator('[data-color-role="sticker-fill"] svg').getAttribute('data-sticker-shape'),id);
     await page.locator('#sticker-add').click();
   }

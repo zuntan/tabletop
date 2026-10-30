@@ -1,3 +1,4 @@
+import {encodeDeskFile,decodeDeskFile} from '../src/desk-file';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Desk, objectSchema, dispatch } from '../src/model';
@@ -6,7 +7,7 @@ import { reactionOperations } from '../src/reactions';
 
 const rect = (id: string) => objectSchema.parse({ id, type: 'rect' });
 
-test('eighteen unique reactions are optional, validated and updated atomically with shared Undo', () => {
+test('unique reactions are optional, validated and updated atomically with shared Undo', () => {
   assert.equal(rect('legacy').reactions, undefined);
   assert.deepEqual(objectSchema.parse({ id: 'all', type: 'text', reactions: [...reactions] }).reactions, reactions);
   for (const invalid of [['🔥'], ['👍', '👍'], ['✔', '✅'], [...reactions, '👍'], '👍', null]) {
@@ -78,4 +79,14 @@ test('legacy check marks remain stored until explicitly toggled and share the ne
   desk.undo(); assert.deepEqual(desk.get('legacy').reactions, ['✅', '💡']);
   desk.execute({ operations: reactionOperations(desk.snapshot(), '😊') });
   assert.deepEqual(desk.get('legacy').reactions, ['✅', '💡', '😊']);
+});
+
+
+test('reaction size is an individual attribute, retained with archive and Undo', async()=>{
+ const desk=new Desk();desk.execute({operations:[{kind:'label_add',id:'a',seriesId:'series-1',x:0,y:0},{kind:'label_add',id:'b',seriesId:'series-1',x:100,y:0}]});
+ desk.execute({operations:[{kind:'update',id:'a',patch:{reactionSize:64,reactions:['🔍']}}]});
+ assert.equal(desk.get('a').reactionSize,64);assert.equal(desk.get('b').reactionSize,undefined);
+ desk.undo();assert.equal(desk.get('a').reactionSize,undefined);desk.redo();
+ const file=await decodeDeskFile(await encodeDeskFile(desk));assert.equal(file.objects.find(o=>o.id==='a')?.reactionSize,64);
+ assert.equal(objectSchema.safeParse({id:'invalid',type:'text',reactionSize:0}).success,false);
 });

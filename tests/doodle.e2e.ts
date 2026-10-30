@@ -24,7 +24,7 @@ test('doodle local history, editing, paper resize and cancellation preserve the 
  await page.mouse.move(box.x+box.width/2-50,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+box.width/2+60,box.y+box.height/2+40,{steps:12});await page.mouse.up();
  await surface.press('Control+z');assert.equal((await call('desk_get',{id:object.id})).doodle.strokes.length,0);
  await page.locator('#doodle-redo').click();
- await page.locator('[data-color-role="doodle-stroke"]').click();await page.locator('.palette-doodle-stroke .pcr-swatches button').nth(7).click();
+ await page.locator('[data-color-role="doodle-stroke"]').click();await page.locator('.palette-doodle-stroke').getByRole('button',{name:'全色',exact:true}).click();await page.locator('.palette-doodle-stroke .pcr-swatches button').nth(7).click();
  await page.screenshot({path:'/tmp/tabletop-doodle-editor.png'});await page.locator('#doodle-accept').click();let saved=await call('desk_get',{id:object.id});assert.equal(saved.doodle.strokes.length,1);assert.equal(saved.doodle.strokes[0].width,64);const points=saved.doodle.strokes[0].points;
  await call('desk_execute',{operations:[{kind:'update',id:object.id,patch:{width:200,height:180}}]});saved=await call('desk_get',{id:object.id});assert.deepEqual(saved.doodle.strokes[0].points,points);
  await page.locator(`[data-id="${object.id}"]`).dblclick({position:{x:40,y:65}});assert.equal(await page.locator('[data-doodle-size-slot="2"]').textContent(),'64');await page.getByRole('button',{name:'全消去',exact:true}).click();await page.getByRole('button',{name:'キャンセル',exact:true}).click();assert.deepEqual((await call('desk_get',{id:object.id})).doodle.strokes[0].points,points);

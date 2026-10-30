@@ -5,8 +5,8 @@ import { openTestDesk } from './desk-browser';
 test('left toolbar exposes absolute stacking actions and reactions without changing shared Undo', { timeout: 45_000 }, async () => {
   const { page, call, close, errors } = await openTestDesk('toolbar-actions');
   try {
-    assert.equal(await page.locator('.toolbar-parts #front').count(), 1);
-    assert.equal(await page.locator('.toolbar-parts #back').count(), 1);
+    assert.equal(await page.locator('#authoring-tools #front').count(), 1);
+    assert.equal(await page.locator('#authoring-tools #back').count(), 1);
     assert.equal(await page.locator('.toolbar-parts #reaction-more').count(), 1);
     assert.equal(await page.locator('aside #front, aside #back').count(), 0);
     assert.equal(await page.locator('#authoring-tools #reaction-controls').count(), 0);
@@ -59,6 +59,7 @@ test('toolbar color captions sit below their swatches inside buttons while prope
     await call('desk_select', { ids: ['rect'] });
     const fill = page.locator('[data-color-role="default-fill"]');
     await fill.click();
+    await page.locator('.palette-default-fill').getByRole('button',{name:'全色',exact:true}).click();
     await page.locator('.palette-default-fill').getByRole('button', { name: '塗り #f87171', exact: true }).click();
     assert.equal((await call('desk_get', { id: 'rect' })).fill, '#f87171');
     assert.equal((await call('desk_settings')).defaults.fill, '#f87171');

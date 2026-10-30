@@ -43,6 +43,7 @@ test('wayfinder follows an off-screen bent route at fixed zoom, lands at its car
     await call('desk_select',{ids:['go']});
     const originalStroke=(await call('desk_get',{id:'go'})).stroke;
     await page.locator('#color-controls [data-color-role="fill"]').click();
+    await page.locator('.palette-fill').getByRole('button',{name:'全色',exact:true}).click();
     await page.locator('.palette-fill').getByRole('button',{name:'塗り #f87171',exact:true}).click();
     assert.equal((await call('desk_get',{id:'go'})).fill,'#f87171');
     assert.equal((await call('desk_get',{id:'go'})).stroke,originalStroke);

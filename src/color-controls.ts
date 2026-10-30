@@ -15,6 +15,12 @@ const families = [
   ['#f3e8ff', '#d8b4fe', '#c084fc', '#a855f7', '#7e22ce', '#581c87'],
 ];
 export const swatches = Array.from({ length: 6 }, (_, shade) => families.map(family => family[shade])).flat();
+export const recommendedSwatches = {
+  fill: families.flatMap(family=>[family[0],family[1]]),
+  stroke: families.flatMap(family=>[family[3],family[4]]),
+  text: families.flatMap(family=>[family[4],family[5]]),
+  sticker: families.flatMap(family=>[family[2],family[3]]),
+};
 const names = { fill: '塗り', stroke: '輪郭', text: '文字' };
 function field(object: DeskObject, role: Role): 'fill' | 'stroke' | 'textColor' | null {
   if (object.type === 'label') return role === 'text' ? 'textColor' : role;
@@ -36,7 +42,7 @@ export function colorOperations(objects: DeskObject[], role: Role, color: string
 }
 
 /** A thin adapter around Pickr's existing swatch picker, shared by all object types. */
-export function createColorControls(container: HTMLElement, apply: (operations: Operation[]) => void, prefix = '', options: { roles?: Role[]; names?: Partial<Record<Role, string>>; allowTransparent?: boolean; popupContainer?:HTMLElement } = {}) {
+export function createColorControls(container: HTMLElement, apply: (operations: Operation[]) => void, prefix = '', options: { roles?: Role[]; names?: Partial<Record<Role, string>>; allowTransparent?: boolean; popupContainer?:HTMLElement; paletteRole?: keyof typeof recommendedSwatches } = {}) {
   let objects: DeskObject[] = [];
   let selection = '';
   const compact = !!container.closest('nav');
@@ -90,6 +96,28 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
       popup.querySelectorAll<HTMLButtonElement>('.pcr-swatches button').forEach((swatch, i) => {
         swatch.title = swatches[i]; swatch.setAttribute('aria-label', `${captions[role]} ${swatches[i]}`);
       });
+      const paletteRole=options.paletteRole??role;
+      const modeKey=`tabletop.palette.${paletteRole}.mode`;
+      let mode='recommended';
+      const switches=document.createElement('div');switches.className='palette-modes';switches.setAttribute('role','group');switches.setAttribute('aria-label','色パレットの種類');
+      const updateMode=()=>{
+        try{mode=localStorage.getItem(modeKey)==='all'?'all':'recommended';}catch{/* In-memory fallback. */}
+        for(const tab of switches.querySelectorAll<HTMLButtonElement>('button'))tab.setAttribute('aria-pressed',String(tab.dataset.mode===mode));
+        popup.querySelectorAll<HTMLButtonElement>('.pcr-swatches button').forEach((swatch,i)=>{swatch.hidden=mode!=='all'&&!recommendedSwatches[paletteRole].includes(swatches[i]);});
+        popup.dataset.paletteMode=mode;
+        requestAnimationFrame(()=>{
+          if(!pickr.isOpen())return;
+          const rect=popup.getBoundingClientRect();
+          const top=parseFloat(popup.style.top)||rect.top,left=parseFloat(popup.style.left)||rect.left;
+          popup.style.top=`${top+Math.max(0,8-rect.top)-Math.max(0,rect.bottom-innerHeight+8)}px`;
+          popup.style.left=`${left+Math.max(0,8-rect.left)-Math.max(0,rect.right-innerWidth+8)}px`;
+        });
+      };
+      for(const [value,label] of [['recommended','おすすめ'],['all','全色']]){
+        const tab=document.createElement('button');tab.type='button';tab.dataset.mode=value;tab.textContent=label;
+        tab.onclick=()=>{mode=value;try{localStorage.setItem(modeKey,mode);}catch{/* In-memory fallback. */}updateMode();};switches.append(tab);
+      }
+      popup.prepend(switches);pickr.on('show',updateMode);updateMode();
       sync();
     }).on('swatchselect', (color: Pickr.HSVaColor) => change(color.toHEXA().toString().slice(0, 7).toLowerCase()))
       .on('show', () => button.setAttribute('aria-expanded', 'true'))

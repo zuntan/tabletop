@@ -37,6 +37,7 @@ test('round swatch palettes, shape labels, arrow endpoints and attached movement
     await page.locator(`[data-color-role="${role}"]`).click();
     const popup = page.locator(`.palette-${role}`);
     await popup.waitFor({ state: 'visible' });
+    await popup.getByRole('button',{name:'全色',exact:true}).click();
     assert.equal(await popup.locator('.pcr-swatches button').count(), 42);
     assert.equal(await popup.locator('.pcr-swatches').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), 7);
     assert.equal(await popup.locator('.pcr-swatches button').first().evaluate(el => getComputedStyle(el).borderRadius), '50%');

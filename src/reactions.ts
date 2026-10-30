@@ -1,3 +1,4 @@
+import {addNumberPresets} from './number-presets';
 import type { DeskObject, Operation } from './model';
 import { reactionChoices, hasReaction, canonicalReaction, type Reaction } from './reaction-values';
 import { createReactionButtons } from './reaction-picker';
@@ -42,8 +43,8 @@ export function drawReactions(group: SVGGElement, object: DeskObject, descriptio
   const active = reactionChoices.filter(reaction => hasReaction(object.reactions, reaction));
   if (!active.length) return;
   const visual = isConnector(object) ? bounds(object) : labelVisualBounds(object, descriptionsVisible);
-  // Pin groups already cancel camera zoom; other parts need an inverse scale here.
-  const scale = object.type === 'label' ? 1 : 1 / zoom;
+  // Pins cancel camera zoom for their own glyph; restore it for the attached marks.
+  const scale = (object.type === 'label' ? zoom : 1) * (object.reactionSize ?? 24) / 24;
   const x = visual.x - object.x + Math.max(0, visual.width - Math.min(active.length, 7) * 28 * scale);
   const y = visual.y - object.y + visual.height + 8 * scale;
   const badges = element('g', { 'data-reactions': object.id, 'pointer-events': 'none', 'aria-hidden': 'true',
@@ -57,4 +58,19 @@ export function drawReactions(group: SVGGElement, object: DeskObject, descriptio
     text.textContent = reaction; badges.append(text);
   });
   group.append(badges);
+}
+
+/** Size is common to all reactions on each selected object, independent of pin series. */
+export function createReactionSizeControls(form:HTMLElement, selected:()=>DeskObject[], apply:(operations:Operation[])=>void, report:(message:string,error?:boolean)=>void){
+  const box=document.createElement('fieldset');box.id='reaction-size-controls';box.hidden=true;
+  const legend=document.createElement('legend');legend.textContent='リアクション';
+  const label=document.createElement('label');label.textContent='大きさ';
+  const input=document.createElement('input');input.id='reaction-size';input.type='number';input.min='1';input.max='100000';input.step='any';input.setAttribute('aria-label','リアクションの大きさ');
+  label.append(input);box.append(legend,label);form.after(box);
+  addNumberPresets(input,[16,24,36,48,64,80,100],'リアクションの大きさ');
+  input.onchange=()=>{try{const size=Number(input.value);if(!input.value||!input.checkValidity())throw new Error('大きさを確認してください');apply(selected().map(object=>({kind:'update',id:object.id,patch:{reactionSize:size}})));}catch(error){report(error instanceof Error?error.message:String(error),true);}update();};
+  input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();input.blur();}});
+  box.addEventListener('keydown',event=>event.stopPropagation());
+  function update(){const objects=selected();box.hidden=!objects.length;const sizes=objects.map(o=>o.reactionSize??24);input.value=sizes.length&&sizes.every(s=>s===sizes[0])?String(sizes[0]):'';input.placeholder='複数';}
+  return {update};
 }
