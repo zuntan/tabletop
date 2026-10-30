@@ -2,13 +2,19 @@ import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {overviewLayout,overviewUnion,offscreenDirections} from '../src/desk-overview-values';
 
-test('only fully offscreen objects indicate directions, including diagonal islands',()=>{
+test('directions use the minimap bounds, including partially offscreen objects',()=>{
  const view={x:0,y:0,width:100,height:100};
- assert.equal(offscreenDirections([{x:-5,y:10,width:20,height:20}],view),'');
- assert.equal(offscreenDirections([{x:10,y:10,width:20,height:20}],view),'');
- assert.equal(offscreenDirections([{x:-20,y:110,width:10,height:10}],view),'← ↓');
- assert.equal(offscreenDirections([{x:-20,y:-20,width:10,height:10},{x:110,y:110,width:10,height:10}],view),'← ↑ → ↓');
- assert.equal(offscreenDirections([],view),'');
+ assert.equal(offscreenDirections({x:-5,y:10,width:20,height:20},view),'←');
+ assert.equal(offscreenDirections({x:10,y:10,width:20,height:20},view),'');
+ assert.equal(offscreenDirections({x:-20,y:110,width:10,height:10},view),'← ↓');
+ assert.equal(offscreenDirections(overviewUnion([{x:-20,y:-20,width:10,height:10},{x:110,y:110,width:10,height:10}]),view),'← ↑ → ↓');
+ assert.equal(offscreenDirections(null,view),'');
+ assert.equal(offscreenDirections(view,view),'');
+ const partial={x:80,y:80,width:40,height:40};
+ assert.equal(offscreenDirections(partial,view),'→ ↓');
+ const map=overviewLayout(partial,view);
+ assert.ok(map.all!.x+map.all!.width>map.view.x+map.view.width);
+ assert.ok(map.all!.y+map.all!.height>map.view.y+map.view.height);
 });
 test('overview projects both rectangles together when neither contains the other',()=>{
  const all={x:-400,y:-100,width:1000,height:100},view={x:-50,y:-500,width:100,height:1000};

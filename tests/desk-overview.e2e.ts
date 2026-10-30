@@ -19,6 +19,11 @@ test('low-zoom footer warns about islands; two-rectangle overview opens without 
   const fills=await page.locator('#overview-map rect').evaluateAll(nodes=>nodes.map(n=>getComputedStyle(n).fill));assert.notEqual(fills[0],fills[1]);
   assert.deepEqual(await call('desk_camera_get'),before);assert.equal((await call('desk_summary')).revision,revision);
   await page.screenshot({path:'/tmp/tabletop-desk-overview.png'});
+  // No fully offscreen object remains, but one card extends beyond right/bottom.
+  const visible=(await call('desk_camera_get')).visibleBounds;
+  await call('desk_execute',{operations:[{kind:'update',id:'island',patch:{x:visible.x+visible.width-150,y:visible.y+visible.height-150}}]});
+  await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  assert.equal(await indicator.textContent(),'画面外：→ ↓');
   await call('desk_camera_move',{center:{x:0,y:0},zoom:.1,durationMs:0});
   await indicator.waitFor({state:'hidden'});
   await page.locator('#overview-toggle').press('Space');await page.locator('#overview-panel').waitFor({state:'hidden'});

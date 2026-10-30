@@ -4,7 +4,7 @@ import type {DeskObject} from './model';
 import {overviewUnion,overviewLayout,offscreenDirections,type OverviewRect} from './desk-overview-values';
 import './desk-overview.css';
 
-/** Cached object rectangles, two SVG rectangles, and one bounded low-zoom direction check. */
+/** Cached object rectangles, two SVG rectangles, and a constant-time low-zoom direction check. */
 export function createDeskOverview(workspace:HTMLElement,canvas:SVGSVGElement,message:HTMLElement,camera:Camera){
   const status=document.createElement('span');status.id='offscreen-indicator';status.hidden=true;
   const statusText=document.createElement('span');statusText.id='desk-status-text';message.before(statusText);statusText.append(message,status);
@@ -20,14 +20,14 @@ export function createDeskOverview(workspace:HTMLElement,canvas:SVGSVGElement,me
   const legend=document.createElement('div');legend.className='overview-legend';legend.innerHTML='<span class="overview-all-key">机上全体</span><span class="overview-view-key">表示範囲</span>';
   panel.append(map,legend);control.append(toggle,panel);workspace.append(control);
   let open=false;try{open=localStorage.getItem('tabletop.overview.open')==='true';}catch{/* In-memory fallback. */}
-  let boxes:OverviewRect[]=[],all:OverviewRect|null=null,frame=0;
+  let all:OverviewRect|null=null,frame=0;
   function update(){
     frame=0;if(canvas.clientWidth<=0||canvas.clientHeight<=0)return;
     const view=cameraView(camera,{width:canvas.clientWidth,height:canvas.clientHeight}).visibleBounds;
-    const directions=camera.zoom<.1?offscreenDirections(boxes,view):'';
+    const directions=camera.zoom<.1?offscreenDirections(all,view):'';
     const label=directions?`画面外：${directions}`:'';
     if(status.textContent!==label)status.textContent=label;status.hidden=!directions;
-    status.title='10%未満：表示範囲の外にあるオブジェクトの方向';
+    status.title='10%未満：机上全体の矩形が表示範囲からはみ出す方向';
     panel.hidden=!open;toggle.setAttribute('aria-expanded',String(open));
     if(!open)return;
     const layout=overviewLayout(all,view);
@@ -41,7 +41,7 @@ export function createDeskOverview(workspace:HTMLElement,canvas:SVGSVGElement,me
   control.addEventListener('pointerdown',event=>event.stopPropagation());control.addEventListener('wheel',event=>event.stopPropagation());
   new ResizeObserver(schedule).observe(canvas);
   return {cameraChanged:schedule,setObjects(objects:readonly DeskObject[]){
-    boxes=objects.map(object=>isConnector(object)?bounds(object):{x:object.x,y:object.y,width:object.width,height:object.height});
+    const boxes=objects.map(object=>isConnector(object)?bounds(object):{x:object.x,y:object.y,width:object.width,height:object.height});
     all=overviewUnion(boxes);schedule();
   }};
 }

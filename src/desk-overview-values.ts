@@ -5,15 +5,11 @@ export function overviewUnion(rects:readonly OverviewRect[]):OverviewRect|null{
   for(const rect of rects){x=Math.min(x,rect.x);y=Math.min(y,rect.y);right=Math.max(right,rect.x+rect.width);bottom=Math.max(bottom,rect.y+rect.height);}
   return {x,y,width:right-x,height:bottom-y};
 }
-/** Only fully offscreen objects count; a diagonal island can indicate two directions. */
-export function offscreenDirections(rects:readonly OverviewRect[],view:OverviewRect):string{
-  let left=false,right=false,up=false,down=false;
-  for(const rect of rects){
-    left ||= rect.x+rect.width<=view.x;right ||= rect.x>=view.x+view.width;
-    up ||= rect.y+rect.height<=view.y;down ||= rect.y>=view.y+view.height;
-    if(left&&right&&up&&down)break;
-  }
-  return [left?'←':'',up?'↑':'',right?'→':'',down?'↓':''].filter(Boolean).join(' ');
+/** Compare the same unprojected rectangles used by the minimap. */
+export function offscreenDirections(all:OverviewRect|null,view:OverviewRect):string{
+  if(!all)return '';
+  return [all.x<view.x?'←':'',all.y<view.y?'↑':'',
+    all.x+all.width>view.x+view.width?'→':'',all.y+all.height>view.y+view.height?'↓':''].filter(Boolean).join(' ');
 }
 /** Fit the union of both rectangles, rather than assuming either contains the other. */
 export function overviewLayout(all:OverviewRect|null,view:OverviewRect,width=164,height=112){
