@@ -67,7 +67,7 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
   container.addEventListener('keydown', event => { if (event.code === 'Space') event.stopPropagation(); });
   return { update(objects: DeskObject[]) {
     const texts = objects.filter(o => ['text','file'].includes(o.type));
-    repeat.disabled=!texts.length;
+    repeat.disabled=!texts.length;trigger.disabled=!texts.length;
     buttons.forEach(button => { button.disabled = !texts.length; });
     clear.disabled = !texts.some(o => o.stamp);
   } };

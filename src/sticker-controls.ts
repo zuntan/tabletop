@@ -59,7 +59,7 @@ export function createStickerControls(form: HTMLElement, selected:()=>DeskObject
   fixed.onchange=()=>commit({kind:'settings',patch:{fixed:fixed.checked}});
   box.addEventListener('keydown',event=>event.stopPropagation());
   function update(){
-    const objects=selected().filter(stickerTarget);box.hidden=!objects.length;repeat.disabled=!objects.length;
+    const objects=selected().filter(stickerTarget);box.hidden=!objects.length;repeat.disabled=!objects.length;trigger.disabled=!objects.length;
     const configs=objects.map(object=>stickerSchema.parse(object.stickers??{}));
     const one=<K extends keyof Stickers>(key:K)=>configs.length&&configs.every(c=>c[key]===configs[0][key])?configs[0][key]:undefined;
     origin.value=one('origin')??'';picker.menu.textContent=names[origin.value as keyof typeof names]??'複数';

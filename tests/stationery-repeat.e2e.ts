@@ -6,8 +6,10 @@ test('split stationery buttons repeat applied choices, independent of previews a
  const {page,call,close,errors}=await openTestDesk('stationery-repeat');
  try{
   await call('desk_execute',{operations:[{kind:'add',object:{id:'a',type:'text',x:200,y:200,width:400,height:300,text:'A'}},{kind:'add',object:{id:'b',type:'text',x:700,y:200,width:400,height:300,text:'B'}},{kind:'add',object:{id:'line',type:'line',x:0,y:0,x2:100,y2:0}}]});
-  assert.equal(await page.locator('#stamp-open').isDisabled(),true);
+  assert.equal(await page.locator('#stamp-open').isDisabled(),true);assert.equal(await page.locator('#stamp-menu').isDisabled(),true);assert.equal(await page.locator('#sticker-menu').isDisabled(),true);
   await call('desk_select',{ids:['a']});
+  for(const selector of ['#stamp-open','#stamp-menu','#sticker-open','#sticker-menu']){await page.locator(selector).hover();const pair=await page.locator(selector.startsWith('#stamp')?'#stamp-controls > button':'#sticker-toolbar > button').evaluateAll(nodes=>nodes.map(n=>({background:getComputedStyle(n).backgroundColor,border:getComputedStyle(n).borderColor})));assert.deepEqual(pair[0],pair[1]);}
+
   await page.evaluate(()=>{(window as any).__stationeryBody=document.querySelector('[data-id="a"]');(window as any).__stationeryOther=document.querySelector('[data-id="b"]');});
   await page.locator('#stamp-open').click();assert.equal(await page.locator('[data-id="a"] [data-stamp="done_ja"]').count(),1);assert.equal((await call('desk_get',{id:'a'})).stamp.designId,'done_ja');
   assert.equal(await page.locator('[data-id="a"] [data-stamp]').getAttribute('data-compact'),'false');

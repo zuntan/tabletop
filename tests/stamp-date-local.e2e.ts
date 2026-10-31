@@ -5,6 +5,7 @@ import {openTestDesk} from './desk-browser';
 test('stamp date preference survives a new desk at the same browser origin',{timeout:45000},async()=>{
  const name='stamp-date-local';const {page,call,close,port,errors}=await openTestDesk(name);
  try{
+  await call('desk_execute',{operations:[{kind:'add',object:{id:'first',type:'text',text:'日付設定'}}]});await call('desk_select',{ids:['first']});
   assert.equal(await page.locator('#stamp-dated').isChecked(),false);
   await page.locator('#stamp-menu').click();await page.locator('#stamp-dated').check();
   assert.equal(await page.evaluate(()=>localStorage.getItem('tabletop.stamp.dated')),'true');
