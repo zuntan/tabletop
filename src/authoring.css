@@ -117,3 +117,8 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 6px 10px; padding-top: 6px;
 .wayfinder-mode button[aria-pressed="true"] { background:var(--ui-selected,#dbeafe); border-color:#2563eb; }
 
 [data-link-display] { white-space:nowrap; }
+
+/* Clip attachment points follow the same spatial arrangement as the card. */
+.number-preset-choices.clip-anchor-choices { display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(3,36px); gap:6px; }
+.clip-anchor-choices .clip-anchor-paper { grid-area:2 / 2; margin:2px 5px; border:1.5px solid currentColor; border-radius:3px; background:linear-gradient(currentColor,currentColor) 50% 35% / 60% 1px no-repeat,linear-gradient(currentColor,currentColor) 50% 55% / 60% 1px no-repeat; opacity:.65; pointer-events:none; }
+.clip-anchor-choices button { padding:4px; }

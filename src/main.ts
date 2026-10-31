@@ -175,13 +175,13 @@ app.innerHTML = `
           <label hidden>配置方式<select name="rulerMode"><option value="free">自由</option><option value="gap">均等</option><option value="center">中心均等</option></select></label>
           <label hidden>定規の素材<select name="rulerMaterial"><option value="acrylic">アクリル</option><option value="bamboo">竹</option><option value="steel">ステンレス</option></select></label>
           <label hidden>定規の幅<select name="rulerThickness"><option value="24">24</option><option value="36">36</option><option value="48">48</option></select></label>
-          <label hidden>間隔の指定<select name="clipOffsetMode"><option value="fixed">固定距離</option><option value="percent">割合（直前の紙）</option><option value="base-short-side">割合（1枚目の短辺）</option></select></label>
-          <label hidden>クリップの割合（%）<input name="clipOffsetPercent" type="number" min="0" step="any"></label>
-          <label hidden>クリップの間隔<input name="clipOffset" type="number" min="0" step="any"></label>
           <label hidden>クリップのサイズ<input name="clipSize" type="number" min="1" max="100000" step="any"></label>
           <label hidden>サイズ指定<select name="clipAutoSize"><option value="false">数値指定</option><option value="true">自動（1枚目に合わせる）</option></select></label>
           <label hidden>留め位置<select name="clipAnchor"><option value="top-left">左上</option><option value="top">上</option><option value="top-right">右上</option><option value="right">右</option><option value="bottom-right">右下</option><option value="bottom">下</option><option value="bottom-left">左下</option><option value="left">左</option></select></label>
           <label hidden>クリップの形<select name="clipStyle"><option value="binder">ダブルクリップ</option><option value="wire">ゼムクリップ</option></select></label>
+          <label hidden>間隔の指定<select name="clipOffsetMode"><option value="fixed">固定距離</option><option value="percent">割合（直前の紙）</option><option value="base-short-side">割合（1枚目の短辺）</option></select></label>
+          <label hidden>クリップの割合（%）<input name="clipOffsetPercent" type="number" min="0" step="any"></label>
+          <label hidden>クリップの間隔<input name="clipOffset" type="number" min="0" step="any"></label>
           <label class="wide">テキスト<textarea name="text" rows="3"></textarea></label>
           <label class="wide" hidden>QRコードの内容<textarea name="qrText" rows="8" spellcheck="false" disabled></textarea></label>
           <label class="wide" hidden>Mermaidソース<textarea name="mermaidSource" rows="8" spellcheck="false" disabled></textarea></label>
@@ -253,7 +253,15 @@ const clipMenuUpdates = ([
   const input=form.elements.namedItem(name) as HTMLSelectElement;
   const {menu,choices,wrapper}=addPresetPalette(input,Object.keys(labels),label);input.hidden=true;wrapper.classList.add('line-style-picker');
   for(const button of choices.querySelectorAll<HTMLButtonElement>('button')) {button.textContent=(labels as Record<string,string>)[button.dataset.value!];button.setAttribute('aria-label',button.textContent);}
-  return ()=>{menu.textContent=(labels as Record<string,string>)[input.value]??'';};
+  if(name==='clipAnchor'){
+    choices.classList.add('clip-anchor-choices');
+    const positions:Record<string,[number,number]>={'top-left':[1,1],top:[1,2],'top-right':[1,3],left:[2,1],right:[2,3],'bottom-left':[3,1],bottom:[3,2],'bottom-right':[3,3]};
+    const paper=document.createElement('span');paper.className='clip-anchor-paper';paper.setAttribute('aria-hidden','true');choices.append(paper);
+    for(const button of choices.querySelectorAll<HTMLButtonElement>('button')){
+      const [row,column]=positions[button.dataset.value!];button.style.gridRow=String(row);button.style.gridColumn=String(column);
+    }
+  }
+  return ()=>{menu.textContent=(labels as Record<string,string>)[input.value]??'';choices.querySelectorAll<HTMLButtonElement>('button').forEach(button=>button.setAttribute('aria-pressed',String(input.value===button.dataset.value)));};
 });
 const updateStrokeWidthMode=createStrokeWidthMode(form.elements.namedItem('fixedWidth') as HTMLInputElement,'線の太さ固定');
 const updateConnectorLineStyle = createLineStylePicker(form.elements.namedItem('dash') as HTMLSelectElement);
