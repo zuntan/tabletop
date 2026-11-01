@@ -143,7 +143,7 @@ app.innerHTML = `
   <main>
     <section id="workspace" aria-label="共有キャンバス">
       <svg id="canvas" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tabletop キャンバス" tabindex="0">
-        <defs><pattern id="dots" x="-12" y="-12" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="12" cy="12" r="1" fill="#cbd5e1"/></pattern></defs>
+        <defs><pattern id="dots" x="-12" y="-12" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="12" cy="12" r="1" fill="#cbd5e1"/><path d="" fill="none" stroke="#cbd5e1" stroke-width="1" display="none"/></pattern></defs>
         <rect id="desk-background" width="100%" height="100%" fill="#f8fafc"/>
         <rect id="desk-wallpaper" width="100%" height="100%" fill="none"/>
         <rect id="desk-grid" width="100%" height="100%" fill="url(#dots)"/>
@@ -445,6 +445,9 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
   if (busy || gesture || editor.isActive()) { notify('操作が終わってから実験を開いてください', true); return; }
   void rasterPointedCard(desk, id => drawnNodes.get(id)).then(raster => openBhPreview(raster.dataUrl))
     .catch(error => notify(error instanceof Error ? error.message : String(error), true));
+}, patch=>{
+  if (busy || gesture || editor.isActive()) { notify('操作が終わってから設定を変更してください', true); deskMenu.refresh(); return; }
+  attempt(()=>execute([{kind:'grid_update',patch}]));
 });
 const labels: Record<DeskObject['type'], string> = { ...shapeNames, wayfinder:'道しるべ', label: 'ピン', ellipse: '楕円', line: '線', text: 'カード', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', ruler:'定規', file:'クリアファイル', mermaid: 'Mermaid', qrcode:'QRコード', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
@@ -488,6 +491,9 @@ function cameraChanged() {
   dots.setAttribute('x', String(grid.origin.x - grid.interval / 2)); dots.setAttribute('y', String(grid.origin.y - grid.interval / 2));
   dots.querySelector('circle')!.setAttribute('cx', String(grid.interval / 2));
   dots.querySelector('circle')!.setAttribute('cy', String(grid.interval / 2));
+  const gridLines=settings.background.gridStyle==='lines',gridColor=settings.background.gridColor??'#cbd5e1';
+  dots.querySelector('circle')!.setAttribute('fill',gridColor);dots.querySelector('circle')!.setAttribute('display',gridLines?'none':'inline');
+  const gridPath=dots.querySelector('path')!;gridPath.setAttribute('d',`M ${grid.interval/2} 0 V ${grid.interval} M 0 ${grid.interval/2} H ${grid.interval}`);gridPath.setAttribute('stroke',gridColor);gridPath.setAttribute('display',gridLines?'inline':'none');
   dots.setAttribute('patternTransform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
   $('#zoom-reset .tool-icon').textContent = `${Math.round(camera.zoom * 100)}%`;
   refreshPinPresentation();

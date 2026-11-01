@@ -18,7 +18,7 @@ export function groupToolbar(nav: HTMLElement) {
   parts.append(select);
   const clearAi = document.createElement('button');
   clearAi.id = 'clear-ai-pointing';
-  iconButton(clearAi, '↖×', 'AIの選択（指差し）を解除');
+  iconButton(clearAi, '↖×', 'AI指差し解除');
   clearAi.disabled = true;
   parts.append(clearAi);
   const icons: Record<string, [string, string]> = {

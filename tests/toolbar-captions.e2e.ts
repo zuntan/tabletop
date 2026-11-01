@@ -60,7 +60,7 @@ test('toolbar captions stay visible and flexible groups keep editing actions tog
       assert.equal(await page.locator('#reaction-more').isVisible(), true);
       assert.equal(await page.locator('[data-add="text"] .tool-caption').isVisible(), true);
       assert.equal(await page.locator('#clear-ai-pointing').isVisible(), true);
-      assert.equal(await page.locator('#clear-ai-pointing .tool-caption').innerText(), 'AI選択解除');
+      assert.equal(await page.locator('#clear-ai-pointing .tool-caption').innerText(), 'AI指差し\n解除');
       const back = (await page.locator('#back').boundingBox())!;
       const trigger = (await page.locator('#reaction-more').boundingBox())!;
       assert.equal(back.y, trigger.y);

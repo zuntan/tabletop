@@ -48,3 +48,9 @@ test('tight frame keeps small padding and accounts for wide number formats', () 
   assert.ok(tightFrame(24, 'pin', ['123']).width > 36);
   assert.equal(tightFrame(24, 'roundedRect', ['XX'], () => 40).width, 52);
 });
+
+test('new series frame includes the next formatted number and keeps explicit dimensions',()=>{
+ const desk=new Desk();desk.execute({operations:[{kind:'series_add',series:{id:'roman',name:'Roman',format:'upper-roman'}}]});
+ const series=desk.settingsSnapshot().series.find(s=>s.id==='roman')!;
+ assert.deepEqual({width:series.width,height:series.height},tightFrame(series.fontSize,'pin',['I','II']));
+});

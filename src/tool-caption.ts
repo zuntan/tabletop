@@ -11,7 +11,7 @@ const buttonIcons: Record<string, IconName> = {
 };
 
 const shortCaptions: Record<string, string> = {
-  'file-create':'クリア\nファイル', 'clear-ai-pointing': 'AI選択解除', 'delete-animated': '削除', 'cutout-create': '型抜き',
+  'file-create':'クリア\nファイル', 'clear-ai-pointing': 'AI指差し\n解除', 'delete-animated': '削除', 'cutout-create': '型抜き',
   'selection-mode': '選択', rect: '矩形', roundedRect: '角丸', ellipse: '楕円', line: '線', arrow: '矢印', text: 'カード',
   image: '画像', mermaid: 'Mermaid', qrcode:'QRコード', web: 'Web資料', link: 'リンク', numbering: 'ピン', clipboard: '貼り付け',
   'wayfinder-create':'道しるべ', 'zoom-out': '縮小', 'zoom-reset': '100%へ', 'zoom-in': '拡大', fit: '全体', 'view-center': '中心',

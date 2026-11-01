@@ -100,10 +100,10 @@ nav { flex-wrap: wrap; align-items: flex-start; gap: 6px 10px; padding-top: 6px;
 #prop-head-selection[aria-checked="true"] .thinking-switch-track::before { left:18px; }
 
 /* Two-line stationery name, within the standard toolbar button height. */
-.toolbar-group #file-create { gap: 1px; padding-top: 2px; padding-bottom: 2px; }
-#file-create .tool-icon { height: 16px; line-height: 16px; }
-#file-create .ui-icon { width: 16px; height: 16px; }
-#file-create .tool-caption { white-space: pre-line; line-height: 10px; }
+.toolbar-group :is(#file-create, #clear-ai-pointing) { gap: 1px; padding-top: 2px; padding-bottom: 2px; }
+:is(#file-create, #clear-ai-pointing) .tool-icon { height: 16px; line-height: 16px; }
+:is(#file-create, #clear-ai-pointing) .ui-icon { width: 16px; height: 16px; }
+:is(#file-create, #clear-ai-pointing) .tool-caption { white-space: pre-line; line-height: 10px; }
 .line-input-tools { display: inline-flex; align-items: stretch; gap: 0; }
 .line-input-tools #line-input-open { min-width: 20px; width: 20px; padding: 0; height: 46px; color: #64748b; }
 #line-input-open[data-active] { background: #dbeafe; border-color: #2563eb; }

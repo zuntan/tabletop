@@ -13,10 +13,14 @@ test('pin toolbar adds immediately; selected/last/arbitrary/new series and first
   const second=await add();assert.equal(second.number,2);assert.equal(second.seriesId,first.seriesId);
   const count=(await call('desk_summary')).count;await page.locator('#canvas').click({position:{x:800,y:500}});assert.equal((await call('desk_summary')).count,count);
   assert.equal((await add()).number,3);
+  await call('desk_execute',{operations:[{kind:'defaults_update',patch:{fontSize:64}}]});
   const revision=(await call('desk_summary')).revision;
   await page.locator('#pin-series-menu').click();await page.locator('#pin-series-new').click();
   const newId=(await call('desk_selection')).ids[0],fresh=await call('desk_get',{id:newId});assert.notEqual(fresh.seriesId,first.seriesId);assert.equal(fresh.number,1);assert.equal((await call('desk_summary')).revision,revision+1);
   await call('desk_undo');assert.equal((await call('desk_settings')).series.length,1);await call('desk_redo');assert.equal((await call('desk_settings')).series.length,2);
+  await call('desk_select',{ids:[newId]});
+  if(!await page.locator('#series-panel').isVisible())await page.locator('#numbering-settings').click();await page.locator('#series-fit').click();
+  const fitted=(await call('desk_settings')).series.find((s:any)=>s.id===fresh.seriesId);assert.equal(fresh.fontSize,64);assert.equal(fitted.width,fresh.width);assert.equal(fitted.height,fresh.height);await page.locator('#numbering-settings').click();
   await call('desk_select',{ids:[newId]});await page.locator('#canvas').focus();await page.keyboard.press('Delete');assert.equal((await call('desk_settings')).series.length,2);
   await call('desk_select',{ids:[]});assert.equal((await add()).seriesId,fresh.seriesId);
   await call('desk_select',{ids:[first.id,second.id]});assert.equal((await add()).seriesId,first.seriesId);

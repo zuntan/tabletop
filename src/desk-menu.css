@@ -55,3 +55,28 @@
 #desk-menu-panel .about-project-links,
 #desk-menu-panel .about-project-license,
 #desk-menu-panel .about-links { text-align: center; }
+
+#desk-menu-panel .desk-menu-frame-color,
+#desk-menu-panel .desk-menu-inline-field { grid-template-columns: 104px minmax(0,1fr); align-items:center; gap:8px; }
+#desk-menu-panel .desk-menu-frame-color .desk-menu-colors,
+#desk-menu-panel .desk-menu-inline-field .desk-menu-colors { gap:8px; }
+#desk-menu-panel .desk-menu-frame-color .desk-menu-colors label { white-space:nowrap; }
+
+#desk-menu-panel .desk-menu-inline-field > label { display:flex; align-items:center; gap:4px; }
+#desk-menu-panel .desk-menu-inline-field .number-presets { min-width:0; }
+#desk-menu-panel #grid-interval { width:72px; min-width:0; }
+
+#desk-menu-panel.desk-appearance { width:360px; }
+#desk-menu-panel .desk-menu-grid-field { display:grid; grid-template-columns:104px minmax(0,1fr); align-items:center; gap:8px; }
+#desk-menu-panel .desk-menu-grid-field > span { white-space:nowrap; }
+#desk-menu-panel .desk-menu-grid-controls { display:flex; align-items:center; gap:8px; min-width:0; }
+#desk-menu-panel .desk-menu-grid-controls > label { display:flex; align-items:center; gap:4px; white-space:nowrap; }
+#desk-menu-panel .desk-menu-grid-controls input[type=color] { width:44px; flex-shrink:0; }
+#desk-menu-panel .desk-menu-grid-controls select { width:48px; height:30px; padding:4px; flex-shrink:0; }
+#desk-menu-panel .desk-menu-grid-controls .number-presets { gap:4px; flex-shrink:0; }
+#desk-menu-panel .desk-menu-grid-controls #grid-interval { width:52px; }
+
+#desk-menu-panel .desk-menu-grid-interval { grid-template-columns:140px minmax(0,1fr); }
+#desk-menu-panel .desk-menu-inline-field .desk-menu-range { min-width:0; gap:6px; }
+
+#desk-menu-panel .desk-menu-grid-interval #grid-interval { width:52px; flex:0 0 52px; }

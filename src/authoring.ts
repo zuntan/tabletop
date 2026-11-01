@@ -5,7 +5,7 @@ import { objectSchema, type Desk, type DeskObject, type Operation } from './mode
 import { colorOperations, createColorControls } from './color-controls';
 import { isConnector, isShape } from './geometry';
 import { formatSchema, type Series } from './settings';
-import { browserPinFitOperations } from './pin-fit';
+import { browserPinFitOperations,browserPinFrame } from './pin-fit';
 import { opacityOperations, transparencyPercent, opacityFromPercent } from './fill-opacity';
 import { iconButton } from './toolbar';
 import { randomUuid } from './portable-crypto';
@@ -101,12 +101,12 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     const ids = new Set(desk.selected().map(id => desk.get(id)).filter(object => object.type === 'label').map(object => object.seriesId!));
     return ids.size === 1 ? [...ids][0] : chosen;
   }
-  function addPin(seriesId: string, extra: Operation[] = []) {
+  function addPin(seriesId: string, extra: Operation[] = [], frame?:{width:number;height:number}) {
     hide();
     const previous = chosen, id = `label-${randomUuid().slice(0, 8)}`;
     chosen = seriesId;
     const current = desk.settingsSnapshot().series.find(item => item.id === seriesId);
-    const {width,height} = current ?? tightFrame(desk.settingsSnapshot().defaults.fontSize, 'pin');
+    const {width,height} = current ?? frame ?? tightFrame(desk.settingsSnapshot().defaults.fontSize, 'pin');
     const point = placementPoint();
     apply([...extra, {kind:'label_add', id, seriesId, x:point.x-width/2, y:point.y-height}], id);
     if (!desk.snapshot().some(object => object.id === id)) chosen = previous;
@@ -114,7 +114,10 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
   }
   function newSeries() {
     const id = `series-${randomUuid().slice(0, 8)}`;
-    addPin(id, [{kind:'series_add', series:{id, name:`シリーズ ${desk.settingsSnapshot().series.length+1}`}}]);
+    try{
+      const frame=browserPinFrame(desk.settingsSnapshot().defaults.fontSize,'pin',['1','2']);
+      addPin(id, [{kind:'series_add', series:{id, name:`シリーズ ${desk.settingsSnapshot().series.length+1}`,...frame}}],frame);
+    }catch(error){report(error instanceof Error?error.message:String(error),true);}
   }
   function populate() {
     const heading = document.createElement('div'); heading.className = 'number-preset-heading'; heading.textContent = 'シリーズを選んで1本追加';

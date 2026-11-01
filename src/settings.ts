@@ -14,6 +14,8 @@ export const backgroundSchema = z.object({
   titleBackground:z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
   opacity: z.number().finite().min(0).max(1).default(1),
   underlayBrightness: z.number().finite().min(0).max(1).default(0.5),
+  gridColor:z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  gridStyle:z.enum(['dots','lines']).optional(),
   showGrid: z.boolean().nullable().default(null),
   selectionColor: colorSchema.nullable().default(null),
   pointingColor: colorSchema.nullable().default(null),
@@ -125,7 +127,8 @@ export function applySettingsOperation(operation: SettingsOperation, objects: De
   } else if (operation.kind === 'series_add') {
     if (settings.series.some(series => series.id === operation.series.id)) throw new Error('Duplicate series ID');
     const fontSize = operation.series.fontSize ?? settings.defaults.fontSize;
-    const frame = tightFrame(fontSize, operation.series.shape ?? 'pin');
+    const format=operation.series.format??'decimal';
+    const frame = tightFrame(fontSize, operation.series.shape ?? 'pin',[formatNumber(format,1),formatNumber(format,2)]);
     settings.series.push(seriesSchema.parse({ ...settings.defaults, ...frame, ...operation.series }));
   } else if (operation.kind === 'series_update') {
     const index = settings.series.findIndex(series => series.id === operation.id);
