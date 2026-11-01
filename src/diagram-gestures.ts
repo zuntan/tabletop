@@ -28,6 +28,7 @@ export type Gesture = {
   detach?: boolean;
   junctionId?: string;
   endpointMoved?: boolean;
+  keyboard?: boolean;
 };
 /** Shared by endpoint preview highlights and the committed operation. */
 export function endpointSnap(gesture: Gesture, object: DeskObject, point: Point, zoom: number) {
@@ -61,10 +62,10 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
   if(gesture.mode!=='move'&&gesture.originals.some(o=>fileFor(gesture.scene,o.id)))return [];
   if (gesture.mode === 'move') {
     const filed=fileMoveOperations(gesture.scene,movable.map(o=>o.id),dx,dy);if(filed)return filed;
-    const ruled=rulerMoveOperations(gesture.scene,movable.map(o=>o.id),dx,dy,!!gesture.detach,point,zoom);if(ruled)return ruled;
+    const ruled=rulerMoveOperations(gesture.scene,movable.map(o=>o.id),dx,dy,!!gesture.detach,point,zoom,!gesture.keyboard);if(ruled)return ruled;
     const bundled=clipMoveOperations(gesture.scene,gesture.detach&&gesture.anchorId?[gesture.anchorId]:movable.map(o=>o.id),dx,dy,!!gesture.detach);
     if(bundled) return bundled;
-    if(movable.length===1 && !gesture.detach) {
+    if(movable.length===1 && !gesture.detach && !gesture.keyboard) {
       const object=movable[0];
       if(object.type==='clip' && !object.clipMembers?.length) {
         const next={x:object.x+object.width/2+dx,y:object.y+object.height*.5+dy};
@@ -134,7 +135,7 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
       if(object.attachment&&selected.has(object.attachment.objectId))patch={x:moved.x,y:moved.y};
       else{
         const targets=(gesture.snapScene??gesture.scene).filter(o=>!selected.has(o.id)&&!clipFor(gesture.scene,o.id)?.clipMembers?.slice(1).includes(o.id));
-        const candidate=movable.length===1&&!gesture.detach?snapWayfinderAttachment(moved,targets,18/zoom):undefined;
+        const candidate=movable.length===1&&!gesture.detach&&!gesture.keyboard?snapWayfinderAttachment(moved,targets,18/zoom):undefined;
         patch={x:moved.x,y:moved.y,...(candidate?{attachment:candidate.binding,attachmentAnchor:candidate.sourceAnchor}:object.attachment?{attachment:null}:{})};
       }
     } else if (object.type === 'label') {
@@ -142,7 +143,7 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
       if (object.attachment && selected.has(object.attachment.objectId)) {
         patch = { x: object.x + dx, y: object.y + dy };
       } else {
-        const candidate = movable.length === 1 && !gesture.detach
+        const candidate = movable.length === 1 && !gesture.detach && !gesture.keyboard
           ? snapPinAttachment(next, (gesture.snapScene ?? gesture.scene).filter(o => !selected.has(o.id) && !clipFor(gesture.scene,o.id)?.clipMembers?.slice(1).includes(o.id)), 18 / zoom) : null;
         const position = candidate?.point ?? next;
         patch = { x: position.x - object.width / 2, y: position.y - object.height,

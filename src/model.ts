@@ -1,3 +1,4 @@
+import {equalValue} from './value-equality';
 import {MAX_ASSET_BYTES,MAX_OBJECTS} from './data-limits';
 import {reactionPlacements} from './reaction-layout';
 import {pdfExportFields} from './pdf-export';
@@ -280,13 +281,18 @@ export class Desk {
     this.markSaved(this.revision);
     return this.summary();
   }
-  execute(input: Batch) {
+  /** Internal keyboard-preview commit. Only geometry updates may share immutable snapshots. */
+  commitGeometry(input:Batch){return this.execute(input,true);}
+  execute(input: Batch, geometryOnly=false) {
     const batch = batchSchema.parse(input);
+    if(geometryOnly && batch.operations.some(op=>op.kind!=='update'||Object.keys(op.patch).some(key=>!['x','y','x2','y2','width','height','attachment','attachmentAnchor','callout','startBinding','endBinding','startJunction','endJunction','clipMembers','rulerMembers'].includes(key))))throw new Error('Geometry updates only');
     if (batch.expectedRevision !== undefined && batch.expectedRevision !== this.revision) throw new Error('Revision conflict: refresh before editing');
-    const before = this.snapshot();
+    // Validation and connection resolution create owned objects below. Prior committed
+    // objects are immutable here; avoid duplicating every embedded image for a nudge.
+    const before = geometryOnly ? this.objects : this.snapshot();
     const beforeSettings = this.settingsSnapshot();
     const afterSettings = this.settingsSnapshot();
-    let after = this.snapshot();
+    let after = geometryOnly ? this.objects.slice() : this.snapshot();
     const placement = createGridPlacement(batch, before, value => objectSchema.parse(value));
     for (const inputOperation of batch.operations) {
       const normalized = placement.normalize(inputOperation, materializeLabels(after, afterSettings), afterSettings);
@@ -346,19 +352,25 @@ export class Desk {
         after.splice(Math.min(operation.index, after.length), 0, ...group);
       }
     }
-    after = groupPinLayers(resolveConnections(materializeLabels(after, afterSettings).map(validateObject), before).map(validateObject));
+    const validated=geometryOnly?new Map(before.map(object=>[object.id,object])):undefined;
+    const validate=(object:DeskObject)=>{
+      const known=validated?.get(object.id);
+      if(known&&equalValue(known,object))return known;
+      const result=validateObject(object);validated?.set(result.id,result);return result;
+    };
+    after = groupPinLayers(resolveConnections(materializeLabels(after, afterSettings).map(validate), before).map(validate));
     const result = () => ({ ...this.summary(), placement: { mode: placement.mode, results: placement.results.map(item => {
       const object = after.find(object => object.id === item.id);
       return { ...item, applied: object ? placementGeometry(object) : null };
     }) } });
-    if (JSON.stringify(before) === JSON.stringify(after)
-      && JSON.stringify(beforeSettings) === JSON.stringify(afterSettings)) return result();
+    if (equalValue(before,after)
+      && equalValue(beforeSettings,afterSettings)) return result();
     const targets = [...new Set(batch.operations.map(op => op.kind === 'add' ? op.object.id
       : op.kind === 'desk_rename' ? 'name' : op.kind === 'grid_update' ? 'grid' : op.kind === 'background_update' ? 'background' : op.kind === 'defaults_update' ? 'defaults' : op.kind === 'series_add' ? op.series.id : op.id))];
     const entry = { before, after, beforeSettings, afterSettings, actor: batch.actor, targets };
     this.undoStack.push(entry);
     this.redoStack = [];
-    this.commit(after, before, 'batch', batch.actor, targets, afterSettings);
+    this.commit(after, before, 'batch', batch.actor, targets, afterSettings,geometryOnly);
     return result();
   }
   undo(actor = 'human') {
@@ -377,18 +389,18 @@ export class Desk {
     this.commit(entry.after, this.objects, 'redo', actor, entry.targets, entry.afterSettings);
     return this.summary();
   }
-  private commit(after: Snapshot, before: Snapshot, operation: Change['operation'], actor: string, targets: string[], settings: Settings) {
-    const settingsChange = JSON.stringify(this.settings) === JSON.stringify(settings) ? undefined
+  private commit(after: Snapshot, before: Snapshot, operation: Change['operation'], actor: string, targets: string[], settings: Settings, owned=false) {
+    const settingsChange = equalValue(this.settings,settings) ? undefined
       : { before: this.settingsSnapshot(), after: structuredClone(settings) };
     this.settings = structuredClone(settings);
     const oldMap = new Map(before.map((o, i) => [o.id, { object: o, index: i }]));
     const newMap = new Map(after.map((o, i) => [o.id, { object: o, index: i }]));
     const details = [...new Set([...oldMap.keys(), ...newMap.keys()])].flatMap(id => {
       const old = oldMap.get(id), next = newMap.get(id);
-      if (JSON.stringify(old) === JSON.stringify(next)) return [];
+      if (equalValue(old,next)) return [];
       return [{ id, before: old?.object, after: next?.object, beforeIndex: old?.index, afterIndex: next?.index }];
     });
-    this.objects = structuredClone(after);
+    this.objects = owned ? after : structuredClone(after);
     this.selection = this.selection.filter(id => newMap.has(id));
     this.aiPointing = this.aiPointing.filter(id => newMap.has(id));
     this.changes.push(structuredClone({ revision: ++this.revision, operation, actor,

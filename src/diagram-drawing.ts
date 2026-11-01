@@ -1,3 +1,4 @@
+import {equalValue} from './value-equality';
 import type { LineRounding } from './junction-rounding';
 import { fittedShapeFont } from './shape-definitions';
 import { snapConnectorEndpoint } from './connector-junctions';
@@ -101,16 +102,16 @@ export function drawSnapTargets(layer: SVGGElement, objects: DeskObject[], point
     }
   }
 }
-export function updateScenePreview(layer: SVGGElement, scene: DeskObject[], original: DeskObject[], draw: (object: DeskObject) => void, forceLines = false) {
+export function updateScenePreview(layer: SVGGElement, scene: DeskObject[], original: DeskObject[], draw: (object: DeskObject) => void, forceLines = false, resizeMedia = false) {
   const previous = new Map(original.map(o => [o.id, o]));
   const present = new Set(scene.map(o=>o.id));
   for(const node of [...layer.children]) if(node.hasAttribute('data-id') && !present.has(node.getAttribute('data-id')!)) node.remove();
   for (const object of scene) {
     const old = previous.get(object.id)!;
-    if (!(forceLines && isConnector(object)) && JSON.stringify(object) === JSON.stringify(old)) continue;
+    if (!(forceLines && isConnector(object)) && equalValue(object,old)) continue;
     const node = [...layer.children].find(el => el.getAttribute('data-id') === object.id);
     if (!node) continue;
-    if (['web', 'image', 'svg', 'mermaid', 'qrcode', 'prop'].includes(object.type)) {
+    if (['web', 'image', 'svg', 'mermaid', 'qrcode', 'prop'].includes(object.type) && !(resizeMedia && (object.width!==old?.width||object.height!==old?.height))) {
       // Avoid reloading external media while moving. Resize is committed on release.
       node.setAttribute('transform', `translate(${object.x} ${object.y})`);
     } else {

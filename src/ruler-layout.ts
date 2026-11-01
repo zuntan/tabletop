@@ -80,7 +80,7 @@ export function rulerDropTarget(scene:DeskObject[],point:{x:number;y:number},zoo
    if(distance<=18/zoom&&(!best||distance<best.distance))best={ruler:r,side,distance};}
  }return best;
 }
-export function rulerMoveOperations(scene:DeskObject[],ids:string[],dx:number,dy:number,detach:boolean,point:{x:number;y:number},zoom:number):Operation[]|null{
+export function rulerMoveOperations(scene:DeskObject[],ids:string[],dx:number,dy:number,detach:boolean,point:{x:number;y:number},zoom:number,allowDrop=true):Operation[]|null{
  const selected=scene.filter(o=>ids.includes(o.id)),updates=new Map<string,Partial<DeskObject>>();let handled=false;
  const put=(id:string,patch:Partial<DeskObject>)=>updates.set(id,{...updates.get(id),...patch});
  for(const o of selected){const owner=rulerFor(scene,o.id);if(!owner)continue;handled=true;
@@ -92,7 +92,7 @@ export function rulerMoveOperations(scene:DeskObject[],ids:string[],dx:number,dy
   if(owner.rulerMode==='free')put(o.id,vertical?{y:next}:{x:next});
   else {const member=members.find(m=>m.id===o.id)!;const same=members.filter(m=>m.side===member.side&&m.id!==o.id);const center=next+(vertical?o.height:o.width)/2;let index=same.findIndex(m=>{const t=scene.find(t=>t.id===m.id)!;return (vertical?t.y+t.height/2:t.x+t.width/2)>center;});if(index<0)index=same.length;same.splice(index,0,member);let i=0;members=members.map(m=>m.side===member.side?same[i++]:m);put(owner.id,{rulerMembers:members});}
  }
- if(!handled&&selected.length===1&&!detach&&rulerTarget(selected[0])&&!filed(scene,selected[0].id)&&!clipped(scene,selected[0].id)){
+ if(allowDrop&&!handled&&selected.length===1&&!detach&&rulerTarget(selected[0])&&!filed(scene,selected[0].id)&&!clipped(scene,selected[0].id)){
   const hit=rulerDropTarget(scene,point,zoom,ids);if(hit){handled=true;const o=selected[0];put(o.id,{x:o.x+dx,y:o.y+dy});put(hit.ruler.id,{rulerMembers:[...hit.ruler.rulerMembers??[],{id:o.id,side:hit.side}]});}
  }
  if(!handled)return null;

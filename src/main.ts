@@ -1,3 +1,4 @@
+import {KeyboardGeometryEdit} from './keyboard-geometry';
 import {newPartGridSize} from './grid';
 import {MAX_ASSET_BYTES,checkAssetBytes} from './data-limits';
 import {encodeDeskFile,decodeDeskFile} from './desk-file';
@@ -651,8 +652,8 @@ function drawObjectRaw(object: DeskObject) {
   drawStickers(group, object, camera.zoom);
   objectsLayer.append(group);
 }
-function drawSelection(preview?: DeskObject[], scene = preview) {
-  for (const object of scene ?? renderedScene) {
+function drawSelection(preview?: DeskObject[], scene = preview, refreshStamps=true) {
+  for (const object of refreshStamps ? scene ?? renderedScene : []) {
     const node = drawnNodes.get(object.id);
     if (node && ['text','file'].includes(object.type) && (object.stamp || node.querySelector('[data-stamp]'))) {
       const source=object.cutout?node.querySelector<SVGGElement>('[data-cutout-source]'):node;
@@ -698,15 +699,15 @@ function drawSelection(preview?: DeskObject[], scene = preview) {
 }
 let previousObjectListSelection = '';
 let pendingObjectListSelection = false;
-function drawMoveFrame(scene: DeskObject[]) {
+function drawMoveFrame(scene: DeskObject[], resizeMedia=false) {
   const previous = renderedScene;
   const hadRounding = renderedRounding.size > 0;
   renderedScene = scene;
   renderedById.clear(); for (const object of scene) renderedById.set(object.id, object);
   renderedRounding = buildJunctionRounding(scene.map(connectorForView));
-  updateScenePreview(objectsLayer, scene, previous, drawObject, hadRounding || renderedRounding.size > 0);
+  updateScenePreview(objectsLayer, scene, previous, drawObject, hadRounding || renderedRounding.size > 0,resizeMedia);
   refreshPinPresentation(); drawPinThreads(scene);
-  drawSelection(scene.filter(object => desk.selected().includes(object.id)), scene);
+  drawSelection(scene.filter(object => desk.selected().includes(object.id)), scene,!resizeMedia);
 }
 /** Decoration edits preserve every card body and unrelated rendered object. */
 function renderDecorations(ids:string[]){
@@ -1125,12 +1126,47 @@ canvas.addEventListener('pointerup', event => endGesture(event));
 canvas.addEventListener('pointercancel', event => endGesture(event, true));
 canvas.addEventListener('lostpointercapture', event => { if (gesture) endGesture(event, true); });
 window.addEventListener('blur', () => { space = false; if (gesture) { gesture = null; busy = false; render(); } });
+let keyboardEdit:{edit:KeyboardGeometryEdit,revision:number}|undefined;
+function finishKeyboardEdit(){
+  const current=keyboardEdit;if(!current)return;
+  keyboardEdit=undefined;busy=false;
+  try{
+    const operations=current.edit.operations();
+    if(operations.length)desk.commitGeometry({actor:'human',snap:'exact',expectedRevision:current.revision,operations});
+    // Geometry changes do not alter the object list, tools, paint or selection.
+    // Preserve unrelated DOM/media instead of rebuilding the entire desk on release.
+    drawMoveFrame(desk.snapshot(),true);
+    deskOverview.setObjects(renderedScene.filter(pinIsVisible));
+    $('#revision').textContent=`rev. ${desk.revision}`;
+    $<HTMLButtonElement>('#undo').disabled=!desk.summary().canUndo;
+    $<HTMLButtonElement>('#redo').disabled=!desk.summary().canRedo;
+    const ids=desk.selected();if(ids.length===1)propertyEditor.sync(desk.get(ids[0]));
+    refreshHistory();
+    notify(`revision ${desk.revision} · ${desk.summary().count} オブジェクト`);
+  }catch(error){render();notify(error instanceof Error?error.message:String(error),true);}
+}
+window.addEventListener('keyup',event=>{if(event.key.startsWith('Arrow'))finishKeyboardEdit();});
+window.addEventListener('blur',finishKeyboardEdit);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)finishKeyboardEdit();});
+window.addEventListener('pointerdown',finishKeyboardEdit,true);
 window.addEventListener('keydown', event => {
+  if(keyboardEdit && (!event.key.startsWith('Arrow')||event.ctrlKey||event.metaKey))finishKeyboardEdit();
   if((isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive()))return;
   if (editor.isActive()) return;
   if ((event.target as Element).closest('input,textarea,select') || colorControls.isOpen()) return;
   if (event.code === 'Space') { space = true; event.preventDefault(); }
   if (gesture) return;
+  if (event.key.startsWith('Arrow') && !event.ctrlKey && !event.metaKey) {
+    if((busy&&!keyboardEdit) || identityControls.isEditing() || (event.target as Element).closest('[contenteditable]:not([contenteditable="false"]),[role="dialog"],button'))return;
+    event.preventDefault();
+    try{
+      keyboardEdit??={edit:new KeyboardGeometryEdit(renderedScene,desk.selected(),desk.settingsSnapshot().grid),revision:desk.revision};
+      busy=true;
+      keyboardEdit.edit.step(event.key,event.shiftKey,event.altKey,camera.zoom);
+      drawMoveFrame(keyboardEdit.edit.scene,true);
+    }catch(error){keyboardEdit=undefined;busy=false;render();notify(error instanceof Error?error.message:String(error),true);}
+    return;
+  }
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase()==='g') {
     event.preventDefault();if(busy)return;
     attempt(()=>{const scene=desk.snapshot(),selected=desk.selected();const files=selected.filter(id=>desk.get(id).type==='file');
