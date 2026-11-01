@@ -1,3 +1,4 @@
+import {checkAssetBytes} from './data-limits';
 import type {Desk} from './model';
 import {bounds} from './geometry';
 import {deskSceneRaster} from './desk-pdf';
@@ -36,7 +37,7 @@ export function createCaptureCamera(desk:Desk,canvas:SVGSVGElement,camera:Camera
   working=true;draw();cancel.disabled=true;const crop={...rect};
   try{
    let webCount=0;
-   const png=deskSceneRaster(desk,canvas,descriptions,crop).then(async result=>{webCount=result.webCount;return new Promise<Blob>((resolve,reject)=>result.bitmap.toBlob(blob=>blob?resolve(blob):reject(new Error('PNGを作成できません')),'image/png'));});
+   const png=deskSceneRaster(desk,canvas,descriptions,crop).then(async result=>{webCount=result.webCount;return new Promise<Blob>((resolve,reject)=>result.bitmap.toBlob(blob=>{try{if(!blob)throw Error('PNGを作成できません');checkAssetBytes(blob.size);resolve(blob);}catch(error){reject(error);}},'image/png'));});
    // Start the clipboard operation in the click/key activation, before asynchronous rendering.
    await navigator.clipboard.write([new ClipboardItem({'image/png':png})]);
    last=crop;working=false;close();report(`撮影した画像をコピーしました${webCount?'（Web資料の本文は代替表示）':''}`);

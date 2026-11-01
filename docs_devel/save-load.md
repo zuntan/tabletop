@@ -37,7 +37,7 @@
 
 ## 制限と安全性
 
-- 圧縮ファイル全体50 MiB、展開合計50 MiB、manifest 16 MiB、画像一枚5 MiB。
+- 無圧縮ZIP全体250MB、展開合計250MB、manifest 10MB、素材一枚10MB、オブジェクト3,000個、ZIP内ファイル3,001個。すべて十進MB。
 - オブジェクト2,000個、ピン体系2,000個、ZIPエントリ2,001個まで。
 - パスは `manifest.json` と上記の画像パスのみ許可。重複名・暗号化・分割ZIP・ZIP64・未知のversionは拒否します。
 - ZIPのディレクトリ・境界・展開前サイズ制限、展開後サイズ・CRC、画像SHA-256、JSONスキーマとオブジェクト間参照を検証します。
@@ -52,3 +52,5 @@ ZIPライブラリは [fflate](https://github.com/101arrowz/fflate)。ZIP生成�
 - `npm exec -- tsx --test tests/desk-file.test.ts`：往復、画像重複排除、欠落画像、原子的置換、Undo／Redo、不正manifest・参照・サイズ。
 - `npm exec -- tsx --test tests/desk-file.e2e.ts`：独立したChromeとMCPサーバーで保存・ダウンロード・読込・画像描画・Undo／Redo・破損ファイル・取消を確認。
 - 既存の机を開いているタブは、検証のために再読込しません。
+
+通信経由のSAVE／LOADも同じファイル形式と上限を使う。[分割転送](./binary-transfer.md)を参照。

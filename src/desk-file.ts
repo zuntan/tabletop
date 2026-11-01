@@ -1,3 +1,4 @@
+import {MAX_DESK_BYTES,MAX_ASSET_BYTES,MAX_MANIFEST_BYTES,MAX_OBJECTS} from './data-limits';
 import { publishObject } from './object-properties';
 import { zipSync, unzipSync, strToU8, strFromU8 } from 'fflate';
 import { z } from 'zod';
@@ -5,14 +6,12 @@ import { Desk } from './model';
 import { zipChecksums, verifyZipEntries } from './zip-integrity';
 import { sha256Hex } from './portable-crypto';
 
-export const MAX_DESK_FILE_BYTES = 50 * 1024 * 1024;
-const MAX_ASSET_BYTES = 5 * 1024 * 1024;
-const MAX_MANIFEST_BYTES = 16 * 1024 * 1024;
+export const MAX_DESK_FILE_BYTES = MAX_DESK_BYTES;
 const assetPath = /^assets\/[a-f0-9]{64}\.(png|jpeg|gif|webp|svg)$/;
 const mimeExtensions: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpeg',
   'image/gif': 'gif', 'image/webp': 'webp', 'image/svg+xml': 'svg' };
 const manifestSchema = z.object({ format: z.literal('tabletop'), version: z.literal(1),
-  objects: z.array(z.record(z.unknown())).max(2000), settings: z.unknown(),
+  objects: z.array(z.record(z.unknown())).max(MAX_OBJECTS), settings: z.unknown(),
   assets: z.record(z.object({ path: z.string().regex(assetPath),
     mime: z.enum(['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']) }).strict()),
 }).strict();
@@ -45,30 +44,30 @@ export async function encodeDeskFile(desk: Desk): Promise<Uint8Array> {
       const match = /^data:(image\/(?:png|jpeg|gif|webp|svg\+xml));base64,([A-Za-z0-9+/=\s]+)$/.exec(object.src);
       if (!match) throw new Error('Invalid embedded image');
       const bytes = Uint8Array.from(atob(match[2].replace(/\s/g, '')), char => char.charCodeAt(0));
-      if (!bytes.length || bytes.length > MAX_ASSET_BYTES) throw new Error('Image exceeds 5 MiB');
+      if (!bytes.length || bytes.length > MAX_ASSET_BYTES) throw new Error('Image exceeds 10MB');
       const hash = await digest(bytes);
       const path = `assets/${hash}.${mimeExtensions[match[1]]}`;
       if (!files[path]) { files[path] = bytes; total += bytes.length; }
-      if (total > MAX_DESK_FILE_BYTES) throw new Error('Desk exceeds 50 MiB');
+      if (total > MAX_DESK_FILE_BYTES) throw new Error('Desk exceeds 250MB');
       assets[object.id] = { path, mime: match[1] };
       delete copy.src;
     }
     objects.push(copy);
   }
   files['manifest.json'] = strToU8(JSON.stringify({ format: 'tabletop', version: 1, objects, settings: document.settings, assets }));
-  if (files['manifest.json'].length > MAX_MANIFEST_BYTES) throw new Error('Manifest exceeds 16 MiB');
+  if (files['manifest.json'].length > MAX_MANIFEST_BYTES) throw new Error('Manifest exceeds 10MB');
   const archive = zipSync(files, { level: 0 });
-  if (archive.length > MAX_DESK_FILE_BYTES) throw new Error('Desk file exceeds 50 MiB');
+  if (archive.length > MAX_DESK_FILE_BYTES) throw new Error('Desk file exceeds 250MB');
   return archive;
 }
 
 export async function decodeDeskFile(bytes: Uint8Array) {
-  if (bytes.length > MAX_DESK_FILE_BYTES) throw new Error('Desk file exceeds 50 MiB');
+  if (bytes.length > MAX_DESK_FILE_BYTES) throw new Error('Desk file exceeds 250MB');
   const checksums = zipChecksums(bytes);
   const names = new Set<string>();
   let total = 0;
   const files = unzipSync(bytes, { filter: file => {
-    if (names.has(file.name) || names.size >= 2001) throw new Error('Duplicate or excessive ZIP entries');
+    if (names.has(file.name) || names.size >= MAX_OBJECTS+1) throw new Error('Duplicate or excessive ZIP entries');
     names.add(file.name);
     if (file.name !== 'manifest.json' && !assetPath.test(file.name)) throw new Error('Invalid ZIP entry path');
     const limit = file.name === 'manifest.json' ? MAX_MANIFEST_BYTES : MAX_ASSET_BYTES;

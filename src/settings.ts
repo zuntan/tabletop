@@ -1,3 +1,4 @@
+import {MAX_OBJECTS} from './data-limits';
 import { z } from 'zod';
 import type { DeskObject } from './model';
 import { tightFrame } from './pin-shape';
@@ -66,7 +67,7 @@ export const settingsOperations = [
 ] as const;
 export type Appearance = z.infer<typeof appearanceSchema>;
 export type Series = z.infer<typeof seriesSchema>;
-export const settingsSchema = z.object({ defaults: appearanceSchema, series: z.array(seriesSchema).max(2000),
+export const settingsSchema = z.object({ defaults: appearanceSchema, series: z.array(seriesSchema).max(MAX_OBJECTS),
   grid: gridSettingsSchema.default({}),
   background: backgroundSchema.default({}),
   name: deskNameSchema.default(''),
@@ -135,7 +136,7 @@ export function applySettingsOperation(operation: SettingsOperation, objects: De
     const series = settings.series.find(item => item.id === operation.seriesId);
     if (!series) throw new Error(`Unknown series: ${operation.seriesId}`);
     if (objects.some(object => object.id === operation.id)) throw new Error(`Duplicate ID: ${operation.id}`);
-    if (objects.length >= 2000) throw new Error('Object limit reached');
+    if (objects.length >= MAX_OBJECTS) throw new Error('Object limit reached');
     // The model validates and materializes this draft before committing it.
     objects.push({ id: operation.id, type: 'label', seriesId: series.id,
       number: nextNumber(objects, series), x: operation.x, y: operation.y,

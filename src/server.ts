@@ -1,3 +1,4 @@
+import {MAX_WS_BYTES} from './data-limits';
 import {registerPdfTools} from './pdf-tools.js';
 import {pinFitFields} from './pin-fit';
 import {wayfinderStartFields,wayfinderStartSchema} from './wayfinder-input';
@@ -68,7 +69,7 @@ const http = createServer(async (req, res) => {
   } catch { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Run npm run build first.'); }
 });
 const network = new NetworkAccess(http, port);
-const wss = new WebSocketServer({ noServer: true, maxPayload: 24_000_000 });
+const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_WS_BYTES });
 const remotePeers = new WeakSet<WebSocket>();
 const desks:DeskConnections=new DeskConnections(()=>network.isChanging,desk=>releaseDesk(desk,true),()=>handoffTicket.clear());
 http.on('upgrade',(req,socket,head)=>{

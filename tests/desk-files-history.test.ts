@@ -1,3 +1,4 @@
+import {dataBytes} from '../src/binary-envelope';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,readFile,rm,symlink} from 'node:fs/promises';
@@ -18,7 +19,7 @@ test('normal save resolves unicode paths, overwrites atomically and keeps old by
   desk.execute({operations:[{kind:'update',id:'note',patch:{text:'second'}}]});
   await assert.rejects(service.save(path,dispatch(desk,{method:'file_snapshot'}) as any),/同名/);assert.deepEqual(await readFile(path),original);
   await service.save(path,dispatch(desk,{method:'file_snapshot'}) as any,true);
-  assert.equal((await service.load(path)).document.objects[0].text,'second');
+  assert.equal((await decodeDeskFile(dataBytes((await service.load(path)).archiveDataUrl))).objects[0].text,'second');
   await assert.rejects(service.load('../escape.tabletop'));
   await assert.rejects(service.load(join(root,'missing.tabletop')));
   if(process.platform!=='win32'){await symlink(path,join(root,'link.tabletop'));await assert.rejects(service.save(join(root,'link.tabletop'),dispatch(desk,{method:'file_snapshot'}) as any,true),/symlink/);}

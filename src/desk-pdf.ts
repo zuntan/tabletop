@@ -1,3 +1,4 @@
+import {checkAssetBytes} from './data-limits';
 import type { Desk } from './model';
 import { cloneSvgForRaster } from './part-raster';
 import { rgbPagePdf, pdfRasterSize, pdfOuterBounds } from './pdf-document';
@@ -116,5 +117,6 @@ export async function deskPdf(desk:Desk,canvas:SVGSVGElement,descriptions:(id:st
 export async function deskPng(desk:Desk,canvas:SVGSVGElement,descriptions:(id:string)=>boolean){
  const {bitmap,revision,webCount}=await deskSceneRaster(desk,canvas,descriptions);
  const blob=await new Promise<Blob>((resolve,reject)=>bitmap.toBlob(blob=>blob?resolve(blob):reject(new Error('PNGを作成できません')),'image/png'));
+ checkAssetBytes(blob.size);
  return{bytes:new Uint8Array(await blob.arrayBuffer()),revision,webCount};
 }

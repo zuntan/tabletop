@@ -1,9 +1,9 @@
+import {bytesDataUrl,dataBytes} from './binary-envelope';
 import { z } from 'zod';
 import { Desk } from './model';
 import { DeskFileStore } from './desk-file-store';
 import { decodeDeskFile, encodeDeskFile } from './desk-file';
-import { checkDeskBridgeSize } from './desk-file-protocol';
-export const fileSnapshotSchema=z.object({sessionId:z.string().uuid(),revision:z.number().int().nonnegative(),generation:z.string().uuid().optional(),objects:z.array(z.unknown()),settings:z.unknown()}).strict();
+export const fileSnapshotSchema=z.object({sessionId:z.string().uuid(),revision:z.number().int().nonnegative(),generation:z.string().uuid().optional(),objects:z.array(z.unknown()).optional(),settings:z.unknown().optional(),archiveDataUrl:z.string().optional(),count:z.number().int().optional(),name:z.string().optional()}).strict();
 const reference=z.string().min(1).max(4096);
 const browserFileSchema=z.discriminatedUnion('action',[
   z.object({action:z.literal('save'),path:reference,overwrite:z.boolean(),snapshot:fileSnapshotSchema}).strict(),
@@ -13,20 +13,20 @@ const browserFileSchema=z.discriminatedUnion('action',[
 export class DeskFileService{
   constructor(readonly store=new DeskFileStore()){}
   async save(path:string,snapshot:z.infer<typeof fileSnapshotSchema>,overwrite=false){
-    const parsed=fileSnapshotSchema.parse(snapshot);checkDeskBridgeSize(parsed);
-    const validator=new Desk();validator.replaceDocument({objects:parsed.objects,settings:parsed.settings});
-    const bytes=await encodeDeskFile(validator);
+    const parsed=fileSnapshotSchema.parse(snapshot);
+    let bytes:Uint8Array,count:number,name:string|undefined;
+    if(parsed.archiveDataUrl){bytes=dataBytes(parsed.archiveDataUrl);const decoded=await decodeDeskFile(bytes);count=decoded.objects.length;name=decoded.settings.name;}
+    else{const validator=new Desk();validator.replaceDocument({objects:parsed.objects,settings:parsed.settings});bytes=await encodeDeskFile(validator);count=validator.snapshot().length;name=validator.settingsSnapshot().name;}
     const resolved=await this.store.writeReference(path,bytes,overwrite);
-    return {path:resolved,sessionId:parsed.sessionId,revision:parsed.revision,count:parsed.objects.length,formatVersion:1,bytes:bytes.length,name:validator.settingsSnapshot().name};
+    return {path:resolved,sessionId:parsed.sessionId,revision:parsed.revision,count,formatVersion:1,bytes:bytes.length,name};
   }
   async load(path:string){
     const resolved=await this.store.reference(path);
-    const decoded=await decodeDeskFile(await this.store.readReference(resolved));
-    const result={path:resolved,document:{objects:decoded.objects,settings:decoded.settings},missingAssets:decoded.warnings};
-    checkDeskBridgeSize(result);return result;
+    const bytes=await this.store.readReference(resolved);
+    return {path:resolved,archiveDataUrl:bytesDataUrl(bytes),missingAssets:[] as string[]};
   }
   async browser(input:unknown){
-    checkDeskBridgeSize(input);const request=browserFileSchema.parse(input);
+    const request=browserFileSchema.parse(input);
     return request.action==='save'?this.save(request.path,request.snapshot,request.overwrite):this.load(request.path);
   }
 }

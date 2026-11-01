@@ -1,3 +1,5 @@
+import {packEnvelope} from './binary-envelope';
+import {MAX_DESK_BYTES,MAX_OBJECTS} from './data-limits';
 import {clipboardTransferSchema,type ClipboardTransfer} from './clipboard-transfer';
 import type {Settings} from './settings';
 import type { Desk, DeskObject, Operation } from './model';
@@ -38,7 +40,8 @@ export class PartClipboard {
   clear() { this.snapshot = undefined; }
   write(data: Pick<DataTransfer, 'setData' | 'getData'>, objects: DeskObject[], series:Settings['series']=[]) {
     if (!objects.length) throw new Error('コピーするパーツを選択してください');
-    if (objects.length > 200) throw new Error('一度にコピーできるパーツは200個までです');
+    if (objects.length > MAX_OBJECTS) throw new Error('一度にコピーできるパーツは3000個までです');
+    if(packEnvelope({objects,series}).length>MAX_DESK_BYTES)throw Error('コピー対象は250MB以下にしてください');
     const text = partClipboardText(objects), token = randomUuid();
     data.setData('text/plain', text);
     // HTML provides the same-tab marker to the toolbar's async clipboard reader too.
@@ -59,6 +62,7 @@ export class PartClipboard {
     const {objects,series}=this.snapshot;return structuredClone({token,objects,series});
   }
   pasteRemote(desk:Desk,raw:unknown,token:string,delta:{x:number;y:number}):string[]{
+    if(packEnvelope(raw).length>MAX_DESK_BYTES)throw Error('コピー対象は250MB以下にしてください');
     const transfer=clipboardTransferSchema.parse(raw);
     if(transfer.token!==token)throw new Error('Clipboard token mismatch');
     const clipboard=new PartClipboard();clipboard.snapshot={...transfer,pasted:0};
@@ -121,7 +125,7 @@ export class PartClipboard {
         operations.push({ kind: 'add', object: copy });
       }
     }
-    if (operations.length > 200) throw new Error('ピンの属性を含む貼り付け処理が200件を超えます。選択を減らしてください');
+    if (operations.length > MAX_OBJECTS*4) throw new Error('ピンの属性を含む貼り付け処理が12000件を超えます。選択を減らしてください');
     desk.execute({ actor: 'human', expectedRevision: desk.revision, snap: 'exact', operations });
     this.snapshot.pasted++;
     return [...ids.values()];

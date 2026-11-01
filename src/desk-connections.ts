@@ -1,5 +1,6 @@
+import {BinaryTransfer} from './binary-transfer';
+import {temporaryTransferSink} from './binary-transfer-node';
 import {clipboardTokenSchema,clipboardTransferSchema,type ClipboardRead} from './clipboard-transfer';
-import {checkDeskBridgeSize} from './desk-file-protocol';
 import {randomUUID} from 'node:crypto';
 import {WebSocket,type RawData} from 'ws';
 import {PairingGate} from './pairing-server';
@@ -10,12 +11,12 @@ import {DeskShareServer} from './share-server';
 import type {DeskRequest} from './desk-target';
 import type {Request} from './model';
 
-type Pending={resolve:(result:unknown)=>void;reject:(error:Error)=>void;timer:NodeJS.Timeout};
+type Pending={resolve:(result:unknown)=>void;reject:(error:Error)=>void;timer:NodeJS.Timeout|undefined};
 export class DeskConnection {
  peer:WebSocket|null=null;
  releasing=false;
  fileBusy=false;
- releaseCapable=false;bellCapable=false;toastCapable=false;
+ binaryCapable=false;releaseCapable=false;bellCapable=false;toastCapable=false;
  readonly pending=new Map<string,Pending>();
  readonly gate=new PairingGate(()=>this.peer!==null||this.releasing);
  readonly files=new DeskFileService();
@@ -25,51 +26,59 @@ export class DeskConnection {
  constructor(private changing:()=>boolean,private handoff:(desk:DeskConnection)=>Promise<unknown>,private clipboard:(desk:DeskConnection,token:string)=>Promise<unknown>=async()=>null){}
  get deskId(){const pair=this.gate.info();return pair?connectionDeskId(pair.pairId):undefined;}
  get connected(){return this.peer?.readyState===WebSocket.OPEN;}
- private send(value:unknown){if(this.connected)this.peer!.send(JSON.stringify(value));}
+ private transport:BinaryTransfer|null=null;
+ private send(value:unknown){if(this.connected)void this.transport?.send(value).catch(error=>{const v=value as any;if(v.id)void this.transport?.send({id:v.id,type:v.type==='file_result'?'file_result':undefined,error:String(error.message)});});}
  private newBell(){return new BellWait(()=>{if(this.bellCapable)this.send({type:'bell_state',...this.bell.state()});},note=>this.send({type:'bell_collected',...note}));}
  activity(){this.bell.acknowledge();if(this.bellCapable)this.send({type:'ai_activity'});}
  attach(ws:WebSocket){
-  this.peer=ws;this.releaseCapable=false;this.bellCapable=false;this.toastCapable=false;this.bell.disconnect();this.bell=this.newBell();
-  ws.on('message',data=>{
+  this.peer=ws;this.binaryCapable=false;this.releaseCapable=false;this.bellCapable=false;this.toastCapable=false;this.bell.disconnect();this.bell=this.newBell();
+  this.transport?.close();
+  let compatible=false;
+  const handle=(message:any)=>{
    try{
     if(this.peer!==ws)return;
-    const message=JSON.parse(data.toString());
+    if(message.type==='capabilities'){compatible=message.binaryTransfer===1;this.binaryCapable=compatible;}
+    if(!this.binaryCapable&&message.type!=='capabilities'){this.send({type:'file_result',id:message.id,error:'ブラウザを再読込してください（分割転送非対応）'});return;}
     if(message.type==='file_request'){
      const id=typeof message.id==='string'?message.id:'';
      if(!id||id.length>100)throw Error('Invalid file request');
      if(message.request?.method==='clipboard_lookup'){
       const token=clipboardTokenSchema.parse(message.request.token);
-      void this.clipboard(this,token).then(result=>{if(this.peer===ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'file_result',id,result}));}).catch(()=>{if(this.peer===ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'file_result',id,result:null}));});return;
+      void this.clipboard(this,token).then(result=>{if(this.peer===ws&&ws.readyState===WebSocket.OPEN)this.send({type:'file_result',id,result});}).catch(()=>{if(this.peer===ws&&ws.readyState===WebSocket.OPEN)this.send({type:'file_result',id,result:null});});return;
      }
-     if(this.fileBusy||this.pending.size||this.releasing||this.changing()){ws.send(JSON.stringify({type:'file_result',id,error:'別の処理が進行中です。完了してから再実行してください'}));return;}
+     if(this.fileBusy||this.pending.size||this.releasing||this.changing()){this.send({type:'file_result',id,error:'別の処理が進行中です。完了してから再実行してください'});return;}
      this.fileBusy=true;
-     void this.files.browser(message.request).then(result=>{if(this.peer===ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'file_result',id,result}));})
-      .catch(error=>{if(this.peer===ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'file_result',id,error:error instanceof Error?error.message:String(error)}));})
+     void this.files.browser(message.request).then(result=>{if(this.peer===ws&&ws.readyState===WebSocket.OPEN)this.send({type:'file_result',id,result});})
+      .catch(error=>{if(this.peer===ws&&ws.readyState===WebSocket.OPEN)this.send({type:'file_result',id,error:error instanceof Error?error.message:String(error)});})
       .finally(()=>{this.fileBusy=false;});return;
     }
     if(message.type==='handoff_request'){void this.handoff(this).catch(()=>{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'handoff_error',error:'引き渡しできませんでした。LANの許可・接続状態・処理中の操作を確認してください。'}));});return;}
     if(message.type==='bell_press'){const press=bellPressSchema.parse(message);this.bell.ring(press.ids,press.text,press.draftVersion);return;}
-    if(message.type==='capabilities'&&message.release===true){this.releaseCapable=true;this.bellCapable=message.bell===true;this.toastCapable=message.toast===true;if(message.fileOperations===true)this.send({type:'file_ready'});if(this.bellCapable)this.send({type:'bell_state',...this.bell.state()});return;}
+    if(message.type==='capabilities'&&message.release===true){this.releaseCapable=true;this.bellCapable=message.bell===true;this.toastCapable=message.toast===true;if(message.fileOperations===true&&compatible)this.send({type:'file_ready',binaryTransfer:1});if(this.bellCapable)this.send({type:'bell_state',...this.bell.state()});return;}
     const item=this.pending.get(message.id);if(!item)return;
     clearTimeout(item.timer);this.pending.delete(message.id);
     if(typeof message.error==='string')item.reject(Error(message.error));else item.resolve(message.result);
    }catch{ws.close(1007,'Invalid response');}
-  });
+  };
+  const transport=this.transport=new BinaryTransfer(data=>ws.send(data),handle,temporaryTransferSink);
+  let receiving=Promise.resolve();
+  ws.on('message',(data,isBinary)=>{receiving=receiving.then(()=>transport.receive(isBinary?new Uint8Array(data as Buffer):data.toString())).catch(()=>ws.close(1007,'Invalid transfer'));});
   ws.on('error',error=>console.error('[Tabletop] WebSocket:',error.message));
-  ws.on('close',()=>{if(this.peer!==ws)return;this.peer=null;this.sharing.revoke();this.bell.disconnect();this.rejectPending('Browser disconnected; operation outcome may be unknown. Inspect this desk before retrying.');});
+  ws.on('close',()=>{if(this.peer!==ws)return;this.transport?.close();this.peer=null;this.sharing.revoke();this.bell.disconnect();this.rejectPending('Browser disconnected; operation outcome may be unknown. Inspect this desk before retrying.');});
  }
  bind():DeskRequest{
   const peer=this.peer;if(!peer||!this.connected)throw Error('Desk is disconnected. Inspect desk_connections; do not redirect to another desk.');
   this.activity();return payload=>this.request(payload,peer,false);
  }
- request(payload:Request|ClipboardRead,expectedPeer=this.peer,notify=true,timeoutMs=10_000):Promise<unknown>{
+ request(payload:Request|ClipboardRead,expectedPeer=this.peer,notify=true,timeoutMs=0):Promise<unknown>{
   return new Promise((resolve,reject)=>{
    if(!expectedPeer||this.peer!==expectedPeer||expectedPeer.readyState!==WebSocket.OPEN){reject(Error('Desk disconnected or connection changed; no request was sent.'));return;}
    if(this.fileBusy||this.releasing||this.changing()){reject(Error('Desk file/release or server network operation in progress; no request was sent.'));return;}
    if(notify&&payload.method!=='share_read')this.activity();
-   const id=randomUUID(),timer=setTimeout(()=>{this.pending.delete(id);reject(Error('Browser response timed out; outcome may be unknown. Inspect this desk before retrying; no automatic replay.'));},timeoutMs);
+   const id=randomUUID(),timer=timeoutMs>0?setTimeout(()=>{this.pending.delete(id);reject(Error('Browser response timed out; outcome may be unknown. Inspect this desk before retrying; no automatic replay.'));},timeoutMs):undefined;
    this.pending.set(id,{resolve,reject,timer});
-   expectedPeer.send(JSON.stringify({id,request:payload}),error=>{if(error){clearTimeout(timer);this.pending.delete(id);reject(error);}});
+   if(!this.binaryCapable){clearTimeout(timer);this.pending.delete(id);reject(Error('Browser capabilities are not ready; reload an old browser'));return;}
+   void this.transport!.send({id,request:payload}).catch(error=>{clearTimeout(timer);this.pending.delete(id);reject(error);});
   });
  }
  rejectPending(reason:string){for(const p of this.pending.values()){clearTimeout(p.timer);p.reject(Error(reason));}this.pending.clear();}
@@ -137,8 +146,8 @@ export class DeskConnections {
   if(!requester.connected||requester.fileBusy||requester.releasing||this.changing())return null;
   const answers=await Promise.all([...this.entries].filter(d=>d!==requester&&d.connected&&!d.fileBusy&&!d.releasing&&!d.pending.size).map(async desk=>{
    try{
-    const raw=await desk.request({method:'clipboard_read',token},desk.peer,false,800);
-    if(raw===null)return null;checkDeskBridgeSize(raw);
+    const raw=await desk.request({method:'clipboard_read',token},desk.peer,false,0);
+    if(raw===null)return null;
     const data=clipboardTransferSchema.parse(raw);return data.token===token?data:null;
    }catch{return null;}
   }));

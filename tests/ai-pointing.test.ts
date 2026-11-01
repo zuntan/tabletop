@@ -13,7 +13,7 @@ test('AI pointing is independent, atomic, isolated and excluded from revisions a
   const ids = desk.pointed(); ids.push('a'); assert.deepEqual(desk.pointed(), ['b']);
   assert.throws(() => dispatch(desk, { method: 'point', ids: ['a', 'missing'] }), /Unknown pointing ID/);
   assert.deepEqual(desk.pointed(), ['b']);
-  assert.throws(() => dispatch(desk, { method: 'point', ids: Array(2001).fill('a') }));
+  assert.throws(() => dispatch(desk, { method: 'point', ids: Array(3001).fill('a') }));
   for (const method of ['state', 'context', 'selection']) {
     const result = dispatch(desk, { method }) as { aiPointing: string[] };
     assert.deepEqual(result.aiPointing, ['b']);

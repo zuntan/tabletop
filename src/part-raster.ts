@@ -1,3 +1,5 @@
+import {checkAssetBytes} from './data-limits';
+import {dataBytes} from './binary-envelope';
 import type { Desk, DeskObject } from './model';
 import { cutoutTitle } from './logical-cutout';
 
@@ -60,8 +62,7 @@ export async function rasterRenderedPart(object: DeskObject, source: SVGGElement
   if (!context) throw new Error('Canvas unavailable');
   context.drawImage(image, 0, 0);
   const drawn = performance.now();
-  const dataUrl = canvas.toDataURL('image/png');
-  if (dataUrl.length > 7_000_000) throw new Error('PNG exceeds experimental transfer limit');
+  const dataUrl = canvas.toDataURL('image/png');checkAssetBytes(dataBytes(dataUrl).length);
   return { width, height, scale, bounds,
     timingsMs: { raster: drawn - started, png: performance.now() - drawn, total: performance.now() - started },
     dataUrl, limitations: ['Single text card only; attachments and selection frames excluded', 'Current displayed stamp/reaction appearance; system fonts; approximate capture'] };
@@ -90,7 +91,7 @@ export async function cloneSvgForRaster<T extends SVGElement>(source:T):Promise<
       const response=await fetch(href,{signal:AbortSignal.timeout(5000),credentials:'omit'});
       if(!response.ok) throw new Error('画像をラスタ化できませんでした。画像の読み込みとアクセス許可を確認してください');
       const blob=await response.blob();
-      if(blob.size>5_000_000)throw new Error('画像が大きすぎます');
+      if(blob.size>10_000_000)throw new Error('画像が大きすぎます');
       const url=await new Promise<string>((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=reject;r.readAsDataURL(blob);});
       media.setAttribute('href',url);
     }

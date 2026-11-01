@@ -1,3 +1,6 @@
+import {MAX_ASSET_BYTES,checkAssetBytes} from './data-limits';
+import {encodeDeskFile,decodeDeskFile} from './desk-file';
+import {bytesDataUrl,dataBytes} from './binary-envelope';
 import {createDeskOverview} from './desk-overview';
 import {createTopbarCollapse} from './topbar-collapse';
 import {MAX_PDF_EXPORT_BYTES} from './pdf-export';
@@ -21,7 +24,6 @@ import {pagesMode} from './runtime-mode';
 import {pagesFileRequest} from './pages-desk';
 import './pages-mode.css';
 import {createOriginGuides} from './origin-guides';
-import {checkDeskBridgeSize} from './desk-file-protocol';
 import {partClipboardToken,clipboardTransferSchema} from './clipboard-transfer';
 import {applyTitleBackground} from './desk-appearance';
 import {fileCreateOperations,fileFor,fileGroup} from './clear-files';
@@ -1143,7 +1145,7 @@ async function addFiles(files: File[]) {
   try {
     for (const file of files) {
       if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'].includes(file.type)) throw new Error('対応していない画像形式です');
-      if (file.size > 5_000_000) throw new Error('画像は1枚5MB以下にしてください');
+      if (file.size > MAX_ASSET_BYTES) throw new Error('画像は1枚10MB以下にしてください');
       const src = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(new Error('画像の読み込みに失敗しました')); reader.readAsDataURL(file);
       });
@@ -1294,7 +1296,18 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if(message.type==='ai_activity'){activityLed.pulse('tool');return;}
       id = message.id;
       if (typeof id !== 'string') throw new Error('Invalid request ID');
-      if(message.request?.method==='clipboard_read'){const result=partClipboard.export(message.request.token);checkDeskBridgeSize(result);ws.send(JSON.stringify({id,result}));return;}
+      if(message.request?.method==='file_snapshot'){
+        thinkingMode.assertAllowed('file_snapshot');
+        const revision=desk.revision,generation=desk.documentGeneration,sessionId=desk.sessionId,count=desk.summary().count;
+        const bytes=await encodeDeskFile(desk);
+        ws.send(JSON.stringify({id,result:{revision,generation,sessionId,count,archiveDataUrl:bytesDataUrl(bytes)}}));return;
+      }
+      if(message.request?.method==='load_document'&&message.request.document?.archiveDataUrl){
+        const decoded=await decodeDeskFile(dataBytes(message.request.document.archiveDataUrl));
+        message.request.document={objects:decoded.objects,settings:decoded.settings};
+        message.missingAssets=decoded.warnings;
+      }
+      if(message.request?.method==='clipboard_read'){const result=partClipboard.export(message.request.token);ws.send(JSON.stringify({id,result}));return;}
       if (typeof message.request?.method === 'string') activityLed.pulse(message.request.method);
       thinkingMode.assertAllowed(message.request?.method);
       if(deskFiles.isBusy()&& !['summary','get','list','state','context','settings','selection','changes','file_saved','camera_get','ui_get'].includes(message.request?.method))throw new Error('Human file operation in progress. No change was made.');
@@ -1310,7 +1323,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
       let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid, scale => rasterPointedCard(desk, id => drawnNodes.get(id), scale),renderQrCode,{
         pdf:async()=>{
           const r=await deskPdf(desk,canvas,id=>pinDescriptionVisible(desk.get(id)));
-          if(r.bytes.length>MAX_PDF_EXPORT_BYTES)throw new Error('PDF exceeds 14 MiB transfer limit');
+          if(r.bytes.length>MAX_PDF_EXPORT_BYTES)throw new Error('PDF exceeds 250MB');
           const base64=await new Promise<string>((resolve,reject)=>{
             const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(new Error('PDF encoding failed'));
             reader.readAsDataURL(new Blob([r.bytes.slice().buffer],{type:'application/pdf'}));
@@ -1320,7 +1333,8 @@ async function connect(token: string, port: string, manual = false, host = '127.
         capture:async input=>{
           const bounds=captureBounds(desk,input);
           const r=await deskSceneRaster(desk,canvas,id=>pinDescriptionVisible(desk.get(id)),bounds,input.scale);
-          return{sessionId:desk.sessionId,revision:r.revision,bounds:r.bounds,width:r.raster.width,height:r.raster.height,scale:r.raster.scale,webCount:r.webCount,dataUrl:r.bitmap.toDataURL('image/png')};
+          const dataUrl=r.bitmap.toDataURL('image/png');checkAssetBytes(dataBytes(dataUrl).length);
+          return{sessionId:desk.sessionId,revision:r.revision,bounds:r.bounds,width:r.raster.width,height:r.raster.height,scale:r.raster.scale,webCount:r.webCount,dataUrl};
         },
         pinFit:input=>{
           const operations=browserPinFitOperations(desk,input.seriesIds);
@@ -1345,6 +1359,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
           result = { ...(result as Record<string, unknown>), animation: { status, durationMs: flight.durationMs, ids: flight.ids } };
         }
       }
+      if(message.request.method==='load_document'&&message.missingAssets)result={...(result as object),missingAssets:message.missingAssets};
       ws.send(JSON.stringify({ id, result }));
       // Read-only requests must not rebuild iframes or steal form edits.
       if (message.request.method === 'point') drawSelection();

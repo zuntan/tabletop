@@ -1,3 +1,4 @@
+import {MAX_OBJECTS} from './data-limits';
 import {z} from 'zod';
 import {objectSchema} from './model';
 import {seriesSchema} from './settings';
@@ -5,8 +6,8 @@ import {seriesSchema} from './settings';
 export const clipboardTokenSchema=z.string().uuid();
 export const clipboardTransferSchema=z.object({
  token:clipboardTokenSchema,
- objects:z.array(objectSchema).min(1).max(200),
- series:z.array(seriesSchema).max(200),
+ objects:z.array(objectSchema).min(1).max(MAX_OBJECTS),
+ series:z.array(seriesSchema).max(MAX_OBJECTS),
 }).strict();
 export type ClipboardTransfer=z.infer<typeof clipboardTransferSchema>;
 export type ClipboardRead={method:'clipboard_read';token:string};

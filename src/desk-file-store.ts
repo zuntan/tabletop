@@ -64,7 +64,7 @@ export class DeskFileStore {
     const file = await open(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0));
     try {
       const info = await file.stat();
-      if (!info.isFile() || info.ino !== before.ino || info.dev !== before.dev || info.size > MAX_DESK_FILE_BYTES) throw new Error('Desk file changed or exceeds 50 MiB');
+      if (!info.isFile() || info.ino !== before.ino || info.dev !== before.dev || info.size > MAX_DESK_FILE_BYTES) throw new Error('Desk file changed or exceeds 250MB');
       // Read one extra byte so growth after stat cannot bypass the size ceiling.
       const bytes = Buffer.alloc(Math.min(info.size + 1, MAX_DESK_FILE_BYTES + 1));
       let length = 0;

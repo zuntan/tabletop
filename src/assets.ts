@@ -1,13 +1,14 @@
+import {MAX_ASSET_BYTES} from './data-limits';
 import { constants } from 'node:fs';
 import { open, realpath, mkdtemp, writeFile } from 'node:fs/promises';
 import { isAbsolute, resolve, sep } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 
-export const assetLimit = 5_000_000;
+export const assetLimit = MAX_ASSET_BYTES;
 export type Asset = { bytes: Buffer; mimeType: string; src: string };
 export function assetFromBytes(bytes: Buffer): Asset {
-  if (!bytes.length || bytes.length > assetLimit) throw new Error('Asset must be between 1 byte and 5MB');
+  if (!bytes.length || bytes.length > assetLimit) throw new Error('Asset must be between 1 byte and 10MB');
   let mimeType: string;
   if (bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) mimeType = 'image/png';
   else if (bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255) mimeType = 'image/jpeg';
@@ -33,7 +34,7 @@ export async function importAssetFile(path: string, allowedRoot = process.env.TA
   const file = await open(canonical, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
   try {
     const info = await file.stat();
-    if (!info.isFile() || info.size > assetLimit) throw new Error('Asset must be a regular file of at most 5MB');
+    if (!info.isFile() || info.size > assetLimit) throw new Error('Asset must be a regular file of at most 10MB');
     // Compare the open file with its checked path before reading any contents.
     const checked = await realpath(canonical);
     if (!checked.startsWith(root + sep)) throw new Error('Asset path changed outside allowed root');
@@ -55,7 +56,7 @@ export async function importAssetFile(path: string, allowedRoot = process.env.TA
 export function embeddedAsset(src: string): Asset {
   const match = /^data:(image\/(?:png|jpeg|gif|webp|svg\+xml));base64,([A-Za-z0-9+/=\s]+)$/.exec(src);
   if (!match) throw new Error('Asset is remote. The server does not fetch URLs; supply a local file to import it first');
-  if (match[2].length > 8_000_000) throw new Error('Asset exceeds size limit');
+  if (match[2].length > 13_333_600) throw new Error('Asset exceeds size limit');
   const asset = assetFromBytes(Buffer.from(match[2], 'base64'));
   if (asset.mimeType !== match[1]) throw new Error('Image MIME type does not match its content');
   return asset;

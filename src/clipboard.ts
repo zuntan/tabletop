@@ -1,10 +1,11 @@
+import {checkAssetBytes} from './data-limits';
 const imageTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'];
 
 /** Validate standalone SVG without inserting any nodes into the page. */
 export function svgClipboardFile(text: string): File | null {
   const source = text.trim();
   if (!source || !/^(?:<\?xml\s|<svg[\s>])/i.test(source)) return null;
-  if (new Blob([source]).size > 5_000_000) throw new Error('SVGは5MB以下にしてください');
+  if (new Blob([source]).size > 10_000_000) throw new Error('SVGは10MB以下にしてください');
   if (/<!DOCTYPE|<!ENTITY/i.test(source)) throw new Error('DOCTYPEやENTITYを含むSVGには対応していません');
   const document = new DOMParser().parseFromString(source, 'image/svg+xml');
   if (document.querySelector('parsererror') || document.documentElement.localName !== 'svg' ||
@@ -31,7 +32,7 @@ export async function readClipboardContent(): Promise<ClipboardContent> {
     }
     const type = imageTypes.find(type => item.types.includes(type));
     if (type) {
-      const blob = await item.getType(type);
+      const blob = await item.getType(type);checkAssetBytes(blob.size);
       if (type === 'image/svg+xml') {
         const file = svgClipboardFile(await blob.text());
         if (file) result.files.push(file);

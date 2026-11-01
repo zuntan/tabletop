@@ -54,7 +54,7 @@ test('copied labels receive new IDs and series numbers, and paste is undone as o
   assert.deepEqual(desk.snapshot(), source);
 });
 
-test('a paste that exceeds the operation cap fails atomically', () => {
+test('a paste with pin attributes can exceed the former 200-operation cap', () => {
   const desk = new Desk();
   desk.execute({ operations: Array.from({ length: 101 }, (_, index) => ({
     kind: 'label_add' as const, id: `pin-${index}`, seriesId: 'series-1', x: index, y: 0,
@@ -64,9 +64,9 @@ test('a paste that exceeds the operation cap fails atomically', () => {
   })) });
   const before = desk.snapshot(), revision = desk.revision;
   const cb = new PartClipboard(); copy(cb, ...before);
-  assert.throws(() => cb.paste(desk), /200件を超えます/);
-  assert.equal(desk.revision, revision);
-  assert.deepEqual(desk.snapshot(), before);
+  assert.equal(cb.paste(desk).length,101);
+  assert.equal(desk.revision, revision+1);
+  assert.equal(desk.snapshot().length,202);
 });
 
 test('internal identity requires this clipboard token or matching HTML marker', () => {

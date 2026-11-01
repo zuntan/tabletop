@@ -1,3 +1,4 @@
+import {MAX_ASSET_BYTES,MAX_OBJECTS} from './data-limits';
 import {reactionPlacements} from './reaction-layout';
 import {pdfExportFields} from './pdf-export';
 import {captureFields,type CaptureInput} from './desk-capture';
@@ -15,7 +16,6 @@ import { initialSettings, settingsOperations, applySettingsOperation, materializ
 import type { Settings } from './settings';
 import { deskContext } from './desk-context';
 import { reactions, reactionChoices, canonicalReaction } from './reaction-values';
-import { checkDeskBridgeSize } from './desk-file-protocol';
 import { ImageGeometry } from './image-geometry';
 import { createGridPlacement, placementGeometry } from './grid-placement';
 import { createDeskId } from './desk-identity';
@@ -34,8 +34,8 @@ const safeUrl = (value: string) => {
   try { return ['http:', 'https:'].includes(new URL(value).protocol); }
   catch { return false; }
 };
-const source = z.string().max(8_000_000).refine(value =>
-  safeUrl(value) || /^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=\s]+$/.test(value),
+const source = z.string().max(Math.ceil(MAX_ASSET_BYTES/3)*4+256).refine(value =>
+  safeUrl(value) || (()=>{if(!/^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=\s]+$/.test(value))return false;const encoded=value.slice(value.indexOf(',')+1).replace(/\s/g,'');return Math.floor(encoded.length*3/4)-(encoded.endsWith('==')?2:encoded.endsWith('=')?1:0)<=MAX_ASSET_BYTES;})(),
   'Expected an HTTP(S) URL or a base64 image data URL',
 );
 
@@ -135,7 +135,7 @@ export const operationSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('reorder'), id: z.string(), index: z.number().int().min(0) }).strict(),
 ]);
 export const batchSchema = z.object({
-  operations: z.array(operationSchema).min(1).max(200),
+  operations: z.array(operationSchema).min(1).max(12000),
   actor: z.string().min(1).max(100).default('agent-01'),
   expectedRevision: z.number().int().nonnegative().optional(),
   snap: z.enum(['desk', 'exact']).default('exact'),
@@ -266,7 +266,7 @@ export class Desk {
     return { ...rest, ...(src ? { asset: { source: src.startsWith('data:') ? 'embedded' : src, length: src.length } } : {}) };
   }
   replaceDocument(input: unknown, actor = 'human') {
-    const document = z.object({ objects: z.array(objectSchema).max(2000), settings: settingsSchema }).strict().parse(input);
+    const document = z.object({ objects: z.array(objectSchema).max(MAX_OBJECTS), settings: settingsSchema }).strict().parse(input);
     if (new Set(document.objects.map(object => object.id)).size !== document.objects.length) throw new Error('Duplicate object ID');
     if (new Set(document.settings.series.map(series => series.id)).size !== document.settings.series.length) throw new Error('Duplicate series ID');
     const after = groupPinLayers(resolveConnections(materializeLabels(document.objects.map(validateObject), document.settings)).map(validateObject));
@@ -304,7 +304,7 @@ export class Desk {
         if(operation.object.type==='ruler'&&operation.object.rulerMembers?.some(m=>fileFor(after,m.id)||batch.actor==='human'&&after.find(o=>o.id===m.id)?.locked))throw Error('ファイル内やロック中のカードは定規へ追加できません');
         if(operation.object.type==='clip'&&operation.object.clipMembers?.some(id=>{const owner=fileFor(after,id);return owner&&before.some(o=>o.id===owner.id);}))throw new Error('ファイル内ではクリップの追加・組み替えはできません');
         if (after.some(o => o.id === operation.object.id)) throw new Error(`Duplicate ID: ${operation.object.id}`);
-        if (after.length >= 2000) throw new Error('Object limit reached');
+        if (after.length >= MAX_OBJECTS) throw new Error('Object limit reached');
         if (operation.object.type === 'label') throw new Error('Use label_add to create a series label');
         if (batch.actor === 'human' && operation.object.type === 'clip' && operation.object.clipMembers?.some(id => after.find(object => object.id === id)?.locked))
           throw new Error('ロック中の紙はクリップへ追加できません');
@@ -416,8 +416,8 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('context'), sinceRevision: z.number().int().nonnegative().default(0), limit: z.number().int().min(1).max(200).default(100) }),
   z.object({ method: z.literal('settings') }),
   z.object({ method: z.literal('selection') }),
-  z.object({ method: z.literal('select'), ids: z.array(z.string()).max(2000) }),
-  z.object({ method: z.literal('point'), ids: z.array(z.string()).max(2000) }),
+  z.object({ method: z.literal('select'), ids: z.array(z.string()).max(MAX_OBJECTS) }),
+  z.object({ method: z.literal('point'), ids: z.array(z.string()).max(MAX_OBJECTS) }),
   z.object({ method: z.literal('lock'), ...lockFields }).strict(),
   z.object({ method: z.literal('fit'), ...cameraAnimationFields }).strict(),
   z.object({ method: z.literal('ui_get') }).strict(),
@@ -482,7 +482,7 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, text
     case 'state': return { ...desk.summary(), objects: desk.snapshot().map(publishObject), selection: desk.selected(), aiPointing: desk.pointed(), settings: desk.settingsSnapshot() };
     case 'file_snapshot': {
       const snapshot = { sessionId: desk.sessionId, revision: desk.revision, ...(request.includeGeneration?{generation:desk.documentGeneration}:{}), objects: desk.snapshot(), settings: desk.settingsSnapshot() };
-      checkDeskBridgeSize(snapshot);
+
       return snapshot;
     }
     case 'file_saved': {
@@ -493,7 +493,6 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, text
     }
     case 'load_document': {
       if (request.expectedSessionId !== desk.sessionId || request.expectedRevision !== desk.revision) throw new Error('Session or revision conflict: refresh before loading');
-      checkDeskBridgeSize(request);
       const result=desk.replaceDocument(request.document, request.actor);
       desk.filePath=request.filePath??null;return result;
     }

@@ -1,3 +1,4 @@
+import {dataBytes,bytesDataUrl} from './binary-envelope';
 import {deskTargetFields,deskTargetDescription,type DeskRequestFactory} from './desk-target';
 import { DeskFileService, fileSnapshotSchema } from './desk-file-service';
 import { z } from 'zod';
@@ -6,7 +7,6 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { Desk, type Request } from './model';
 import { encodeDeskFile, decodeDeskFile } from './desk-file';
 import { DeskFileStore, validateDeskFilename } from './desk-file-store';
-import { checkDeskBridgeSize } from './desk-file-protocol';
 
 const name = z.string().refine(value => { try { validateDeskFilename(value); return true; } catch { return false; } }, 'Expected a simple .tabletop filename, not a path');
 const snapshotSchema=fileSnapshotSchema;
@@ -16,7 +16,7 @@ export function registerDeskFileTools(mcp: McpServer, forDesk: DeskRequestFactor
   const result = (value: unknown): CallToolResult => ({ content: [{ type: 'text', text: JSON.stringify(value) }] });
   const failure = (error: unknown): CallToolResult => ({ isError: true, content: [{ type: 'text', text: error instanceof Error ? error.message : String(error) }] });
   mcp.registerTool('desk_save', {
-    description: deskTargetDescription+'Save the connected desk, including embedded images, to a server-local .tabletop ZIP. Use path for an absolute server-local .tabletop path (or a basename under the save root). overwrite:true explicitly allows replacing that file atomically. Otherwise a new file is required. Legacy filename is a simple basename under TABLETOP_SAVE_ROOT (default ~/.tabletop/saves), never an arbitrary path. Legacy filename never overwrites. Returns saved session/revision, formatVersion and path. browserSavedState reports updated/unchanged/unavailable for the unsaved-warning baseline; a failed/stale notification does not undo file-save success and must not trigger automatic replay. UI and MCP share format/version and validators. Snapshot is taken at request time; later edits require another save. Max MCP transfer 20 MB JSON, archive 50 MiB. Requires the new browser UI; do not refresh an unsaved old tab. No network fetch or automatic retry.',
+    description: deskTargetDescription+'Save the connected desk, including embedded images, to a server-local .tabletop ZIP. Use path for an absolute server-local .tabletop path (or a basename under the save root). overwrite:true explicitly allows replacing that file atomically. Otherwise a new file is required. Legacy filename is a simple basename under TABLETOP_SAVE_ROOT (default ~/.tabletop/saves), never an arbitrary path. Legacy filename never overwrites. Returns saved session/revision, formatVersion and path. browserSavedState reports updated/unchanged/unavailable for the unsaved-warning baseline; a failed/stale notification does not undo file-save success and must not trigger automatic replay. UI and MCP share format/version and validators. Snapshot is taken at request time; later edits require another save. Archive maximum 250MB, materials 10MB each, manifest 10MB and 3000 objects. Uses acknowledged 1MB binary chunks. Requires the new browser UI; do not refresh an unsaved old tab. No network fetch or automatic retry.',
     inputSchema: { ...deskTargetFields, filename: name.optional(), path:reference.optional(), overwrite:z.boolean().default(false) },
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
   }, async ({ deskId, filename, path:referencePath, overwrite }) => {
@@ -25,17 +25,17 @@ export function registerDeskFileTools(mcp: McpServer, forDesk: DeskRequestFactor
       if(!!filename===!!referencePath)throw new Error('Specify exactly one of filename or path');
       if(filename&&overwrite)throw new Error('Use path for explicit overwrite');
       const snapshot = snapshotSchema.parse(await request({ method: 'file_snapshot',includeGeneration:true }));
-      const validator = new Desk(); validator.replaceDocument({ objects: snapshot.objects, settings: snapshot.settings });
-      let path:string,byteLength:number;
-      if(referencePath){const saved=await service.save(referencePath,snapshot,overwrite);path=saved.path;byteLength=saved.bytes;}
-      else{const bytes=await encodeDeskFile(validator);path=await store.save(filename!,bytes);byteLength=bytes.length;}
+      const validator = new Desk(); if(!snapshot.archiveDataUrl)validator.replaceDocument({ objects: snapshot.objects, settings: snapshot.settings });
+      let path:string,byteLength:number,count:number;
+      if(referencePath){const saved=await service.save(referencePath,snapshot,overwrite);path=saved.path;byteLength=saved.bytes;count=saved.count;}
+      else{const bytes=snapshot.archiveDataUrl?dataBytes(snapshot.archiveDataUrl):await encodeDeskFile(validator);count=(await decodeDeskFile(bytes)).objects.length;path=await store.writeReference(filename!,bytes,false);byteLength=bytes.length;}
       // The file is already safely written. A lost/old browser must not turn success into a retryable save failure.
       let browserSavedState:'updated'|'unchanged'|'unavailable'='unavailable';
       try{
         const reply=await request({method:'file_saved',expectedSessionId:snapshot.sessionId,expectedRevision:snapshot.revision,expectedGeneration:snapshot.generation,filePath:path}) as {marked?:boolean};
         browserSavedState=reply.marked?'updated':'unchanged';
       }catch{/* Save succeeded; leave the browser's unsaved warning conservative. */}
-      return result({ filename, path, sessionId: snapshot.sessionId, revision: snapshot.revision, count: snapshot.objects.length, formatVersion: 1, bytes: byteLength, browserSavedState });
+      return result({ filename, path, sessionId: snapshot.sessionId, revision: snapshot.revision, count, formatVersion: 1, bytes: byteLength, browserSavedState });
     } catch (error) { return failure(error); }
   });
   mcp.registerTool('desk_load', {
@@ -47,11 +47,10 @@ export function registerDeskFileTools(mcp: McpServer, forDesk: DeskRequestFactor
       const request=forDesk(deskId);
       if(!!filename===!!referencePath)throw new Error('Specify exactly one of filename or path');
       const path=referencePath?await store.reference(referencePath):undefined;
-      const decoded = await decodeDeskFile(referencePath?await store.readReference(referencePath):await store.load(filename!));
-      const payload = { method: 'load_document' as const, document: { objects: decoded.objects, settings: decoded.settings }, confirm, expectedSessionId, expectedRevision, actor, filePath:path??await store.reference(filename!) };
-      checkDeskBridgeSize(payload);
+      const bytes=referencePath?await store.readReference(referencePath):await store.load(filename!);
+      const payload = { method: 'load_document' as const, document: { archiveDataUrl:bytesDataUrl(bytes) }, confirm, expectedSessionId, expectedRevision, actor, filePath:path??await store.reference(filename!) };
       const summary = await request(payload);
-      return result({ ...summary as Record<string, unknown>, filename, path:payload.filePath, formatVersion: 1, missingAssets: decoded.warnings });
+      return result({ ...summary as Record<string, unknown>, filename, path:payload.filePath, formatVersion: 1, missingAssets: (summary as any).missingAssets??[] });
     } catch (error) { return failure(error); }
   });
 }

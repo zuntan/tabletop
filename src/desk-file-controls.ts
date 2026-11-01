@@ -1,3 +1,4 @@
+import {bytesDataUrl,dataBytes} from './binary-envelope';
 import { DeskFileHistory } from './desk-file-history';
 import { askFilePath, choiceDialog } from './confirm-dialog';
 import type { Desk } from './model';
@@ -52,13 +53,13 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
     if(!path)return null;
     if(desk.documentGeneration!==generation)throw new Error('机が切り替わったため保存を中止しました');
     const overwrite=!as&&!!desk.filePath;
-    const saved=snapshot();let result;
-    try{result=await remote({action:'save',path,overwrite,snapshot:saved});}
+    const saved=snapshot();const bytes=await encodeDeskFile(desk);const archive={sessionId:saved.sessionId,revision:saved.revision,generation:saved.generation,archiveDataUrl:bytesDataUrl(bytes)};let result;
+    try{result=await remote({action:'save',path,overwrite,snapshot:archive});}
     catch(error){
       if(!overwrite&&error instanceof Error&&error.message.includes('同名ファイル')){
         if(!await confirmAction('上書き保存します',`${path} の内容を現在の机で置き換えます。`,'上書きする'))return null;
         if(desk.documentGeneration!==generation||desk.revision!==saved.revision)throw new Error('確認中に机が変わったため保存を中止しました');
-        result=await remote({action:'save',path,overwrite:true,snapshot:saved});
+        result=await remote({action:'save',path,overwrite:true,snapshot:archive});
       }else throw error;
     }
     if(desk.documentGeneration===generation){desk.filePath=result.path;desk.markSaved(saved.revision);history.record(result.path,saved.settings.name);}
@@ -85,6 +86,7 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
       const result=await remote?.({action:'load',path});
       if(!result)throw new Error('MCP接続が必要です');
       if(desk.documentGeneration!==generation||desk.revision!==revision||!canLoad())throw new Error('読込中に机が変更されたため切替を中止しました');
+      if(result.archiveDataUrl){const decoded=await decodeDeskFile(dataBytes(result.archiveDataUrl));if(desk.documentGeneration!==generation||desk.revision!==revision||!canLoad())throw Error('読込中に机が変更されました');result.document={objects:decoded.objects,settings:decoded.settings};result.missingAssets=decoded.warnings;}
       desk.replaceDocument(result.document);desk.filePath=result.path;
       history.record(result.path,desk.settingsSnapshot().name);refresh();
       report(`読込完了：${result.path}${result.missingAssets.length?'（画像欠落あり）':''}`);
@@ -152,7 +154,7 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
     loading=true;load.disabled = true;
     try {
       if(!await authorizeSwitch())return;
-      if (file.size > MAX_DESK_FILE_BYTES) throw new Error('File exceeds 50 MiB');
+      if (file.size > MAX_DESK_FILE_BYTES) throw new Error('File exceeds 250MB');
       const result = await decodeDeskFile(new Uint8Array(await file.arrayBuffer()));
       if (desk.revision !== revision || !canLoad()) throw new Error('Desk changed during loading; please retry');
       desk.replaceDocument({ objects: result.objects, settings: result.settings });

@@ -1,3 +1,4 @@
+import {BinaryTransfer} from './binary-transfer';
 import { challengeSchema, readySchema, randomHex, signPair, verifyPair, type Pairing, connectionDeskId } from './pairing-protocol';
 
 type Callbacks = {
@@ -10,6 +11,7 @@ type Callbacks = {
 };
 /** Per-tab memory only: neither documents nor browser storage contain credentials. */
 export class BrowserConnection {
+  private transport:BinaryTransfer|null=null;
   private pair: Pairing | null = null;
   private socket: WebSocket | null = null;
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -17,17 +19,17 @@ export class BrowserConnection {
   private attempt = 0;
   private handoffRequested = false;
   private fileReady=false;
-  private filePending=new Map<string,{resolve:(value:any)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>}>();
-  private clearFiles(){this.fileReady=false;for(const p of this.filePending.values()){clearTimeout(p.timer);p.reject(new Error('接続が切れました。保存結果は未確定の場合があります。自動再実行はしません'));}this.filePending.clear();}
-  fileRequest(request:unknown,timeoutMs=30_000):Promise<any>{
+  private filePending=new Map<string,{resolve:(value:any)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>|undefined}>();
+  private clearFiles(){this.transport?.close();this.transport=null;this.fileReady=false;for(const p of this.filePending.values()){clearTimeout(p.timer);p.reject(new Error('接続が切れました。保存結果は未確定の場合があります。自動再実行はしません'));}this.filePending.clear();}
+  fileRequest(request:unknown,timeoutMs=0):Promise<any>{
     if(!this.fileReady||this.socket?.readyState!==WebSocket.OPEN)return Promise.reject(new Error('通常SAVE／LOADには対応したMCP接続が必要です。未保存の机はダウンロードできます'));
     const id=crypto.randomUUID();return new Promise((resolve,reject)=>{
-      const timer=setTimeout(()=>{this.filePending.delete(id);reject(new Error('ファイル処理が時間切れになりました。結果を確認してから操作してください（自動再実行なし）'));},timeoutMs);
+      const timer=timeoutMs>0?setTimeout(()=>{this.filePending.delete(id);reject(new Error('ファイル処理が時間切れになりました。結果を確認してから操作してください（自動再実行なし）'));},timeoutMs):undefined;
       this.filePending.set(id,{resolve,reject,timer});
-      try{this.socket!.send(JSON.stringify({type:'file_request',id,request}));}catch(error){clearTimeout(timer);this.filePending.delete(id);reject(error);}
+      void this.transport!.send({type:'file_request',id,request}).catch(error=>{clearTimeout(timer);this.filePending.delete(id);reject(error);});
     });
   }
-  clipboardRequest(token:string):Promise<unknown>{return this.fileRequest({method:'clipboard_lookup',token},1500);}
+  clipboardRequest(token:string):Promise<unknown>{return this.fileRequest({method:'clipboard_lookup',token});}
   constructor(private callbacks: Callbacks) {}
   hasPairing() { return this.pair !== null; }
   ringBell(ids:string[],note:{text:string;draftVersion:number}) {
@@ -60,10 +62,22 @@ export class BrowserConnection {
     };
     const deadline = setTimeout(() => ws.close(), 9000);
     ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', pairId: paired?.pairId ?? null, nonce: clientNonce }));
+    const handle=(value:any)=>{
+      if(!current())return;
+      if(value.type==='file_ready'){this.fileReady=value.binaryTransfer===1;if(!this.fileReady)this.callbacks.status('blocked','MCPを再起動してください（分割転送非対応）。机は保持しています。');return;}
+      if(value.type==='file_result'){
+        const pending=this.filePending.get(value.id);if(!pending)return;
+        clearTimeout(pending.timer);this.filePending.delete(value.id);
+        if(typeof value.error==='string')pending.reject(new Error(value.error));else pending.resolve(value.result);return;
+      }
+      const proxy={send:(data:string)=>{void this.transport!.send(JSON.parse(data)).catch(error=>{const id=JSON.parse(data).id;void this.transport?.send({id,error:error.message});});}} as WebSocket;
+      request(proxy,{data:JSON.stringify(value)} as MessageEvent);
+    };
     let chain = Promise.resolve();
     ws.onmessage = event => {
       chain = chain.then(async () => {
         if (!current() || ws.readyState !== WebSocket.OPEN) return;
+        if(authenticated&&(typeof event.data!=='string'||!['release','handoff_error'].includes(JSON.parse(event.data).type))){await this.transport!.receive(typeof event.data==='string'?event.data:new Uint8Array(event.data));return;}
         const value = JSON.parse(String(event.data));
         if (authenticated) {
           if(value.type==='file_ready'){this.fileReady=true;return;}
@@ -92,7 +106,7 @@ export class BrowserConnection {
             ws.close(4003, 'Desk released');
             this.handoffRequested = false;
             if (humanHandoff) this.callbacks.handoff?.(value.handoffUrl);
-          } else request(ws, event);
+          } else handle(value);
           return;
         }
         if (value.type === 'challenge') {
@@ -108,8 +122,10 @@ export class BrowserConnection {
           if (!candidate || !serverNonce || !await verifyPair(candidate, 'ready', clientNonce, serverNonce, ready.proof)) { block(); return; }
           if (!current() || ws.readyState !== WebSocket.OPEN) return;
           this.pair = candidate; authenticated = true; this.attempt = 0;
+          ws.binaryType='arraybuffer';
+          this.transport=new BinaryTransfer(data=>ws.send(data as any),handle,undefined,(done,total)=>{const message=document.querySelector('#message');if(message)message.textContent=`データ転送中 ${Math.round(done/total*100)}%（${done.toLocaleString()} / ${total.toLocaleString()} bytes）`;});
           this.callbacks.identity?.(connectionDeskId(candidate.pairId));
-          ws.send(JSON.stringify({ type: 'capabilities', release: true, bell:true, toast:true, fileOperations:true }));
+          ws.send(JSON.stringify({ type: 'capabilities', release: true, bell:true, toast:true, fileOperations:true, binaryTransfer:1 }));
           clearTimeout(deadline); this.callbacks.status('connected', '');
         }
       }).catch(block);

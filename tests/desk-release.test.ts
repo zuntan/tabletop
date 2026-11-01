@@ -28,7 +28,7 @@ test('release rejects legacy/pending/uncertain peers and isolates stale handshak
     const legacy = await call('desk_release', { confirm: true });
     assert.equal(legacy.isError, true); assert.match(JSON.stringify(legacy), /does not support/);
     assert.equal(peer.ws.readyState, WebSocket.OPEN);
-    peer.ws.send(JSON.stringify({ type: 'capabilities', release: true }));
+    peer.ws.send(JSON.stringify({ type: 'capabilities', release: true,binaryTransfer:1 }));
     // A pending application request must finish before release can start.
     const requestMessage = once(peer.ws, 'message');
     const summary = call('desk_summary');

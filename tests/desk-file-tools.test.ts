@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Desk, dispatch } from '../src/model';
 import { DeskFileStore, validateDeskFilename } from '../src/desk-file-store';
-import { checkDeskBridgeSize } from '../src/desk-file-protocol';
+import {packEnvelope} from '../src/binary-envelope';
 
 test('desk file store confines filenames, creates exclusively and rejects symlinks/non-files/oversize', async () => {
   const root = await mkdtemp(join(tmpdir(), 'tabletop-save-store-'));
@@ -30,7 +30,7 @@ test('desk file store confines filenames, creates exclusively and rejects symlin
     await writeFile(join(root, 'saves', 'empty.tabletop'), '');
     await assert.rejects(store.load('empty.tabletop'));
     await assert.rejects(store.load('absent.tabletop'), /ENOENT/);
-    await assert.rejects(store.save('huge.tabletop', new Uint8Array(50 * 1024 * 1024 + 1)));
+    await assert.rejects(store.save('huge.tabletop', new Uint8Array(250_000_001)));
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 test('file bridge requires explicit confirmation and current session/revision, commits atomically with Undo', () => {
@@ -48,5 +48,5 @@ test('file bridge requires explicit confirmation and current session/revision, c
   dispatch(desk, request); assert.equal(desk.snapshot().length, 0);
   desk.undo(); assert.deepEqual(desk.snapshot(), original);
   assert.equal(snapshot.objects.length, 1);
-  assert.throws(() => checkDeskBridgeSize({ text: 'あ'.repeat(7_000_000) }), /20 MB/);
+  assert.throws(() => packEnvelope({ text: 'あ'.repeat(4_000_000) }), /10MB/);
 });

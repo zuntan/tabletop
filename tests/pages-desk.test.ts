@@ -12,7 +12,7 @@ test('static desk reads resolve URLs, reuse archive validation and reject errors
  try{
   const loaded=await pagesFileRequest({action:'load',path:'guide.tabletop'},base);assert.equal(loaded.path,base+'guide.tabletop');assert.equal(loaded.document.settings.name,'Static guide');assert.equal(loaded.document.objects[0].text,'hello');assert.deepEqual(loaded.missingAssets,[]);
   await assert.rejects(pagesFileRequest({action:'load',path:'missing.tabletop'},base),/HTTP 404/);
-  await assert.rejects(pagesFileRequest({action:'load',path:'large'},base),/50MiB/);
+  await assert.rejects(pagesFileRequest({action:'load',path:'large'},base),/250MB/);
   await assert.rejects(pagesFileRequest({action:'load',path:'file:///tmp/a.tabletop'},base),/HTTP/);
   await assert.rejects(pagesFileRequest({action:'save',path:'guide.tabletop'},base));
  }finally{server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}

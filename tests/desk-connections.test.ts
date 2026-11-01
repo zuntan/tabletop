@@ -18,11 +18,11 @@ const connection=()=>new DeskConnection(()=>false,async()=>{});
 
 test('a bound multi-step request cannot continue on a reconnected socket or affect another desk',async()=>{
  const a=connection(),b=connection(),old=new Peer(),other=new Peer(),replacement=new Peer();
- a.attach(old.socket());b.attach(other.socket());
+ a.attach(old.socket());b.attach(other.socket());a.binaryCapable=b.binaryCapable=true;
  try{
   const bound=a.bind(),pending=bound({method:'summary'}),unaffected=b.bind()({method:'summary'});
   const rejected=assert.rejects(pending,/disconnected/);old.close();await rejected;
-  a.attach(replacement.socket());
+  a.attach(replacement.socket());a.binaryCapable=true;
   await assert.rejects(bound({method:'settings'}),/connection changed/);assert.equal(replacement.sent.length,0);
   const fresh=a.bind()({method:'summary'});old.emit('close');
   replacement.reply({name:'new socket'});other.reply({name:'other desk'});
@@ -32,7 +32,7 @@ test('a bound multi-step request cannot continue on a reconnected socket or affe
 
 test('restoring a disconnected endpoint leaves another connected pairing and pending request intact',async()=>{
  const registry=new DeskConnections(()=>false,async()=>{}),a=connection(),peer=new Peer();
- const first=pairing(),second=pairing();a.gate.restore(first);registry.entries.add(a);a.attach(peer.socket());
+ const first=pairing(),second=pairing();a.gate.restore(first);registry.entries.add(a);a.attach(peer.socket());a.binaryCapable=true;
  try{
   const pending=registry.bind(a.deskId!)({method:'summary'});
   const restored=registry.restore(second);assert.notEqual(restored.deskId,a.deskId);assert.equal(registry.connectedCount,1);
@@ -46,14 +46,14 @@ test('restoring a disconnected endpoint leaves another connected pairing and pen
 test('clipboard lookup only accepts the exact marker and rejects conflicting answers without caching',async()=>{
  const registry=new DeskConnections(()=>false,async()=>{}),target=connection(),source=connection(),unrelated=connection();
  const peers=[new Peer(),new Peer(),new Peer()];
- [target,source,unrelated].forEach((desk,i)=>{desk.gate.restore(pairing());desk.attach(peers[i].socket());registry.entries.add(desk);});
+ [target,source,unrelated].forEach((desk,i)=>{desk.gate.restore(pairing());desk.attach(peers[i].socket());desk.binaryCapable=true;registry.entries.add(desk);});
  const token=crypto.randomUUID();
  try{
   const {objectSchema}=await import('../src/model');const payload={token,objects:[objectSchema.parse({id:'a',type:'text',text:'copied'})],series:[]};
   let lookup=registry.lookupClipboard(target,token);assert.equal(peers[0].sent.length,0);peers[1].reply(payload);peers[2].reply(null);assert.deepEqual(await lookup,payload);
   lookup=registry.lookupClipboard(target,token);peers[1].reply({...payload,token:crypto.randomUUID()});peers[2].reply(null);assert.equal(await lookup,null);
   lookup=registry.lookupClipboard(target,token);peers[1].reply(payload);peers[2].reply(payload);assert.equal(await lookup,null);
-  const started=Date.now();assert.equal(await registry.lookupClipboard(target,token),null);assert.ok(Date.now()-started<1500);assert.equal(source.pending.size,0);
+  const disconnected=registry.lookupClipboard(target,token);peers[1].close();peers[2].close();assert.equal(await disconnected,null);assert.equal(source.pending.size,0);
   peers[1].close();peers[2].close();assert.equal(await registry.lookupClipboard(target,token),null);
  }finally{registry.close();}
 });

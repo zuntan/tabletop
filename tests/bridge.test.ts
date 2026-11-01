@@ -1,3 +1,4 @@
+import {BinaryTransfer} from '../src/binary-transfer';
 import {callTestTool} from './mcp-call';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -54,18 +55,19 @@ test('real stdio MCP server relays tools to a browser state and rejects unauthor
     ws = (await pairPeer(`ws://127.0.0.1:${port}/bridge?token=${token}`, origin)).ws;
     const desk = new Desk();
     let legacy = false, legacyName = false, legacyBackground = false, mutationRequests = 0;
-    ws.on('message', data => {
-      const message = JSON.parse(data.toString());
+    const binary=new BinaryTransfer(data=>ws!.send(data),message=>{
       try {
         if (message.request.method === 'execute') mutationRequests++;
         const result = dispatch(desk, message.request) as Record<string, unknown>;
         if (legacy && message.request.method === 'settings') delete result.grid;
         if (legacyName && message.request.method === 'settings') delete result.name;
         if (legacyBackground && message.request.method === 'settings') delete result.background;
-        ws!.send(JSON.stringify({ id: message.id, result }));
+        void binary.send({ id: message.id, result });
       }
-      catch (error) { ws!.send(JSON.stringify({ id: message.id, error: String(error) })); }
+      catch (error) { void binary.send({ id: message.id, error: String(error) }); }
     });
+    ws.on('message',(data,isBinary)=>void binary.receive(isBinary?new Uint8Array(data as Buffer):data.toString()));
+    ws.once('close',()=>binary.close());
     await rejectConnection(`ws://127.0.0.1:${port}/bridge?token=${token}`, origin, 409);
     async function call(name: string, args: Record<string, unknown> = {}) {
       const result = await callTestTool(client, { name, arguments: name === 'desk_execute' ? { snap: 'exact', ...args } : args });

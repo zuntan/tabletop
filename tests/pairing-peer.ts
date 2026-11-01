@@ -15,5 +15,6 @@ export async function pairPeer(url: string, origin: string, existing?: Pairing) 
   ws.send(JSON.stringify({ type: 'proof', proof: await signPair(pairing, 'client', nonce, challenge.nonce) }));
   const ready = readySchema.parse(JSON.parse(String((await readyMessage)[0])));
   if (!await verifyPair(pairing, 'ready', nonce, challenge.nonce, ready.proof)) throw new Error('Bad ready proof');
+  ws.send(JSON.stringify({type:'capabilities',binaryTransfer:1}));
   return { ws, pairing,deskId:connectionDeskId(pairing.pairId) };
 }
