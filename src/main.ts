@@ -152,7 +152,7 @@ app.innerHTML = `
         <g id="viewport"><g id="objects"></g><g id="overlays"></g></g>
       </svg>
       <div id="empty">ここに資料を広げて、いっしょに考える。<small>上のツールから追加 · 画像をドロップ · AIからMCPで操作</small></div>
-      <div class="hint">Shift / Ctrl＋クリック・範囲選択：追加選択 · Space＋ドラッグ / 中ボタン：パン · ホイール：ズーム · Delete：削除</div>
+      <div class="hint"><button id="hint-toggle" type="button" aria-controls="operation-hint" aria-expanded="true" aria-label="操作説明を隠す" title="操作説明を隠す">‹</button><span id="operation-hint">Shift / Ctrl＋クリック・範囲選択：追加選択 · Space＋ドラッグ / 中ボタン：パン · ホイール：ズーム · 矢印キー：移動 · Shift＋矢印：リサイズ · Alt併用：スナップ解除 · Delete：削除</span></div>
     </section>
     <aside>
       <section id="series-panel" hidden></section>
@@ -217,6 +217,16 @@ app.innerHTML = `
 `;
 groupToolbar(app.querySelector<HTMLElement>('nav')!);
 createSidebar(app,!pagesMode);
+const hintToggle=app.querySelector<HTMLButtonElement>('#hint-toggle')!;
+const operationHint=app.querySelector<HTMLElement>('#operation-hint')!;
+hintToggle.onclick=()=>{
+  operationHint.hidden=!operationHint.hidden;
+  const show=!operationHint.hidden;
+  hintToggle.setAttribute('aria-expanded',String(show));
+  hintToggle.textContent=show?'‹':'›';
+  hintToggle.title=show?'操作説明を隠す':'操作説明を表示';
+  hintToggle.setAttribute('aria-label',hintToggle.title);
+};
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => app.querySelector<T>(selector)!;
 headerIcon($<HTMLButtonElement>('#undo'), 'undo', '元に戻す');
 headerIcon($<HTMLButtonElement>('#redo'), 'redo', 'やり直す');
