@@ -143,7 +143,7 @@ app.innerHTML = `
   <main>
     <section id="workspace" aria-label="共有キャンバス">
       <svg id="canvas" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tabletop キャンバス" tabindex="0">
-        <defs><pattern id="dots" x="-12" y="-12" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="12" cy="12" r="1" fill="#cbd5e1"/><path d="" fill="none" stroke="#cbd5e1" stroke-width="1" display="none"/></pattern></defs>
+        <defs><pattern id="dots" x="-12" y="-12" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="12" cy="12" r="2" fill="#cbd5e1"/><path d="" fill="none" stroke="#cbd5e1" stroke-width="1" display="none"/></pattern></defs>
         <rect id="desk-background" width="100%" height="100%" fill="#f8fafc"/>
         <rect id="desk-wallpaper" width="100%" height="100%" fill="none"/>
         <rect id="desk-grid" width="100%" height="100%" fill="url(#dots)"/>
@@ -493,7 +493,7 @@ function cameraChanged() {
   dots.querySelector('circle')!.setAttribute('cy', String(grid.interval / 2));
   const gridLines=settings.background.gridStyle==='lines',gridColor=settings.background.gridColor??'#cbd5e1';
   dots.querySelector('circle')!.setAttribute('fill',gridColor);dots.querySelector('circle')!.setAttribute('display',gridLines?'none':'inline');
-  const gridPath=dots.querySelector('path')!;gridPath.setAttribute('d',`M ${grid.interval/2} 0 V ${grid.interval} M 0 ${grid.interval/2} H ${grid.interval}`);gridPath.setAttribute('stroke',gridColor);gridPath.setAttribute('display',gridLines?'inline':'none');
+  const gridPath=dots.querySelector('path')!;gridPath.setAttribute('d',`M ${grid.interval/2} 0 V ${grid.interval} M 0 ${grid.interval/2} H ${grid.interval}`);gridPath.setAttribute('stroke',gridColor);gridPath.setAttribute('display',settings.background.gridStyle!=='dots'&&settings.background.gridStyle!==undefined?'inline':'none');
   dots.setAttribute('patternTransform', `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`);
   $('#zoom-reset .tool-icon').textContent = `${Math.round(camera.zoom * 100)}%`;
   refreshPinPresentation();

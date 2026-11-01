@@ -97,12 +97,12 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     gridVisible.onchange=()=>change({showGrid:gridVisible.checked});
     const gridLabel=document.createElement('label');gridLabel.append(gridVisible,'表示する');
     const gridColor=document.createElement('input');gridColor.type='color';gridColor.setAttribute('aria-label','スナップグリッドの色');gridColor.onchange=()=>change({gridColor:gridColor.value});
-    const gridStyle=document.createElement('select');gridStyle.setAttribute('aria-label','スナップグリッドの形');for(const [value,title]of [['dots','点'],['lines','線']]){const option=document.createElement('option');option.value=value;option.textContent=title;gridStyle.append(option);}gridStyle.onchange=()=>change({gridStyle:gridStyle.value as 'dots'|'lines'});
+    const gridStyle=document.createElement('select');gridStyle.setAttribute('aria-label','スナップグリッドの形');for(const [value,title]of [['dots','点'],['lines','線'],['both','点と線']]){const option=document.createElement('option');option.value=value;option.textContent=title;gridStyle.append(option);}gridStyle.onchange=()=>change({gridStyle:gridStyle.value as 'dots'|'lines'|'both'});
     const gridControls=document.createElement('div');gridControls.className='desk-menu-colors desk-menu-grid-controls';gridControls.append(gridLabel,gridColor,gridStyle);
     label('スナップグリッド',gridControls).classList.add('desk-menu-grid-field');
     const interval=document.createElement('input');interval.type='number';interval.id='grid-interval';interval.min='1';interval.max='100000';interval.step='any';interval.required=true;interval.setAttribute('aria-label','グリッド間隔');interval.disabled=!changeGrid;
     interval.title='スナップグリッド間隔';label('スナップグリッド間隔',interval).classList.add('desk-menu-inline-field','desk-menu-grid-interval');
-    const intervalPicker=addNumberPresets(interval,[24,48,72,96,120],'グリッド間隔');panel.append(intervalPicker.popup);
+    const intervalPicker=addNumberPresets(interval,[24,48,72,96,120,144,168,192,216,240],'グリッド間隔');panel.append(intervalPicker.popup);
     interval.onchange=()=>{if(!interval.checkValidity()){interval.reportValidity();sync();return;}changeGrid?.({interval:Number(interval.value)});};
     sync = () => {
       const settings=desk.settingsSnapshot(),bg = settings.background, resolved = frameColors(bg);

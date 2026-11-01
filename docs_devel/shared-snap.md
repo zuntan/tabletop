@@ -10,7 +10,7 @@
 
 `settings.grid` にON／OFF・間隔・格子の原点を保持し、UI／MCP双方の `.tabletop` に保存・復元する。設定の変更と読込は共通Undo／Redoの対象で、revisionも進む。変更しただけでは既存パーツを再配置しない。読込時も、格子に合わせ直さず保存済みの座標をそのまま復元する。
 
-間隔は机上の単位で、ズームとは独立した有限値1〜100,000。原点の各軸は−1,000,000〜1,000,000。「机の見た目」で間隔を数値入力でき、候補24・48・72・96・120を選べる。原点座標の変更は引き続きMCP側の設定を使う。スナップグリッドの表示はbackground.showGridへ保存し、スナップ動作のON／OFFとは独立する。
+間隔は机上の単位で、ズームとは独立した有限値1〜100,000。原点の各軸は−1,000,000〜1,000,000。「机の見た目」で間隔を数値入力でき、候補24〜240（24刻みの10個）を選べる。原点座標の変更は引き続きMCP側の設定を使う。スナップグリッドの表示はbackground.showGridへ保存し、スナップ動作のON／OFFとは独立する。
 
 保存形式のversionは1のまま。新実装は `settings.grid` のない旧ファイルを読めるが、旧実装の厳密な設定検証は新フィールドを拒否するため、新しい保存ファイルを旧アプリで開けるとは保証しない。利用者の机を更新する場合は先に旧UIで保存し、了承後にサーバーとブラウザの両方を更新する。勝手なリロードはしない。
 
@@ -100,4 +100,4 @@ UIではつかんだパーツが基準となり、同じ格子計算で相対位
 - [MDN Math.round](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/round)：負数・中間値を含む丸め。
 - [MDN SVG patternUnits](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/patternUnits)：机上座標の間隔・原点と格子描画。
 
-「スナップグリッド」は表示・色・形（点／線）を一行にまとめ、「スナップグリッド間隔」は数値入力・候補を別の一行にまとめる。色はbackground.gridColor、形はbackground.gridStyle（dots／lines）へ保存。旧データの既定値は従来の点・#cbd5e1。原点軸のoriginAxesColorとは独立する。
+「スナップグリッド」は表示・色・形（点／線／点と線）を一行にまとめ、「スナップグリッド間隔」は数値入力・候補を別の一行にまとめる。色はbackground.gridColor、形はbackground.gridStyle（dots／lines／both）へ保存。旧データの既定値は従来の点・#cbd5e1。原点軸のoriginAxesColorとは独立する。

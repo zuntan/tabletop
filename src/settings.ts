@@ -15,7 +15,7 @@ export const backgroundSchema = z.object({
   opacity: z.number().finite().min(0).max(1).default(1),
   underlayBrightness: z.number().finite().min(0).max(1).default(0.5),
   gridColor:z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
-  gridStyle:z.enum(['dots','lines']).optional(),
+  gridStyle:z.enum(['dots','lines','both']).optional(),
   showGrid: z.boolean().nullable().default(null),
   selectionColor: colorSchema.nullable().default(null),
   pointingColor: colorSchema.nullable().default(null),
