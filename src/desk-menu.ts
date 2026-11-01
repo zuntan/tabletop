@@ -1,4 +1,4 @@
-import {addNumberPresets} from './number-presets';
+import {addNumberPresets,addPresetPalette} from './number-presets';
 import {publicAsset} from './runtime-mode';
 import thirdParty from '../public/licenses/generated/manifest.json';
 import deskArtwork from './assets/desk-link.svg?raw';
@@ -97,15 +97,22 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     gridVisible.onchange=()=>change({showGrid:gridVisible.checked});
     const gridLabel=document.createElement('label');gridLabel.append(gridVisible,'表示する');
     const gridColor=document.createElement('input');gridColor.type='color';gridColor.setAttribute('aria-label','スナップグリッドの色');gridColor.onchange=()=>change({gridColor:gridColor.value});
-    const gridStyle=document.createElement('select');gridStyle.setAttribute('aria-label','スナップグリッドの形');for(const [value,title]of [['dots','点'],['lines','線'],['both','点と線']]){const option=document.createElement('option');option.value=value;option.textContent=title;gridStyle.append(option);}gridStyle.onchange=()=>change({gridStyle:gridStyle.value as 'dots'|'lines'|'both'});
+    const gridStyle=document.createElement('select');gridStyle.setAttribute('aria-label','スナップグリッドの形');for(const [value,title]of [['dots','ドット'],['lines','ライン'],['both','ドット＋ライン']]){const option=document.createElement('option');option.value=value;option.textContent=title;gridStyle.append(option);}gridStyle.onchange=()=>change({gridStyle:gridStyle.value as 'dots'|'lines'|'both'});
     const gridControls=document.createElement('div');gridControls.className='desk-menu-colors desk-menu-grid-controls';gridControls.append(gridLabel,gridColor,gridStyle);
-    label('スナップグリッド',gridControls).classList.add('desk-menu-grid-field');
+    label('グリッド',gridControls).classList.add('desk-menu-grid-field');
     const interval=document.createElement('input');interval.type='number';interval.id='grid-interval';interval.min='1';interval.max='100000';interval.step='any';interval.required=true;interval.setAttribute('aria-label','グリッド間隔');interval.disabled=!changeGrid;
-    interval.title='スナップグリッド間隔';label('スナップグリッド間隔',interval).classList.add('desk-menu-inline-field','desk-menu-grid-interval');
+    interval.title='グリッド間隔';label('グリッド間隔',interval).classList.add('desk-menu-inline-field','desk-menu-grid-interval');
     const intervalPicker=addNumberPresets(interval,[24,48,72,96,120,144,168,192,216,240],'グリッド間隔');panel.append(intervalPicker.popup);
     interval.onchange=()=>{if(!interval.checkValidity()){interval.reportValidity();sync();return;}changeGrid?.({interval:Number(interval.value)});};
+    const divisions=document.createElement('select');divisions.hidden=true;divisions.setAttribute('aria-label','スナップ間隔');divisions.disabled=!changeGrid;
+    for(const value of [1,2,3,4]){const option=document.createElement('option');option.value=String(value);option.textContent=`${value}:1`;divisions.append(option);}
+    label('スナップ間隔',divisions).classList.add('desk-menu-inline-field');
+    const divisionPicker=addPresetPalette(divisions,['1','2','3','4'],'スナップ間隔');divisionPicker.wrapper.classList.add('line-style-picker');panel.append(divisionPicker.popup);
+    for(const button of divisionPicker.choices.querySelectorAll<HTMLButtonElement>('button'))button.textContent=button.dataset.value+':1';
+    divisions.onchange=()=>changeGrid?.({snapDivisions:Number(divisions.value)});
     sync = () => {
       const settings=desk.settingsSnapshot(),bg = settings.background, resolved = frameColors(bg);
+      divisions.value=String(settings.grid.snapDivisions??1);divisionPicker.menu.textContent=divisions.value+':1';
       gridColor.value=bg.gridColor??'#cbd5e1';gridStyle.value=bg.gridStyle??'dots';
       gridVisible.checked=bg.showGrid??bg.wallpaper==='none';interval.value=String(settings.grid.interval);
       axes.checked=bg.originAxes??false;axesColor.value=bg.originAxesColor??'#94a3b8';

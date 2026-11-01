@@ -14,7 +14,7 @@ test('grid interval presets and visibility are independent of snapping and prese
   await page.getByLabel('スナップグリッドの形',{exact:true}).selectOption('dots');assert.equal(await page.locator('#dots circle').getAttribute('display'),'inline');assert.equal(await page.locator('#dots circle').getAttribute('fill'),'#112233');
   await page.getByLabel('スナップグリッドの形',{exact:true}).selectOption('both');assert.equal(await page.locator('#dots circle').getAttribute('display'),'inline');assert.equal(await page.locator('#dots path').getAttribute('display'),'inline');
   const row=page.locator('.desk-menu-grid-controls');assert.equal(await row.evaluate(e=>new Set([...e.children].map(n=>Math.round(n.getBoundingClientRect().top+n.getBoundingClientRect().height/2))).size),1);
-  assert.equal(await interval.inputValue(),'24');assert.equal(await visible.isChecked(),true);
+  assert.equal(await interval.inputValue(),'96');assert.equal(await visible.isChecked(),true);
   await page.getByRole('button',{name:'グリッド間隔の候補',exact:true}).click();const palette=page.getByRole('dialog',{name:'グリッド間隔の候補',exact:true});assert.deepEqual(await palette.locator('button').allTextContents(),['24','48','72','96','120','144','168','192','216','240']);await palette.getByRole('button',{name:'72',exact:true}).click();
   assert.equal((await call('desk_settings')).grid.interval,72);assert.equal(await page.locator('#dots').getAttribute('width'),'72');
   await visible.uncheck();assert.equal((await call('desk_settings')).grid.enabled,true);assert.equal(await page.locator('#desk-grid').getAttribute('visibility'),'hidden');
@@ -23,6 +23,9 @@ test('grid interval presets and visibility are independent of snapping and prese
   await call('desk_undo');assert.equal(await interval.inputValue(),'72');await call('desk_redo');assert.equal(await interval.inputValue(),'37.5');
   for(const name of ['選択枠の色','AIの指差し枠の色','タイトル背景色','原点軸の色']){assert.equal(await page.getByLabel(name,{exact:true}).evaluate(node=>getComputedStyle(node.closest('.desk-menu-field')!).gridTemplateColumns.split(' ').length),2);}
   assert.equal(await page.locator('#clear-ai-pointing .tool-caption').textContent(),'AI指差し\n解除');assert.equal(await page.locator('#clear-ai-pointing .tool-caption').evaluate(e=>getComputedStyle(e).whiteSpace),'pre-line');
+  await page.getByRole('button',{name:'スナップ間隔の候補',exact:true}).click();const divisions=page.getByRole('dialog',{name:'スナップ間隔の候補',exact:true});assert.deepEqual(await divisions.locator('button').allTextContents(),['1:1','2:1','3:1','4:1']);await divisions.getByRole('button',{name:'2:1',exact:true}).click();
+  assert.equal((await call('desk_settings')).grid.snapDivisions,2);assert.equal(await page.locator('#dots').getAttribute('width'),'37.5');assert.deepEqual(await call('desk_get',{id:'note'}),before);
+  await call('desk_undo');assert.equal((await call('desk_settings')).grid.snapDivisions,4);assert.equal(await page.getByRole('button',{name:'スナップ間隔の候補',exact:true}).textContent(),'4:1');
   assert.deepEqual(desk.errors,[]);
  }finally{await desk.close();}
 });

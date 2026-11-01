@@ -1,3 +1,4 @@
+import {snapInterval} from './grid-settings';
 import {packEnvelope} from './binary-envelope';
 import {MAX_DESK_BYTES,MAX_OBJECTS} from './data-limits';
 import {clipboardTransferSchema,type ClipboardTransfer} from './clipboard-transfer';
@@ -72,7 +73,7 @@ export class PartClipboard {
     if (!this.snapshot) throw new Error('もう一度パーツをコピーしてください');
     const { objects, pasted } = this.snapshot;
     const ids = new Map(objects.map(object => [object.id, `${object.type}-${randomUuid()}`]));
-    const step = desk.settingsSnapshot().grid.enabled ? desk.settingsSnapshot().grid.interval : 24;
+    const grid=desk.settingsSnapshot().grid,step=grid.enabled?snapInterval(grid):24;
     const offset = remote?.delta??{x:step*(pasted+1),y:step*(pasted+1)};
     const operations: Operation[] = [];
     const seriesIds=new Map<string,string>();

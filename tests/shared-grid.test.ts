@@ -12,7 +12,7 @@ function apply(desk: Desk, operations: Batch['operations'], options: Omit<Batch,
 }
 
 test('shared grid defaults ON; settings/context expose isolated world interval and origin', () => {
-  const desk = new Desk(), grid = { enabled: true, interval: 24, origin: { x: 0, y: 0 } };
+  const desk = new Desk(), grid = { enabled: true, interval: 96, snapDivisions:4, origin: { x: 0, y: 0 } };
   assert.deepEqual(desk.settingsSnapshot().grid, grid);
   const settings = dispatch(desk, { method: 'settings' }) as ReturnType<Desk['listSettings']>;
   const context = dispatch(desk, { method: 'context' }) as { settings: typeof settings };
@@ -42,7 +42,7 @@ test('grid changes share revision/Undo, never reposition existing objects, and f
   const desk = new Desk();
   desk.execute({ operations: [{ kind: 'add', object: { id: 'r', type: 'rect', x: 13, y: 17 } }] });
   const before = desk.snapshot(), settings = desk.settingsSnapshot();
-  apply(desk, [{ kind: 'grid_update', patch: { enabled: false, interval: 10, origin: { x: 3, y: -4 } } }]);
+  apply(desk, [{ kind: 'grid_update', patch: { enabled: false, interval: 10, snapDivisions:1, origin: { x: 3, y: -4 } } }]);
   assert.deepEqual(desk.snapshot(), before); assert.equal(desk.revision, 2);
   assert.deepEqual(desk.getChanges(1).changes[0].targets, ['grid']);
   desk.undo(); assert.deepEqual(desk.settingsSnapshot(), settings);
@@ -74,7 +74,7 @@ test('all label shapes snap their bottom-center; descriptions and shared style e
 
 test('UI and MCP moves share custom grid math and preserve relative positions with a chosen anchor', () => {
   const desk = new Desk();
-  desk.execute({ operations: [{ kind: 'grid_update', patch: { interval: 10, origin: { x: 3, y: -4 } } },
+  desk.execute({ operations: [{ kind: 'grid_update', patch: { interval: 10, snapDivisions:1, origin: { x: 3, y: -4 } } },
     { kind: 'add', object: { id: 'r', type: 'rect', x: 13, y: 17 } },
     { kind: 'label_add', id: 'p', seriesId: 'series-1', x: 100, y: 110 }] });
   const originals = desk.snapshot(), grid = desk.settingsSnapshot().grid;
@@ -105,8 +105,8 @@ test('free endpoints snap, explicit and forward bindings override the grid, exac
     endBinding: { objectId: 'r', anchor: 'left' } } },
     { kind: 'add', object: { id: 'r', type: 'rect', x: 47, y: 47, width: 90, height: 50 } }]);
   assert.equal(desk.get('a').x, 24); assert.equal(desk.get('a').y, 24);
-  assert.equal(desk.get('a').x2, 48); assert.equal(desk.get('a').y2, 73);
-  assert.equal(result.placement.results[0].applied?.y2, 73);
+  assert.equal(desk.get('a').x2, 48); assert.equal(desk.get('a').y2, 84);
+  assert.equal(result.placement.results[0].applied?.y2, 84);
   apply(desk, [{ kind: 'update', id: 'a', patch: { x2: 151, y2: 152, endBinding: null } }]);
   assert.equal(desk.get('a').x2, 144); assert.equal(desk.get('a').y2, 144);
   apply(desk, [{ kind: 'update', id: 'a', patch: { x2: 151, y2: 152 } }], { snap: 'exact' });
@@ -124,7 +124,7 @@ test('placement reports final deletion without throwing after the commit', () =>
 
 test('grid round-trips in desk files; legacy files default ON/24/origin0 without changing any object', async () => {
   const desk = new Desk();
-  desk.execute({ operations: [{ kind: 'grid_update', patch: { enabled: false, interval: 10, origin: { x: 3, y: -4 } } },
+  desk.execute({ operations: [{ kind: 'grid_update', patch: { enabled: false, interval: 10, snapDivisions:1, origin: { x: 3, y: -4 } } },
     { kind: 'add', object: { id: 'r', type: 'rect', x: 13, y: 17 } }] });
   const bytes = await encodeDeskFile(desk), document = await decodeDeskFile(bytes);
   assert.deepEqual(document.settings.grid, desk.settingsSnapshot().grid);

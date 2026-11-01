@@ -16,7 +16,7 @@ test('shared snap defaults, public MCP placement, exact numeric editing and save
   try {
     const button = page.getByRole('button', { name: 'グリッドにスナップ', exact: true });
     assert.equal(await button.getAttribute('aria-pressed'), 'true'); assert.match(await button.innerText(), /スナップ/);
-    assert.deepEqual((await call('desk_settings')).grid, { enabled: true, interval: 24, origin: { x: 0, y: 0 } });
+    assert.deepEqual((await call('desk_settings')).grid, { enabled: true, interval: 96, snapDivisions:4, origin: { x: 0, y: 0 } });
     const placed = await execute([{ kind: 'add', object: { id: 'r', type: 'rect', x: 35, y: -35 } }]);
     assert.equal(placed.placement.mode, 'desk'); assert.equal(placed.placement.results[0].applied.x, 24);
     assert.equal(placed.placement.results[0].snapped, true);
@@ -40,7 +40,7 @@ test('shared snap defaults, public MCP placement, exact numeric editing and save
     await button.click(); assert.equal((await call('desk_settings')).grid.enabled, false);
     await execute([{ kind: 'add', object: { id: 'off', type: 'rect', x: 35, y: 35 } }]);
     assert.equal((await call('desk_get', { id: 'off' })).x, 35);
-    await execute([{ kind: 'grid_update', patch: { enabled: true, interval: 10, origin: { x: 3, y: -4 } } }]);
+    await execute([{ kind: 'grid_update', patch: { enabled: true, interval: 10, snapDivisions:1, origin: { x: 3, y: -4 } } }]);
     assert.equal(await button.getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('#dots').getAttribute('width'), '10');
     assert.equal(await page.locator('#dots').getAttribute('x'), '-2');
@@ -53,14 +53,14 @@ test('shared snap defaults, public MCP placement, exact numeric editing and save
     assert.deepEqual({ x: dragged.x, y: dragged.y }, { x: 43, y: -4 });
     const downloadPromise = page.waitForEvent('download'); await page.locator('#file-menu').click(); await page.locator('#download-desk').click();
     const bytes = await readFile((await (await downloadPromise).path())!);
-    assert.deepEqual((await decodeDeskFile(bytes)).settings.grid, { enabled: true, interval: 10, origin: { x: 3, y: -4 } });
+    assert.deepEqual((await decodeDeskFile(bytes)).settings.grid, { enabled: true, interval: 10, snapDivisions:1, origin: { x: 3, y: -4 } });
     await execute([{ kind: 'grid_update', patch: { enabled: false, interval: 24, origin: { x: 0, y: 0 } } }]);
     assert.equal(await button.getAttribute('aria-pressed'), 'false');
     const confirmation1 = respondToConfirm(page, 'proceed');
     await page.locator('#desk-file').setInputFiles({ name: 'grid.tabletop', mimeType: 'application/zip', buffer: bytes });
     await confirmation1;
     await page.waitForFunction(() => document.querySelector('#message')?.textContent === '読込完了');
-    assert.deepEqual((await call('desk_context')).settings.grid, { enabled: true, interval: 10, origin: { x: 3, y: -4 } });
+    assert.deepEqual((await call('desk_context')).settings.grid, { enabled: true, interval: 10, snapDivisions:1, origin: { x: 3, y: -4 } });
     assert.equal(await button.getAttribute('aria-pressed'), 'true'); assert.equal(await page.locator('#dots').getAttribute('width'), '10');
     await page.locator('#undo').click();
     assert.equal(await button.getAttribute('aria-pressed'), 'false'); assert.equal(await page.locator('#dots').getAttribute('width'), '24');

@@ -1,3 +1,4 @@
+import {newPartGridSize} from './grid';
 import {MAX_ASSET_BYTES,checkAssetBytes} from './data-limits';
 import {encodeDeskFile,decodeDeskFile} from './desk-file';
 import {bytesDataUrl,dataBytes} from './binary-envelope';
@@ -852,6 +853,7 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
     ...(type === 'mermaid' ? { text: 'Mermaid', mermaidSource: defaultMermaidSource } : {}),
     ...(['line', 'arrow'].includes(type) ? {...initialLinePoints(center),...selectedConnection(desk.selected().map(id => desk.get(id)),desk.snapshot(),initialLineDelta)} : {}),
     ...extra });
+  Object.assign(object,newPartGridSize(object,desk.settingsSnapshot().grid));
   if(!isConnector(object))Object.assign(object,gridPosition({x:center.x-object.width/2,y:center.y-object.height/2}));
   if (['text', 'web', 'link', 'mermaid', 'qrcode'].includes(type)) { editor.open(object, true); return; }
   execute([{ kind: 'add', object }], 'desk'); desk.select([object.id]);
@@ -1157,7 +1159,8 @@ async function addFiles(files: File[]) {
       });
       const image = new Image(); image.src = src;
       await image.decode();
-      const size=initialImageSize(image.naturalWidth,image.naturalHeight);
+      const type=file.type==='image/svg+xml'?'svg':'image';
+      const size=newPartGridSize({type,...initialImageSize(image.naturalWidth,image.naturalHeight)},desk.settingsSnapshot().grid);
       operations.push({ kind: 'add', object: objectSchema.parse({
         id: `image-${randomUuid().slice(0, 8)}`, type: file.type === 'image/svg+xml' ? 'svg' : 'image', src,
         ...size,...gridPosition(centeredPartPoint(camera,cameraSize(),size,operations.length*24)),text:file.name,

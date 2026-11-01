@@ -2,7 +2,7 @@ import type { Batch, DeskObject, Operation } from './model';
 import type { Settings } from './settings';
 import type { GridSettings } from './grid-settings';
 import { endpoints, isConnector } from './geometry';
-import { gridMoveDelta, gridOrigin, gridPoint } from './grid';
+import { gridMoveDelta, gridOrigin, gridPoint, newPartGridSize } from './grid';
 
 const fields = ['x', 'y', 'x2', 'y2', 'width', 'height'] as const;
 export function placementGeometry(object: DeskObject) {
@@ -51,6 +51,7 @@ export function createGridPlacement(batch: Batch, before: DeskObject[], parseObj
     if ((requested.x2 === undefined) !== (requested.y2 === undefined)) throw new Error('Both x2 and y2 are required');
     const next = { ...requested }, grid = settings.grid;
     const active = mode === 'desk' && grid.enabled;
+    if(active&&operation.kind==='add')Object.assign(next,newPartGridSize(next,grid));
     if (active && operation.kind === 'update' && anchor && group.length) {
       const delta = gridMoveDelta(anchor.object, anchor.delta, grid);
       const correction = { x: delta.x - anchor.delta.x, y: delta.y - anchor.delta.y };

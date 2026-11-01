@@ -77,6 +77,7 @@ export const settingsSchema = z.object({ defaults: appearanceSchema, series: z.a
 export type Settings = z.infer<typeof settingsSchema>;
 type SettingsOperation = z.infer<typeof settingsOperations[number]>;
 export const initialSettings = (): Settings => settingsSchema.parse({ defaults: {},
+  grid:{enabled:true,interval:96,snapDivisions:4,origin:{x:0,y:0}},
   series: [{ id: 'series-1', name: '数字' }] });
 const katakana = [...'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン'];
 const romans = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi', 'xvii', 'xviii', 'xix', 'xx'];
