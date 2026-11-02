@@ -149,7 +149,7 @@ Tabletopサーバー
 ## 参照
 
 - [関連する既存の方向性](./DIRECTIONS.md)
-- [現在のAIインターフェース](../docs/AI_INTERFACE.md)
+- [現在のAIインターフェース](../docs/ai-interface.md)
 - [MCP公式：トランスポート](https://modelcontextprotocol.io/specification/latest/basic/transports)
 - [MCP TypeScript SDK v1.x：サーバー](https://github.com/modelcontextprotocol/typescript-sdk/blob/v1.x/docs/server.md)
 - [ngrok公式ドキュメント](https://ngrok.com/docs/)

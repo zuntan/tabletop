@@ -61,7 +61,7 @@
 ## 関連する記録
 
 - `IDEAS.md` のデモ案：AIの逐次更新によるパラパラ漫画的な案を実際に試し、今回の通信往復の問題が見えた。古い机ボードは相談当時の記録として残す。
-- 現行のフォーカス／任意カメラ操作：[AIインタフェース](../docs/AI_INTERFACE.md#カメラを合わせる)。
+- 現行のフォーカス／任意カメラ操作：[AIインタフェース](../docs/ai-interface.md#カメラを合わせる)。
 - 机の追加ボード：`idea-batch-animation-board`／`idea-batch-animation-title`／`idea-batch-animation-body`。
 
 ## 技術検討の参照先

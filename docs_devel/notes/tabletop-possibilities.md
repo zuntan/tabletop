@@ -100,5 +100,5 @@ AIがもっともらしい説明をしても、人間が資料を指して「で
 ## 関連する記録
 
 - [今後の方向性と検討案](../DIRECTIONS.md)
-- [現在のAI向けインターフェース](../../docs/AI_INTERFACE.md)
+- [現在のAI向けインターフェース](../../docs/ai-interface.md)
 - [保存したスクリーンショット](../images/tabletop-demo.png)

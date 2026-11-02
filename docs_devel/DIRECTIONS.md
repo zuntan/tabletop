@@ -8,7 +8,7 @@
 
 Tabletopは完成図面を制作するためだけのツールではなく、人間とAIが資料を広げ、指差し、試行錯誤する机です。普通のチャットで足りるときはチャットを使い、並べて考えたいときに机を広げる、という距離感を目指します。
 
-初期構想は [concept.md](./concept.md)、現在の操作は [AUTHORING.md](../docs/AUTHORING.md)・[DIAGRAM.md](../docs/DIAGRAM.md)、実装済みMCPは [AI_INTERFACE.md](../docs/AI_INTERFACE.md) を参照してください。以下は実装済みの最初の段階と、未実装の追加機能・HTTP API・複数参加者機能を区別して記載しています。
+初期構想は [concept.md](./concept.md)、現在の操作は [authoring.md](../docs/authoring.md)・[diagram.md](../docs/diagram.md)、実装済みMCPは [ai-interface.md](../docs/ai-interface.md) を参照してください。以下は実装済みの最初の段階と、未実装の追加機能・HTTP API・複数参加者機能を区別して記載しています。
 
 2026-10-15の机上整理とおっさんの追加案は [IDEAS.md](./IDEAS.md) に統合しています。原文は [追加アイデア集](./ideas-from-ossan-2026-10-15.md)、外部AI・複数参加者の具体化は [FUTURE_VISION.md](./FUTURE_VISION.md) を参照してください。古い案を別機能として二重に実装せず、更新後の案と実装状態を確認してください。
 
