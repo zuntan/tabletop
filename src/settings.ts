@@ -58,6 +58,7 @@ export const seriesSchema = appearanceSchema.extend({
 export const seriesPatchSchema = seriesSchema.omit({ id: true }).partial().extend({ thread: pinThreadSchema.partial().optional() }).strict();
 export const settingsOperations = [
   z.object({ kind: z.literal('desk_rename'), name: deskNameSchema }).strict(),
+  z.object({ kind: z.literal('initial_view_update'), targetId:z.string().min(1).max(100).nullable() }).strict(),
   z.object({ kind: z.literal('grid_update'), patch: gridSettingsSchema.partial() }).strict(),
   z.object({ kind: z.literal('background_update'), patch: backgroundSchema.partial() }).strict(),
   z.object({ kind: z.literal('defaults_update'), patch: appearanceSchema.partial() }).strict(),
@@ -73,6 +74,7 @@ export const settingsSchema = z.object({ defaults: appearanceSchema, series: z.a
   grid: gridSettingsSchema.default({}),
   background: backgroundSchema.default({}),
   name: deskNameSchema.default(''),
+  initialFocusId:z.string().min(1).max(100).nullable().optional(),
 }).strict();
 export type Settings = z.infer<typeof settingsSchema>;
 type SettingsOperation = z.infer<typeof settingsOperations[number]>;
@@ -118,6 +120,8 @@ export function materializeLabels(objects: DeskObject[], settings: Settings): De
 export function applySettingsOperation(operation: SettingsOperation, objects: DeskObject[], settings: Settings): void {
   if (operation.kind === 'desk_rename') {
     settings.name = deskNameSchema.parse(operation.name);
+  } else if (operation.kind === 'initial_view_update') {
+    settings.initialFocusId=operation.targetId;
   } else if (operation.kind === 'grid_update') {
     settings.grid = gridSettingsSchema.parse({ ...settings.grid, ...operation.patch });
   } else if (operation.kind === 'background_update') {

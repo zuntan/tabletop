@@ -82,3 +82,5 @@
 #desk-menu-panel .desk-menu-grid-interval #grid-interval { width:52px; flex:0 0 52px; }
 
 #desk-menu-panel .desk-menu-grid-controls select { font-size:11px; }
+
+#desk-menu-panel #initial-focus-id { width: auto; min-width: 0; text-align: left; white-space: nowrap; overflow-x: auto; }

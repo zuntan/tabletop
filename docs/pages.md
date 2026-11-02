@@ -22,6 +22,32 @@ https://zuntan.github.io/tabletop/?desk=%2Fother-product%2Fguide.tabletop
 
 URL指定がなければ空の机が開き、「ファイル → アップロード」で手元の `.tabletop` を読み込めます。
 
+## 最初に表示するカード
+
+机ファイルの `settings.initialFocusId` にカードIDを保存すると、URLで机を読み込んだ直後にそのカードを選択し、「選択範囲」と同じ位置・倍率で表示します。通常版のLOADでは適用しません。
+
+設定・解除はAIに依頼してください。MCPでは `desk_execute` の `{kind:"initial_view_update", targetId:"カードID"}` で設定し、`targetId:null` で解除します。机の保存・読込・Undoに対応します。「机の見た目」の「初期表示」にはIDまたは「未設定」を読み取り専用で表示します。保存時の選択カードから自動設定することはありません。
+
+別のカードへ直接案内する場合は、URLの `focus` で保存済みの設定を上書きできます。
+
+```text
+https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop&focus=text-0cc36b55
+```
+
+優先順位は、空でない `pdf` → 空でない `focus` → 机ファイルの初期表示ID → 従来の全体表示です。空の `focus` は指定なしとして扱います。対象IDが見つからなければ全体表示に戻し、下部に対象が見つからない旨を表示します。位置・サイズ・机データは変更しません。
+
+初期表示は起動時の `desk` 読込に適用します。起動後の机リンクやアップロードは従来の切替動作です。
+
+## URLオプション一覧
+
+| オプション | 値・動作 |
+|---|---|
+| `desk` | 相対URLまたはHTTP(S) URLの机ファイル。省略時は空の机 |
+| `focus` | 初期表示するオブジェクトID。空でない場合は机ファイルの設定より優先 |
+| `pdf` | 空でない値なら読込・描画後にPDFを開く。`1`・`0` とも有効。focusより優先 |
+
+関連する通常版の `connect=off` はAIへの自動接続を抑止する指定です。Pages版は常に自動接続しないため不要です。`newDeskName` は空の机の起動時名称の指定で、読み込む机の名称や初期表示先を指定するものではありません。
+
 ## 読込後すぐPDFを表示する
 
 ```text

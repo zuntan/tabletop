@@ -1,3 +1,4 @@
+import {initialFocusTarget} from './initial-focus';
 import {KeyboardGeometryEdit} from './keyboard-geometry';
 import {newPartGridSize} from './grid';
 import {MAX_ASSET_BYTES,checkAssetBytes} from './data-limits';
@@ -1475,5 +1476,15 @@ render();
 if(pagesMode){
  $('#empty small').textContent='ファイルからアップロード · 上のツールから追加 · 画像をドロップ';
  const reference=startupParameters.get('desk');
- if(reference)void deskFiles.openInitial(reference).then(loaded=>{if(loaded&&startupParameters.get('pdf'))return deskFiles.openPdfHere();});
+ if(reference)void deskFiles.openInitial(reference).then(async loaded=>{
+  if(!loaded)return;
+  if(startupParameters.get('pdf'))return deskFiles.openPdfHere();
+  const id=initialFocusTarget(startupParameters,desk.settingsSnapshot().initialFocusId);
+  if(!id)return;
+  await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+  if(!desk.snapshot().some(object=>object.id===id)){
+    desk.select([]);fitView([]);notify(`初期表示の対象が見つかりません：${id}`,true);return;
+  }
+  desk.select([id]);fitView([id]);
+ });
 }

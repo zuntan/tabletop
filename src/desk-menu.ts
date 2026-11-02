@@ -110,8 +110,11 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     const divisionPicker=addPresetPalette(divisions,['1','2','3','4'],'スナップ間隔');divisionPicker.wrapper.classList.add('line-style-picker');panel.append(divisionPicker.popup);
     for(const button of divisionPicker.choices.querySelectorAll<HTMLButtonElement>('button'))button.textContent=button.dataset.value+':1';
     divisions.onchange=()=>changeGrid?.({snapDivisions:Number(divisions.value)});
+    const initialFocus=document.createElement('output');initialFocus.id='initial-focus-id';
+    label('初期表示',initialFocus).classList.add('desk-menu-inline-field');
     sync = () => {
       const settings=desk.settingsSnapshot(),bg = settings.background, resolved = frameColors(bg);
+      initialFocus.textContent=settings.initialFocusId??'未設定';
       divisions.value=String(settings.grid.snapDivisions??1);divisionPicker.menu.textContent=divisions.value+':1';
       gridColor.value=bg.gridColor??'#cbd5e1';gridStyle.value=bg.gridStyle??'dots';
       gridVisible.checked=bg.showGrid??bg.wallpaper==='none';interval.value=String(settings.grid.interval);
