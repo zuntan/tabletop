@@ -5,7 +5,7 @@
 - [現在の作業机と復元先](current-desk.md)
 - [公開情報・Aboutの記録](public-info-and-license.md)
 - [第三者ライセンスと配布通知](third-party-licenses.md)
-- [AI向け説明書](help/)
+- [AI向け説明書](help)
 - [開発用の机スナップショット](desk-snapshots/README.md)
 
 READMEなどからの既存リンクは、参照切れを避けるため移動先へ向けています。利用者向け入口として何を残すか・新しいdocsへ何を案内するかは、今後個別に検討します。

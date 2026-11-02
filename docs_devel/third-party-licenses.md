@@ -7,7 +7,7 @@ Tabletop自身はルートの [LICENSE](../LICENSE) にあるMITです。第三�
 - [全通知・ライセンス全文](../public/licenses/THIRD_PARTY_NOTICES.txt)
 - [監査時の直接・間接依存338件（開発用を含むCSV）](./licenses/dependency-audit-2026-10-24.csv)
 - [名称・版・出典・個別通知への対応表](../public/licenses/generated/manifest.json)
-- [内部コードの補足原本](../licenses/supplemental/)
+- [内部コードの補足原本](../licenses/supplemental)
 
 通知集はpackage-lock.jsonの本番依存全体を対象にします。現在は263配置・260種類/版。ブラウザに含まれるものだけでなく、MCPサーバーの依存や、保守的に推移依存の型・CLI等も含めます。開発用依存、Node本体、Chrome本体の配布をカバーするものではありません。
 

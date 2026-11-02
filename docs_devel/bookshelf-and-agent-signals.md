@@ -90,7 +90,7 @@ Tabletopは参照先を識別する情報と一覧を保持し、ストレージ
 - `card-bookshelf-boundary`：未実装の道具。取り出しと役割分担。
 - `card-agent-signals`：その先の机。第二段階の呼びかけ。
 
-関連：[現在の机の整理](./desk-cleanup-2026-10-18.md)、[将来構想](../FUTURE_VISION.md)。
+関連：[現在の机の整理](./desk-cleanup-2026-10-18.md)、[将来構想](FUTURE_VISION.md)。
 
 ## 2026-10-20：依頼された時間だけ待つ案
 
