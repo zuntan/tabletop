@@ -1,4 +1,4 @@
-import { reactionChoices, reactionBars, reactionMoons, reactionNames, isReactionBar, type Reaction } from './reaction-values';
+import { reactionChoices, reactionSymbolGroups, reactionDisplay, reactionBars, reactionMoons, reactionNames, isReactionBar, type Reaction } from './reaction-values';
 import { stationeryButton } from './stationery-button';
 
 /** Stay open while selecting targets; close explicitly with the trigger or Escape. */
@@ -13,7 +13,7 @@ export function createReactionButtons(container: HTMLElement, toggle: (reaction:
   more.setAttribute('aria-expanded', 'false'); more.setAttribute('aria-controls', palette.id);
   more.popoverTargetElement = palette; more.popoverTargetAction = 'toggle';
   const makeButton = (reaction: Reaction) => {
-    const button = document.createElement('button'); button.type = 'button'; button.textContent = reaction;
+    const button = document.createElement('button'); button.type = 'button'; button.textContent = reactionDisplay(reaction);
     button.classList.toggle('reaction-bar',isReactionBar(reaction));button.dataset.reaction = reaction; button.setAttribute('aria-label', `${reaction} ${reactionNames[reaction]}`);
     button.title = `${reactionNames[reaction]}を付け外し`; button.onclick = () => toggle(reaction);
     return button;
@@ -23,7 +23,8 @@ export function createReactionButtons(container: HTMLElement, toggle: (reaction:
   quick.append(more);
   const symbols=paletteButtons.filter(button=>!reactionBars.some(v=>v===button.dataset.reaction)&&!reactionMoons.some(v=>v===button.dataset.reaction));
   const strip=(name:string,values:readonly string[])=>{const row=document.createElement('div');row.className='reaction-level-strip '+name;row.setAttribute('role','group');row.setAttribute('aria-label',name==='reaction-bars'?'棒の高さ':'月の満ち欠け');row.append(...paletteButtons.filter(button=>values.includes(button.dataset.reaction!)));return row;};
-  palette.append(...symbols,strip('reaction-bars',reactionBars),strip('reaction-moons',reactionMoons));container.append(quick, palette);
+  const groups=reactionSymbolGroups.map(values=>{const row=document.createElement('div');row.className='reaction-symbol-group';row.append(...symbols.filter(button=>(values as readonly string[]).includes(button.dataset.reaction!)));return row;});
+  palette.append(...groups,strip('reaction-bars',reactionBars),strip('reaction-moons',reactionMoons));container.append(quick, palette);
   const position = () => {
     const anchor = more.getBoundingClientRect();
     const width = palette.offsetWidth || 238, height = palette.offsetHeight || 110;

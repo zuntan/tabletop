@@ -4,7 +4,7 @@ import { Desk, objectSchema } from '../src/model';
 import { reactionOperations } from '../src/reactions';
 import { canonicalReaction, hasReaction, type Reaction } from '../src/reaction-values';
 
-for (const [legacy, emoji] of [['○', '⭕'], ['✕', '❌']] as [Reaction, Reaction][]) {
+for (const [legacy, emoji] of [['○', '⭕'], ['✕', '❌'], ['✔️','✔'], ['▶','🔜'], ['⏸','🅿️']] as [Reaction, Reaction][]) {
   test(`legacy ${legacy} stays stored and is controlled by ${emoji}`, () => {
     const desk = new Desk();
     desk.execute({ operations: [{ kind: 'add', object: objectSchema.parse({ id: 'legacy', type: 'text', reactions: [legacy, '💡'] }) }] });

@@ -1,6 +1,6 @@
 export const reactionPlacements=['top-left-right','top-left-down','top-right-left','top-right-down','bottom-left-right','bottom-left-up','bottom-right-left','bottom-right-up'] as const;
 export type ReactionPlacement=typeof reactionPlacements[number];
-export const defaultReactionPlacement:ReactionPlacement='bottom-right-left';
+export const defaultReactionPlacement:ReactionPlacement='top-right-left';
 export const reactionPlacementNames:Record<ReactionPlacement,string>={
  'top-left-right':'左上→','top-left-down':'左上↓','top-right-left':'右上←','top-right-down':'右上↓',
  'bottom-left-right':'左下→','bottom-left-up':'左下↑','bottom-right-left':'右下←','bottom-right-up':'右下↑',

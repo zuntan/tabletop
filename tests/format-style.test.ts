@@ -16,8 +16,8 @@ test('format snapshots preserve meaningful styles only and cross-type applicatio
   desk.execute({ operations: [{ kind: 'update', id: 'target', patch: formatPatch(style, 'text') }] });
   const target = desk.get('target'); assert.equal(target.fontSize, 48); assert.equal(target.text, 'Keep me'); assert.equal(target.x, 120); assert.equal(target.width, 300); assert.equal(target.locked, true); assert.deepEqual(target.reactions, ['👍']);
   const line = extractFormat(desk.get('line')); assert.equal(line.endMarker, 'arrow'); assert.equal(line.junctionRounding, 192); assert.equal('x2' in line, false);
-  assert.deepEqual(formatPatch(line, 'text'), { stroke: '#334155', strokeWidth: 2 });
-  assert.deepEqual(formatPatch(style, 'image'), {stickers:null});
+  assert.deepEqual(formatPatch(line, 'text'), { stroke: '#334155', strokeWidth: 2, reactionSize:64,reactionPlacement:'top-right-left',reactionFixed:false });
+  assert.deepEqual(formatPatch(style, 'image'), {stickers:null,reactionSize:64,reactionPlacement:'top-right-left',reactionFixed:false});
   desk.execute({ operations: [{ kind: 'add', object: { id: 'legacy', type: 'rect' } }, { kind: 'add', object: { id: 'auto', type: 'rect', textFit: 'auto' } }] });
   desk.execute({ operations: [{ kind: 'update', id: 'auto', patch: formatPatch(extractFormat(desk.get('legacy')), 'rect') }] });
   assert.equal(desk.get('auto').textFit, undefined);
@@ -45,5 +45,16 @@ test('format snapshots retain independent sticker rows across media, memory, cre
  desk.execute({operations:[{kind:'update',id:'media',patch:formatPatch(without,'image')}]});assert.equal(desk.get('media').stickers,null);
  desk.undo();assert.deepEqual(desk.get('media').stickers,stickers);
  assert.equal('stickers' in formatPatch({fontSize:24},'text'),false);
- assert.deepEqual(extractFormat(desk.get('media')),{stickers});
+ assert.deepEqual(extractFormat(desk.get('media')),{stickers,reactionSize:64,reactionPlacement:'top-right-left',reactionFixed:false});
+});
+
+test('reaction format copies presentation without copying marks and retains explicit small sizes',()=>{
+ const desk=new Desk();desk.execute({operations:[{kind:'add',object:{id:'source',type:'text',reactions:['✔'],reactionSize:192,reactionPlacement:'top-left-down',reactionFixed:true}},{kind:'add',object:{id:'target',type:'text',reactions:['💡'],reactionSize:24}}]});
+ const style=extractFormat(desk.get('source'));
+ assert.equal('reactions' in style,false);
+ desk.execute({operations:[{kind:'update',id:'target',patch:formatPatch(style,'text')}]});
+ assert.deepEqual(desk.get('target').reactions,['💡']);assert.equal(desk.get('target').reactionSize,192);assert.equal(desk.get('target').reactionFixed,true);
+ desk.undo();assert.equal(desk.get('target').reactionSize,24);
+ assert.equal(readFormatMemory(JSON.stringify({current:style,slots:[style,null,null]})).current.reactionPlacement,'top-left-down');
+ assert.equal(formatPatch({fontSize:24},'text').reactionSize,undefined);
 });

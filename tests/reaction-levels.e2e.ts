@@ -9,6 +9,7 @@ test('level strips stay together, bars are green, and fixed reactions keep their
   await call('desk_execute',{operations:[{kind:'add',object:{id:'note',type:'text',x:200,y:200,width:400,height:280,text:'棒の高さと月の満ち欠け',reactions:['▁','█','🌕']}}]});await call('desk_select',{ids:['note']});
   await page.locator('#reaction-more').click();
   assert.equal(await page.locator('#reaction-palette [data-reaction]').count(),43);
+  assert.deepEqual(await page.locator('.reaction-symbol-group').allTextContents(),['👍👎❓❗⭕❌💡','✔️🆗🔜🅿️⏳⚠️🔒','❤️📌🚩👀🤔😊🎉','🔍🔁🛠💤📎📝🙏']);
   assert.deepEqual(await page.locator('.reaction-bars button').allTextContents(),[...reactionBars]);assert.deepEqual(await page.locator('.reaction-moons button').allTextContents(),[...reactionMoons]);
   assert.equal(reactionChoices.length,43);
   assert.equal(await page.locator('.reaction-moons button').first().evaluate(n=>getComputedStyle(n).backgroundColor),'rgb(203, 213, 225)');

@@ -15,7 +15,7 @@ test('reaction placement picker moves marks to the exposed edge of clipped cards
   assert.deepEqual(await page.locator('.number-preset-palette:popover-open .number-preset-choices button').allTextContents(),['12','16','24','32','48','64']);
   await page.keyboard.press('Escape');
   await page.getByRole('button',{name:'リアクションの大きさの候補',exact:true}).click();
-  assert.deepEqual(await page.locator('.number-preset-palette:popover-open .number-preset-choices button').allTextContents(),['24','32','48','64','96','128']);
+  assert.deepEqual(await page.locator('.number-preset-palette:popover-open .number-preset-choices button').allTextContents(),['24','32','48','64','80','96','128','160','192']);
   await page.keyboard.press('Escape');
   const controls=await page.locator('#reaction-size-controls label').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().toJSON()));
   assert.ok(Math.abs(controls[0].y+controls[0].height/2-controls[1].y-controls[1].height/2)<2);
