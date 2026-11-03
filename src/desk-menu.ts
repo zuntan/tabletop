@@ -137,7 +137,7 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     const artwork=document.createElement('img');artwork.className='about-desk-artwork';artwork.src=`data:image/svg+xml;base64,${btoa(deskArtwork)}`;
     artwork.alt='ランプと紙とマグカップ、笑顔の引き出しがある机';artwork.width=230;artwork.height=158;
     const text = document.createElement('h3');text.className='about-app-name';
-    const releaseLink=document.createElement('a');releaseLink.textContent='Tabletop '+JSON.parse(packageSource).version;releaseLink.href='https://github.com/zuntan/tabletop/releases';releaseLink.target='_blank';releaseLink.rel='noopener noreferrer';
+    const releaseLink=document.createElement('a');releaseLink.textContent='Tabletop '+JSON.parse(packageSource).version+(__TABLETOP_COMMIT__?' ('+__TABLETOP_COMMIT__+')':'');releaseLink.href='https://github.com/zuntan/tabletop/releases';releaseLink.target='_blank';releaseLink.rel='noopener noreferrer';
     text.append(releaseLink);
     const description = document.createElement('p'); description.className='about-description';description.textContent = '人間とAIが同じ机を囲んで考えるための作業机。';
     const link = document.createElement('a'); link.href = 'https://github.com/zuntan/tabletop'; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'プロジェクト → GitHub Repository';

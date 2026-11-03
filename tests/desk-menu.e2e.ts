@@ -47,7 +47,9 @@ test('desk menu edits shared appearance, previews opacity once per gesture, foll
     await page.keyboard.press('Escape');
     await menu.click(); await page.getByRole('button', { name: 'Tabletopについて…' }).click();
     const version=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8')).version;
-    assert.equal(await page.getByRole('link',{name:`Tabletop ${version}`,exact:true}).getAttribute('href'),'https://github.com/zuntan/tabletop/releases');
+    const releaseLink=page.locator('a[href="https://github.com/zuntan/tabletop/releases"]');
+    const releaseText=await releaseLink.innerText();
+    assert.ok(releaseText===`Tabletop ${version}`||releaseText.startsWith(`Tabletop ${version} (`)&&/\([0-9a-f]{7,40}\)$/.test(releaseText));
     assert.equal(await page.getByRole('link', { name: 'プロジェクト → GitHub Repository' }).getAttribute('href'), 'https://github.com/zuntan/tabletop');
     assert.deepEqual(await page.locator('.about-credits dt').allTextContents(),['プログラマー','アドバイザー','企画・ディレクション']);
     assert.deepEqual(await page.locator('.about-credits dd').allTextContents(),['センパイ（GPT Sol 6.1 ～）','おっさん〈だらっくだ〉（ChatGPT GPT 6 ～）','ずんたん〈zuntan〉']);
