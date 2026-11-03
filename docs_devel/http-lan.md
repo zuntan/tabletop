@@ -12,8 +12,8 @@
 ## 接続と端末切替
 
 1. LANを開くだけでは、接続中のローカルの机を解放しない。ペアリングと内容を保持する。
-2. 別端末へ渡す場合は、人間の了承後に `desk_release({ confirm: true })`。元のタブの自動再接続を止める。
-3. `desk_connection_info` の `lanUrls` から接続先を案内する。一つのサーバーに接続できる机は一つ。
+2. 別端末へ渡す場合は、人間の了承後に `desk_release({ deskId, confirm: true })`。元のタブの自動再接続を止める。
+3. `desk_connection_info` の `lanUrls` から接続先を案内する。現在は複数の机を接続できるため、追加先をdesk_connectionsで確認する（[複数接続](multiple-desk-connections.md)）。
 4. 新しい接続後は `desk_pairing_info` の秘密recordを直ちに非公開で保持する。
 
 人間は接続タブの「別端末へ渡す」からも切り替えられる。確認後、認証済みWebSocket経由で解放し、元タブの再試行を停止してQRを表示する。LANが未許可なら解放せずエラーにする。LANを開く権限は引き続きAIのみ。

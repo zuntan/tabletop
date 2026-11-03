@@ -15,3 +15,21 @@
 端点の見やすさを調整し、マーカーの基準寸法を25%拡大。丸とひし形は横幅も広げる。描画する線の本体だけをマーカーの内側まで控え、太線がマーカーの先端からはみ出すのを抑える。端点座標・操作ハンドル・当たり判定・Bindingは動かさず、途中の破線・点線とマーカーなし側の丸い線端は維持する。端点クリップの試作は廃止し、描画座標の補正に一本化。
 
 旧type=arrowは読込・追加の入口だけでtype=line、startMarker=none、endMarker=arrowへ変換する。旧lineは両端none。明示的な端点属性は保持する。新しく保存・返却するオブジェクトはlineのみ。Git内の過去の.tabletopをすべてデコードし、パーツ数・ID・旧矢印の向き・線幅を検証する。過去アーカイブの書換えは行わない。
+
+## MCP端点データの整理（2026-11-03）
+
+旧diagram資料を `src/geometry.ts`・`src/object-properties.ts` と照合。現在の取得・保存は `type:line`、始点 `x,y` と終点 `x2,y2` を使う。矢印は終点という意味ではなく、`startMarker`／`endMarker`でそれぞれ指定する。次は既存対象への接続を表すobjectの例（実行時は実在するIDに置き換え、deskIdも指定する）。
+
+```json
+{
+  "id": "line-example", "type": "line",
+  "x": 280, "y": 150, "x2": 500, "y2": 150,
+  "stroke": "#1d4ed8", "startMarker": "none", "endMarker": "arrow",
+  "startBinding": {"objectId": "rect-example", "anchor": "right"},
+  "endBinding": {"objectId": "ellipse-example", "anchor": "left"}
+}
+```
+
+Bindingが有効なら対象アンカーが端点座標に優先する。解除は該当Bindingへnullを指定する。接続先を動かす操作と端点の追従は同じ変更単位となり、変更履歴のdetailsには間接的に変わった線も含む。線同士の接合はBindingではなく[接合点ID](connector-junctions.md)を使う。対象と接続点は[8点アンカー](eight-anchors.md)・[メディア](media-anchors.md)・[追加図形](diagram-shapes.md)を参照する。
+
+旧矩形表現からの端点変換は左下→右上。内部のwidth／heightは端点差から導出されるが、現在の一般取得・保存では省く。線の寸法変更には端点を使い、通常の矩形サイズとして編集しない。[意味のあるプロパティ](meaningful-properties.md)を参照。線の色はstrokeで、fillを線の描画には使わない。

@@ -24,3 +24,6 @@ READMEなどからの既存リンクは、参照切れを避けるため移動�
 - [入力欄の開始サイズとAI分割](inline-editor-bounds.md)：画面内補正と、原本を残す意味単位のカード分割。
 - [定規レイアウト](ruler-layout.md)：自由・均等・中心均等、両側配置、素材とファイル収納。
 - [連続線・フリー連続線](continuous-line-input.md)：入力モード、粗い清書、端点接合とUndo。
+
+- [AIの操作調整・指差し・カメラ](ai-workspace-controls.md)：ひとりモード、ロック、カメラ移動と中断。
+- [AIの机参照と画像入出力](ai-asset-io.md)：context、画像取得・取込・差し替えと容量。

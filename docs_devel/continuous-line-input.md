@@ -26,3 +26,11 @@
 - 仮線は専用の一時SVGレイヤーで、保存・PDF・オブジェクト数に含まれない。机が外部変更されたら描画を終了し、古いrevisionで追記しない。AIによる変更は人間の描画中に拒否し、参照は可能。
 
 検証は単純化・接合・吸着・閉路・保存・Undoの単体試験と、実際のクリック・ドラッグ・中断・継ぎ足しのブラウザ試験。
+
+## 実装の参照先（2026-11-03）
+
+旧diagram資料の構成説明を移管。`src/geometry.ts`が端点・境界・アンカーと接続解決、`src/diagram-gestures.ts`が移動・端点操作とプレビュー、`src/diagram-drawing.ts`が描画・ヒット領域・ハンドル、`src/color-controls.ts`が色UIのアダプター、`src/properties.ts`がプロパティ入力を扱う。線同士の接合は `src/connector-junctions.ts`、各端の形は `src/connector-markers.ts` へ分離されている。
+
+基本の接続・原子性・Undo・プレビューは `tests/diagram.test.ts`、ブラウザとMCPの操作は `tests/diagram-browser.e2e.ts`。接合は `tests/connector-junctions.test.ts`／`tests/connector-junctions.e2e.ts`、端点装飾は `tests/connector-markers.test.ts`／`tests/connector-markers.e2e.ts` に分けている。これは既存試験の参照先の整理であり、今回これらを再実行した結果ではない。
+
+描画後の[角丸め](junction-rounding.md)、[マウス接続の調査・修正](connector-junction-mouse-investigation.md)、線をたどる[道しるべ](wayfinder.md)は、それぞれの資料を正本とする。

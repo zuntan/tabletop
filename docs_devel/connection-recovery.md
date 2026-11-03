@@ -87,7 +87,7 @@ pairingはpairId（UUID）、token・secret（各256ビット、64桁の小文�
 - 復帰先未登録はclose 4000で待機を促す。机の内容や秘密は毎回送らない。
 - 不一致や不正なハンドシェークはclose 4003で拒否。正しい机でも相手を確認できなければ停止する。
 - 再試行間隔は最初250ms、次に1秒、2秒、以後5秒。通常のclose通知を受けてからの値であり、サーバー起動時間やブラウザの背景タブ制限を含む保証ではない。
-- 未認証接続は最大8本、ハンドシェークはサーバー8秒、ブラウザ側9秒で打ち切る。ハンドシェークのアプリケーションメッセージは4096 bytes以下。WebSocket全体の受信上限24 MBは既存のままなので、大きいフレームの受信段階まで低コストを保証するものではない。
+- 未認証接続は最大8本、ハンドシェークはサーバー8秒、ブラウザ側9秒で打ち切る。ハンドシェークのアプリケーションメッセージは4096 bytes以下。WebSocket全体の受信上限は現在20,000,000 bytes（2026-11-01更新、[分割転送](binary-transfer.md)参照）なので、大きいフレームの受信段階まで低コストを保証するものではない。
 - 通常は控えめな「AI再接続待ち」。フッターへ失敗通知を繰り返さず、詳細を接続ペインに表示する。成功は静かに接続済みへ戻す。
 - 確認不能時は「接続確認が必要」と目立つ案内を出し、保存または手動接続を促す。
 - サーバーは接続・切断時刻、close code、保留要求数、stdin終了／シグナルによる停止理由を記録する。ペアの秘密や文書本文は記録しない。従来どおり、生成トークンの初回URLは起動ログに含まれる。
@@ -123,3 +123,11 @@ Context7で確認した公式仕様：
 - [SubtleCrypto.verify](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify)
 - [Crypto.getRandomValues](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues)
 - [Secure contexts](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts)：ループバックは潜在的に信頼できるoriginとして扱われる。
+
+## 接続案内の応答と入力検証（2026-11-03）
+
+旧ai-interface資料を `src/connection-guidance.ts`・`src/connection-url.ts` と照合。接続情報の `nextAction` は文字列のツール名ではなく、行動を示すオブジェクト。`ask-user`はtopic、`call-tool`はtool、`browser-connect`／`wait-for-browser`はverifyWithを持つ。新規受付が開いている場合は、既存ブラウザが接続済みでも追加接続の案内を優先する。受付開始・URL取得・ブラウザ起動の成功だけで接続成立とは判断せず、一覧の追加先を確認する。
+
+接続タブはURLを受け取り、既存ページの再読込なしで接続できる。HTTP・許可ホスト・ルートパスを検証し、認証情報付きURL・クエリ・未知のフラグメント・token／portの重複・URLとフラグメントのポート不一致を拒否する。初回URL・公開deskId・復帰recordは別の情報であり、互いの代用にしない。環境変数の固定トークンをAIが推測・取得する必要はない。
+
+関連資料：[複数接続とdeskId必須の境界](multiple-desk-connections.md)、[名前と公開ID](desk-identity.md)、[LANの明示許可](http-lan.md)、[外部への読み取り共有](read-only-sharing.md)。読み取り共有は接続・認証の代わりではなく、別の公開操作として扱う。
