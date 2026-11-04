@@ -36,7 +36,7 @@ export function createDoodleEditor(commit:(id:string,patch:Partial<DeskObject>)=
   });
   const swatches=colors.map((color,i)=>{const b=button('',()=>{index=i;if(tool!=='pen')tool='pen';sync();});b.dataset.doodleColor=String(i);b.setAttribute('aria-label',`色${i+1}`);b.style.background=color;return b;});
   const picker=document.createElement('div');picker.className='doodle-picker';toolbar.append(picker);
-  const palette=createColorControls(picker,ops=>{for(const op of ops)if(op.kind==='update'&&op.patch.stroke)colors[index]=op.patch.stroke;sync();},'doodle-',{roles:['stroke'],names:{stroke:'色を変更'},allowTransparent:false,popupContainer:dialog});
+  const palette=createColorControls(picker,ops=>{for(const op of ops)if(op.kind==='update'&&op.patch.stroke)colors[index]=op.patch.stroke;sync();},'doodle-',{roles:['stroke'],names:{stroke:'paint:changeColor'},allowTransparent:false,popupContainer:dialog});
   const undo=button('戻す',()=>{if(!past.length||gesture)return;future.push(snapshot());restore(past.pop()!);});undo.id='doodle-undo';
   const redo=button('やり直す',()=>{if(!future.length||gesture)return;past.push(snapshot());restore(future.pop()!);});redo.id='doodle-redo';
   button('全消去',()=>{if(!data.strokes.length||gesture)return;remember();data.strokes=[];refresh();});

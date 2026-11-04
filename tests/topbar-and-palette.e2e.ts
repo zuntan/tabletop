@@ -63,8 +63,8 @@ test('two sticker rows and reaction size edit independently with shared Undo', {
   assert.equal(await page.locator('[data-stickers="note"] svg').count(),1);
   await call('desk_undo');await page.locator('#sticker-clear-2').click();note=await call('desk_get',{id:'note'});
   assert.equal(note.stickers.items.length,1);assert.equal(note.stickers.items2.length,0);
-  await page.locator('#reaction-size').fill('64');await page.locator('#reaction-size').press('Tab');
-  assert.equal((await call('desk_get',{id:'note'})).reactionSize,64);
+  await page.locator('#reaction-size').fill('96');await page.locator('#reaction-size').press('Tab');
+  assert.equal((await call('desk_get',{id:'note'})).reactionSize,96);
   const width=await page.locator('[data-reactions="note"] rect').evaluate(el=>el.getBoundingClientRect().width);
   await page.waitForTimeout(450); // Human property scrolling must finish before an AI camera request.
   await call('desk_camera_move',{zoom:.5,durationMs:0});

@@ -100,3 +100,32 @@ test('English file dialogs cancel without changing the desk and follow a later l
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });
+
+test('color palette and style labels follow the local language without repainting the selection', { timeout: 30_000 }, async () => {
+  const { page, call, close, errors } = await openTestDesk('ui-language-paint', undefined, undefined, 'en-US');
+  page.setDefaultTimeout(5000);
+  try {
+    await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'paint', type: 'text', text: 'Keep this text', fill: '#ffeecc' } }] });
+    await call('desk_select', { ids: ['paint'] });
+    const before = await call('desk_state');
+    await page.locator('[data-color-role="fill"]').click();
+    const palette = page.locator('.palette-fill');
+    await palette.getByRole('button', { name: 'All colors', exact: true }).click();
+    await palette.getByRole('button', { name: 'Transparent (none)', exact: true }).waitFor();
+    await page.keyboard.press('Escape');
+    await page.locator('#desk-menu').click();
+    await page.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();
+    await page.locator('#ui-language').selectOption('ja');
+    await page.waitForFunction(() => document.documentElement.lang === 'ja');
+    await page.keyboard.press('Escape');
+    await call('desk_select', { ids: ['paint'] });
+    await page.locator('[data-color-role="fill"]').click();
+    await palette.getByRole('button', { name: '全色', exact: true }).waitFor();
+    await palette.getByRole('button', { name: '透明（なし）', exact: true }).waitFor();
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('#format-capture-0').textContent(), 'スポイト');
+    await call('desk_select', { ids: ['paint'] });
+    assert.deepEqual(await call('desk_state'), before);
+    assert.deepEqual(errors, []);
+  } finally { await close(); }
+});

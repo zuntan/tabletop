@@ -83,7 +83,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
   const threadColors = createColorControls(panel.querySelector<HTMLElement>('#thread-colors')!, operations => {
     const patch = operations[0]?.kind === 'update' ? operations[0].patch : {};
     if (patch.stroke !== undefined) apply([{ kind: 'series_update', id: chosen, patch: { thread: { color: patch.stroke } } }]);
-  }, 'thread-', { roles: ['stroke'], names: { stroke: '色' } });
+  }, 'thread-', { roles: ['stroke'], names: { stroke: 'paint:color' } });
   const threadVisible = panel.querySelector<HTMLButtonElement>('#thread-visible')!;
   threadVisible.onkeydown = event => event.stopPropagation();
   threadVisible.onclick = () => {

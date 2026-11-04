@@ -1,3 +1,5 @@
+import { t, languageChangeEvent } from './i18n';
+import { uiText, uiAttribute, type UiKey } from './i18n/dom';
 import {swatches, recommendedSwatches, paletteColors} from './color-palettes';
 export {swatches, recommendedSwatches} from './color-palettes';
 import {isStyledLink} from './link-values';
@@ -7,7 +9,7 @@ import type { DeskObject, Operation } from './model';
 import { isConnector, isShape } from './geometry';
 
 type Role = 'fill' | 'stroke' | 'text';
-const names = { fill: '塗り', stroke: '輪郭', text: '文字' };
+const names = { fill: 'paint:fill', stroke: 'paint:stroke', text: 'paint:text' } as const;
 function field(object: DeskObject, role: Role): 'fill' | 'stroke' | 'textColor' | null {
   if (object.type === 'label') return role === 'text' ? 'textColor' : role;
   if (role === 'fill') return object.type === 'clip' || object.type === 'wayfinder' || isShape(object) || (['text','file'].includes(object.type)||isStyledLink(object)) ? 'fill' : null;
@@ -28,21 +30,21 @@ export function colorOperations(objects: DeskObject[], role: Role, color: string
 }
 
 /** A thin adapter around Pickr's existing swatch picker, shared by all object types. */
-export function createColorControls(container: HTMLElement, apply: (operations: Operation[]) => void, prefix = '', options: { roles?: Role[]; names?: Partial<Record<Role, string>>; allowTransparent?: boolean; popupContainer?:HTMLElement; paletteRole?: keyof typeof recommendedSwatches } = {}) {
+export function createColorControls(container: HTMLElement, apply: (operations: Operation[]) => void, prefix = '', options: { roles?: Role[]; names?: Partial<Record<Role, UiKey>>; allowTransparent?: boolean; popupContainer?:HTMLElement; paletteRole?: keyof typeof recommendedSwatches } = {}) {
   let objects: DeskObject[] = [];
   let selection = '';
   const compact = !!container.closest('nav');
   const captions = { ...names, ...options.names };
   const controls = (options.roles ?? ['fill', 'stroke', 'text'] as Role[]).map(role => {
     const row = document.createElement('div'); row.className = 'color-control';
-    const label = document.createElement('span'); label.textContent = captions[role];
+    const label = document.createElement('span'); uiText(label, captions[role]);
     const button = document.createElement('button'); button.type = 'button';
     button.className = 'color-trigger'; button.dataset.colorRole = `${prefix}${role}`;
-    button.setAttribute('aria-label', `${captions[role]}の色`); button.setAttribute('aria-haspopup', 'dialog');
+    uiAttribute(button, 'aria-label', 'paint:colorLabel', { name: captions[role] }); button.setAttribute('aria-haspopup', 'dialog');
     const dot = document.createElement('span'); dot.className = 'color-dot';
     const value = document.createElement('span'); value.className = 'color-value'; button.append(dot, value);
     if (compact) {
-      label.className = 'tool-caption'; label.textContent = role === 'stroke' ? '輪郭' : captions[role];
+      label.className = 'tool-caption'; uiText(label, captions[role]);
       button.classList.add('tool-button'); button.append(label); row.append(button);
     } else row.append(label, button);
     container.append(row);
@@ -51,7 +53,7 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
       el: button, container:options.popupContainer??'body', useAsButton: true, theme: 'nano', appClass: `tabletop-palette palette-${prefix}${role}`,
       default: '#ffffff', defaultRepresentation: 'HEXA', swatches, comparison: false, closeOnScroll: true,
       components: { palette: false, preview: false, hue: false, opacity: false, interaction: {} },
-      i18n: { 'ui:dialog': `${captions[role]}の色パレット`, 'btn:swatch': '色見本' },
+      i18n: { 'ui:dialog': t('paint:colorPalette', { name: t(captions[role]) }), 'btn:swatch': t('paint:swatch') },
     });
     const change = (color: string) => { apply(colorOperations(objects, role, color)); pickr.hide(); button.focus(); };
     const sync = () => {
@@ -62,8 +64,8 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
       button.dataset.color = color ?? 'mixed';
       dot.style.backgroundColor = color ?? 'transparent';
       dot.classList.toggle('transparent', color === 'transparent'); dot.classList.toggle('mixed', color === null);
-      value.textContent = color === 'transparent' ? '透明' : color ?? '複数の色';
-      button.title = `${captions[role]}の色：${value.textContent}`;
+      value.textContent = color === 'transparent' ? t('paint:transparent') : color ?? t('paint:mixed');
+      button.title = t('paint:colorValue', { name: t(captions[role]), value: value.textContent });
       if (ready) {
         pickr.setColor(color === 'transparent' || !color ? null : color, true);
         const popup = document.querySelector<HTMLElement>(`.palette-${prefix}${role}`)!;
@@ -77,15 +79,15 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
       ready = true;
       const popup = document.querySelector<HTMLElement>(`.palette-${prefix}${role}`)!;
       const transparent = document.createElement('button'); transparent.type = 'button';
-      transparent.className = 'transparent-choice'; transparent.textContent = '透明（なし）';
+      transparent.className = 'transparent-choice'; uiText(transparent, 'paint:noColor');
       transparent.onclick = () => change('transparent'); if(options.allowTransparent !== false) popup.prepend(transparent);
       popup.querySelectorAll<HTMLButtonElement>('.pcr-swatches button').forEach((swatch, i) => {
-        swatch.title = swatches[i]; swatch.setAttribute('aria-label', `${captions[role]} ${swatches[i]}`);
+        swatch.title = swatches[i]; swatch.setAttribute('aria-label', `${t(captions[role])} ${swatches[i]}`);
       });
       const paletteRole=options.paletteRole??role;
       const modeKey=`tabletop.palette.${paletteRole}.mode`;
       let mode='recommended';
-      const switches=document.createElement('div');switches.className='palette-modes';switches.setAttribute('role','group');switches.setAttribute('aria-label','色パレットの種類');
+      const switches=document.createElement('div');switches.className='palette-modes';switches.setAttribute('role','group');uiAttribute(switches,'aria-label','paint:paletteMode');
       const updateMode=()=>{
         try{mode=localStorage.getItem(modeKey)==='all'?'all':'recommended';}catch{/* In-memory fallback. */}
         for(const tab of switches.querySelectorAll<HTMLButtonElement>('button'))tab.setAttribute('aria-pressed',String(tab.dataset.mode===mode));
@@ -102,8 +104,8 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
           popup.style.left=`${left+Math.max(0,8-rect.left)-Math.max(0,rect.right-innerWidth+8)}px`;
         });
       };
-      for(const [value,label] of [['recommended','おすすめ'],['all','全色']]){
-        const tab=document.createElement('button');tab.type='button';tab.dataset.mode=value;tab.textContent=label;
+      for(const [value,label] of [['recommended','paint:recommended'],['all','paint:all']] as const){
+        const tab=document.createElement('button');tab.type='button';tab.dataset.mode=value;uiText(tab,label);
         tab.onclick=()=>{mode=value;try{localStorage.setItem(modeKey,mode);}catch{/* In-memory fallback. */}updateMode();};switches.append(tab);
       }
       popup.prepend(switches);pickr.on('show',updateMode);updateMode();
@@ -111,7 +113,9 @@ export function createColorControls(container: HTMLElement, apply: (operations: 
     }).on('swatchselect', (color: Pickr.HSVaColor) => change(color.toHEXA().toString().slice(0, 7).toLowerCase()))
       .on('show', () => button.setAttribute('aria-expanded', 'true'))
       .on('hide', () => button.setAttribute('aria-expanded', 'false'));
-    return { sync, hide: () => pickr.hide(), destroy:()=>pickr.destroyAndRemove() };
+    const translate = () => { sync(); const popup = document.querySelector<HTMLElement>(`.palette-${prefix}${role}`); if (popup) { popup.setAttribute('aria-label', t('paint:colorPalette', { name: t(captions[role]) })); popup.querySelectorAll<HTMLButtonElement>('.pcr-swatches button').forEach((swatch, i) => swatch.setAttribute('aria-label', `${t(captions[role])} ${swatches[i]}`)); } };
+    document.addEventListener(languageChangeEvent, translate);
+    return { sync, hide: () => pickr.hide(), destroy:()=>{document.removeEventListener(languageChangeEvent, translate);pickr.destroyAndRemove();} };
   });
   return {
     update(selected: DeskObject[]) {
