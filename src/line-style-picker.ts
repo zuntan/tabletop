@@ -1,6 +1,8 @@
+import { t } from './i18n';
+import { uiText, uiAttribute } from './i18n/dom';
 import { addPresetPalette } from './number-presets';
 
-const styles = { solid: '実線', dashed: '破線', dotted: '点線' } as const;
+const styles = { solid: 'shell:solid', dashed: 'shell:dashed', dotted: 'shell:dotted' } as const;
 type LineStyle = keyof typeof styles;
 
 function sample(style: LineStyle) {
@@ -13,16 +15,17 @@ function sample(style: LineStyle) {
 }
 
 export function createLineStylePicker(select: HTMLSelectElement) {
-  const { menu, choices, wrapper, popup } = addPresetPalette(select, Object.keys(styles), '線種');
+  const { menu, choices, wrapper, popup } = addPresetPalette(select, Object.keys(styles), t('shell:lineStyle'));
   select.hidden = true; wrapper.classList.add('line-style-picker'); popup.classList.add('line-style-palette');
   for (const button of choices.querySelectorAll<HTMLButtonElement>('button')) {
     const value = button.dataset.value as LineStyle;
-    button.replaceChildren(sample(value), document.createTextNode(styles[value]));
-    button.setAttribute('aria-label', styles[value]);
+    button.replaceChildren(sample(value), uiText(document.createElement('span'), styles[value]));
+    uiAttribute(button, 'aria-label', styles[value]);
   }
   return () => {
     const value = select.value as LineStyle;
-    menu.replaceChildren(sample(value), document.createTextNode(styles[value]));
-    menu.title = `線種：${styles[value]}`;
+    menu.removeAttribute('data-i18n');
+    menu.replaceChildren(sample(value), uiText(document.createElement('span'), styles[value]));
+    menu.title = t('tools:lineStyleTitle', { name: t(styles[value]) });
   };
 }

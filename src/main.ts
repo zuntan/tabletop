@@ -1,4 +1,5 @@
 import { languageChangeEvent, t } from './i18n';
+import { translateUi, uiAttribute, uiText, type UiKey } from './i18n/dom';
 import {initialFocusTarget} from './initial-focus';
 import {KeyboardGeometryEdit} from './keyboard-geometry';
 import {newPartGridSize} from './grid';
@@ -54,7 +55,7 @@ import { createPropControls } from './prop-controls';
 import { drawStamp } from './stamps';
 import { createStampControls } from './stamp-controls';
 import { createShapePicker, createTextFitPicker } from './shape-picker';
-import { shapeNames, isShapeType, shapePaths } from './shape-definitions';
+import { isShapeType, shapePaths } from './shape-definitions';
 import { createCalloutPicker } from './callout-picker';
 import { calloutPath, drawCalloutLeader } from './text-callouts';
 import { isPinAttachmentTarget,attachmentOffset } from './pin-attachments';
@@ -130,93 +131,94 @@ const partClipboard = new PartClipboard();
 const app = document.querySelector<HTMLDivElement>('#app')!;
 document.documentElement.dataset.appMode=pagesMode?'pages':'desk';
 app.innerHTML = `
-  <header><div class="brand">Tabletop <small>人間とAIの共有作業机</small></div>
-    <span id="connection" class="badge">未接続</span><span id="revision">rev. 0</span>
-    <button id="undo">元に戻す</button><button id="redo">やり直す</button>
+  <header><div class="brand">Tabletop <small data-i18n="shell:tagline"></small></div>
+    <span id="connection" class="badge" data-i18n="shell:disconnected"></span><span id="revision">rev. 0</span>
+    <button id="undo" data-i18n="shell:undo"></button><button id="redo" data-i18n="shell:redo"></button>
   </header>
-  <nav aria-label="追加ツール">
-    <button data-add="rect">▭ 矩形</button><button data-add="roundedRect">▢ 角丸矩形</button><button data-add="ellipse">◯ 楕円</button>
-    <button data-add="line">╱ 線</button><button data-add="arrow">↗ 矢印</button>
-    <button data-add="text">T カード</button><button id="image">画像 / SVG</button><button data-add="mermaid">Mermaid</button><button data-add="qrcode">QRコード</button>
-    <button id="clipboard" title="クリップボードから追加" aria-label="クリップボードから追加">▣ クリップボードから追加</button>
-    <button data-add="web">Web資料</button><button data-add="link">リンク</button>
-    <button id="numbering">ピン</button><div id="authoring-tools"></div>
-    <span class="spacer"></span><button id="zoom-out" aria-label="縮小">−</button>
-    <button id="zoom-reset">100%</button><button id="zoom-in" aria-label="拡大">＋</button><button id="fit">全体表示</button>
+  <nav data-i18n-aria-label="shell:addTools">
+    <button data-add="rect" data-i18n="shell:rectButton"></button><button data-add="roundedRect" data-i18n="shell:roundedRectButton"></button><button data-add="ellipse" data-i18n="shell:ellipseButton"></button>
+    <button data-add="line" data-i18n="shell:lineButton"></button><button data-add="arrow" data-i18n="shell:arrowButton"></button>
+    <button data-add="text" data-i18n="shell:cardButton"></button><button id="image" data-i18n="shell:imageButton"></button><button data-add="mermaid">Mermaid</button><button data-add="qrcode" data-i18n="shell:qrCode"></button>
+    <button id="clipboard" data-i18n-title="shell:paste" data-i18n-aria-label="shell:paste" data-i18n="shell:pasteButton"></button>
+    <button data-add="web" data-i18n="shell:webPage"></button><button data-add="link" data-i18n="shell:link"></button>
+    <button id="numbering" data-i18n="shell:pin"></button><div id="authoring-tools"></div>
+    <span class="spacer"></span><button id="zoom-out" data-i18n-aria-label="shell:zoomOut">−</button>
+    <button id="zoom-reset">100%</button><button id="zoom-in" data-i18n-aria-label="shell:zoomIn">＋</button><button id="fit" data-i18n="shell:fitAll"></button>
   </nav>
   <main>
-    <section id="workspace" aria-label="共有キャンバス">
-      <svg id="canvas" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tabletop キャンバス" tabindex="0">
+    <section id="workspace" data-i18n-aria-label="shell:workspace">
+      <svg id="canvas" xmlns="http://www.w3.org/2000/svg" role="img" data-i18n-aria-label="shell:canvas" tabindex="0">
         <defs><pattern id="dots" x="-12" y="-12" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="12" cy="12" r="2" fill="#cbd5e1"/><path d="" fill="none" stroke="#cbd5e1" stroke-width="1" display="none"/></pattern></defs>
         <rect id="desk-background" width="100%" height="100%" fill="#f8fafc"/>
         <rect id="desk-wallpaper" width="100%" height="100%" fill="none"/>
         <rect id="desk-grid" width="100%" height="100%" fill="url(#dots)"/>
         <g id="viewport"><g id="objects"></g><g id="overlays"></g></g>
       </svg>
-      <div id="empty">ここに資料を広げて、いっしょに考える。<small>上のツールから追加 · 画像をドロップ · AIからMCPで操作</small></div>
-      <div class="hint"><button id="hint-toggle" type="button" aria-controls="operation-hint" aria-expanded="true" aria-label="操作説明を隠す" title="操作説明を隠す">‹</button><span id="operation-hint">Shift / Ctrl＋クリック・範囲選択：追加選択 · Space＋ドラッグ / 中ボタン：パン · ホイール：ズーム · 矢印キー：移動 · Shift＋矢印：リサイズ · Alt併用：スナップ解除 · Delete：削除</span></div>
+      <div id="empty"><span data-i18n="shell:emptyTitle"></span><small data-i18n="shell:emptyHint"></small></div>
+      <div class="hint"><button id="hint-toggle" type="button" aria-controls="operation-hint" aria-expanded="true" data-i18n-aria-label="shell:hideHint" data-i18n-title="shell:hideHint">‹</button><span id="operation-hint" data-i18n="shell:operationHint"></span></div>
     </section>
     <aside>
       <section id="series-panel" hidden></section>
-      <section><h2>選択・プロパティ</h2><div id="selected-label">未選択</div>
+      <section><h2 data-i18n="shell:selectionProperties"></h2><div id="selected-label" data-i18n="shell:nothingSelected"></div>
         <form id="properties" hidden>
-          <label>X / 始点X<input name="x" type="number" step="any"></label><label>Y / 始点Y<input name="y" type="number" step="any"></label>
-          <label hidden>終点X<input name="x2" type="number" step="any" disabled></label><label hidden>終点Y<input name="y2" type="number" step="any" disabled></label>
-          <label>幅<input name="width" type="number" min="1" step="any"></label><label>高さ<input name="height" type="number" min="1" step="any"></label>
-          <label hidden>塗り<input name="fill" type="text"></label><label hidden>線<input name="stroke" type="text"></label>
-          <label>塗り透過（%）<input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
-          <label>線幅<input name="strokeWidth" type="number" min="0" step="any"></label><label>文字サイズ<input name="fontSize" type="number" min="1"></label>
-          <label hidden>太さの扱い<input name="fixedWidth" type="hidden" value="false"></label>
-          <label hidden>接合部の丸め<input name="junctionRounding" type="number" min="0" max="100000" step="any" disabled></label>
-          <label hidden>線種<select name="dash" disabled><option value="solid">実線</option><option value="dashed">破線</option><option value="dotted">点線</option></select></label>
-          <label hidden>始点形状<select name="startMarker" disabled><option value="none">なし</option><option value="arrow">矢印</option><option value="circle">丸</option><option value="diamond">ひし形</option></select></label>
-          <label hidden>終点形状<select name="endMarker" disabled><option value="none">なし</option><option value="arrow">矢印</option><option value="circle">丸</option><option value="diamond">ひし形</option></select></label>
-          <label hidden>角丸<input name="cornerRadius" type="number" min="0" step="any"></label>
-          <label hidden>内側の余白<input name="padding" type="number" min="0" step="any"></label>
-          <label hidden>文字サイズ調整<select name="textFit" disabled><option value="fixed" hidden>指定サイズ（既存）</option><option value="auto">完全自動</option><option value="shrink">縮小のみ</option></select></label>
-          <label hidden>吹き出し<select name="calloutMode" disabled><option value="none">なし</option><option value="speech">三角</option><option value="thought">考え事</option><option value="leader">引き出し線</option></select></label>
-          <label class="wide" hidden>リンクの表示<select name="linkDisplay" hidden><option value="url">URL文字</option><option value="qr">QRコード</option></select><span class="wayfinder-mode" role="group" aria-label="リンクの表示"><button type="button" data-link-display="url" aria-pressed="true">URL文字</button><button type="button" data-link-display="qr" aria-pressed="false">QRコード</button></span></label>
-          <label hidden>道しるべの動き<select name="wayfinderMode" hidden><option value="move">移動</option><option value="tour">観光</option></select><span class="wayfinder-mode" role="group" aria-label="道しるべの動き"><button type="button" data-wayfinder-mode="move" aria-pressed="true">移動</button><button type="button" data-wayfinder-mode="tour" aria-pressed="false">観光</button></span></label>
-          <label hidden>ヘッド選択<select name="propSelection" hidden><option value="normal">通常選択</option><option value="head">ヘッド選択</option></select><button id="prop-head-selection" type="button" role="switch" aria-label="ヘッド選択" aria-checked="false"><span class="thinking-switch-track" aria-hidden="true"></span><span class="thinking-switch-state">OFF</span></button></label>
-          <label hidden>配置方式<select name="rulerMode"><option value="free">自由</option><option value="gap">均等</option><option value="center">中心均等</option></select></label>
-          <label hidden>定規の素材<select name="rulerMaterial"><option value="acrylic">アクリル</option><option value="bamboo">竹</option><option value="steel">ステンレス</option></select></label>
-          <label hidden>定規の幅<select name="rulerThickness"><option value="24">24</option><option value="36">36</option><option value="48">48</option></select></label>
-          <label hidden>クリップのサイズ<input name="clipSize" type="number" min="1" max="100000" step="any"></label>
-          <label hidden>サイズ指定<select name="clipAutoSize"><option value="false">数値指定</option><option value="true">自動（1枚目に合わせる）</option></select></label>
-          <label hidden>留め位置<select name="clipAnchor"><option value="top-left">左上</option><option value="top">上</option><option value="top-right">右上</option><option value="right">右</option><option value="bottom-right">右下</option><option value="bottom">下</option><option value="bottom-left">左下</option><option value="left">左</option></select></label>
-          <label hidden>クリップの形<select name="clipStyle"><option value="binder">ダブルクリップ</option><option value="wire">ゼムクリップ</option></select></label>
-          <label hidden>間隔の指定<select name="clipOffsetMode"><option value="fixed">固定距離</option><option value="percent">割合（直前の紙）</option><option value="base-short-side">割合（1枚目の短辺）</option></select></label>
-          <label hidden>クリップの割合（%）<input name="clipOffsetPercent" type="number" min="0" step="any"></label>
-          <label hidden>クリップの間隔<input name="clipOffset" type="number" min="0" step="any"></label>
-          <label class="wide">テキスト<textarea name="text" rows="3"></textarea></label>
-          <label class="wide" hidden>QRコードの内容<textarea name="qrText" rows="8" spellcheck="false" disabled></textarea></label>
-          <label class="wide" hidden>Mermaidソース<textarea name="mermaidSource" rows="8" spellcheck="false" disabled></textarea></label>
+          <label><span data-i18n="shell:startX"></span><input name="x" type="number" step="any"></label><label><span data-i18n="shell:startY"></span><input name="y" type="number" step="any"></label>
+          <label hidden><span data-i18n="shell:endX"></span><input name="x2" type="number" step="any" disabled></label><label hidden><span data-i18n="shell:endY"></span><input name="y2" type="number" step="any" disabled></label>
+          <label><span data-i18n="shell:width"></span><input name="width" type="number" min="1" step="any"></label><label><span data-i18n="shell:height"></span><input name="height" type="number" min="1" step="any"></label>
+          <label hidden><span data-i18n="shell:fill"></span><input name="fill" type="text"></label><label hidden><span data-i18n="shell:line"></span><input name="stroke" type="text"></label>
+          <label><span data-i18n="shell:fillTransparency"></span><input name="fillOpacity" type="number" min="0" max="100" step="1"></label>
+          <label><span data-i18n="shell:strokeWidth"></span><input name="strokeWidth" type="number" min="0" step="any"></label><label><span data-i18n="shell:fontSize"></span><input name="fontSize" type="number" min="1"></label>
+          <label hidden><span data-i18n="shell:widthMode"></span><input name="fixedWidth" type="hidden" value="false"></label>
+          <label hidden><span data-i18n="shell:rounding"></span><input name="junctionRounding" type="number" min="0" max="100000" step="any" disabled></label>
+          <label hidden><span data-i18n="shell:lineStyle"></span><select name="dash" disabled><option value="solid" data-i18n="shell:solid"></option><option value="dashed" data-i18n="shell:dashed"></option><option value="dotted" data-i18n="shell:dotted"></option></select></label>
+          <label hidden><span data-i18n="shell:startMarker"></span><select name="startMarker" disabled><option value="none" data-i18n="shell:none"></option><option value="arrow" data-i18n="shell:arrow"></option><option value="circle" data-i18n="shell:circle"></option><option value="diamond" data-i18n="shell:diamond"></option></select></label>
+          <label hidden><span data-i18n="shell:endMarker"></span><select name="endMarker" disabled><option value="none" data-i18n="shell:none"></option><option value="arrow" data-i18n="shell:arrow"></option><option value="circle" data-i18n="shell:circle"></option><option value="diamond" data-i18n="shell:diamond"></option></select></label>
+          <label hidden><span data-i18n="shell:cornerRadius"></span><input name="cornerRadius" type="number" min="0" step="any"></label>
+          <label hidden><span data-i18n="shell:padding"></span><input name="padding" type="number" min="0" step="any"></label>
+          <label hidden><span data-i18n="shell:textFit"></span><select name="textFit" disabled><option value="fixed" hidden data-i18n="shell:fixedText"></option><option value="auto" data-i18n="shell:autoText"></option><option value="shrink" data-i18n="shell:shrinkText"></option></select></label>
+          <label hidden><span data-i18n="shell:callout"></span><select name="calloutMode" disabled><option value="none" data-i18n="shell:none"></option><option value="speech" data-i18n="shell:speech"></option><option value="thought" data-i18n="shell:thought"></option><option value="leader" data-i18n="shell:leader"></option></select></label>
+          <label class="wide" hidden><span data-i18n="shell:linkDisplay"></span><select name="linkDisplay" hidden><option value="url" data-i18n="shell:urlText"></option><option value="qr" data-i18n="shell:qrCode"></option></select><span class="wayfinder-mode" role="group" data-i18n-aria-label="shell:linkDisplay"><button type="button" data-link-display="url" aria-pressed="true" data-i18n="shell:urlText"></button><button type="button" data-link-display="qr" aria-pressed="false" data-i18n="shell:qrCode"></button></span></label>
+          <label hidden><span data-i18n="shell:wayfinderMode"></span><select name="wayfinderMode" hidden><option value="move" data-i18n="shell:move"></option><option value="tour" data-i18n="shell:tour"></option></select><span class="wayfinder-mode" role="group" data-i18n-aria-label="shell:wayfinderMode"><button type="button" data-wayfinder-mode="move" aria-pressed="true" data-i18n="shell:move"></button><button type="button" data-wayfinder-mode="tour" aria-pressed="false" data-i18n="shell:tour"></button></span></label>
+          <label hidden><span data-i18n="shell:headSelection"></span><select name="propSelection" hidden><option value="normal" data-i18n="shell:normalSelection"></option><option value="head" data-i18n="shell:headSelection"></option></select><button id="prop-head-selection" type="button" role="switch" data-i18n-aria-label="shell:headSelection" aria-checked="false"><span class="thinking-switch-track" aria-hidden="true"></span><span class="thinking-switch-state">OFF</span></button></label>
+          <label hidden><span data-i18n="shell:layout"></span><select name="rulerMode"><option value="free" data-i18n="shell:free"></option><option value="gap" data-i18n="shell:gap"></option><option value="center" data-i18n="shell:center"></option></select></label>
+          <label hidden><span data-i18n="shell:rulerMaterial"></span><select name="rulerMaterial"><option value="acrylic" data-i18n="shell:acrylic"></option><option value="bamboo" data-i18n="shell:bamboo"></option><option value="steel" data-i18n="shell:steel"></option></select></label>
+          <label hidden><span data-i18n="shell:rulerThickness"></span><select name="rulerThickness"><option value="24">24</option><option value="36">36</option><option value="48">48</option></select></label>
+          <label hidden><span data-i18n="shell:clipSize"></span><input name="clipSize" type="number" min="1" max="100000" step="any"></label>
+          <label hidden><span data-i18n="shell:sizeMode"></span><select name="clipAutoSize"><option value="false" data-i18n="shell:manualSize"></option><option value="true" data-i18n="shell:autoSize"></option></select></label>
+          <label hidden><span data-i18n="shell:clipAnchor"></span><select name="clipAnchor"><option value="top-left" data-i18n="shell:topLeft"></option><option value="top" data-i18n="shell:top"></option><option value="top-right" data-i18n="shell:topRight"></option><option value="right" data-i18n="shell:right"></option><option value="bottom-right" data-i18n="shell:bottomRight"></option><option value="bottom" data-i18n="shell:bottom"></option><option value="bottom-left" data-i18n="shell:bottomLeft"></option><option value="left" data-i18n="shell:left"></option></select></label>
+          <label hidden><span data-i18n="shell:clipStyle"></span><select name="clipStyle"><option value="binder" data-i18n="shell:binder"></option><option value="wire" data-i18n="shell:wire"></option></select></label>
+          <label hidden><span data-i18n="shell:offsetMode"></span><select name="clipOffsetMode"><option value="fixed" data-i18n="shell:fixedOffset"></option><option value="percent" data-i18n="shell:previousPercent"></option><option value="base-short-side" data-i18n="shell:firstPercent"></option></select></label>
+          <label hidden><span data-i18n="shell:clipPercent"></span><input name="clipOffsetPercent" type="number" min="0" step="any"></label>
+          <label hidden><span data-i18n="shell:clipOffset"></span><input name="clipOffset" type="number" min="0" step="any"></label>
+          <label class="wide"><span data-i18n="shell:text"></span><textarea name="text" rows="3"></textarea></label>
+          <label class="wide" hidden><span data-i18n="shell:qrText"></span><textarea name="qrText" rows="8" spellcheck="false" disabled></textarea></label>
+          <label class="wide" hidden><span data-i18n="shell:mermaidSource"></span><textarea name="mermaidSource" rows="8" spellcheck="false" disabled></textarea></label>
           <label class="wide">URL<input name="url" type="url"></label>
         </form>
-        <button id="text-measure" type="button" hidden>文章の収まりを確認</button>
+        <button id="text-measure" type="button" hidden data-i18n="shell:measureText"></button>
         <small id="text-measure-result" role="status" hidden></small>
         <div id="color-controls" hidden></div>
         <div id="reaction-controls" hidden></div>
-        <small>図形のダブルクリックで文字編集。矢印の両端をドラッグして接続できます。</small>
-        <div class="actions"><button id="front">最前面</button><button id="back">最背面</button><button id="delete">削除</button></div>
-        <a id="open-url" hidden target="_blank" rel="noopener noreferrer">元のページをブラウザで開く ↗</a>
+        <small data-i18n="shell:propertyHint"></small>
+        <div class="actions"><button id="front" data-i18n="shell:front"></button><button id="back" data-i18n="shell:back"></button><button id="delete" data-i18n="shell:delete"></button></div>
+        <a id="open-url" hidden target="_blank" rel="noopener noreferrer"><span data-i18n="shell:openOriginal"></span></a>
       </section>
-      <section><h2>オブジェクトリスト <span id="count">0</span></h2><div id="object-list"></div></section>
-      <section><h2>共通履歴</h2><div id="history"></div></section>
-      <section><h2>MCP接続</h2><p>初回・手動接続はAIに受付を開いてもらい、接続URLを貼り付けて「接続」を押してください。通常の切断は自動復帰を待ちます。</p>
+      <section><h2><span data-i18n="shell:objectList"></span><span id="count">0</span></h2><div id="object-list"></div></section>
+      <section><h2 data-i18n="shell:sharedHistory"></h2><div id="history"></div></section>
+      <section><h2 data-i18n="shell:mcpConnection"></h2><p data-i18n="shell:connectionHelp"></p>
         <p id="connection-detail" role="status"></p>
-        <form id="connect-form" novalidate><label for="connection-url">接続URL（貼り付け）</label><div class="connection-url-row"><input id="connection-url" type="password" autocomplete="off" spellcheck="false" placeholder="http://127.0.0.1:4317/#token=…&amp;port=4317"><button id="connection-show" type="button"></button><button id="connection-clear" type="button"></button></div>
-          <small>#token=… を含むURLを貼り付けてください。LAN接続はAIの許可が必要です。HTTP通信は暗号化されません。接続を切り替えても机の内容は移動しません。</small>
-          <button type="submit">接続</button></form>
-        <button id="handoff-start" type="button">別端末へ渡す</button>
-        <div id="handoff-panel" hidden><canvas id="handoff-qr" role="img" aria-label="別端末用の接続QR"></canvas><p>同じLANの端末で読み取ってください。有効期限5分・1回限り。机の内容は移動しません。HTTP通信は暗号化されません。QRは他人に見せないでください。</p><button id="handoff-hide" type="button">QRを隠す</button></div>
-        <small>閉じる前に上部の「保存」で机を保存してください。「読込」で再開できます。</small>
+        <form id="connect-form" novalidate><label for="connection-url" data-i18n="shell:connectionUrl"></label><div class="connection-url-row"><input id="connection-url" type="password" autocomplete="off" spellcheck="false" placeholder="http://127.0.0.1:4317/#token=…&amp;port=4317"><button id="connection-show" type="button"></button><button id="connection-clear" type="button"></button></div>
+          <small data-i18n="shell:connectionWarning"></small>
+          <button type="submit" data-i18n="shell:connect"></button></form>
+        <button id="handoff-start" type="button" data-i18n="shell:handoff"></button>
+        <div id="handoff-panel" hidden><canvas id="handoff-qr" role="img" data-i18n-aria-label="shell:handoffQr"></canvas><p data-i18n="shell:handoffWarning"></p><button id="handoff-hide" type="button" data-i18n="shell:hideQr"></button></div>
+        <small data-i18n="shell:saveReminder"></small>
       </section>
     </aside>
   </main>
-  <footer><span id="message" role="status">準備完了</span></footer>
+  <footer><span id="message" role="status" data-i18n="shell:ready"></span></footer>
   <input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" hidden>
 `;
+translateUi(app);
 groupToolbar(app.querySelector<HTMLElement>('nav')!);
 createSidebar(app,!pagesMode);
 const hintToggle=app.querySelector<HTMLButtonElement>('#hint-toggle')!;
@@ -226,7 +228,9 @@ hintToggle.onclick=()=>{
   const show=!operationHint.hidden;
   hintToggle.setAttribute('aria-expanded',String(show));
   hintToggle.textContent=show?'‹':'›';
-  hintToggle.title=show?'操作説明を隠す':'操作説明を表示';
+  hintToggle.setAttribute('data-i18n-title',show?'shell:hideHint':'shell:showHint');
+  hintToggle.title=t(show?'shell:hideHint':'shell:showHint');
+  hintToggle.setAttribute('data-i18n-aria-label',show?'shell:hideHint':'shell:showHint');
   hintToggle.setAttribute('aria-label',hintToggle.title);
 };
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => app.querySelector<T>(selector)!;
@@ -262,17 +266,17 @@ const propertyEditor = createPropertyEditor(form, desk, (id, patch) => {
 }, message => notify(message, true));
 addFormNumberPresets(form);
 const clipMenuUpdates = ([
-  ['rulerMode','配置方式',{free:'自由',gap:'均等',center:'中心均等'}],
-  ['rulerMaterial','定規の素材',{acrylic:'アクリル',bamboo:'竹',steel:'ステンレス'}],
-  ['rulerThickness','定規の幅',{'24':'24','36':'36','48':'48'}],
-  ['clipOffsetMode','間隔の指定',{'fixed':'固定距離','percent':'割合（直前の紙）','base-short-side':'割合（1枚目の短辺）'}],
-  ['clipAutoSize','サイズ指定',{'false':'数値指定','true':'自動（1枚目に合わせる）'}],
-  ['clipStyle','クリップの形',{binder:'ダブルクリップ',wire:'ゼムクリップ'}],
-  ['clipAnchor','留め位置',{'top-left':'左上',top:'上','top-right':'右上',right:'右','bottom-right':'右下',bottom:'下','bottom-left':'左下',left:'左'}],
-] as const).map(([name,label,labels])=>{
+  ['rulerMode','shell:layout',{free:'shell:free',gap:'shell:gap',center:'shell:center'}],
+  ['rulerMaterial','shell:rulerMaterial',{acrylic:'shell:acrylic',bamboo:'shell:bamboo',steel:'shell:steel'}],
+  ['rulerThickness','shell:rulerThickness',{'24':'24','36':'36','48':'48'}],
+  ['clipOffsetMode','shell:offsetMode',{'fixed':'shell:fixedOffset','percent':'shell:previousPercent','base-short-side':'shell:firstPercent'}],
+  ['clipAutoSize','shell:sizeMode',{'false':'shell:manualSize','true':'shell:autoSize'}],
+  ['clipStyle','shell:clipStyle',{binder:'shell:binder',wire:'shell:wire'}],
+  ['clipAnchor','shell:clipAnchor',{'top-left':'shell:topLeft',top:'shell:top','top-right':'shell:topRight',right:'shell:right','bottom-right':'shell:bottomRight',bottom:'shell:bottom','bottom-left':'shell:bottomLeft',left:'shell:left'}],
+] as const).map(([name,labelKey,labels])=>{
   const input=form.elements.namedItem(name) as HTMLSelectElement;
-  const {menu,choices,wrapper}=addPresetPalette(input,Object.keys(labels),label);input.hidden=true;wrapper.classList.add('line-style-picker');
-  for(const button of choices.querySelectorAll<HTMLButtonElement>('button')) {button.textContent=(labels as Record<string,string>)[button.dataset.value!];button.setAttribute('aria-label',button.textContent);}
+  const {menu,choices,wrapper}=addPresetPalette(input,Object.keys(labels),t(labelKey),labelKey);input.hidden=true;wrapper.classList.add('line-style-picker');
+  for(const button of choices.querySelectorAll<HTMLButtonElement>('button')) {const label=(labels as Record<string,string>)[button.dataset.value!]; if(label.startsWith('shell:')){uiText(button,label as UiKey);uiAttribute(button,'aria-label',label as UiKey);}else{button.textContent=label;button.setAttribute('aria-label',label);}}
   if(name==='clipAnchor'){
     choices.classList.add('clip-anchor-choices');
     const positions:Record<string,[number,number]>={'top-left':[1,1],top:[1,2],'top-right':[1,3],left:[2,1],right:[2,3],'bottom-left':[3,1],bottom:[3,2],'bottom-right':[3,3]};
@@ -281,7 +285,7 @@ const clipMenuUpdates = ([
       const [row,column]=positions[button.dataset.value!];button.style.gridRow=String(row);button.style.gridColumn=String(column);
     }
   }
-  return ()=>{menu.textContent=(labels as Record<string,string>)[input.value]??'';choices.querySelectorAll<HTMLButtonElement>('button').forEach(button=>button.setAttribute('aria-pressed',String(input.value===button.dataset.value)));};
+  return ()=>{const label=(labels as Record<string,string>)[input.value]??'';if(label.startsWith('shell:'))uiText(menu,label as UiKey);else{menu.removeAttribute('data-i18n');menu.textContent=label;}choices.querySelectorAll<HTMLButtonElement>('button').forEach(button=>button.setAttribute('aria-pressed',String(input.value===button.dataset.value)));};
 });
 const updateStrokeWidthMode=createStrokeWidthMode(form.elements.namedItem('fixedWidth') as HTMLInputElement,'線の太さ固定');
 const updateConnectorLineStyle = createLineStylePicker(form.elements.namedItem('dash') as HTMLSelectElement);
@@ -468,7 +472,6 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
   attempt(()=>execute([{kind:'grid_update',patch}]));
 }, () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing()
   && !lineInput.isActive() && !doodleEditor.isActive() && !captureCamera.isActive() && !isConfirmDialogOpen());
-const labels: Record<DeskObject['type'], string> = { ...shapeNames, wayfinder:'道しるべ', label: 'ピン', ellipse: '楕円', line: '線', text: 'カード', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', ruler:'定規', file:'クリアファイル', mermaid: 'Mermaid', qrcode:'QRコード', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
   if ($('#object-filter-files').getAttribute('aria-pressed')==='true'&&fileFor(renderedScene,object.id))return true;
@@ -485,7 +488,7 @@ function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string,
   for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, String(value));
   return node;
 }
-function notify(message: string, error = false) { $('#message').textContent = message; $('#message').classList.toggle('error', error); }
+function notify(message: string, error = false) { $('#message').removeAttribute('data-i18n'); $('#message').textContent = message; $('#message').classList.toggle('error', error); }
 function attempt(action: () => void) {
   try { action(); render(); notify(`revision ${desk.revision} · ${desk.summary().count} オブジェクト`); }
   catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
@@ -680,9 +683,9 @@ function drawSelection(preview?: DeskObject[], scene = preview, refreshStamps=tr
   const colors = frameColors(desk.settingsSnapshot().background);
   $<HTMLButtonElement>('#clear-ai-pointing').disabled = desk.pointed().length === 0;
   const fit = $('#fit'), hasSelection = desk.selected().length > 0, hasPointing = desk.pointed().length > 0;
-  fit.title = hasSelection ? '選択範囲を表示' : hasPointing ? 'AI指差し範囲を表示' : '全体表示';
-  fit.setAttribute('aria-label', fit.title);
-  fit.querySelector('.tool-caption')!.textContent = hasSelection ? '選択範囲' : hasPointing ? 'AI指差し' : '全体';
+  const fitTitle = hasSelection ? 'shell:fitSelectionTitle' : hasPointing ? 'shell:fitPointingTitle' : 'shell:fitAll';
+  uiAttribute(fit, 'title', fitTitle); uiAttribute(fit, 'aria-label', fitTitle);
+  uiText(fit.querySelector('.tool-caption')!, hasSelection ? 'shell:fitSelection' : hasPointing ? 'shell:fitPointing' : 'shell:fitAllCaption');
   overlays.replaceChildren();
   const selected = preview ?? desk.selected().map(id => desk.get(id));
   const pin=selected.length===1&&selected[0].type==='label'&&pinIsVisible(selected[0])?selected[0]:undefined;
@@ -773,7 +776,8 @@ function render(rebuild = true) {
   stampControls.update(ids.map(id => desk.get(id)));
   authoring.update();
   formatControls.update();
-  $('#selected-label').textContent = ids.length ? `${ids.length} 個選択 · ${ids.join(', ')}` : '未選択';
+  $('#selected-label').removeAttribute('data-i18n');
+  $('#selected-label').textContent = ids.length ? t('shell:selected', { count: ids.length, ids: ids.join(', ') }) : t('shell:nothingSelected');
   form.hidden = ids.length !== 1;
   if (ids.length !== 1) propertyEditor.clear();
   // Human measurement UI is paused; the read-only MCP tool remains available.
@@ -802,7 +806,7 @@ function render(rebuild = true) {
   listObjects.forEach(object => {
     const button = document.createElement('button'); button.className = 'object-row';
     button.classList.toggle('active', ids.includes(object.id));
-    const typeLabel = object.deskPath?'机リンク':object.type === 'label' ? `ピン［${seriesNames.get(object.seriesId!) ?? object.seriesId}］` : labels[object.type];
+    const typeLabel = object.deskPath?t('tools:deskLink'):object.type === 'label' ? t('tools:pinsTitle', { name: seriesNames.get(object.seriesId!) ?? object.seriesId }) : t(`tools:objects.${object.type}`);
     button.textContent = `${typeLabel} · ${object.text.slice(0, 22) || object.id}`;
     button.onclick = event => attempt(() => {
       const current = desk.selected();
@@ -935,9 +939,11 @@ $('#grid-snap').onclick = () => {
 function updatePinVisibilityButton() {
   const button = $('#label-descriptions');
   button.removeAttribute('aria-pressed');
-  button.title = `すべてのピン：${pinVisibilityNames[pinVisibility]}（クリックで切替）`;
+  const key = pinVisibility === 'all' ? 'toolbar:pinText.caption' : pinVisibility === 'pins' ? 'controls:pinsOnly' : 'controls:hidePins';
+  const name = t(key);
+  button.title = t('controls:pinsTitle', { name });
   button.setAttribute('aria-label', button.title);
-  button.querySelector('.tool-caption')!.textContent = pinVisibilityNames[pinVisibility];
+  uiText(button.querySelector('.tool-caption')!, key);
   button.dataset.pinVisibility = pinVisibility;
 }
 $('#label-descriptions').onclick = () => {
@@ -1331,7 +1337,7 @@ const recovery = new BrowserConnection({
     bellControls.connected(state==='connected');
     if (state === 'connected') connectionPanel.hide();
     const status = $('#connection');
-    status.textContent = state === 'connected' ? 'MCP接続済み' : state === 'released' ? 'AI接続解放済み' : state === 'blocked' ? '接続確認が必要' : 'AI再接続待ち';
+    uiText(status, state === 'connected' ? 'shell:connected' : state === 'released' ? 'shell:released' : state === 'blocked' ? 'shell:blocked' : 'shell:reconnecting');
     status.classList.toggle('connected', state === 'connected');
     status.classList.toggle('error', state === 'blocked');
     $('#connection-detail').textContent = detail;
@@ -1494,3 +1500,6 @@ if(pagesMode){
   desk.select([id]);fitView([id]);
  });
 }
+
+// Update application chrome without replacing the document or reconnecting the browser.
+document.addEventListener(languageChangeEvent, () => { translateUi(app); updatePinVisibilityButton(); render(false); });

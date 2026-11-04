@@ -1,5 +1,7 @@
+import { t } from './i18n';
+import { uiText, uiAttribute } from './i18n/dom';
 import { addPresetPalette } from './number-presets';
-import { shapeNames, shapePaths, shapeTypes, type ShapeType } from './shape-definitions';
+import { shapePaths, shapeTypes, type ShapeType } from './shape-definitions';
 import { iconButton } from './toolbar';
 export function shapeSample(type: ShapeType) {
   const ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg');
@@ -19,21 +21,21 @@ export function createShapePicker(anchor: HTMLButtonElement, create: (type: Shap
   const select = document.createElement('select'); select.hidden = true;
   for (const type of shapeTypes) { const option = document.createElement('option'); option.value = type; select.append(option); }
   anchor.after(select);
-  const { menu, choices, wrapper } = addPresetPalette(select, shapeTypes, '図形');
-  menu.dataset.add = 'rect'; iconButton(menu, '▭', '図形を追加'); menu.querySelector('.tool-caption')!.textContent = '図形';
-  menu.setAttribute('aria-label', '図形の候補'); anchor.replaceWith(menu); wrapper.hidden = true;
+  const { menu, choices, wrapper } = addPresetPalette(select, shapeTypes, t('tools:shapesLabel'));
+  menu.dataset.add = 'rect'; iconButton(menu, '▭', t('tools:addShape')); uiText(menu.querySelector('.tool-caption')!, 'tools:shapesLabel');
+  uiAttribute(menu, 'aria-label', 'tools:shapeChoices'); uiAttribute(menu, 'title', 'tools:shapeChoices'); anchor.replaceWith(menu); wrapper.hidden = true;
   for (const button of choices.querySelectorAll<HTMLButtonElement>('button')) {
     const type = button.dataset.value as ShapeType;
-    button.replaceChildren(shapeSample(type), document.createTextNode(shapeNames[type])); button.setAttribute('aria-label', shapeNames[type]);
+    button.replaceChildren(shapeSample(type), uiText(document.createElement('span'), `tools:shapes.${type}`)); uiAttribute(button, 'aria-label', `tools:shapes.${type}`);
   }
   select.onchange = () => create(select.value as ShapeType);
 }
 export function createTextFitPicker(select: HTMLSelectElement) {
-  const labels: Record<string, string> = { auto: '完全自動', shrink: '縮小のみ' };
-  const { menu, choices, wrapper } = addPresetPalette(select, ['auto', 'shrink'], '文字サイズ調整');
+  const labels = { auto: 'shell:autoText', shrink: 'shell:shrinkText' } as const;
+  const { menu, choices, wrapper } = addPresetPalette(select, ['auto', 'shrink'], t('shell:textFit'));
   select.hidden = true; wrapper.classList.add('line-style-picker');
   for (const button of choices.querySelectorAll<HTMLButtonElement>('button')) {
-    button.textContent = labels[button.dataset.value!]; button.setAttribute('aria-label', button.textContent);
+    const key = labels[button.dataset.value as keyof typeof labels]; uiText(button, key); uiAttribute(button, 'aria-label', key);
   }
-  return () => { menu.textContent = labels[select.value] ?? '指定サイズ（既存）'; };
+  return () => { uiText(menu, labels[select.value as keyof typeof labels] ?? 'shell:fixedText'); };
 }

@@ -1,7 +1,9 @@
+import { t } from './i18n';
+import { uiText, uiAttribute } from './i18n/dom';
 import { addPresetPalette } from './number-presets';
 import { drawConnectorMarker, type EndpointShape } from './connector-markers';
 
-const names = { none: 'なし', arrow: '矢印', circle: '丸', diamond: 'ひし形' } as const;
+const names = { none: 'shell:none', arrow: 'shell:arrow', circle: 'shell:circle', diamond: 'shell:diamond' } as const;
 export function createEndpointPicker(select: HTMLSelectElement, label: string, side: 'start' | 'end') {
   const { menu, choices, wrapper, popup } = addPresetPalette(select, Object.keys(names), label);
   select.hidden = true; wrapper.classList.add('line-style-picker'); popup.classList.add('line-style-palette');
@@ -15,10 +17,11 @@ export function createEndpointPicker(select: HTMLSelectElement, label: string, s
   }
   for (const button of choices.querySelectorAll<HTMLButtonElement>('button')) {
     const value = button.dataset.value as EndpointShape;
-    button.replaceChildren(sample(value), document.createTextNode(names[value])); button.setAttribute('aria-label', names[value]);
+    button.replaceChildren(sample(value), uiText(document.createElement('span'), names[value])); uiAttribute(button, 'aria-label', names[value]);
   }
   return () => {
     const value = select.value as EndpointShape;
-    menu.replaceChildren(sample(value), document.createTextNode(names[value])); menu.title = `${label}：${names[value]}`;
+    menu.removeAttribute('data-i18n');
+    menu.replaceChildren(sample(value), uiText(document.createElement('span'), names[value])); menu.title = `${t(side === 'start' ? 'shell:startMarker' : 'shell:endMarker')}: ${t(names[value])}`;
   };
 }

@@ -4,11 +4,19 @@ import enMessages from './en/messages.json';
 import jaCommon from './ja/common.json';
 import jaMenu from './ja/menu.json';
 import jaMessages from './ja/messages.json';
+import enShell from './en/shell.json';
+import jaShell from './ja/shell.json';
+import enToolbar from './en/toolbar.json';
+import jaToolbar from './ja/toolbar.json';
+import enControls from './en/controls.json';
+import jaControls from './ja/controls.json';
+import enTools from './en/tools.json';
+import jaTools from './ja/tools.json';
 
 // English is the complete source catalog. Every locale uses the same namespaces.
 export const resources = {
-  en: { common: enCommon, menu: enMenu, messages: enMessages },
-  ja: { common: jaCommon, menu: jaMenu, messages: jaMessages },
+  en: { common: enCommon, menu: enMenu, messages: enMessages, shell: enShell, toolbar: enToolbar, controls: enControls, tools: enTools },
+  ja: { common: jaCommon, menu: jaMenu, messages: jaMessages, shell: jaShell, toolbar: jaToolbar, controls: jaControls, tools: jaTools },
 };
 export type UiLanguage = keyof typeof resources;
 

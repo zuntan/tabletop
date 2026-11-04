@@ -12,6 +12,8 @@ test('local UI language switches without changing the document, camera, selectio
   try {
     assert.equal(await page.locator('html').getAttribute('lang'), 'en');
     assert.equal(await page.locator('#undo').getAttribute('aria-label'), 'Undo');
+    assert.equal(await page.locator('#desk-menu').getAttribute('aria-label'), 'Menu');
+    assert.equal(await page.locator('#desk-menu svg').count(), 1);
     await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'note', type: 'text', text: '日本語の本文とEnglish', x: 50, y: 60 } }] });
     await call('desk_select', { ids: ['note'] });
     await call('desk_point', { ids: ['note'] });
@@ -21,6 +23,8 @@ test('local UI language switches without changing the document, camera, selectio
     await page.locator('#ui-language').selectOption('ja');
     await page.waitForFunction(() => document.documentElement.lang === 'ja');
     assert.equal(await page.locator('#undo').getAttribute('aria-label'), '元に戻す');
+    assert.equal(await page.locator('#desk-menu').getAttribute('aria-label'), 'メニュー');
+    assert.equal(await page.locator('#desk-menu svg').count(), 1);
     assert.equal(await page.locator('#ui-language').inputValue(), 'ja');
     assert.deepEqual(await call('desk_state'), before);
     assert.deepEqual(await call('desk_camera_get'), camera);

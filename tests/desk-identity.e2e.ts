@@ -33,8 +33,13 @@ test('name editing, download names, AI save/load, same-named tabs and manual rec
     await page.locator('#edit-desk-name').click();
     const inputBox = await page.locator('#desk-name-input').boundingBox();
     assert.ok(displayedName && inputBox);
-    for (const key of ['x', 'y', 'width', 'height'] as const) assert.ok(Math.abs(displayedName[key] - inputBox[key]) <= 2, key);
-    assert.deepEqual(await page.locator('#desk-id').boundingBox(), displayedId);
+    for (const key of ['x', 'y', 'height'] as const) assert.ok(Math.abs(displayedName[key] - inputBox[key]) <= 2, key);
+    // The editor intentionally grows short names to eight full-width characters.
+    assert.ok(inputBox.width >= Math.max(displayedName.width, 8 * 23 + 16) - 2);
+    const editingId = await page.locator('#desk-id').boundingBox();
+    assert.ok(editingId && displayedId);
+    assert.equal(editingId.width, displayedId.width);
+    assert.equal(editingId.height, displayedId.height);
     assert.equal(await page.locator('#desk-name-input').evaluate(element => getComputedStyle(element).fontSize), '23px');
     await page.locator('#desk-name-input').fill('  企画/メモ:案  ');
     // Read-only AI requests leave the name draft and focus untouched; mutations are refused.

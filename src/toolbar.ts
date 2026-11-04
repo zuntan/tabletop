@@ -1,16 +1,21 @@
-import { toolButtonContent } from './tool-caption';
+import { t } from './i18n';
+import { uiAttribute, type UiKey } from './i18n/dom';
+import { toolButtonContent, toolKeys } from './tool-caption';
 
 export function iconButton(button: HTMLButtonElement, icon: string, label: string) {
+  button.removeAttribute('data-i18n');
   toolButtonContent(button, icon, label);
   button.title = label;
   button.setAttribute('aria-label', label);
+  const key = toolKeys[(button.dataset.add ?? button.id) as keyof typeof toolKeys];
+  if (key) { uiAttribute(button, 'title', `toolbar:${key}.description` as UiKey); uiAttribute(button, 'aria-label', `toolbar:${key}.description` as UiKey); }
 }
 
 export function groupToolbar(nav: HTMLElement) {
   const parts = document.createElement('div');
   parts.className = 'toolbar-group toolbar-parts';
   parts.setAttribute('role', 'group');
-  parts.setAttribute('aria-label', '選択・部品を追加');
+  uiAttribute(parts, 'aria-label', 'controls:addParts');
   const select = document.createElement('button');
   select.id = 'selection-mode';
   iconButton(select, '↖', '選択モード（Esc）');
@@ -37,11 +42,11 @@ export function groupToolbar(nav: HTMLElement) {
   const defaults = nav.querySelector<HTMLElement>('#authoring-tools')!;
   defaults.classList.add('toolbar-group');
   defaults.setAttribute('role', 'group');
-  defaults.setAttribute('aria-label', '作成時の初期設定');
+  uiAttribute(defaults, 'aria-label', 'controls:creationDefaults');
   const view = document.createElement('div');
   view.className = 'toolbar-group toolbar-view';
   view.setAttribute('role', 'group');
-  view.setAttribute('aria-label', '表示');
+  uiAttribute(view, 'aria-label', 'controls:view');
   for (const [id, icon, label] of [['zoom-out', '−', '縮小'], ['zoom-reset', '', 'ズームを100%に戻す'], ['zoom-in', '＋', '拡大'], ['fit', '⛶', '全体表示']]) {
     const button = nav.querySelector<HTMLButtonElement>(`#${id}`)!;
     iconButton(button, icon || button.textContent || '100%', label);

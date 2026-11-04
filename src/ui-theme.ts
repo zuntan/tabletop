@@ -1,3 +1,5 @@
+import { t, languageChangeEvent } from './i18n';
+import { uiText, uiAttribute } from './i18n/dom';
 import { createIcon } from './icons';
 
 const storageKey = 'tabletop-ui-theme';
@@ -24,11 +26,12 @@ export function createUiThemeButton(header: HTMLElement) {
   const button = document.createElement('button'); button.type = 'button'; button.id = 'ui-theme'; button.className = 'header-icon';
   function update() {
     const dark = document.documentElement.dataset.theme === 'dark';
-    const label = dark ? 'ライトモードに切替' : 'ダークモードに切替';
+    const label = dark ? t('controls:lightTheme') : t('controls:darkTheme');
     button.title = label; button.setAttribute('aria-label', label); button.setAttribute('aria-pressed', String(dark));
     button.replaceChildren(createIcon(dark ? 'sun' : 'moon', 20));
   }
   button.onclick = () => setUiTheme(getUiTheme() === 'dark' ? 'light' : 'dark');
   document.addEventListener('ui-theme-change', update);
+  document.addEventListener(languageChangeEvent, update);
   header.insertBefore(button, header.querySelector('#file-menu') ?? header.querySelector('#save-desk')); update();
 }

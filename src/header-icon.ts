@@ -7,6 +7,7 @@ const icons = {
 
 /** Monochrome icons inherit button colors, including disabled states. */
 export function headerIcon(button: HTMLButtonElement, kind: keyof typeof icons, label: string) {
+  button.removeAttribute('data-i18n');
   button.classList.add('header-icon');
   button.title = label; button.setAttribute('aria-label', label);
   button.replaceChildren(createIcon(icons[kind], 20));

@@ -1,0 +1,138 @@
+{
+  "select": {
+    "caption": "選択",
+    "description": "選択モード（Esc）"
+  },
+  "clearPointing": {
+    "caption": "AI指差し\n解除",
+    "description": "AI指差し解除"
+  },
+  "rect": {
+    "caption": "矩形",
+    "description": "矩形"
+  },
+  "roundedRect": {
+    "caption": "角丸",
+    "description": "角丸矩形"
+  },
+  "ellipse": {
+    "caption": "楕円",
+    "description": "楕円"
+  },
+  "line": {
+    "caption": "線",
+    "description": "線"
+  },
+  "arrow": {
+    "caption": "矢印",
+    "description": "矢印"
+  },
+  "card": {
+    "caption": "カード",
+    "description": "カード"
+  },
+  "image": {
+    "caption": "画像",
+    "description": "画像 / SVG"
+  },
+  "mermaid": {
+    "caption": "Mermaid",
+    "description": "Mermaid"
+  },
+  "qr": {
+    "caption": "QRコード",
+    "description": "QRコード"
+  },
+  "web": {
+    "caption": "Web資料",
+    "description": "Web資料"
+  },
+  "link": {
+    "caption": "リンク",
+    "description": "リンク"
+  },
+  "pin": {
+    "caption": "ピン",
+    "description": "ピンを配置"
+  },
+  "paste": {
+    "caption": "貼り付け",
+    "description": "クリップボードから追加"
+  },
+  "wayfinder": {
+    "caption": "道しるべ",
+    "description": "道しるべ"
+  },
+  "clip": {
+    "caption": "クリップ",
+    "description": "選択を束ねる（Ctrl/⌘＋G）。未選択ならクリップを置く"
+  },
+  "folder": {
+    "caption": "クリア\nファイル",
+    "description": "選択を配置ごとクリアファイルにまとめる"
+  },
+  "ruler": {
+    "caption": "定規",
+    "description": "定規を置く。選択したカードや図形を右側へ並べます"
+  },
+  "doodle": {
+    "caption": "落書き",
+    "description": "落書き"
+  },
+  "cutout": {
+    "caption": "型抜き",
+    "description": "型抜き"
+  },
+  "zoomOut": {
+    "caption": "縮小",
+    "description": "縮小"
+  },
+  "zoomReset": {
+    "caption": "100%へ",
+    "description": "ズームを100%に戻す"
+  },
+  "zoomIn": {
+    "caption": "拡大",
+    "description": "拡大"
+  },
+  "fit": {
+    "caption": "全体",
+    "description": "全体表示"
+  },
+  "center": {
+    "caption": "中心",
+    "description": "中心"
+  },
+  "snap": {
+    "caption": "スナップ",
+    "description": "グリッドにスナップ"
+  },
+  "pinText": {
+    "caption": "ピンとテキスト",
+    "description": "ピンの説明文を隠す"
+  },
+  "pinSettings": {
+    "caption": "ピン設定",
+    "description": "ピン設定"
+  },
+  "front": {
+    "caption": "最前面",
+    "description": "最前面"
+  },
+  "back": {
+    "caption": "最背面",
+    "description": "最背面"
+  },
+  "delete": {
+    "caption": "削除",
+    "description": "アニメ削除（落下／吸引／消しゴム／三角片をランダム）"
+  },
+  "lock": {
+    "caption": "ロック",
+    "description": "マウス操作をロック"
+  },
+  "camera": {
+    "caption": "カメラ",
+    "description": "カメラ"
+  }
+}

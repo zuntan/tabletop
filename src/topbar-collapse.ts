@@ -1,3 +1,5 @@
+import { t, languageChangeEvent } from './i18n';
+import { uiText, uiAttribute } from './i18n/dom';
 import {createIcon} from './icons';
 import './topbar-collapse.css';
 
@@ -13,7 +15,7 @@ export function createTopbarCollapse(app:HTMLElement, canToggle:()=>boolean, res
   const apply=()=>{
     app.classList.toggle('topbar-collapsed',collapsed);
     const icon=createIcon(collapsed?'chevron-down':'chevron-up',16);icon.setAttribute('stroke-width','2');
-    toggle.replaceChildren(icon);toggle.title=collapsed?'上部の操作帯を開く':'上部の操作帯を畳む';
+    toggle.replaceChildren(icon);toggle.title=collapsed?t('controls:expandToolbar'):t('controls:collapseToolbar');
     toggle.setAttribute('aria-label',toggle.title);toggle.setAttribute('aria-expanded',String(!collapsed));
     if(collapsed){
       for(const popup of app.querySelectorAll<HTMLElement>(':popover-open'))popup.hidePopover();
@@ -22,5 +24,6 @@ export function createTopbarCollapse(app:HTMLElement, canToggle:()=>boolean, res
     requestAnimationFrame(resized);
   };
   toggle.onclick=()=>{if(!canToggle())return;collapsed=!collapsed;try{localStorage.setItem('tabletop.topbar.collapsed',String(collapsed));}catch{/* In-memory fallback. */}apply();};
+  document.addEventListener(languageChangeEvent, () => { toggle.title = t(collapsed ? 'controls:expandToolbar' : 'controls:collapseToolbar'); toggle.setAttribute('aria-label', toggle.title); });
   apply();
 }

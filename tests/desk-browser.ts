@@ -33,7 +33,7 @@ export async function openTestDesk(name: string, initScript?: string, serverPrel
     await call('desk_pairing_open', { confirm: true });
     if (initScript) await page.addInitScript(initScript);
     await page.goto(`http://127.0.0.1:${port}/#token=${token}&port=${port}`);
-    await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
+    await page.waitForFunction(() => document.querySelector('#connection')?.classList.contains('connected'));
     return { page, client, call, close, port, errors };
   } catch (error) { await close(); throw error; }
 }

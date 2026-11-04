@@ -1,3 +1,4 @@
+import { uiText, type UiKey } from './i18n/dom';
 import { createIcon, type IconName } from './icons';
 
 const buttonIcons: Record<string, IconName> = {
@@ -10,13 +11,42 @@ const buttonIcons: Record<string, IconName> = {
   front: 'arrow-bar-to-up', back: 'arrow-bar-to-down', 'mouse-lock': 'lock',
 };
 
-const shortCaptions: Record<string, string> = {
-  'file-create':'クリア\nファイル', 'clear-ai-pointing': 'AI指差し\n解除', 'delete-animated': '削除', 'cutout-create': '型抜き',
-  'selection-mode': '選択', rect: '矩形', roundedRect: '角丸', ellipse: '楕円', line: '線', arrow: '矢印', text: 'カード',
-  image: '画像', mermaid: 'Mermaid', qrcode:'QRコード', web: 'Web資料', link: 'リンク', numbering: 'ピン', clipboard: '貼り付け',
-  'wayfinder-create':'道しるべ', 'zoom-out': '縮小', 'zoom-reset': '100%へ', 'zoom-in': '拡大', fit: '全体', 'view-center': '中心',
-  'grid-snap': 'スナップ', 'label-descriptions': 'ピンとテキスト', 'numbering-settings': 'ピン設定',
-};
+export const toolKeys = {
+  'selection-mode': 'select',
+  'clear-ai-pointing': 'clearPointing',
+  'rect': 'rect',
+  'roundedRect': 'roundedRect',
+  'ellipse': 'ellipse',
+  'line': 'line',
+  'arrow': 'arrow',
+  'text': 'card',
+  'image': 'image',
+  'mermaid': 'mermaid',
+  'qrcode': 'qr',
+  'web': 'web',
+  'link': 'link',
+  'numbering': 'pin',
+  'clipboard': 'paste',
+  'wayfinder-create': 'wayfinder',
+  'clip-create': 'clip',
+  'file-create': 'folder',
+  'ruler-create': 'ruler',
+  'doodle-create': 'doodle',
+  'cutout-create': 'cutout',
+  'zoom-out': 'zoomOut',
+  'zoom-reset': 'zoomReset',
+  'zoom-in': 'zoomIn',
+  'fit': 'fit',
+  'view-center': 'center',
+  'grid-snap': 'snap',
+  'label-descriptions': 'pinText',
+  'numbering-settings': 'pinSettings',
+  'front': 'front',
+  'back': 'back',
+  'delete-animated': 'delete',
+  'mouse-lock': 'lock',
+  'camera-capture': 'camera'
+} as const;
 
 /** Keep short visible captions separate from the full accessible name and tooltip. */
 export function toolButtonContent(button: HTMLButtonElement, icon: string, label: string) {
@@ -26,7 +56,8 @@ export function toolButtonContent(button: HTMLButtonElement, icon: string, label
   else symbol.textContent = icon;
   symbol.setAttribute('aria-hidden', 'true');
   const caption = document.createElement('small'); caption.className = 'tool-caption';
-  caption.textContent = shortCaptions[button.dataset.add ?? button.id] ?? label;
+  const key = toolKeys[(button.dataset.add ?? button.id) as keyof typeof toolKeys];
+  if (key) uiText(caption, `toolbar:${key}.caption` as UiKey); else caption.textContent = label;
   button.classList.toggle('compact-caption', [...caption.textContent.replace(/\s/g,'')].length >= 2);
   button.classList.add('tool-button'); button.replaceChildren(symbol, caption);
 }

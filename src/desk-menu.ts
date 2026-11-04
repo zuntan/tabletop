@@ -68,78 +68,79 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
       finally { select.disabled = false; panel.querySelector<HTMLSelectElement>('#ui-language')?.focus(); }
     };
   }
+  const plainLabelKeys = {"plain-ivory": "menu:plainIvory", "plain-blue": "menu:plainBlue", "plain-green": "menu:plainGreen", "plain-pink": "menu:plainPink", "plain-purple": "menu:plainPurple"} as const;
   function appearance() {
-    heading('机の見た目');panel.classList.add('desk-appearance');
+    heading(t('menu:appearanceTitle'));panel.classList.add('desk-appearance');
     const label = (text: string, control: HTMLElement) => {
       const node = document.createElement('label'); node.className = 'desk-menu-field';
       const caption = document.createElement('span'); caption.textContent = text; node.append(caption, control); panel.append(node);return node;
     };
-    const wallpaper = document.createElement('select'); wallpaper.setAttribute('aria-label', '壁紙');
-    for (const [value, text] of [['none', '無地'], ...plainDeskColors.map(p=>[p.value,p.label]), ['wood-1', '木目1'], ['wood-2', '木目2'], ['wood', 'フローリング'], ['cutting-mat', 'カッターマット'], ['pink-notebook', 'ピンクのノート'], ['charcoal', 'チャコール']]) {
+    const wallpaper = document.createElement('select'); wallpaper.setAttribute('aria-label', t('menu:wallpaper'));
+    for (const [value, text] of [['none', t('menu:plain')], ...plainDeskColors.map(p=>[p.value,t(plainLabelKeys[p.value])]), ['wood-1', t('menu:woodOne')], ['wood-2', t('menu:woodTwo')], ['wood', t('menu:floor')], ['cutting-mat', t('menu:cuttingMat')], ['pink-notebook', t('menu:pinkNotebook')], ['charcoal', t('menu:charcoal')]]) {
       const option = document.createElement('option'); option.value = value; option.textContent = text; wallpaper.append(option);
     }
     wallpaper.onchange = () => change(wallpaperPatch(wallpaper.value));
-    label('壁紙', wallpaper);
-    const titleColor=document.createElement('input');titleColor.type='color';titleColor.setAttribute('aria-label','タイトル背景色');
+    label(t('menu:wallpaper'), wallpaper);
+    const titleColor=document.createElement('input');titleColor.type='color';titleColor.setAttribute('aria-label',t('menu:titleColor'));
     titleColor.onchange=()=>change({titleBackground:titleColor.value});
-    const resetTitle=document.createElement('button');resetTitle.type='button';resetTitle.textContent='標準に戻す';resetTitle.setAttribute('aria-label','タイトル背景色を標準に戻す');
+    const resetTitle=document.createElement('button');resetTitle.type='button';resetTitle.textContent=t('menu:reset');resetTitle.setAttribute('aria-label',t('menu:resetTitleColor'));
     resetTitle.onclick=()=>change({titleBackground:null});
-    const titleRow=document.createElement('div');titleRow.className='desk-menu-colors';titleRow.append(titleColor,resetTitle);label('タイトル背景色',titleRow).classList.add('desk-menu-inline-field');
+    const titleRow=document.createElement('div');titleRow.className='desk-menu-colors';titleRow.append(titleColor,resetTitle);label(t('menu:titleColor'),titleRow).classList.add('desk-menu-inline-field');
 
-    const opacity = document.createElement('input'); opacity.type = 'range'; opacity.min = '0'; opacity.max = '100'; opacity.step = '1'; opacity.setAttribute('aria-label', '壁紙の不透明度');
+    const opacity = document.createElement('input'); opacity.type = 'range'; opacity.min = '0'; opacity.max = '100'; opacity.step = '1'; opacity.setAttribute('aria-label', t('menu:opacity'));
     const output = document.createElement('output'); output.htmlFor = opacity.id = 'wallpaper-opacity';
     const range = document.createElement('div'); range.className = 'desk-menu-range'; range.append(opacity, output);
     opacity.oninput = () => { output.value = opacity.value + '%'; preview({ opacity: Number(opacity.value) / 100 }); };
     opacity.onchange = () => change({ opacity: Number(opacity.value) / 100 });
-    label('壁紙の不透明度', range).classList.add('desk-menu-inline-field');
-    const brightness = document.createElement('input'); brightness.type = 'range'; brightness.min = '0'; brightness.max = '100'; brightness.step = '1'; brightness.dir = 'rtl'; brightness.setAttribute('aria-label', '下地の明るさ');
+    label(t('menu:opacity'), range).classList.add('desk-menu-inline-field');
+    const brightness = document.createElement('input'); brightness.type = 'range'; brightness.min = '0'; brightness.max = '100'; brightness.step = '1'; brightness.dir = 'rtl'; brightness.setAttribute('aria-label', t('menu:brightness'));
     const brightnessOutput = document.createElement('output'); brightnessOutput.htmlFor = brightness.id = 'wallpaper-underlay-brightness';
     const brightnessRow = document.createElement('div'); brightnessRow.className = 'desk-menu-range';
-    const white = document.createElement('span'); white.textContent = '白';
-    const black = document.createElement('span'); black.textContent = '黒';
+    const white = document.createElement('span'); white.textContent = t('menu:white');
+    const black = document.createElement('span'); black.textContent = t('menu:black');
     brightnessRow.append(white, brightness, black, brightnessOutput);
     brightness.oninput = () => { brightnessOutput.value = brightness.value + '%'; preview({ underlayBrightness: Number(brightness.value) / 100 }); };
     brightness.onchange = () => change({ underlayBrightness: Number(brightness.value) / 100 });
-    label('下地の明るさ', brightnessRow).classList.add('desk-menu-inline-field');
-    const note = document.createElement('p'); note.className = 'desk-menu-note'; note.textContent = '壁紙の不透明度0%で下地だけになります。下地は白から黒まで調整できます。パーツの色は変わりません。'; panel.append(note);
+    label(t('menu:brightness'), brightnessRow).classList.add('desk-menu-inline-field');
+    const note = document.createElement('p'); note.className = 'desk-menu-note'; note.textContent = t('menu:opacityNote'); panel.append(note);
     const colors: { key: 'selectionColor' | 'pointingColor'; input: HTMLInputElement; auto: HTMLInputElement }[] = [];
-    for (const [key, title] of [['selectionColor', '選択枠'], ['pointingColor', 'AIの指差し枠']] as const) {
+    for (const [key, title] of [['selectionColor', t('menu:selectionFrame')], ['pointingColor', t('menu:pointingFrame')]] as const) {
       const row = document.createElement('div'); row.className = 'desk-menu-colors';
-      const input = document.createElement('input'); input.type = 'color'; input.setAttribute('aria-label', title + 'の色');
+      const input = document.createElement('input'); input.type = 'color'; input.setAttribute('aria-label', t('menu:frameColor', { name: title }));
       input.onchange = () => change({ [key]: input.value });
-      const auto = document.createElement('input'); auto.type = 'checkbox'; auto.setAttribute('aria-label', title + 'を壁紙に合わせる');
+      const auto = document.createElement('input'); auto.type = 'checkbox'; auto.setAttribute('aria-label', t('menu:frameAuto', { name: title }));
       auto.onchange = () => change({ [key]: auto.checked ? null : input.value });
-      const autoLabel = document.createElement('label'); autoLabel.append(auto, '壁紙に合わせる');
+      const autoLabel = document.createElement('label'); autoLabel.append(auto, t('menu:matchWallpaper'));
       row.append(input, autoLabel); label(title, row).classList.add('desk-menu-frame-color'); colors.push({ key, input, auto });
     }
-    const axes=document.createElement('input');axes.type='checkbox';axes.setAttribute('aria-label','原点の縦横線を表示');
+    const axes=document.createElement('input');axes.type='checkbox';axes.setAttribute('aria-label',t('menu:showAxes'));
     axes.onchange=()=>change({originAxes:axes.checked});
-    const axesLabel=document.createElement('label');axesLabel.append(axes,'表示する');
-    const axesColor=document.createElement('input');axesColor.type='color';axesColor.setAttribute('aria-label','原点軸の色');
+    const axesLabel=document.createElement('label');axesLabel.append(axes,t('menu:show'));
+    const axesColor=document.createElement('input');axesColor.type='color';axesColor.setAttribute('aria-label',t('menu:axesColor'));
     axesColor.onchange=()=>change({originAxesColor:axesColor.value});
-    const axesRow=document.createElement('div');axesRow.className='desk-menu-colors';axesRow.append(axesLabel,axesColor);label('原点の縦横線',axesRow).classList.add('desk-menu-inline-field');
-    const gridVisible=document.createElement('input');gridVisible.type='checkbox';gridVisible.setAttribute('aria-label','スナップグリッドを表示');
+    const axesRow=document.createElement('div');axesRow.className='desk-menu-colors';axesRow.append(axesLabel,axesColor);label(t('menu:axes'),axesRow).classList.add('desk-menu-inline-field');
+    const gridVisible=document.createElement('input');gridVisible.type='checkbox';gridVisible.setAttribute('aria-label',t('menu:showGrid'));
     gridVisible.onchange=()=>change({showGrid:gridVisible.checked});
-    const gridLabel=document.createElement('label');gridLabel.append(gridVisible,'表示する');
-    const gridColor=document.createElement('input');gridColor.type='color';gridColor.setAttribute('aria-label','スナップグリッドの色');gridColor.onchange=()=>change({gridColor:gridColor.value});
-    const gridStyle=document.createElement('select');gridStyle.setAttribute('aria-label','スナップグリッドの形');for(const [value,title]of [['dots','ドット'],['lines','ライン'],['both','ドット＋ライン']]){const option=document.createElement('option');option.value=value;option.textContent=title;gridStyle.append(option);}gridStyle.onchange=()=>change({gridStyle:gridStyle.value as 'dots'|'lines'|'both'});
+    const gridLabel=document.createElement('label');gridLabel.append(gridVisible,t('menu:show'));
+    const gridColor=document.createElement('input');gridColor.type='color';gridColor.setAttribute('aria-label',t('menu:gridColor'));gridColor.onchange=()=>change({gridColor:gridColor.value});
+    const gridStyle=document.createElement('select');gridStyle.setAttribute('aria-label',t('menu:gridStyle'));for(const [value,title]of [['dots',t('menu:dots')],['lines',t('menu:lines')],['both',t('menu:dotsLines')]]){const option=document.createElement('option');option.value=value;option.textContent=title;gridStyle.append(option);}gridStyle.onchange=()=>change({gridStyle:gridStyle.value as 'dots'|'lines'|'both'});
     const gridControls=document.createElement('div');gridControls.className='desk-menu-colors desk-menu-grid-controls';gridControls.append(gridLabel,gridColor,gridStyle);
-    label('グリッド',gridControls).classList.add('desk-menu-grid-field');
-    const interval=document.createElement('input');interval.type='number';interval.id='grid-interval';interval.min='1';interval.max='100000';interval.step='any';interval.required=true;interval.setAttribute('aria-label','グリッド間隔');interval.disabled=!changeGrid;
-    interval.title='グリッド間隔';label('グリッド間隔',interval).classList.add('desk-menu-inline-field','desk-menu-grid-interval');
-    const intervalPicker=addNumberPresets(interval,[24,48,72,96,120,144,168,192,216,240],'グリッド間隔');panel.append(intervalPicker.popup);
+    label(t('menu:grid'),gridControls).classList.add('desk-menu-grid-field');
+    const interval=document.createElement('input');interval.type='number';interval.id='grid-interval';interval.min='1';interval.max='100000';interval.step='any';interval.required=true;interval.setAttribute('aria-label',t('menu:gridInterval'));interval.disabled=!changeGrid;
+    interval.title=t('menu:gridInterval');label(t('menu:gridInterval'),interval).classList.add('desk-menu-inline-field','desk-menu-grid-interval');
+    const intervalPicker=addNumberPresets(interval,[24,48,72,96,120,144,168,192,216,240],t('menu:gridInterval'));panel.append(intervalPicker.popup);
     interval.onchange=()=>{if(!interval.checkValidity()){interval.reportValidity();sync();return;}changeGrid?.({interval:Number(interval.value)});};
-    const divisions=document.createElement('select');divisions.hidden=true;divisions.setAttribute('aria-label','スナップ間隔');divisions.disabled=!changeGrid;
+    const divisions=document.createElement('select');divisions.hidden=true;divisions.setAttribute('aria-label',t('menu:snapInterval'));divisions.disabled=!changeGrid;
     for(const value of [1,2,3,4]){const option=document.createElement('option');option.value=String(value);option.textContent=`${value}:1`;divisions.append(option);}
-    label('スナップ間隔',divisions).classList.add('desk-menu-inline-field');
-    const divisionPicker=addPresetPalette(divisions,['1','2','3','4'],'スナップ間隔');divisionPicker.wrapper.classList.add('line-style-picker');panel.append(divisionPicker.popup);
+    label(t('menu:snapInterval'),divisions).classList.add('desk-menu-inline-field');
+    const divisionPicker=addPresetPalette(divisions,['1','2','3','4'],t('menu:snapInterval'));divisionPicker.wrapper.classList.add('line-style-picker');panel.append(divisionPicker.popup);
     for(const button of divisionPicker.choices.querySelectorAll<HTMLButtonElement>('button'))button.textContent=button.dataset.value+':1';
     divisions.onchange=()=>changeGrid?.({snapDivisions:Number(divisions.value)});
     const initialFocus=document.createElement('output');initialFocus.id='initial-focus-id';
-    label('初期表示',initialFocus).classList.add('desk-menu-inline-field');
+    label(t('menu:initialFocus'),initialFocus).classList.add('desk-menu-inline-field');
     sync = () => {
       const settings=desk.settingsSnapshot(),bg = settings.background, resolved = frameColors(bg);
-      initialFocus.textContent=settings.initialFocusId??'未設定';
+      initialFocus.textContent=settings.initialFocusId??t('menu:notSet');
       divisions.value=String(settings.grid.snapDivisions??1);divisionPicker.menu.textContent=divisions.value+':1';
       gridColor.value=bg.gridColor??'#cbd5e1';gridStyle.value=bg.gridStyle??'dots';
       gridVisible.checked=bg.showGrid??bg.wallpaper==='none';interval.value=String(settings.grid.interval);
@@ -154,23 +155,23 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
       }
     };
     sync();
-    const saved = document.createElement('p'); saved.className = 'desk-menu-note'; saved.textContent = 'この机に保存される設定です。ライト／ダークの切り替えとは独立しています。'; panel.append(saved);
+    const saved = document.createElement('p'); saved.className = 'desk-menu-note'; saved.textContent = t('menu:savedNote'); panel.append(saved);
   }
   function about() {
-    heading('Tabletopについて');
+    heading(t('menu:aboutTitle'));
     panel.classList.add('desk-about');
     const artwork=document.createElement('img');artwork.className='about-desk-artwork';artwork.src=`data:image/svg+xml;base64,${btoa(deskArtwork)}`;
-    artwork.alt='ランプと紙とマグカップ、笑顔の引き出しがある机';artwork.width=230;artwork.height=158;
+    artwork.alt=t('menu:artworkAlt');artwork.width=230;artwork.height=158;
     const text = document.createElement('h3');text.className='about-app-name';
     const releaseLink=document.createElement('a');releaseLink.textContent='Tabletop '+JSON.parse(packageSource).version+(__TABLETOP_COMMIT__?' ('+__TABLETOP_COMMIT__+')':'');releaseLink.href='https://github.com/zuntan/tabletop/releases';releaseLink.target='_blank';releaseLink.rel='noopener noreferrer';
     text.append(releaseLink);
-    const description = document.createElement('p'); description.className='about-description';description.textContent = '人間とAIが同じ机を囲んで考えるための作業机。';
-    const link = document.createElement('a'); link.href = 'https://github.com/zuntan/tabletop'; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'プロジェクト → GitHub Repository';
+    const description = document.createElement('p'); description.className='about-description';description.textContent = t('menu:aboutDescription');
+    const link = document.createElement('a'); link.href = 'https://github.com/zuntan/tabletop'; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = t('menu:repository');
     const credits=document.createElement('dl');credits.className='about-credits';
     for(const [role,name]of [
-      ['プログラマー','センパイ（GPT Sol 6.1 ～）'],
-      ['アドバイザー','おっさん〈だらっくだ〉（ChatGPT GPT 6 ～）'],
-      ['企画・ディレクション','ずんたん〈zuntan〉'],
+      [t('menu:programmer'),t('menu:senpai')],
+      [t('menu:advisor'),t('menu:ossan')],
+      [t('menu:direction'),t('menu:author')],
     ]){
       const title=document.createElement('dt');title.textContent=role;
       const value=document.createElement('dd');value.textContent=name;
@@ -178,30 +179,30 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     }
     const projectLinks=document.createElement('div');projectLinks.className='about-project-links';
     const repositoryLine=document.createElement('p');repositoryLine.append(link);
-    const fanLetters=document.createElement('a');fanLetters.textContent='ファンレター・感想 → GitHub Discussions';
+    const fanLetters=document.createElement('a');fanLetters.textContent=t('menu:fanLetters');
     fanLetters.href='https://github.com/zuntan/tabletop/discussions/categories/fan-letters';fanLetters.target='_blank';fanLetters.rel='noopener noreferrer';
     const feedbackLine=document.createElement('p');feedbackLine.append(fanLetters);projectLinks.append(repositoryLine,feedbackLine);
     const projectLicense=document.createElement('section');projectLicense.className='about-project-license';
-    const projectHeading=document.createElement('h4');projectHeading.className='about-library-label';projectHeading.textContent='ライセンス';
+    const projectHeading=document.createElement('h4');projectHeading.className='about-library-label';projectHeading.textContent=t('menu:license');
     const projectText=document.createElement('p');
     const mit=document.createElement('a');mit.textContent='MIT License';mit.href='https://github.com/zuntan/tabletop/blob/main/LICENSE';mit.target='_blank';mit.rel='noopener noreferrer';
     projectText.append('Tabletop — ',mit,' · Copyright © 2026 zuntan');
     projectLicense.append(projectHeading,projectText);
     const links=document.createElement('div');links.className='about-links';
-    const licenseHeading=document.createElement('h4');licenseHeading.className='about-library-label';licenseHeading.textContent='ライブラリライセンス';
+    const licenseHeading=document.createElement('h4');licenseHeading.className='about-library-label';licenseHeading.textContent=t('menu:libraryLicenses');
     const licenseList=document.createElement('div');licenseList.className='about-license-list';
-    licenseList.tabIndex=0;licenseList.setAttribute('role','region');licenseList.setAttribute('aria-label','ライブラリライセンス一覧');
+    licenseList.tabIndex=0;licenseList.setAttribute('role','region');licenseList.setAttribute('aria-label',t('menu:libraryList'));
     const directNames=[...new Set(['Tabler Icons','mermaid','markdown-it','@simonwep/pickr',...Object.keys(JSON.parse(packageSource).dependencies)])];
     for(const name of directNames){
       const entry=thirdParty.entries.find(entry=>entry.name===name);
       if(!entry)continue;
       const row=document.createElement('p'),a=document.createElement('a');
       a.textContent=`${entry.name} · ${entry.license}`;a.href=publicAsset('licenses/'+entry.notice);
-      a.target='_blank';a.rel='noopener noreferrer';a.title=`${entry.name} ${entry.version} — 著作権表示・ライセンス全文`;
+      a.target='_blank';a.rel='noopener noreferrer';a.title=t('menu:noticeTitle', { name: entry.name, version: entry.version });
       row.append(a);licenseList.append(row);
     }
     const all=document.createElement('p'),allLink=document.createElement('a');
-    allLink.textContent='すべてのライブラリ・ライセンス';allLink.href=publicAsset('licenses/THIRD_PARTY_NOTICES.txt');allLink.target='_blank';allLink.rel='noopener noreferrer';
+    allLink.textContent=t('menu:allLicenses');allLink.href=publicAsset('licenses/THIRD_PARTY_NOTICES.txt');allLink.target='_blank';allLink.rel='noopener noreferrer';
     all.append(allLink);links.append(licenseHeading,licenseList,all);
     panel.append(artwork,text,description,credits,projectLinks,projectLicense,links);
   }
@@ -209,7 +210,7 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     heading(t('menu:title')); page = 'root';
     action(t('menu:appearance'), appearance); action(t('menu:languageAction'), languageSettings); action(t('menu:about'), about);
     // Keep the experimental entry for internal verification, outside the visible menu.
-    if (bhPreview) action('BH比較（実験）…', () => { panel.hidePopover(); bhPreview(); }).hidden = true;
+    if (bhPreview) action(t('menu:bhPreview'), () => { panel.hidePopover(); bhPreview(); }).hidden = true;
   }
   button.onclick = () => {
     if (panel.matches(':popover-open')) { panel.hidePopover(); return; }

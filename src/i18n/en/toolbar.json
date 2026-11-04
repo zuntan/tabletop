@@ -1,0 +1,138 @@
+{
+  "select": {
+    "caption": "Select",
+    "description": "Select (Esc)"
+  },
+  "clearPointing": {
+    "caption": "Clear AI\npointing",
+    "description": "Clear AI pointing"
+  },
+  "rect": {
+    "caption": "Rectangle",
+    "description": "Rectangle"
+  },
+  "roundedRect": {
+    "caption": "Rounded",
+    "description": "Rounded rectangle"
+  },
+  "ellipse": {
+    "caption": "Ellipse",
+    "description": "Ellipse"
+  },
+  "line": {
+    "caption": "Line",
+    "description": "Line"
+  },
+  "arrow": {
+    "caption": "Arrow",
+    "description": "Arrow"
+  },
+  "card": {
+    "caption": "Card",
+    "description": "Card"
+  },
+  "image": {
+    "caption": "Image",
+    "description": "Image / SVG"
+  },
+  "mermaid": {
+    "caption": "Mermaid",
+    "description": "Mermaid"
+  },
+  "qr": {
+    "caption": "QR code",
+    "description": "QR code"
+  },
+  "web": {
+    "caption": "Web page",
+    "description": "Web page"
+  },
+  "link": {
+    "caption": "Link",
+    "description": "Link"
+  },
+  "pin": {
+    "caption": "Pin",
+    "description": "Place a pin"
+  },
+  "paste": {
+    "caption": "Paste",
+    "description": "Paste from clipboard"
+  },
+  "wayfinder": {
+    "caption": "Wayfinder",
+    "description": "Wayfinder"
+  },
+  "clip": {
+    "caption": "Clip",
+    "description": "Clip selected cards together (Ctrl/⌘+G), or place a clip if nothing is selected."
+  },
+  "folder": {
+    "caption": "Clear\nFolder",
+    "description": "Keep selected items together in a clear folder."
+  },
+  "ruler": {
+    "caption": "Ruler",
+    "description": "Place a ruler. Arrange selected cards and shapes on its right."
+  },
+  "doodle": {
+    "caption": "Doodle",
+    "description": "Doodle"
+  },
+  "cutout": {
+    "caption": "Cutout",
+    "description": "Cutout"
+  },
+  "zoomOut": {
+    "caption": "Out",
+    "description": "Zoom out"
+  },
+  "zoomReset": {
+    "caption": "100%",
+    "description": "Reset zoom to 100%"
+  },
+  "zoomIn": {
+    "caption": "In",
+    "description": "Zoom in"
+  },
+  "fit": {
+    "caption": "All",
+    "description": "Fit all"
+  },
+  "center": {
+    "caption": "Center",
+    "description": "Center view"
+  },
+  "snap": {
+    "caption": "Snap",
+    "description": "Snap to grid"
+  },
+  "pinText": {
+    "caption": "Pin text",
+    "description": "Hide pin descriptions"
+  },
+  "pinSettings": {
+    "caption": "Pin setup",
+    "description": "Pin settings"
+  },
+  "front": {
+    "caption": "Front",
+    "description": "Bring to front"
+  },
+  "back": {
+    "caption": "Back",
+    "description": "Send to back"
+  },
+  "delete": {
+    "caption": "Delete",
+    "description": "Delete with an animation"
+  },
+  "lock": {
+    "caption": "Lock",
+    "description": "Lock mouse movement and resizing"
+  },
+  "camera": {
+    "caption": "Camera",
+    "description": "Camera"
+  }
+}

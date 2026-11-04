@@ -1,3 +1,6 @@
+import { t } from './i18n';
+import { uiText, uiAttribute, type UiKey } from './i18n/dom';
+
 export const numberPresets = {
   clipSize: [32,64,96],
   clipOffset: [0,16,32,64,128],
@@ -15,21 +18,32 @@ export function addNumberPresets(input: HTMLInputElement, values: readonly numbe
   return addPresetPalette(input, values.map(String), label);
 }
 
-export function addPresetPalette(input: HTMLInputElement | HTMLSelectElement, values: readonly string[], label: string) {
+export function addPresetPalette(input: HTMLInputElement | HTMLSelectElement, values: readonly string[], label: string, labelKey?: UiKey) {
+  labelKey ??= input.closest('label')?.querySelector(':scope > [data-i18n]')?.getAttribute('data-i18n') as UiKey | undefined;
+  const currentLabel = () => labelKey ? t(labelKey) : label;
   const wrapper = document.createElement('span'); wrapper.className = 'number-presets';
   const menu = document.createElement('button'); menu.type = 'button'; menu.className = 'number-preset-menu';
-  menu.textContent = '候補';
-  menu.setAttribute('aria-label', `${label}の候補`); menu.title = `${label}の候補`;
+  uiText(menu, 'tools:preset');
+  menu.setAttribute('aria-label', t('tools:presetTitle', { name: currentLabel() })); menu.title = menu.getAttribute('aria-label')!;
+  if (labelKey) for (const attribute of ['title', 'aria-label'] as const) uiAttribute(menu, attribute, 'tools:presetTitle', { name: labelKey });
   const popup = document.createElement('div'); popup.className = 'number-preset-palette'; popup.popover = 'auto';
-  popup.setAttribute('role', 'dialog'); popup.setAttribute('aria-label', `${label}の候補`);
-  const heading = document.createElement('div'); heading.className = 'number-preset-heading'; heading.textContent = label;
+  popup.setAttribute('role', 'dialog'); popup.setAttribute('aria-label', t('tools:presetTitle', { name: currentLabel() }));
+  if (labelKey) uiAttribute(popup, 'aria-label', 'tools:presetTitle', { name: labelKey });
+  const heading = document.createElement('div'); heading.className = 'number-preset-heading';
+  if (labelKey) uiText(heading, labelKey); else heading.textContent = label;
   const choices = document.createElement('div'); choices.className = 'number-preset-choices';
   popup.append(heading, choices); document.body.append(popup);
   menu.setAttribute('aria-haspopup', 'dialog'); menu.setAttribute('aria-expanded', 'false');
   let anchorTop = 0, anchorLeft = 0;
   const hide = () => { if (popup.matches(':popover-open')) popup.hidePopover(); menu.setAttribute('aria-expanded', 'false'); };
+  const choiceLabel = (value: string) => input.name === 'clipSize'
+    ? t(value === '32' ? 'tools:small' : value === '64' ? 'tools:medium' : 'tools:large', { value })
+    : input.name === 'junctionRounding'
+      ? value === '0' ? t('tools:noRounding') : t(value === '48' ? 'tools:small' : value === '96' ? 'tools:medium' : value === '192' ? 'tools:large' : 'tools:extraLarge', { value })
+      : value;
   for (const value of values) {
-    const choice = document.createElement('button'); choice.type = 'button'; choice.textContent = input.name === 'clipSize' ? ({'32':'小 (32)','64':'中 (64)','96':'大 (96)'}[value]??value) : input.name === 'junctionRounding' ? ({ '0': 'なし (0)', '48': '小 (48)', '96': '中 (96)', '192': '大 (192)', '384': '特大 (384)' }[value] ?? value) : String(value);
+    const choice = document.createElement('button'); choice.type = 'button';
+    choice.textContent = choiceLabel(value);
     choice.dataset.value = String(value);
     choice.onclick = () => {
       if (input.disabled) { hide(); return; }
@@ -50,11 +64,14 @@ export function addPresetPalette(input: HTMLInputElement | HTMLSelectElement, va
     event.preventDefault();
     if (popup.matches(':popover-open')) { hide(); return; }
     if (input.disabled) return;
+    const title = t('tools:presetTitle', { name: currentLabel() });
+    menu.title = title; menu.setAttribute('aria-label', title); popup.setAttribute('aria-label', title);
+    for (const choice of choices.querySelectorAll<HTMLButtonElement>('button')) choice.textContent = choiceLabel(choice.dataset.value!);
     if(input.name==='clipOffsetPercent'){
       const previous=(input.form?.elements.namedItem('clipOffsetMode') as HTMLSelectElement|null)?.value==='percent';
       const buttons=[...choices.querySelectorAll<HTMLButtonElement>('button')];
       buttons.sort((a,b)=>previous?Number(b.dataset.value)-Number(a.dataset.value):Number(a.dataset.value)-Number(b.dataset.value));
-      for(const button of buttons){button.textContent=previous?(button.dataset.value==='100'?'隙間無し（100%）':`${button.dataset.value}%`):button.dataset.value!;choices.append(button);}
+      for(const button of buttons){button.textContent=previous?(button.dataset.value==='100'?t('tools:noGap'):`${button.dataset.value}%`):button.dataset.value!;choices.append(button);}
     }
     choices.querySelectorAll<HTMLButtonElement>('button').forEach(choice => choice.setAttribute('aria-pressed', String(input.value === choice.dataset.value)));
     popup.showPopover();

@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import {isUrlLink} from './link-values';
 import { objectPropertyNames } from './object-properties';
 import { isShapeType } from './shape-definitions';
@@ -37,7 +38,7 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
       input.disabled=object.type!=='clip'||(name==='clipSize'&&!!object.clipAutoSize);
       input.closest('label')!.hidden=object.type!=='clip'||name==='clipOffset'&&percent||name==='clipOffsetPercent'&&!percent;
       input.value=propertyValue(object,name);
-      if(name==='clipSize')input.title=object.clipAutoSize?'数値指定へ戻したときのサイズを保持しています':'';
+      if(name==='clipSize')input.title=object.clipAutoSize?t('tools:clipManualSize'):'';
       continue;
     }
     if(name==='qrText'){input.disabled=object.type!=='qrcode';input.closest('label')!.hidden=input.disabled;input.value=object.qrText??'';continue;}
@@ -71,8 +72,8 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
       continue;
     }
     if(name==='fontSize'&&isUrlLink(object)&&object.linkDisplay==='qr'){input.disabled=true;input.closest('label')!.hidden=true;continue;}
-    if (name === 'text') input.closest('label')!.firstChild!.textContent = object.type === 'label' ? '説明文' : ['image', 'svg', 'mermaid', 'qrcode', 'prop','file','link'].includes(object.type) ? 'タイトル' : 'テキスト';
-    if (name === 'url') input.closest('label')!.firstChild!.textContent = ['image', 'svg'].includes(object.type) ? 'URL（任意）' : 'URL';
+    if (name === 'text') input.closest('label')!.firstChild!.textContent = object.type === 'label' ? t('tools:description') : ['image', 'svg', 'mermaid', 'qrcode', 'prop','file','link'].includes(object.type) ? t('tools:title') : t('shell:text');
+    if (name === 'url') input.closest('label')!.firstChild!.textContent = ['image', 'svg'].includes(object.type) ? t('tools:optionalUrl') : 'URL';
     input.value = name === 'fillOpacity' ? String(transparencyPercent(object.fillOpacity))
       : String(object.type === 'label' && name === 'text' ? object.description ?? '' : object[name] ?? '');
     const endpoint = name === 'x2' || name === 'y2';
