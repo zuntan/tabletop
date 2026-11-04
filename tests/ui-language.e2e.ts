@@ -76,3 +76,27 @@ test('language switching still works when browser preference storage is unavaila
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });
+
+test('English file dialogs cancel without changing the desk and follow a later language switch', { timeout: 30_000 }, async () => {
+  const { page, call, close, errors } = await openTestDesk('ui-language-files', undefined, undefined, 'en-US');
+  try {
+    await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'kept', type: 'text', text: '保存する本文' } }] });
+    const before = await call('desk_state');
+    await page.getByRole('button', { name: 'File', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Save as', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Desk file path', exact: true }).fill('/tmp/should-not-save.tabletop');
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+    assert.deepEqual(await call('desk_state'), before);
+    await page.locator('#desk-menu').click();
+    await page.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();
+    await page.locator('#ui-language').selectOption('ja');
+    await page.waitForFunction(() => document.documentElement.lang === 'ja');
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'ファイル', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'SAVE AS（名前を付けて保存）', exact: true }).click();
+    await page.getByRole('textbox', { name: '机ファイルのパス', exact: true }).waitFor();
+    await page.getByRole('button', { name: 'キャンセル', exact: true }).click();
+    assert.deepEqual(await call('desk_state'), before);
+    assert.deepEqual(errors, []);
+  } finally { await close(); }
+});

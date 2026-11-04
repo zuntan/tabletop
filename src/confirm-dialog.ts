@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import './confirm-dialog.css';
 
 let dismiss: (()=>void)|undefined;
@@ -15,7 +16,7 @@ export function choiceDialog<T extends string>(options:{title:string;message:str
   dialog.setAttribute('aria-labelledby','confirm-dialog-title');dialog.setAttribute('aria-describedby','confirm-dialog-message');
   const heading=document.createElement('div');heading.className='confirm-dialog-heading';
   const title=document.createElement('h2');title.id='confirm-dialog-title';title.textContent=options.title;
-  const close=document.createElement('button');close.type='button';close.className='confirm-dialog-close';close.textContent='×';close.setAttribute('aria-label','閉じる');
+  const close=document.createElement('button');close.type='button';close.className='confirm-dialog-close';close.textContent='×';close.setAttribute('aria-label',t('files:close'));
   heading.append(title,close);
   const message=document.createElement('p');message.id='confirm-dialog-message';message.textContent=options.message;
   const actions=document.createElement('div');actions.className='confirm-dialog-actions';
@@ -59,16 +60,16 @@ export function choiceDialog<T extends string>(options:{title:string;message:str
 }
 
 export function confirmAction(title:string,message:string,action:string){
-  return choiceDialog({title,message,cancel:'cancel',choices:[{value:'confirm',label:action},{value:'cancel',label:'キャンセル'}]}).then(value=>value==='confirm');
+  return choiceDialog({title,message,cancel:'cancel',choices:[{value:'confirm',label:action},{value:'cancel',label:t('files:cancel')}]}).then(value=>value==='confirm');
 }
 
 export const confirmUnsavedChanges=()=>choiceDialog({
-  title:'未保存の変更があります',message:'現在の机を別の内容へ切り替えます。変更をどうしますか？',cancel:'cancel',
-  choices:[{value:'save',label:'保存して切り替える'},{value:'discard',label:'保存せず切り替える',danger:true},{value:'cancel',label:'キャンセル'}],
+  title:t('files:unsavedTitle'),message:t('files:unsavedMessage'),cancel:'cancel',
+  choices:[{value:'save',label:t('files:saveSwitch')},{value:'discard',label:t('files:discardSwitch'),danger:true},{value:'cancel',label:t('files:cancel')}],
 });
 
 export async function askFilePath(title:string,value:string){
   let path='';
-  const choice=await choiceDialog({title,message:'サーバー上の.tabletopファイルを指定します。ファイル名だけなら既定の保存フォルダーを使います。別の場所は絶対パスで指定してください。',cancel:'cancel',choices:[{value:'accept',label:'決定'},{value:'cancel',label:'キャンセル'}],input:{label:'机ファイルのパス',value,onAccept:value=>{path=value.trim();return !!path&&path.endsWith('.tabletop');}}});
+  const choice=await choiceDialog({title,message:t('files:pathMessage'),cancel:'cancel',choices:[{value:'accept',label:t('files:accept')},{value:'cancel',label:t('files:cancel')}],input:{label:t('files:pathLabel'),value,onAccept:value=>{path=value.trim();return !!path&&path.endsWith('.tabletop');}}});
   return choice==='accept'?path:null;
 }
