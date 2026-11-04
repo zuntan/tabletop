@@ -1,6 +1,6 @@
 # リリース用ソースZIPの生成
 
-2026-11-03。配布は `tabletop-X.Y.Z.zip` とその `.sha256`。タグ時点のGit管理ファイルに `release-info.json` を加え、一つの `tabletop-X.Y.Z/` フォルダーへまとめる。node_modulesやdist、未追跡ファイルは入らない。docs_develはAI向けヘルプを含むため文章を維持するが、desk-snapshotsと作業用.tabletop、生成物のoutputは配布から除外する。docs/tabletopの公開用机は同梱する。
+2026-11-03。配布は `tabletop-X.Y.Z.zip` とその `.sha256`。タグ時点のGit管理ファイルに `release-info.json` を加え、一つの `tabletop-X.Y.Z/` フォルダーへまとめる。node_modulesやdist、未追跡ファイルは入らない。docs_develの文章は現行の配布範囲に含むが、desk-snapshotsと作業用.tabletop、生成物のoutputは配布から除外する。docs/tabletopの公開用机は同梱する。
 
 ## 自動処理
 
@@ -59,3 +59,9 @@ v0.1.0タグを7044259へ付けてpushした。Pagesのmain更新は成功した
 2026-11-04、利用者から未公開v0.1.0タグの付け直しを明示的に許可された。修正をコミット・mainへpushし、この修正コミットへタグを移して再実行する。以後の再開時はGitHub Actionsと下書きReleaseの実際の状態を確認する。今回の許可は、この未公開タグの修正に対する例外であり、公開済みタグを動かさない方針は維持する。
 
 再実行41757331355ではZIP生成・両ビルドが成功し、単体321件成功／1件失敗。失敗は配布から除外した履歴机フォルダーをテストが必須としていたため。テストを公開机必須・履歴机があれば追加検証する構成に直し、リポジトリと履歴机なしの展開環境の両方で成功を確認した。付け直しの許可に基づいて、この修正も含めて再実行する。
+
+2026-11-04：desk_help用の操作説明書をdocs/helpへ移管。道しるべの利用説明もdocs/help/wayfinder.mdへ分離し、設計・検証記録はdocs_devel/wayfinder.mdへ残した。実行時のdocs_devel参照は解消。既存の下書きZIPは移管前の配置のため、次回の配布更新時に反映が必要。
+
+docs_develを置かない一時環境でも、通常版・Pages版ビルド、desk_help全トピック、実MCP接続・編集・保存読込、Pages操作を確認して成功した。移管後は実行時不要であることを検証済み。検証の範囲・ログはreleases/0.1.0-verification.mdの「docs_develの実行時不要性」を参照。ZIPへの同梱方針は別件として未変更。
+
+2026-11-04：利用者の指示でdocs_devel全体のZIP除外は見送り、現行の同梱方針を維持する。説明書移管をコミット・pushして未公開タグと下書きZIPを更新し、⑦へ進む。既存添付は/tmpへ取得してSHA-256検証後、下書きであることを再確認して旧ZIP・チェックサムだけを除去し、Actionsで再生成する。公開済みReleaseへは適用しない。

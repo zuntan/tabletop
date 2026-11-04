@@ -1,5 +1,7 @@
 # 道しるべ：経路をたどる視点移動
 
+利用時の操作説明は[docs/help/wayfinder.md](../docs/help/wayfinder.md)へ移しました。この文書は設計・実装・検証の記録です。
+
 2026-10-29／4アンカー自由化・選択ポップアップを実装、再起動後に利用者確認済み。2026-10-28／分岐ミニマップ・AIの線端指定起動・ピン前後移動まで利用者確認済み。初版：`feat/wayfinder-navigation`、拡張：`feat/wayfinder-branches`。
 
 ## 今回の範囲

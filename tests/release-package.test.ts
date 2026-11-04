@@ -19,7 +19,8 @@ test('tagged archive excludes working files, embeds tag commit, checks version a
   mkdirSync(join(root,'docs_devel','desk-snapshots'),{recursive:true});
   writeFileSync(join(root,'docs_devel','desk-snapshots','old.tabletop'),'historical desk');
   writeFileSync(join(root,'docs_devel','review.tabletop'),'working desk');
-  writeFileSync(join(root,'docs_devel','ai-help.md'),'required help');
+  mkdirSync(join(root,'docs','help'),{recursive:true});
+  writeFileSync(join(root,'docs','help','guide.md'),'required help');
   mkdirSync(join(root,'docs','tabletop'),{recursive:true});
   writeFileSync(join(root,'docs','tabletop','guide.tabletop'),'public tutorial');
   mkdirSync(join(root,'output'));writeFileSync(join(root,'output','preview.png'),'working output');
@@ -28,7 +29,7 @@ test('tagged archive excludes working files, embeds tag commit, checks version a
   const result=packageRelease(root,'v0.1.0',join(root,'output'));
   const bytes=readFileSync(join(root,'output',result.filename)),files=unzipSync(bytes);
   assert.equal(strFromU8(files['tabletop-0.1.0/INSTALL.md']),'installation');
-  assert.equal(strFromU8(files['tabletop-0.1.0/docs_devel/ai-help.md']),'required help');
+  assert.equal(strFromU8(files['tabletop-0.1.0/docs/help/guide.md']),'required help');
   assert.equal(strFromU8(files['tabletop-0.1.0/docs/tabletop/guide.tabletop']),'public tutorial');
   assert.ok(!Object.keys(files).some(p=>p.includes('/desk-snapshots/')||p.endsWith('/review.tabletop')||p.includes('/output/')));
   assert.ok(!Object.keys(files).some(p=>p.includes('.git/')||p.includes('private-untracked')));
