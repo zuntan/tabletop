@@ -129,3 +129,23 @@ test('color palette and style labels follow the local language without repaintin
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });
+
+test('new pin series use the creation language while existing series names survive switching', { timeout: 30_000 }, async () => {
+  const { page, call, close, errors } = await openTestDesk('ui-language-series', undefined, undefined, 'en-US');
+  page.setDefaultTimeout(5000);
+  try {
+    await page.locator('#pin-series-menu').click();
+    await page.getByRole('button', { name: 'New series + one pin', exact: true }).click();
+    const before = await call('desk_state');
+    assert.equal(before.settings.series.at(-1).name, 'Series 2');
+    assert.equal(await page.locator('#series-fit').textContent(), 'Fit frame to text');
+    await page.locator('#desk-menu').click();
+    await page.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();
+    await page.locator('#ui-language').selectOption('ja');
+    await page.waitForFunction(() => document.documentElement.lang === 'ja');
+    assert.equal(await page.locator('#series-fit').textContent(), '枠を文字にあわせる');
+    assert.deepEqual(await call('desk_state'), before);
+    assert.equal(await page.locator('#series-settings [name="name"]').inputValue(), 'Series 2');
+    assert.deepEqual(errors, []);
+  } finally { await close(); }
+});

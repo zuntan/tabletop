@@ -1,0 +1,21 @@
+{
+  "edit": "Edit doodle",
+  "title": "Doodle title",
+  "pen": "Pen",
+  "eraser": "Eraser",
+  "move": "Move drawing",
+  "sizeChange": "Change width {{number}}",
+  "sizeChoices": "Width {{number}} choices",
+  "color": "Color {{number}}",
+  "undo": "Undo",
+  "redo": "Redo",
+  "clear": "Clear all",
+  "transparent": "Transparent background",
+  "paper": "Paper color",
+  "hint": "Drag: draw / Space + drag or middle button: pan / Wheel: zoom",
+  "cancel": "Cancel",
+  "accept": "Apply",
+  "sizeValue": "Width {{number}}: {{value}}",
+  "strokeLimit": "Too many strokes. Continue in another doodle.",
+  "pointLimit": "Too many points. Apply this doodle before continuing."
+}

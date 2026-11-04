@@ -1,3 +1,7 @@
+import enDoodle from './en/doodle.json';
+import jaDoodle from './ja/doodle.json';
+import enAuthoring from './en/authoring.json';
+import jaAuthoring from './ja/authoring.json';
 import enPaint from './en/paint.json';
 import jaPaint from './ja/paint.json';
 import enFiles from './en/files.json';
@@ -19,8 +23,8 @@ import jaTools from './ja/tools.json';
 
 // English is the complete source catalog. Every locale uses the same namespaces.
 export const resources = {
-  en: { paint: enPaint, files: enFiles, common: enCommon, menu: enMenu, messages: enMessages, shell: enShell, toolbar: enToolbar, controls: enControls, tools: enTools },
-  ja: { paint: jaPaint, files: jaFiles, common: jaCommon, menu: jaMenu, messages: jaMessages, shell: jaShell, toolbar: jaToolbar, controls: jaControls, tools: jaTools },
+  en: { doodle: enDoodle, authoring: enAuthoring, paint: enPaint, files: enFiles, common: enCommon, menu: enMenu, messages: enMessages, shell: enShell, toolbar: enToolbar, controls: enControls, tools: enTools },
+  ja: { doodle: jaDoodle, authoring: jaAuthoring, paint: jaPaint, files: jaFiles, common: jaCommon, menu: jaMenu, messages: jaMessages, shell: jaShell, toolbar: jaToolbar, controls: jaControls, tools: jaTools },
 };
 export type UiLanguage = keyof typeof resources;
 

@@ -1,0 +1,21 @@
+{
+  "edit": "落書きの編集",
+  "title": "落書きのタイトル",
+  "pen": "ペン",
+  "eraser": "消しゴム",
+  "move": "絵全体を移動",
+  "sizeChange": "太さ{{number}}を変更",
+  "sizeChoices": "太さ{{number}}の候補",
+  "color": "色{{number}}",
+  "undo": "戻す",
+  "redo": "やり直す",
+  "clear": "全消去",
+  "transparent": "透明背景",
+  "paper": "紙の色",
+  "hint": "ドラッグ：描く／Space＋ドラッグ・中ボタン：表示を移動／ホイール：拡大縮小",
+  "cancel": "キャンセル",
+  "accept": "確定",
+  "sizeValue": "太さ{{number}}：{{value}}",
+  "strokeLimit": "線が多いため、別の落書きに続きを描いてください",
+  "pointLimit": "線が多いため、一度確定してください"
+}

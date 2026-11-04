@@ -29,7 +29,7 @@ test('pin toolbar adds immediately; selected/last/arbitrary/new series and first
   await call('desk_select',{ids:[first.id]});assert.equal((await add()).seriesId,first.seriesId);
   await call('desk_select',{ids:[]});assert.equal((await add()).seriesId,first.seriesId);
   await page.locator('#numbering').focus();await page.keyboard.press('Enter');assert.equal((await call('desk_get',{id:(await call('desk_selection')).ids[0]})).seriesId,first.seriesId);
-  await page.setViewportSize({width:390,height:900});await page.locator('#pin-series-menu').click();assert.ok(await page.locator('#pin-series-palette').evaluate(node=>{const r=node.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth}));
+  await page.setViewportSize({width:390,height:900});await page.locator('#pin-series-menu').click();await page.waitForFunction(()=>{const r=document.querySelector('#pin-series-palette')!.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;});
   assert.deepEqual(errors,[]);
  }finally{await close();}
 });

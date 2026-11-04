@@ -287,7 +287,7 @@ const clipMenuUpdates = ([
   }
   return ()=>{const label=(labels as Record<string,string>)[input.value]??'';if(label.startsWith('shell:'))uiText(menu,label as UiKey);else{menu.removeAttribute('data-i18n');menu.textContent=label;}choices.querySelectorAll<HTMLButtonElement>('button').forEach(button=>button.setAttribute('aria-pressed',String(input.value===button.dataset.value)));};
 });
-const updateStrokeWidthMode=createStrokeWidthMode(form.elements.namedItem('fixedWidth') as HTMLInputElement,'線の太さ固定');
+const updateStrokeWidthMode=createStrokeWidthMode(form.elements.namedItem('fixedWidth') as HTMLInputElement,'authoring:fixedLine');
 const updateConnectorLineStyle = createLineStylePicker(form.elements.namedItem('dash') as HTMLSelectElement);
 const updateStartMarker = createEndpointPicker(form.elements.namedItem('startMarker') as HTMLSelectElement, '始点形状', 'start');
 const updateTextFit = createTextFitPicker(form.elements.namedItem('textFit') as HTMLSelectElement);
