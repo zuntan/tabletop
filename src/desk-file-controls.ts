@@ -1,4 +1,6 @@
 import {bytesDataUrl,dataBytes} from './binary-envelope';
+import { FILE_EXISTS_MESSAGE, isFileExistsError } from './file-errors';
+import { t } from './i18n';
 import { DeskFileHistory } from './desk-file-history';
 import { askFilePath, choiceDialog } from './confirm-dialog';
 import type { Desk } from './model';
@@ -41,7 +43,7 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
     if(event.key==='Escape'){event.preventDefault();menu.hidePopover();trigger.focus();}
     if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();const current=items.indexOf(document.activeElement as HTMLButtonElement);const index=event.key==='Home'?0:event.key==='End'?items.length-1:(current+(event.key==='ArrowDown'?1:-1)+items.length)%items.length;items[index]?.focus();}
   });
-  const report = (text: string,error=false) => { const message=document.querySelector('#message')!;message.textContent = text;message.classList.toggle('error',error); };
+  const report = (text: string,error=false) => { const message=document.querySelector('#message')!;message.textContent = text === FILE_EXISTS_MESSAGE ? t('messages:fileExists') : text;message.classList.toggle('error',error); };
   let saving=false,loading=false,normalBusy=false;
   let storage:Storage|null=null;try{storage=localStorage;}catch{}
   const history=new DeskFileHistory(storage);
@@ -56,7 +58,7 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
     const saved=snapshot();const bytes=await encodeDeskFile(desk);const archive={sessionId:saved.sessionId,revision:saved.revision,generation:saved.generation,archiveDataUrl:bytesDataUrl(bytes)};let result;
     try{result=await remote({action:'save',path,overwrite,snapshot:archive});}
     catch(error){
-      if(!overwrite&&error instanceof Error&&error.message.includes('同名ファイル')){
+      if(!overwrite&&isFileExistsError(error)){
         if(!await confirmAction('上書き保存します',`${path} の内容を現在の机で置き換えます。`,'上書きする'))return null;
         if(desk.documentGeneration!==generation||desk.revision!==saved.revision)throw new Error('確認中に机が変わったため保存を中止しました');
         result=await remote({action:'save',path,overwrite:true,snapshot:archive});

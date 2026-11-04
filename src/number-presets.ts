@@ -29,7 +29,7 @@ export function addPresetPalette(input: HTMLInputElement | HTMLSelectElement, va
   let anchorTop = 0, anchorLeft = 0;
   const hide = () => { if (popup.matches(':popover-open')) popup.hidePopover(); menu.setAttribute('aria-expanded', 'false'); };
   for (const value of values) {
-    const choice = document.createElement('button'); choice.type = 'button'; choice.textContent = label === 'クリップのサイズ' ? ({'32':'小 (32)','64':'中 (64)','96':'大 (96)'}[value]??value) : label === '接合部の丸め' ? ({ '0': 'なし (0)', '48': '小 (48)', '96': '中 (96)', '192': '大 (192)', '384': '特大 (384)' }[value] ?? value) : String(value);
+    const choice = document.createElement('button'); choice.type = 'button'; choice.textContent = input.name === 'clipSize' ? ({'32':'小 (32)','64':'中 (64)','96':'大 (96)'}[value]??value) : input.name === 'junctionRounding' ? ({ '0': 'なし (0)', '48': '小 (48)', '96': '中 (96)', '192': '大 (192)', '384': '特大 (384)' }[value] ?? value) : String(value);
     choice.dataset.value = String(value);
     choice.onclick = () => {
       if (input.disabled) { hide(); return; }

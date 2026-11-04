@@ -1,0 +1,10 @@
+{
+  "title": "Menu",
+  "appearance": "Desk appearance…",
+  "about": "About Tabletop…",
+  "language": "Language",
+  "languageAction": "Language…",
+  "languageNote": "This setting is saved in this browser, not in your desk file.",
+  "partialNote": "English translation is in progress. Some controls still use Japanese.",
+  "busy": "Finish the current operation before changing the language."
+}

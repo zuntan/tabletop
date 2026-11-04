@@ -6,7 +6,8 @@ type EditorPatch = { text?: string; description?: string; url?: string; deskPath
 
 export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement,
   save: (object: DeskObject, patch: EditorPatch, fresh: boolean) => void,
-  onActiveChange: () => void = () => {}) {
+  onActiveChange: () => void = () => {},
+  preserveDraftAt: (target: EventTarget | null) => boolean = () => false) {
   let active: { object: DeskObject; fresh: boolean; panel: HTMLDivElement; text: HTMLTextAreaElement; url?: HTMLInputElement; source?: HTMLTextAreaElement; error: HTMLElement; resizeObserver?: ResizeObserver; disposePreview?: () => void } | null = null;
   let composing = false;
   const textFrameTypes = new Set(['text', ...shapeTypes]);
@@ -52,7 +53,7 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
     }
   }
   document.addEventListener('pointerdown', event => {
-    if (!active || active.panel.contains(event.target as Node)) return;
+    if (!active || active.panel.contains(event.target as Node) || preserveDraftAt(event.target)) return;
     if (!commit()) { event.preventDefault(); event.stopImmediatePropagation(); }
   }, true);
   return {

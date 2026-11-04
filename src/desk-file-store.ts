@@ -3,6 +3,7 @@ import { mkdir, realpath, open, lstat, rename, unlink, link } from 'node:fs/prom
 import { resolve, join, dirname, basename, isAbsolute } from 'node:path';
 import { homedir } from 'node:os';
 import { MAX_DESK_FILE_BYTES } from './desk-file';
+import { FILE_EXISTS_MESSAGE } from './file-errors';
 
 export function validateDeskFilename(name: string): string {
   if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}\.tabletop$/.test(name)
@@ -27,7 +28,7 @@ export class DeskFileStore {
     let before;
     try{before=await lstat(path);}catch(e){if((e as NodeJS.ErrnoException).code!=='ENOENT')throw e;}
     if(before&&(!before.isFile()||before.isSymbolicLink()))throw new Error('Desk file must be a regular file, not a symlink');
-    if(before&&!overwrite)throw new Error('同名ファイルが存在します。上書きの確認が必要です');
+    if(before&&!overwrite)throw new Error(FILE_EXISTS_MESSAGE);
     const temporary=join(dirname(path),`.tabletop-${crypto.randomUUID()}.tmp`);
     const file=await open(temporary,'wx',0o600);
     try{

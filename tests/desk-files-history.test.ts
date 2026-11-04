@@ -9,6 +9,7 @@ import {DeskFileStore} from '../src/desk-file-store';
 import {DeskFileService} from '../src/desk-file-service';
 import {DeskFileHistory} from '../src/desk-file-history';
 import {encodeDeskFile,decodeDeskFile} from '../src/desk-file';
+import {isFileExistsError} from '../src/file-errors';
 
 test('normal save resolves unicode paths, overwrites atomically and keeps old bytes on rejected writes',async()=>{
  const root=await mkdtemp(join(tmpdir(),'tabletop-files-'));const service=new DeskFileService(new DeskFileStore(root));const desk=new Desk();
@@ -17,7 +18,7 @@ test('normal save resolves unicode paths, overwrites atomically and keeps old by
   const path=join(root,'日本語の机.tabletop');await service.save(path,dispatch(desk,{method:'file_snapshot'}) as any);
   const original=await readFile(path);
   desk.execute({operations:[{kind:'update',id:'note',patch:{text:'second'}}]});
-  await assert.rejects(service.save(path,dispatch(desk,{method:'file_snapshot'}) as any),/同名/);assert.deepEqual(await readFile(path),original);
+  await assert.rejects(service.save(path,dispatch(desk,{method:'file_snapshot'}) as any),isFileExistsError);assert.deepEqual(await readFile(path),original);
   await service.save(path,dispatch(desk,{method:'file_snapshot'}) as any,true);
   assert.equal((await decodeDeskFile(dataBytes((await service.load(path)).archiveDataUrl))).objects[0].text,'second');
   await assert.rejects(service.load('../escape.tabletop'));

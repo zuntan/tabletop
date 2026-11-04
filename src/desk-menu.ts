@@ -9,18 +9,19 @@ import { createIcon } from './icons';
 import { frameColors } from './frame-colors';
 import packageSource from '../package.json?raw';
 import './desk-menu.css';
+import { getUiLanguage, isUiLanguage, languageChangeEvent, setUiLanguage, t } from './i18n';
 
-export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: Partial<Settings['background']>) => void, preview: (patch?: Partial<Settings['background']>) => void, bhPreview?: () => void, changeGrid?: (patch:Partial<Settings['grid']>)=>void) {
+export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: Partial<Settings['background']>) => void, preview: (patch?: Partial<Settings['background']>) => void, bhPreview?: () => void, changeGrid?: (patch:Partial<Settings['grid']>)=>void, canChangeLanguage: () => boolean = () => true) {
   const button = document.createElement('button');
   button.id = 'desk-menu'; button.type = 'button'; button.className = 'header-icon';
-  button.title = 'メニュー'; button.setAttribute('aria-label', 'メニュー');
+  button.title = t('menu:title'); button.setAttribute('aria-label', t('menu:title'));
   button.setAttribute('aria-haspopup', 'dialog'); button.setAttribute('aria-expanded', 'false');
   const icon = createIcon('minus', 20);
   icon.querySelector('path')!.setAttribute('d', 'M4 6h16 M4 12h16 M4 18h16');
   icon.setAttribute('data-icon', 'menu'); button.append(icon);
   (header.querySelector('#file-menu') ?? header.querySelector('#load-desk'))!.after(button);
   const panel = document.createElement('section'); panel.id = 'desk-menu-panel'; panel.popover = 'auto';
-  panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'メニュー');
+  panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', t('menu:title'));
   document.querySelector('#app')!.append(panel);
   button.setAttribute('aria-controls', panel.id);
   // Keep desk shortcuts (Delete, Space, Escape selection clearing) out of this UI.
@@ -29,11 +30,13 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     if (event.key === 'Escape') { event.preventDefault(); panel.hidePopover(); button.focus(); }
   });
   let sync = () => {};
+  let page: 'root' | 'language' | 'other' = 'root';
   function heading(title: string) {
+    page = 'other';
     panel.replaceChildren();panel.classList.remove('desk-about','desk-appearance');
     const row = document.createElement('div'); row.className = 'desk-menu-heading';
     const h = document.createElement('h2'); h.textContent = title;
-    const close = document.createElement('button'); close.type = 'button'; close.title = '閉じる'; close.setAttribute('aria-label', '閉じる');
+    const close = document.createElement('button'); close.type = 'button'; close.title = t('close'); close.setAttribute('aria-label', t('close'));
     close.append(createIcon('x', 18)); close.onclick = () => { panel.hidePopover(); button.focus(); };
     row.append(h, close); panel.append(row); sync = () => {};
     panel.setAttribute('aria-label', title);
@@ -42,6 +45,28 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     const item = document.createElement('button'); item.type = 'button'; item.textContent = label;
     item.className = 'desk-menu-item'; item.onclick = () => { run(); panel.querySelector<HTMLElement>('input,select,button')?.focus(); };
     panel.append(item); return item;
+  }
+  function languageSettings() {
+    heading(t('menu:language')); page = 'language';
+    const label = document.createElement('label'); label.className = 'desk-menu-field';
+    const caption = document.createElement('span'); caption.textContent = t('menu:language');
+    const select = document.createElement('select'); select.id = 'ui-language';
+    select.setAttribute('aria-label', t('menu:language'));
+    for (const [value, name] of [['ja', '日本語'], ['en', 'English']]) {
+      const option = document.createElement('option'); option.value = value; option.textContent = name; select.append(option);
+    }
+    select.value = getUiLanguage(); label.append(caption, select); panel.append(label);
+    for (const key of ['menu:languageNote', 'menu:partialNote'] as const) {
+      const note = document.createElement('p'); note.className = 'desk-menu-note'; note.textContent = t(key); panel.append(note);
+    }
+    const status = document.createElement('p'); status.className = 'desk-menu-note'; status.setAttribute('role', 'status'); panel.append(status);
+    select.onchange = async () => {
+      if (!canChangeLanguage()) { select.value = getUiLanguage(); status.textContent = t('menu:busy'); return; }
+      if (!isUiLanguage(select.value)) { select.value = getUiLanguage(); return; }
+      select.disabled = true;
+      try { await setUiLanguage(select.value); }
+      finally { select.disabled = false; panel.querySelector<HTMLSelectElement>('#ui-language')?.focus(); }
+    };
   }
   function appearance() {
     heading('机の見た目');panel.classList.add('desk-appearance');
@@ -180,13 +205,22 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     all.append(allLink);links.append(licenseHeading,licenseList,all);
     panel.append(artwork,text,description,credits,projectLinks,projectLicense,links);
   }
-  button.onclick = () => {
-    if (panel.matches(':popover-open')) { panel.hidePopover(); return; }
-    heading('メニュー'); action('机の見た目…', appearance); action('Tabletopについて…', about);
+  function rootMenu() {
+    heading(t('menu:title')); page = 'root';
+    action(t('menu:appearance'), appearance); action(t('menu:languageAction'), languageSettings); action(t('menu:about'), about);
     // Keep the experimental entry for internal verification, outside the visible menu.
     if (bhPreview) action('BH比較（実験）…', () => { panel.hidePopover(); bhPreview(); }).hidden = true;
-    panel.showPopover();
+  }
+  button.onclick = () => {
+    if (panel.matches(':popover-open')) { panel.hidePopover(); return; }
+    rootMenu(); panel.showPopover();
   };
+  document.addEventListener(languageChangeEvent, () => {
+    button.title = t('menu:title'); button.setAttribute('aria-label', t('menu:title'));
+    if (!panel.matches(':popover-open')) return;
+    if (page === 'language') languageSettings();
+    else if (page === 'root') rootMenu();
+  });
   panel.addEventListener('beforetoggle', event => {
     if ((event as ToggleEvent).newState === 'closed') preview();
   });

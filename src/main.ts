@@ -1,3 +1,4 @@
+import { languageChangeEvent, t } from './i18n';
 import {initialFocusTarget} from './initial-focus';
 import {KeyboardGeometryEdit} from './keyboard-geometry';
 import {newPartGridSize} from './grid';
@@ -229,8 +230,12 @@ hintToggle.onclick=()=>{
   hintToggle.setAttribute('aria-label',hintToggle.title);
 };
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => app.querySelector<T>(selector)!;
-headerIcon($<HTMLButtonElement>('#undo'), 'undo', '元に戻す');
-headerIcon($<HTMLButtonElement>('#redo'), 'redo', 'やり直す');
+function updateHeaderLanguage() {
+  headerIcon($<HTMLButtonElement>('#undo'), 'undo', t('undo'));
+  headerIcon($<HTMLButtonElement>('#redo'), 'redo', t('redo'));
+}
+updateHeaderLanguage();
+document.addEventListener(languageChangeEvent, updateHeaderLanguage);
 const canvas = app.querySelector<SVGSVGElement>('#canvas')!;
 const deskBackground = createDeskBackground(canvas);
 const originGuides=createOriginGuides(canvas,app.querySelector<HTMLElement>('#empty')!);
@@ -351,7 +356,7 @@ const editor = createInlineEditor($('#workspace'), viewport, (object, patch, fre
   execute([fresh ? { kind: 'add', object: { ...object, ...patch } } : { kind: 'update', id: object.id, patch }], fresh ? 'desk' : 'exact');
   if (fresh) desk.select([object.id]);
   render();
-}, () => drawSelection());
+}, () => drawSelection(), target => target instanceof Element && !!target.closest('#desk-menu, #desk-menu-panel'));
 const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'), $<HTMLButtonElement>('#numbering'), $<HTMLButtonElement>('#selection-mode'), (operations, selectId) => {
   if (!busy && !editor.isActive()) attempt(() => { execute(operations, selectId ? 'desk' : 'exact'); if (selectId) desk.select([selectId]); });
 }, newPartPoint,notify);
@@ -461,7 +466,8 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
 }, patch=>{
   if (busy || gesture || editor.isActive()) { notify('操作が終わってから設定を変更してください', true); deskMenu.refresh(); return; }
   attempt(()=>execute([{kind:'grid_update',patch}]));
-});
+}, () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing()
+  && !lineInput.isActive() && !doodleEditor.isActive() && !captureCamera.isActive() && !isConfirmDialogOpen());
 const labels: Record<DeskObject['type'], string> = { ...shapeNames, wayfinder:'道しるべ', label: 'ピン', ellipse: '楕円', line: '線', text: 'カード', image: '画像', svg: 'SVG', prop: '小物', clip: 'クリップ', ruler:'定規', file:'クリアファイル', mermaid: 'Mermaid', qrcode:'QRコード', web: 'Web資料', link: 'リンク' };
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;

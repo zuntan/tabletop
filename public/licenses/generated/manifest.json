@@ -1,5 +1,5 @@
 {
-  "lockSha256": "4e826f7baf2eca0a9c4ab5a3faab3ba891a7fb219837e1a600ce4a2be93308fe",
+  "lockSha256": "35c86a5becbab337f30b97b243fd22bb71f2fcc3c8dc755fbaf54d72a6b38a67",
   "scope": "Production dependency closure (browser and MCP server); includes conservative transitive/type/CLI entries, excludes devDependencies.",
   "entries": [
     {
@@ -1278,6 +1278,14 @@
       "notice": "generated/http-errors@2.0.1.txt"
     },
     {
+      "name": "i18next",
+      "version": "26.7.1",
+      "license": "MIT",
+      "path": "node_modules/i18next",
+      "source": "https://github.com/i18next/i18next",
+      "notice": "generated/i18next@26.7.1.txt"
+    },
+    {
       "name": "iconv-lite",
       "version": "0.6.3",
       "license": "MIT",
@@ -1980,6 +1988,14 @@
       "path": "node_modules/type-is",
       "source": "jshttp/type-is",
       "notice": "generated/type-is@2.1.0.txt"
+    },
+    {
+      "name": "typescript",
+      "version": "5.9.3",
+      "license": "Apache-2.0",
+      "path": "node_modules/typescript",
+      "source": "https://github.com/microsoft/TypeScript",
+      "notice": "generated/typescript@5.9.3.txt"
     },
     {
       "name": "uc.micro",

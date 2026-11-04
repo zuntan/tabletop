@@ -1,0 +1,10 @@
+{
+  "title": "メニュー",
+  "appearance": "机の見た目…",
+  "about": "Tabletopについて…",
+  "language": "言語",
+  "languageAction": "言語…",
+  "languageNote": "このブラウザに記憶します。机ファイルには保存しません。",
+  "partialNote": "英語対応は作業中です。一部の操作はまだ日本語で表示されます。",
+  "busy": "操作が終わってから言語を変更してください。"
+}
