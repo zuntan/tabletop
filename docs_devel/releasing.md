@@ -1,10 +1,10 @@
 # リリース用ソースZIPの生成
 
-2026-11-03。配布は `tabletop-X.Y.Z.zip` とその `.sha256`。タグ時点のGit管理ファイルに `release-info.json` を加え、一つの `tabletop-X.Y.Z/` フォルダーへまとめる。node_modulesやdist、未追跡ファイルは入らない。docs_develはAI向けヘルプを含むため維持する。
+2026-11-03。配布は `tabletop-X.Y.Z.zip` とその `.sha256`。タグ時点のGit管理ファイルに `release-info.json` を加え、一つの `tabletop-X.Y.Z/` フォルダーへまとめる。node_modulesやdist、未追跡ファイルは入らない。docs_develはAI向けヘルプを含むため文章を維持するが、desk-snapshotsと作業用.tabletop、生成物のoutputは配布から除外する。docs/tabletopの公開用机は同梱する。
 
 ## 自動処理
 
-`.github/workflows/release.yml` はvで始まるタグのpushで起動し、厳密な `vX.Y.Z` 以外は生成スクリプトが拒否する。タグ先とcheckoutのHEAD、タグとpackage.jsonのversionが一致することを確認する。実行時の作業ツリーからではなく `git archive` でタグ先の内容を取得する。
+`.github/workflows/release.yml` はvで始まるタグのpushで起動し、厳密な `vX.Y.Z` 以外は生成スクリプトが拒否する。タグ先とcheckoutのHEAD、タグとpackage.jsonのversionが一致することを確認する。実行時の作業ツリーからではなく `git archive` でタグ先の内容を取得する。アーカイブは一時ファイルへ出力し、子プロセスの標準出力バッファ制限には依存しない。
 
 配布ZIPのrelease-info.jsonにはversion・tag・40桁のcommitを保存する。ビルドはGitを優先し、Git情報がない場合にだけ、versionとtagを検証した同梱情報の先頭7桁を使う。GitHub自動生成のSource codeにはこの追加情報がないため、通常どおりハッシュを省略する。
 
@@ -47,3 +47,13 @@ ZIPをGitのない一時フォルダーへ展開し、npm ci、通常版／Pages
 - 公開済みタグは動かさず、修正は新しいバージョンにする。
 
 現段階では細かな追加ブランチ規則は設けない。まず0.1.0のリリースを完了してから、この運用へ移行する。
+
+## ⑥の初回実行と修正待ち（2026-11-04）
+
+v0.1.0タグを7044259へ付けてpushした。Pagesのmain更新は成功したが、[初回Release Actions](https://github.com/zuntan/tabletop/actions/runs/41756756010)はZIP生成でgitの標準出力上限128MiBを超え、ENOBUFSで失敗した。Releaseはまだ作成されていない。
+
+配布元の管理ファイルは約303MBで、そのうちdocs_develが約283MB。修正案では過去のdesk-snapshots・docs_devel内の作業用.tabletop・outputを配布だけから除外し、Gitアーカイブを一時ファイルへ出力する。リポジトリの元ファイルは保持する。公開用机とAIヘルプは配布に残す。
+
+修正後のパッケージテスト成功。実際のv0.1.0タグの内容を修正済みスクリプトで包装し、ZIP約14.71MB／展開後約20.17MB、973エントリー、全AIヘルプ・公開机・コミット情報・SHA-256を確認した。一時成果物は `/tmp/tabletop-release-package-fixed/`。これは修正済みスクリプトを含む正式配布物ではなく、生成処理の確認用。
+
+2026-11-04、利用者から未公開v0.1.0タグの付け直しを明示的に許可された。修正をコミット・mainへpushし、この修正コミットへタグを移して再実行する。以後の再開時はGitHub Actionsと下書きReleaseの実際の状態を確認する。今回の許可は、この未公開タグの修正に対する例外であり、公開済みタグを動かさない方針は維持する。

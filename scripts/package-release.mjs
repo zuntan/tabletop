@@ -1,5 +1,6 @@
 import {execFileSync} from 'node:child_process';
-import {mkdirSync,writeFileSync} from 'node:fs';
+import {mkdirSync,writeFileSync,readFileSync,mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
@@ -10,7 +11,16 @@ export function packageRelease(root,tag,output) {
   const git=(...args)=>execFileSync('git',args,{cwd:root,maxBuffer:128*1024*1024});
   const commit=git('rev-parse',`refs/tags/${tag}^{commit}`).toString().trim();
   if(commit!==git('rev-parse','HEAD').toString().trim())throw Error('Checkout must match the release tag');
-  const files=unzipSync(git('archive','--format=zip',commit));
+  // Keep developer prose/AI help, but not historical desks or generated working output.
+  // Write git's archive to disk so its size is independent of child-process stdout limits.
+  const temporary=mkdtempSync(join(tmpdir(),'tabletop-release-archive-'));
+  let files;
+  try {
+    const archive=join(temporary,'source.zip');
+    git('archive','--format=zip',`--output=${archive}`,commit,'--','.',
+      ':(exclude)docs_devel/desk-snapshots',':(exclude)docs_devel/*.tabletop',':(exclude)output');
+    files=unzipSync(readFileSync(archive));
+  } finally {rmSync(temporary,{recursive:true,force:true});}
   const {version}=JSON.parse(strFromU8(files['package.json']));
   if(tag!==`v${version}`)throw Error('Tag and package.json version differ');
   if(files['release-info.json'])throw Error('release-info.json must not be tracked');
