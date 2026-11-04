@@ -1,7 +1,7 @@
-argparse@3.0.2
+argparse@3.0.4
 License: PSF-2.0
 Source: nodeca/argparse
-npm artifact: https://registry.npmjs.org/argparse/-/argparse-3.0.2.tgz
+npm artifact: https://registry.npmjs.org/argparse/-/argparse-3.0.4.tgz
 
 
 --- LICENSE ---

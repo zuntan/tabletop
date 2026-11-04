@@ -1,0 +1,48 @@
+name: Prepare Tabletop Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Package tagged source with provenance and checksum
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node scripts/package-release.mjs "$RELEASE_TAG"
+      - name: Verify extracted source without Git
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="tabletop-${RELEASE_TAG#v}"
+          cd release-artifacts
+          sha256sum -c "$archive.zip.sha256"
+          unzip -q "$archive.zip" -d "$RUNNER_TEMP/release-check"
+          cd "$RUNNER_TEMP/release-check/$archive"
+          test ! -e .git
+          npm ci
+          npm run build
+          npm run build:pages
+          npm test
+          node --input-type=module -e 'import {buildCommit} from "./scripts/build-info.mjs"; import {readFileSync} from "node:fs"; const info=JSON.parse(readFileSync("release-info.json")); if(buildCommit(process.cwd())!==info.commit.slice(0,7))throw Error("Missing release hash");'
+      - name: Attach assets to draft release only
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node scripts/draft-release.mjs "$RELEASE_TAG"

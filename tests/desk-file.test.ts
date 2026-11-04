@@ -134,3 +134,16 @@ test('early underlay field in pin threads is discarded when reading saved docume
   desk.replaceDocument({ objects: [], settings: legacy });
   assert.equal(Object.hasOwn(desk.settingsSnapshot().series[0].thread, 'underlayBrightness'), false);
 });
+
+test('oversized invalid manifest arrays stop before allocating per-element validation errors', async () => {
+  const bytes = zipSync({'manifest.json': strToU8(JSON.stringify({
+    format:'tabletop', version:1, objects:Array(30_000).fill(0), settings:{}, assets:{},
+  }))}, {level:0});
+  await assert.rejects(decodeDeskFile(bytes), error => {
+    const issues = (error as {issues?: {code:string;path:unknown[]}[]}).issues;
+    assert.equal(issues?.length, 1);
+    assert.equal(issues?.[0].code, 'too_big');
+    assert.deepEqual(issues?.[0].path, ['objects']);
+    return true;
+  });
+});

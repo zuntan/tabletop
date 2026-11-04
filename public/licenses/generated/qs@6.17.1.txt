@@ -1,7 +1,7 @@
-qs@6.16.0
+qs@6.17.1
 License: BSD-3-Clause
 Source: https://github.com/ljharb/qs
-npm artifact: https://registry.npmjs.org/qs/-/qs-6.16.0.tgz
+npm artifact: https://registry.npmjs.org/qs/-/qs-6.17.1.tgz
 
 
 --- LICENSE.md ---

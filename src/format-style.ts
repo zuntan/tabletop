@@ -1,3 +1,4 @@
+import {partialInputSchema} from './partial-input-schema';
 import { z } from 'zod';
 import {defaultReactionSize} from './reaction-values';
 import {reactionPlacements,defaultReactionPlacement} from './reaction-layout';
@@ -6,7 +7,7 @@ import { appearanceSchema, type Appearance } from './settings';
 import { isShapeType } from './shape-definitions';
 import { stickerSchema, stickerTarget } from './sticker-values';
 
-const styleSchema = appearanceSchema.partial().extend({
+const styleSchema = partialInputSchema(appearanceSchema).extend({
   reactionSize:z.number().finite().min(1).max(100000).optional(),
   reactionPlacement:z.enum(reactionPlacements).optional(),
   reactionFixed:z.boolean().optional(),

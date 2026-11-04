@@ -11,8 +11,8 @@ const assetPath = /^assets\/[a-f0-9]{64}\.(png|jpeg|gif|webp|svg)$/;
 const mimeExtensions: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpeg',
   'image/gif': 'gif', 'image/webp': 'webp', 'image/svg+xml': 'svg' };
 const manifestSchema = z.object({ format: z.literal('tabletop'), version: z.literal(1),
-  objects: z.array(z.record(z.unknown())).max(MAX_OBJECTS), settings: z.unknown(),
-  assets: z.record(z.object({ path: z.string().regex(assetPath),
+  objects: z.array(z.record(z.string(), z.unknown())).max(MAX_OBJECTS), settings: z.unknown(),
+  assets: z.record(z.string(), z.object({ path: z.string().regex(assetPath),
     mime: z.enum(['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']) }).strict()),
 }).strict();
 const missingSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="160"><rect width="320" height="160" fill="#f1f5f9"/><text x="160" y="85" text-anchor="middle" fill="#64748b" font-size="18">Missing image</text></svg>';

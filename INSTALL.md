@@ -15,17 +15,20 @@ Tabletopはローカルで動作し、机の内容はブラウザのタブ内に
 
 ## 2. Tabletopを配置する
 
-リポジトリをcloneするか、ソースのZIPを展開します。
+GitHub Releaseから導入する場合は、添付された **tabletop-バージョン.zip** を取得して展開します。この配布ZIPには、Aboutで表示するリリース元のコミット情報が含まれます。同梱の `.sha256` ファイルでZIPを照合できます。GitHub自動生成の「Source code」には、この追加情報は含まれません。
+
+Gitで入手する場合は、リポジトリをcloneします。特定のリリース版を使う場合は、そのタグ（例：`v0.1.0`）をチェックアウトしてからインストール・ビルドします。
 
 ```sh
 git clone https://github.com/zuntan/tabletop.git
 cd tabletop
+git checkout v0.1.0
 node --version
 npm ci
 npm run build
 ```
 
-ZIPから始めた場合は、展開先のtabletopフォルダーでnode --version以降を実行してください。node_modulesは別のPCやOSからコピーせず、使用する環境でnpm ciを実行します。
+ZIPから始めた場合は、展開先の `tabletop-バージョン` フォルダーでnode --version以降を実行してください。node_modulesは別のPCやOSからコピーせず、使用する環境でnpm ciを実行します。
 
 WindowsのPowerShellでは、npm.ps1が実行ポリシーで拒否される場合、npmの代わりにnpm.cmdを使えます。
 
@@ -143,10 +146,11 @@ MCPサーバーが止まっても、開いている机のタブは編集やダ�
 
 ## 6. 更新する
 
-先に全ての机を保存し、対象のTabletop MCPを停止します。Gitで入手した場合は、配置先で更新します。
+先に全ての机を保存し、対象のTabletop MCPを停止します。Gitでリリース版を入手した場合は、配置先でタグを取得し、更新先のリリースタグを選びます。次は `v0.1.0` を選ぶ例です。更新時には、公開済みの更新先タグへ置き換えてください。
 
 ```sh
-git pull --ff-only
+git fetch --tags
+git checkout v0.1.0
 npm ci
 npm run build
 ```

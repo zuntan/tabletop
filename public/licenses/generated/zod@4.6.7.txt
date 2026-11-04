@@ -1,7 +1,7 @@
-zod@3.25.76
+zod@4.6.7
 License: MIT
 Source: https://github.com/colinhacks/zod
-npm artifact: https://registry.npmjs.org/zod/-/zod-3.25.76.tgz
+npm artifact: https://registry.npmjs.org/zod/-/zod-4.6.7.tgz
 
 
 --- LICENSE ---

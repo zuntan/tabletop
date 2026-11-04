@@ -1,7 +1,7 @@
-body-parser@2.3.0
+body-parser@2.4.0
 License: MIT
 Source: expressjs/body-parser
-npm artifact: https://registry.npmjs.org/body-parser/-/body-parser-2.3.0.tgz
+npm artifact: https://registry.npmjs.org/body-parser/-/body-parser-2.4.0.tgz
 
 
 --- LICENSE ---

@@ -43,7 +43,7 @@ test('Pages serves from a repository subpath, opens a URL without MCP, and keeps
   await page.keyboard.press('Escape');await page.locator('#undo').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='3');
   await page.screenshot({path:'/tmp/tabletop-pages-loaded.png'});
   await page.locator('#file-menu').focus();await page.keyboard.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement?.id),'download-desk');
-  assert.equal(await page.locator('#file-menu-panel button:visible').count(),3);await page.keyboard.press('Escape');
+  assert.deepEqual((await page.locator('#file-menu-panel button:visible').allTextContents()).map(text=>text.trim()),['ダウンロード','アップロード','PDFで開く','PNGで開く']);await page.keyboard.press('Escape');
   const downloading=page.waitForEvent('download');await page.locator('#file-menu').click();await page.locator('#download-desk').click();const downloaded=await downloading;const decoded=await decodeDeskFile(await readFile((await downloaded.path())!));assert.equal(decoded.objects.length,3);
   await page.locator('#desk-menu').click();await page.getByRole('button',{name:'Tabletopについて…'}).click();const notice=await page.getByRole('link',{name:'すべてのライブラリ・ライセンス',exact:true}).getAttribute('href');assert.equal(new URL(notice!,page.url()).pathname,'/tabletop/licenses/THIRD_PARTY_NOTICES.txt');assert.equal((await page.request.get(new URL(notice!,page.url()).href)).status(),200);await page.keyboard.press('Escape');
   await page.locator('[data-add="text"]').click();await page.locator('[data-inline-text]').fill('offline edit');await page.keyboard.press('Enter');

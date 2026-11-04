@@ -37,7 +37,8 @@ test('browser UI and real stdio agent share objects, gestures, selection and his
     await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'MCP接続済み');
     assert.equal(new URL(page.url()).hash, '');
     await page.locator('#grid-snap').click(); // This gesture test intentionally uses unrestricted coordinates.
-    await page.getByRole('button', { name: '矩形', exact: true }).click();
+    await page.getByRole('button', { name: '図形の候補', exact: true }).click();
+    await page.getByRole('dialog', { name: '図形の候補', exact: true }).getByRole('button', { name: '矩形', exact: true }).click();
     const state = await call('desk_list'); assert.equal(state.count, 1);
     const id = state.objects[0].id;
     assert.deepEqual((await call('desk_selection')).ids, [id]);
@@ -58,7 +59,7 @@ test('browser UI and real stdio agent share objects, gestures, selection and his
     await call('desk_execute', { actor: 'agent-01', operations: [{ kind: 'update', id, patch: { fill: '#ff0000' } }] });
     await page.waitForFunction(() => document.querySelector('#objects rect')?.getAttribute('fill') === '#ff0000');
     await page.getByRole('button', { name: '元に戻す', exact: true }).click();
-    assert.equal((await call('desk_get', { id })).fill, '#dbeafe');
+    assert.equal((await call('desk_get', { id })).fill, state.objects[0].fill);
     await page.getByRole('button', { name: 'やり直す', exact: true }).click();
     assert.equal((await call('desk_get', { id })).fill, '#ff0000');
     const changes = await call('desk_changes', { sinceRevision: state.revision + 2 });

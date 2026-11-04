@@ -37,7 +37,8 @@ test('downward signpost has selectable artwork and a fixed screen-size launch po
   await call('desk_select',{ids:['go']});await call('desk_camera_move',{center:{x:320,y:350},durationMs:0});
   await page.locator('#wayfinder-navigation button').click();await page.waitForSelector('[data-wayfinder-marker] circle');
   await call('desk_select',{ids:['a']});await page.keyboard.press('ArrowRight');
-  await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.includes('中止しました'));
+  await page.locator('[data-wayfinder-marker] circle').waitFor({state:'detached'});
+  assert.equal((await call('desk_camera_get')).navigation.status,'cancelled');
   assert.deepEqual((await call('desk_selection')).ids,['a'],'cancellation preserves a subsequent human selection');
   assert.deepEqual(errors,[]);
  }finally{await close();}

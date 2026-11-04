@@ -1,5 +1,5 @@
 {
-  "lockSha256": "bdd78a274d9e29075f8242f6e331cfd8007b1569b993dfedbbd85fa1d1a0be77",
+  "lockSha256": "4e826f7baf2eca0a9c4ab5a3faab3ba891a7fb219837e1a600ce4a2be93308fe",
   "scope": "Production dependency closure (browser and MCP server); includes conservative transitive/type/CLI entries, excludes devDependencies.",
   "entries": [
     {
@@ -447,19 +447,19 @@
     },
     {
       "name": "argparse",
-      "version": "3.0.2",
+      "version": "3.0.4",
       "license": "PSF-2.0",
       "path": "node_modules/argparse",
       "source": "nodeca/argparse",
-      "notice": "generated/argparse@3.0.2.txt"
+      "notice": "generated/argparse@3.0.4.txt"
     },
     {
       "name": "body-parser",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "license": "MIT",
       "path": "node_modules/body-parser",
       "source": "expressjs/body-parser",
-      "notice": "generated/body-parser@2.3.0.txt"
+      "notice": "generated/body-parser@2.4.0.txt"
     },
     {
       "name": "bundle-name",
@@ -1151,11 +1151,11 @@
     },
     {
       "name": "fast-uri",
-      "version": "3.1.8",
+      "version": "3.1.9",
       "license": "BSD-3-Clause",
       "path": "node_modules/fast-uri",
       "source": "https://github.com/fastify/fast-uri",
-      "notice": "generated/fast-uri@3.1.8.txt"
+      "notice": "generated/fast-uri@3.1.9.txt"
     },
     {
       "name": "fflate",
@@ -1479,11 +1479,11 @@
     },
     {
       "name": "markdown-it",
-      "version": "15.0.2",
+      "version": "15.0.3",
       "license": "MIT",
       "path": "node_modules/markdown-it",
       "source": "markdown-it/markdown-it",
-      "notice": "generated/markdown-it@15.0.2.txt"
+      "notice": "generated/markdown-it@15.0.3.txt"
     },
     {
       "name": "marked",
@@ -1743,11 +1743,11 @@
     },
     {
       "name": "qs",
-      "version": "6.16.0",
+      "version": "6.17.1",
       "license": "BSD-3-Clause",
       "path": "node_modules/qs",
       "source": "https://github.com/ljharb/qs",
-      "notice": "generated/qs@6.16.0.txt"
+      "notice": "generated/qs@6.17.1.txt"
     },
     {
       "name": "range-parser",
@@ -2087,11 +2087,11 @@
     },
     {
       "name": "zod",
-      "version": "3.25.76",
+      "version": "4.6.7",
       "license": "MIT",
       "path": "node_modules/zod",
       "source": "https://github.com/colinhacks/zod",
-      "notice": "generated/zod@3.25.76.txt"
+      "notice": "generated/zod@4.6.7.txt"
     },
     {
       "name": "zod-to-json-schema",

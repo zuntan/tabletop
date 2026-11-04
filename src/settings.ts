@@ -1,3 +1,4 @@
+import {partialInputSchema} from './partial-input-schema';
 import {MAX_OBJECTS} from './data-limits';
 import { z } from 'zod';
 import type { DeskObject } from './model';
@@ -46,7 +47,7 @@ export const seriesSchema = appearanceSchema.extend({
       return thread;
     }
     return value;
-  }, pinThreadSchema).default({}),
+  }, pinThreadSchema).prefault({}),
   id: z.string().min(1).max(100),
   name: z.string().trim().min(1).max(100),
   format: formatSchema.default('decimal'),
@@ -55,14 +56,14 @@ export const seriesSchema = appearanceSchema.extend({
   height: z.number().finite().min(1).max(100_000).default(48),
   cornerRadius: z.number().finite().min(0).max(100_000).default(12),
 }).strict();
-export const seriesPatchSchema = seriesSchema.omit({ id: true }).partial().extend({ thread: pinThreadSchema.partial().optional() }).strict();
+export const seriesPatchSchema = partialInputSchema(seriesSchema.omit({ id: true })).extend({ thread: partialInputSchema(pinThreadSchema).optional() }).strict();
 export const settingsOperations = [
   z.object({ kind: z.literal('desk_rename'), name: deskNameSchema }).strict(),
   z.object({ kind: z.literal('initial_view_update'), targetId:z.string().min(1).max(100).nullable() }).strict(),
-  z.object({ kind: z.literal('grid_update'), patch: gridSettingsSchema.partial() }).strict(),
-  z.object({ kind: z.literal('background_update'), patch: backgroundSchema.partial() }).strict(),
-  z.object({ kind: z.literal('defaults_update'), patch: appearanceSchema.partial() }).strict(),
-  z.object({ kind: z.literal('series_add'), series: seriesSchema.partial().required({ id: true, name: true }) }).strict(),
+  z.object({ kind: z.literal('grid_update'), patch: partialInputSchema(gridSettingsSchema) }).strict(),
+  z.object({ kind: z.literal('background_update'), patch: partialInputSchema(backgroundSchema) }).strict(),
+  z.object({ kind: z.literal('defaults_update'), patch: partialInputSchema(appearanceSchema) }).strict(),
+  z.object({ kind: z.literal('series_add'), series: partialInputSchema(seriesSchema).required({ id: true, name: true }) }).strict(),
   z.object({ kind: z.literal('series_update'), id: z.string(), patch: seriesPatchSchema }).strict(),
   z.object({ kind: z.literal('label_add'), id: z.string().min(1).max(100), seriesId: z.string(),
     x: z.number().finite().min(-1_000_000).max(1_000_000), y: z.number().finite().min(-1_000_000).max(1_000_000),
@@ -71,8 +72,8 @@ export const settingsOperations = [
 export type Appearance = z.infer<typeof appearanceSchema>;
 export type Series = z.infer<typeof seriesSchema>;
 export const settingsSchema = z.object({ defaults: appearanceSchema, series: z.array(seriesSchema).max(MAX_OBJECTS),
-  grid: gridSettingsSchema.default({}),
-  background: backgroundSchema.default({}),
+  grid: gridSettingsSchema.prefault({}),
+  background: backgroundSchema.prefault({}),
   name: deskNameSchema.default(''),
   initialFocusId:z.string().min(1).max(100).nullable().optional(),
 }).strict();

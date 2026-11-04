@@ -3,3 +3,5 @@ dist/
 *.log
 .env
 dist-pages/
+release-info.json
+release-artifacts/

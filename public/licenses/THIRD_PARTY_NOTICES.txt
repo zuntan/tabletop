@@ -2744,12 +2744,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 
 ========================================================================
-generated/argparse@3.0.2.txt
+generated/argparse@3.0.4.txt
 ========================================================================
-argparse@3.0.2
+argparse@3.0.4
 License: PSF-2.0
 Source: nodeca/argparse
-npm artifact: https://registry.npmjs.org/argparse/-/argparse-3.0.2.tgz
+npm artifact: https://registry.npmjs.org/argparse/-/argparse-3.0.4.tgz
 
 
 --- LICENSE ---
@@ -2805,12 +2805,12 @@ Agreement.
 
 
 ========================================================================
-generated/body-parser@2.3.0.txt
+generated/body-parser@2.4.0.txt
 ========================================================================
-body-parser@2.3.0
+body-parser@2.4.0
 License: MIT
 Source: expressjs/body-parser
-npm artifact: https://registry.npmjs.org/body-parser/-/body-parser-2.3.0.tgz
+npm artifact: https://registry.npmjs.org/body-parser/-/body-parser-2.4.0.tgz
 
 
 --- LICENSE ---
@@ -6725,12 +6725,12 @@ SOFTWARE.
 
 
 ========================================================================
-generated/fast-uri@3.1.8.txt
+generated/fast-uri@3.1.9.txt
 ========================================================================
-fast-uri@3.1.8
+fast-uri@3.1.9
 License: BSD-3-Clause
 Source: https://github.com/fastify/fast-uri
-npm artifact: https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.8.tgz
+npm artifact: https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.9.tgz
 
 
 --- LICENSE ---
@@ -8094,12 +8094,12 @@ terms above.
 
 
 ========================================================================
-generated/markdown-it@15.0.2.txt
+generated/markdown-it@15.0.3.txt
 ========================================================================
-markdown-it@15.0.2
+markdown-it@15.0.3
 License: MIT
 Source: markdown-it/markdown-it
-npm artifact: https://registry.npmjs.org/markdown-it/-/markdown-it-15.0.2.tgz
+npm artifact: https://registry.npmjs.org/markdown-it/-/markdown-it-15.0.3.tgz
 
 
 --- LICENSE ---
@@ -9198,12 +9198,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 
 ========================================================================
-generated/qs@6.16.0.txt
+generated/qs@6.17.1.txt
 ========================================================================
-qs@6.16.0
+qs@6.17.1
 License: BSD-3-Clause
 Source: https://github.com/ljharb/qs
-npm artifact: https://registry.npmjs.org/qs/-/qs-6.16.0.tgz
+npm artifact: https://registry.npmjs.org/qs/-/qs-6.17.1.tgz
 
 
 --- LICENSE.md ---
@@ -10582,12 +10582,12 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 
 ========================================================================
-generated/zod@3.25.76.txt
+generated/zod@4.6.7.txt
 ========================================================================
-zod@3.25.76
+zod@4.6.7
 License: MIT
 Source: https://github.com/colinhacks/zod
-npm artifact: https://registry.npmjs.org/zod/-/zod-3.25.76.tgz
+npm artifact: https://registry.npmjs.org/zod/-/zod-4.6.7.tgz
 
 
 --- LICENSE ---

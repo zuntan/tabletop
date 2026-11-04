@@ -1,3 +1,4 @@
+import {partialInputSchema} from './partial-input-schema';
 import {equalValue} from './value-equality';
 import {MAX_ASSET_BYTES,MAX_OBJECTS} from './data-limits';
 import {reactionPlacements} from './reaction-layout';
@@ -123,8 +124,8 @@ function normalizeLegacyConnector(input: unknown): unknown {
     endMarker: object.endMarker === undefined ? (object.type === 'arrow' ? 'arrow' : 'none') : object.endMarker };
 }
 export const objectSchema = z.preprocess(normalizeLegacyConnector, objectFields);
-export const patchSchema = objectFields.omit({ id: true, type: true }).partial();
-const addObjectFields = objectFields.partial().required({ id: true, type: true });
+export const patchSchema = partialInputSchema(objectFields.omit({ id: true, type: true }));
+const addObjectFields = partialInputSchema(objectFields).required({ id: true, type: true });
 const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'qrcode', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label', 'wayfinder']) })
   .transform(object => normalizeLegacyConnector(object) as z.input<typeof addObjectFields>);
 export const operationSchema = z.discriminatedUnion('kind', [
