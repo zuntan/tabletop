@@ -1,5 +1,7 @@
 # リリース用ソースZIPの生成
 
+最新状態（2026-11-04）：Tabletop 0.1.0は公開済み。配布元は `e7b8699`、タグは `v0.1.0` に固定。今後の開発先は `develop`。公開完了の詳細は末尾を参照。
+
 2026-11-03。配布は `tabletop-X.Y.Z.zip` とその `.sha256`。タグ時点のGit管理ファイルに `release-info.json` を加え、一つの `tabletop-X.Y.Z/` フォルダーへまとめる。node_modulesやdist、未追跡ファイルは入らない。docs_develの文章は現行の配布範囲に含むが、desk-snapshotsと作業用.tabletop、生成物のoutputは配布から除外する。docs/tabletopの公開用机は同梱する。
 
 ## 自動処理
@@ -71,3 +73,19 @@ docs_develを置かない一時環境でも、通常版・Pages版ビルド、de
 2026-11-04：INSTALLの再接続説明へ、pi-mcp-adapterのアイドル停止とlifecycle／idleTimeout設定の補足を追加。5.3.0の確認記録と現行公式説明を参照し、Codex等の共通設定ではないことを明記。この追記はまだ未コミットで、79cc5f2の下書きZIPにも未反映。
 
 2026-11-04：利用者からINSTALL補足のコミットと⑧の実行を指示された。README机のINSTALLカードにも同じ補足を反映。文書更新を含む配布ZIPを再生成・検証した後、Releaseを公開し、公開URL・添付・Pagesを確認する。公開後は合意済みのdevelop運用へ移行する。
+
+## ⑧ 公開完了（2026-11-04）
+
+- Release：https://github.com/zuntan/tabletop/releases/tag/v0.1.0
+- 公開日時：2026-11-04 09:08:15 UTC（18:08:15 JST）。
+- 配布元：`e7b869976e3273b44079ec1de66b27c06b7a9f20`、`v0.1.0`。これ以降はタグを移動しない。
+- 最終Release Actions：41804489361成功。Gitなし展開から両ビルド・単体322件を確認。
+- 最終Pages Actions：41804472181成功。
+- ZIP：14,718,883バイト。SHA-256：`94b5dfad480df5130bc47fe9b597a8d650b050a39930dfae0a5e17e670a40dfc`。
+- 認証なしのRelease参照・ZIP／SHA-256ダウンロードを確認し、公開前の検証済み添付と同一であることを照合。
+- 公開PagesのREADME机64件・チュートリアル机774件を実ブラウザで読み込み、INSTALLのpi補足と初期フォーカスを確認。
+- docs_develの文章を含む配布方針は維持。desk_helpの実行時原稿はdocs/helpにあり、docs_develは動作時不要。
+
+最終ZIPはINSTALLとREADME机の補足・検証記録を更新したもの。src・scripts・tests・依存定義は⑦で実動作確認した79cc5f2のZIPとバイト一致を確認している。
+
+今後はdevelopで開発し、次版を公開するときにmainへ反映して新しいタグを付ける。公開後、リリース時点のmainからdevelopを作成して切り替えた。この公開完了記録はdevelop側へ保存する。mainとv0.1.0はリリース時点のまま維持する。
