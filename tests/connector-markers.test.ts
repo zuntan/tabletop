@@ -5,21 +5,29 @@ import { unzipSync, strFromU8 } from 'fflate';
 import { Desk, objectSchema } from '../src/model';
 import { decodeDeskFile, encodeDeskFile } from '../src/desk-file';
 
-test('all archived desks keep their objects and legacy arrow intent in canonical lines', async () => {
-  const root = new URL('../docs_devel/desk-snapshots/', import.meta.url);
-  for (const name of (await readdir(root)).filter(name => name.endsWith('.tabletop'))) {
-    const bytes = await readFile(new URL(name, root));
-    const old = JSON.parse(strFromU8(unzipSync(bytes)['manifest.json']));
-    const decoded = await decodeDeskFile(bytes);
-    assert.equal(decoded.objects.length, old.objects.length, name);
-    for (const before of old.objects) {
-      const after = decoded.objects.find(object => object.id === before.id)!;
-      assert.ok(after, `${name}: ${before.id}`);
-      if (before.type === 'line' || before.type === 'arrow') {
-        assert.equal(after.type, 'line');
-        assert.equal(after.startMarker, before.startMarker ?? 'none');
-        assert.equal(after.endMarker, before.endMarker ?? (before.type === 'arrow' ? 'arrow' : 'none'));
-        assert.equal(after.strokeWidth, before.strokeWidth);
+test('public and available historical desks keep their objects and legacy arrow intent in canonical lines', async () => {
+  const roots = [new URL('../docs/tabletop/', import.meta.url), new URL('../docs_devel/desk-snapshots/', import.meta.url)];
+  for (const [index, root] of roots.entries()) {
+    const names = await readdir(root).catch(error => {
+      // Source ZIPs retain public examples but intentionally omit historical working desks.
+      if (index === 1 && error.code === 'ENOENT') return [];
+      throw error;
+    });
+    if (index === 0) assert.ok(names.some(name => name.endsWith('.tabletop')), 'public desk fixtures must be present');
+    for (const name of names.filter(name => name.endsWith('.tabletop'))) {
+      const bytes = await readFile(new URL(name, root));
+      const old = JSON.parse(strFromU8(unzipSync(bytes)['manifest.json']));
+      const decoded = await decodeDeskFile(bytes);
+      assert.equal(decoded.objects.length, old.objects.length, name);
+      for (const before of old.objects) {
+        const after = decoded.objects.find(object => object.id === before.id)!;
+        assert.ok(after, `${name}: ${before.id}`);
+        if (before.type === 'line' || before.type === 'arrow') {
+          assert.equal(after.type, 'line');
+          assert.equal(after.startMarker, before.startMarker ?? 'none');
+          assert.equal(after.endMarker, before.endMarker ?? (before.type === 'arrow' ? 'arrow' : 'none'));
+          assert.equal(after.strokeWidth, before.strokeWidth);
+        }
       }
     }
   }
