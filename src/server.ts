@@ -1,3 +1,4 @@
+import { nextAutomaticDeskName } from './desk-launch-name';
 import {MAX_WS_BYTES} from './data-limits';
 import {registerPdfTools} from './pdf-tools.js';
 import {pinFitFields} from './pin-fit';
@@ -168,8 +169,7 @@ for (const [name, description, inputSchema] of tools) {
   });
 }
 registerBrowserTools(mcp,async()=>{
- const names=new Set((await desks.list()).filter(d=>d.connected).map(d=>d.name||'無題'));
- let initialName='無題',i=2;while(names.has(initialName))initialName=`無題(${i++})`;
+ const initialName=nextAutomaticDeskName((await desks.list()).filter(d=>d.connected).map(d=>typeof d.name==='string'?d.name:''));
  return {url:`${baseUrl}#token=${encodeURIComponent(token)}&port=${port}`,listening:network.info().listening,accepting:desks.canBootstrap&&!network.isChanging,connected:desks.connectedCount>0,initialName};
 });
 registerPortTools(mcp,async target=>{

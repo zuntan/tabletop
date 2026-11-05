@@ -305,3 +305,22 @@ test('English copy notices and standalone status survive language switching', {t
   assert.deepEqual(errors,[]);
  }finally{await close();}
 });
+
+test('automatic launch names use the initial language and explicit names stay literal', {timeout:35_000}, async()=>{
+ const {page,call,close,errors,port}=await openTestDesk('ui-language-launch',undefined,undefined,'en-US');
+ const browser=page.context().browser()!;const ja=await browser.newPage({locale:'ja-JP'}),en=await browser.newPage({locale:'en-US'});
+ for(const tab of [ja,en]){tab.setDefaultTimeout(5000);tab.on('pageerror',error=>errors.push(error.message));}
+ try{
+  const before=await call('desk_state');
+  await ja.goto(`http://127.0.0.1:${port}/?connect=off&newDeskName=Untitled(2)&newDeskNameAuto=1`);
+  await ja.waitForFunction(()=>document.querySelector('#desk-name')?.textContent==='無題(2)');
+  assert.equal(new URL(ja.url()).searchParams.has('newDeskName'),false);assert.equal(new URL(ja.url()).searchParams.has('newDeskNameAuto'),false);
+  await ja.locator('#desk-menu').click();await ja.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();await ja.locator('#ui-language').selectOption('en');
+  await ja.waitForFunction(()=>document.documentElement.lang==='en');assert.equal(await ja.locator('#desk-name').textContent(),'無題(2)');
+  await en.goto(`http://127.0.0.1:${port}/?connect=off&newDeskName=Untitled(3)&newDeskNameAuto=1`);
+  await en.waitForFunction(()=>document.querySelector('#desk-name')?.textContent==='Untitled(3)');
+  await en.goto(`http://127.0.0.1:${port}/?connect=off&newDeskName=${encodeURIComponent('無題(4)')}`);
+  await en.waitForFunction(()=>document.querySelector('#desk-name')?.textContent==='無題(4)');
+  assert.deepEqual(await call('desk_state'),before);assert.deepEqual(errors,[]);
+ }finally{await ja.close();await en.close();await close();}
+});

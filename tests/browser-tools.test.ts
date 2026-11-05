@@ -48,7 +48,7 @@ test('standalone launch strips all credentials and never needs or changes pairin
   assert.equal(state.connected,true);assert.equal(state.accepting,false);assert.doesNotMatch(JSON.stringify(result),/private-token|private=secret/);
   Object.assign(state,{initialName:'無題(2)'});
   assert.notEqual((await callTestTool(client,{name:'desk_browser_open',arguments:{mode:'standalone'}})).isError,true);
-  const named=new URL(launched[1]);assert.equal(named.searchParams.get('newDeskName'),'無題(2)');assert.equal(named.searchParams.get('connect'),'off');assert.equal(named.hash,'');
+  const named=new URL(launched[1]);assert.equal(named.searchParams.get('newDeskName'),'無題(2)');assert.equal(named.searchParams.get('newDeskNameAuto'),'1');assert.equal(named.searchParams.get('connect'),'off');assert.equal(named.hash,'');
   state.listening=false;assert.equal((await callTestTool(client, {name:'desk_browser_open',arguments:{mode:'standalone'}})).isError,true);assert.equal(launched.length,2);
  }finally{await client.close();await server.close();}
 });

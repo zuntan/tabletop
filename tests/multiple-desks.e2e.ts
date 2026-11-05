@@ -10,7 +10,7 @@ import {openTestDesk} from './desk-browser';
 
 test('every desk tool requires a target and two live desks keep edits, bells, files and release isolated',{timeout:45_000},async()=>{
  const name='multiple-desks',fixture=await openTestDesk(name),{page,client,port,close}=fixture;
- const other=await page.context().browser()!.newPage();
+ const other=await page.context().browser()!.newPage({locale:'ja-JP'});
  const root=await mkdtemp(join(tmpdir(),'multi-desks-'));
  const raw=async(name:string,deskId:string,args:Record<string,unknown>={})=>{
   const result=await client.callTool({name,arguments:{deskId,...args}});
@@ -43,6 +43,8 @@ test('every desk tool requires a target and two live desks keep edits, bells, fi
   await raw('desk_point',a,{ids:['same']});assert.deepEqual((await raw('desk_selection',b)).aiPointing,[]);
   await page.locator('#desk-bell').click();await other.locator('#desk-bell').click();
   const bells=await Promise.all([raw('desk_bell_wait',a,{timeoutMs:0}),raw('desk_bell_wait',b,{timeoutMs:0})]);assert.ok(bells.every(r=>r.status==='bell'));assert.notEqual(bells[0].epoch,bells[1].epoch);
+  // The MCP wait result can arrive before the browser's independent bell-state push.
+  await Promise.all([page,other].map(tab=>tab.waitForFunction(()=>document.querySelector('#bell-led')?.getAttribute('data-lit')==='true')));
   await raw('desk_summary',a);assert.equal(await other.locator('#bell-led').getAttribute('data-lit'),'true');
   await global('desk_connections');assert.equal(await other.locator('#bell-led').getAttribute('data-lit'),'true');
   const shares=await Promise.all([raw('desk_share_open',a,{confirm:true,publicBaseUrl:'https://a.example',port:await freePort()}),raw('desk_share_open',b,{confirm:true,publicBaseUrl:'https://b.example',port:await freePort()})]);

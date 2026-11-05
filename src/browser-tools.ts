@@ -33,7 +33,7 @@ export function registerBrowserTools(mcp: McpServer, state: () => BrowserLaunchS
     if (mode==='connected' && !current.accepting) return fail('New/manual pairing acceptance is closed. Follow desk_connection_info; use recovery for an existing pairing. No browser was opened.');
     try {
       const targetUrl=new URL(mode==='standalone'?`${new URL(current.url).origin}/?connect=off`:current.url);
-      if(current.initialName)targetUrl.searchParams.set('newDeskName',current.initialName);
+      if(current.initialName){targetUrl.searchParams.set('newDeskName',current.initialName);targetUrl.searchParams.set('newDeskNameAuto','1');}
       const target=targetUrl.href;
       await launch(target);
       return { content: [{ type: 'text' as const, text: JSON.stringify({ launchRequested: true,mode,

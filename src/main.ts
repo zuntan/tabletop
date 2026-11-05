@@ -1,3 +1,4 @@
+import { localizedLaunchName } from './desk-launch-name';
 import { languageChangeEvent, t, getUiLanguage } from './i18n';
 import { translateUi, uiAttribute, uiText, type UiKey } from './i18n/dom';
 import {initialFocusTarget} from './initial-focus';
@@ -1464,10 +1465,13 @@ $<HTMLFormElement>('#connect-form').onsubmit = event => {
   } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
 };
 const startupParameters=new URLSearchParams(location.search);
-const suggestedDeskName=startupParameters.get('newDeskName');
+const launchName=startupParameters.get('newDeskName');
+const suggestedDeskName=launchName===null?null:localizedLaunchName(launchName,startupParameters.get('newDeskNameAuto')==='1',t('creation:untitled'));
 if(suggestedDeskName&&!desk.list().length&&!desk.settingsSnapshot().name){
  try{desk.execute({operations:[{kind:'desk_rename',name:suggestedDeskName}]});notify(t('messages:deskNamed',{name:suggestedDeskName}));}catch{/* Invalid launch hints never prevent opening a desk. */}
- startupParameters.delete('newDeskName');history.replaceState(null,'',location.pathname+(startupParameters.size?'?'+startupParameters.toString():'')+location.hash);
+}
+if(launchName!==null||startupParameters.has('newDeskNameAuto')){
+ startupParameters.delete('newDeskName');startupParameters.delete('newDeskNameAuto');history.replaceState(null,'',location.pathname+(startupParameters.size?'?'+startupParameters.toString():'')+location.hash);
 }
 const standaloneStartup=pagesMode||startupParameters.get('connect')==='off';
 if(standaloneStartup){
