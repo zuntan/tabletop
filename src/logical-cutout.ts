@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import { z } from 'zod';
 import type { DeskObject } from './model';
 import { shapePaths, isShapeType } from './shape-definitions';
@@ -29,7 +30,7 @@ export function normalizeCutoutPatch(object:DeskObject,patch:Partial<DeskObject>
  return{...moved,...patch};
 }
 export function moldPath(mold:DeskObject){
- if(!isShapeType(mold.type))throw new Error('型には閉じた図形を選んでください');
+ if(!isShapeType(mold.type))throw new DeskError('cutoutMoldType');
  if(mold.type==='ellipse')return'M.5 0 A.5 .5 0 1 1 .5 1 A.5 .5 0 1 1 .5 0 Z';
  if(mold.type==='rect')return'M0 0 H1 V1 H0 Z';
  if(mold.type==='roundedRect'){
@@ -39,10 +40,10 @@ export function moldPath(mold:DeskObject){
  return shapePaths(mold.type,1,1)!.outline;
 }
 export function applyCutoutPatch(target:DeskObject,mold:DeskObject):Partial<DeskObject>{
- if(!cutoutTarget(target))throw new Error('型抜き対象はカード・画像・SVG・Mermaid・Web資料です');
+ if(!cutoutTarget(target))throw new DeskError('cutoutTargetType');
  const original=sourceRect(target),window={x:mold.x,y:mold.y,width:mold.width,height:mold.height};
  if(Math.min(original.x+original.width,window.x+window.width)<=Math.max(original.x,window.x)||
-    Math.min(original.y+original.height,window.y+window.height)<=Math.max(original.y,window.y))throw new Error('型と対象の中身が重なっていません。変更していません');
+    Math.min(original.y+original.height,window.y+window.height)<=Math.max(original.y,window.y))throw new DeskError('cutoutNoOverlap');
  const layout=target.cutout?.layout??{width:original.width,height:original.height};
  return{x:window.x,y:window.y-cutoutTitle(target),width:window.width,height:window.height+cutoutTitle(target),
   cutout:{enabled:true,path:moldPath(mold),layout,source:{x:(original.x-window.x)/window.width,y:(original.y-window.y)/window.height,width:original.width/window.width,height:original.height/window.height}}};

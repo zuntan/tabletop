@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import {MAX_ASSET_BYTES,MAX_MANIFEST_BYTES,MAX_DESK_BYTES} from './data-limits';
 
 const encoder=new TextEncoder(),decoder=new TextDecoder();
@@ -24,7 +25,7 @@ export function packEnvelope(value:unknown):Uint8Array{
  if(header.length>MAX_MANIFEST_BYTES)throw Error('Transfer metadata exceeds 10MB');
  const out=new Uint8Array(4+header.length+total);new DataView(out.buffer).setUint32(0,header.length);out.set(header,4);let offset=4+header.length;for(const a of attachments){out.set(a,offset);offset+=a.length;}return out;
 }
-function checkImage(size:number){if(size>MAX_ASSET_BYTES)throw Error('素材は1点10MB以下にしてください');}
+function checkImage(size:number){if(size>MAX_ASSET_BYTES)throw new DeskError('assetSize');}
 export function unpackEnvelope(bytes:Uint8Array):any{
  if(bytes.length<4)throw Error('Invalid binary envelope');const length=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength).getUint32(0);
  if(length>MAX_MANIFEST_BYTES||length>bytes.length-4)throw Error('Invalid metadata size');

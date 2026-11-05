@@ -1,6 +1,8 @@
+import { DeskError } from './desk-errors';
+import diagnostics from './i18n/en/errors.json';
 import { t, languageChangeEvent } from './i18n';
 import { uiText, uiAttribute } from './i18n/dom';
-export const THINKING_MODE_REFUSAL = '利用者は今、ひとりで考えています。この操作は実行していません。解除を促したり、自動で再試行したりせず、依頼を待ってください。';
+export const THINKING_MODE_REFUSAL = diagnostics.thinkingMode;
 const readMethods = new Set(['summary', 'list', 'get', 'state', 'file_snapshot', 'file_saved', 'settings', 'context', 'selection', 'changes', 'camera_get', 'ui_get', 'share_read', 'text_measure', 'mermaid_render', 'qr_render', 'raster', 'pdf_export']);
 
 /** Human-only, per-tab UI state; reconnects and document loads do not change it. */
@@ -32,7 +34,7 @@ export function createThinkingMode(header: HTMLElement, onAlone: () => void, not
   sync(); header.append(button);
   return {
     assertAllowed(method: string) {
-      if (alone && !readMethods.has(method)) throw new Error(THINKING_MODE_REFUSAL);
+      if (alone && !readMethods.has(method)) throw new DeskError('thinkingMode');
     },
   };
 }

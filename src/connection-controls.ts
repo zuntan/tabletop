@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import { uiAttribute } from './i18n/dom';
 import { t } from './i18n';
 import QRCode from 'qrcode';
@@ -24,7 +25,7 @@ export function connectionControls(root: HTMLElement, handoff: () => void, error
   root.querySelector<HTMLButtonElement>('#handoff-start')!.onclick = async () => {
     if (!await confirmAction(t('editing:handoffTitle'),t('editing:handoffMessage'),t('editing:release'))) return;
     hide();
-    try { handoff(); } catch (cause) { error(cause instanceof Error ? cause.message : String(cause)); }
+    try { handoff(); } catch (cause) { error(uiErrorMessage(cause)); }
   };
   return {
     hide,

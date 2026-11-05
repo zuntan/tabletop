@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import {rulerGroup,rulerFor} from './ruler-layout';
 import type {DeskObject,Operation} from './model';
 import {bounds,endpoints,isConnector} from './geometry';
@@ -15,14 +16,14 @@ const differs=(a:number|undefined,b:number|undefined)=>a===undefined||b===undefi
 const geometryKeys=['x','y','x2','y2','width','height','callout','startBinding','endBinding','startJunction','endJunction','cutout'] as const;
 const structuralClip=['clipMembers','clipAnchor','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipStyle'];
 export function fileCreateOperations(objects:DeskObject[],ids:string[],grid?:GridSettings,title='クリアファイル'):Operation[]{
- if(!ids.length)throw new Error('クリアファイルに入れるものを選択してください');
+ if(!ids.length)throw new DeskError('fileSelect');
  const selected=ids.map(id=>objects.find(o=>o.id===id)!);
- if(selected.some(o=>!o||['label','prop','wayfinder'].includes(o.type)))throw new Error('ピン・小物・道しるべはクリアファイルに入れられません。選択から外してください');
- if(selected.some(o=>fileFor(objects,o.id)))throw new Error('クリアファイルの入れ子・結合はできません。先に解除してください');
+ if(selected.some(o=>!o||['label','prop','wayfinder'].includes(o.type)))throw new DeskError('fileUnsupportedSelection');
+ if(selected.some(o=>fileFor(objects,o.id)))throw new DeskError('fileAlreadyContained');
  const members=new Set(ids.flatMap(id=>(rulerFor(objects,id)?rulerGroup(objects,id):clipGroup(objects,id)).map(o=>o.id)));
  const contents=objects.filter(o=>members.has(o.id));
- if(contents.some(o=>o.locked))throw new Error('ロックを解除してからクリアファイルへ入れてください');
- if(contents.some(o=>o.type==='clip'&&!o.clipMembers?.length))throw new Error('空のクリップはクリアファイルに入れられません');
+ if(contents.some(o=>o.locked))throw new DeskError('fileLocked');
+ if(contents.some(o=>o.type==='clip'&&!o.clipMembers?.length))throw new DeskError('fileEmptyClip');
  const boxes=contents.map(bounds),x=Math.min(...boxes.map(b=>b.x))-FILE_MARGIN,y=Math.min(...boxes.map(b=>b.y))-FILE_MARGIN-FILE_TITLE;
  const corner={x:Math.max(...boxes.map(b=>b.x+b.width))+FILE_MARGIN,y:Math.max(...boxes.map(b=>b.y+b.height))+FILE_MARGIN};
  const origin=grid?.enabled?gridPoint({x,y},grid):{x,y},dx=origin.x-x,dy=origin.y-y;
@@ -38,19 +39,19 @@ export function assertFileOperation(scene:DeskObject[],operation:Operation){
  const file=fileFor(scene,operation.id);if(!file)return;
  const root=file.id===operation.id,object=scene.find(o=>o.id===operation.id)!;
  if(operation.kind==='delete'){
-  if(!root&&(clipFor(scene,object.id)||rulerFor(scene,object.id)))throw new Error('ファイル内のクリップと紙は削除できません。先にファイルを解除してください');return;
+  if(!root&&(clipFor(scene,object.id)||rulerFor(scene,object.id)))throw new DeskError('fileReleaseBeforeDelete');return;
  }
- if(operation.kind==='reorder'&&!root)throw new Error('ファイル内の前後関係は変更できません。先に解除してください');
+ if(operation.kind==='reorder'&&!root)throw new DeskError('fileOrderFrozen');
  if(operation.kind!=='update')return;
  const keys=Object.keys(operation.patch);
- if(keys.some(k=>k==='fileMembers'||k.startsWith('ruler')||k==='width'||k==='height'||(!root&&structuralClip.includes(k))))throw new Error('ファイル内のサイズ・束の構造は変更できません。先に解除してください');
+ if(keys.some(k=>k==='fileMembers'||k.startsWith('ruler')||k==='width'||k==='height'||(!root&&structuralClip.includes(k))))throw new DeskError('fileStructureFrozen');
  if(!root&&keys.some(k=>geometryKeys.includes(k as typeof geometryKeys[number]))) {
   // Dragging a member is a translation of its enclosing file, not a geometry edit.
   const patch=operation.patch;
-  if(keys.some(k=>!['x','y','x2','y2'].includes(k))||patch.x===undefined||patch.y===undefined)throw new Error('ファイル内の配置は固定されています。先に解除してください');
+  if(keys.some(k=>!['x','y','x2','y2'].includes(k))||patch.x===undefined||patch.y===undefined)throw new DeskError('filePositionFrozen');
   if(isConnector(object)){
    const p=endpoints(object),dx=patch.x-p.start.x,dy=patch.y-p.start.y;
-   if(patch.x2===undefined||patch.y2===undefined||Math.abs(patch.x2-p.end.x-dx)>1e-8||Math.abs(patch.y2-p.end.y-dy)>1e-8)throw new Error('ファイル内の端点は変更できません。先に解除してください');
+   if(patch.x2===undefined||patch.y2===undefined||Math.abs(patch.x2-p.end.x-dx)>1e-8||Math.abs(patch.y2-p.end.y-dy)>1e-8)throw new DeskError('fileEndpointsFrozen');
   }
  }
 }
@@ -62,19 +63,19 @@ export function resolveFiles(input:DeskObject[],before:DeskObject[]=[]):DeskObje
   const members=(file.fileMembers??[]).filter(id=>{
    if(map.has(id))return true;
    if(old?.fileMembers?.includes(id))return false;
-   throw new Error('クリアファイルの中身が見つかりません');
+   throw new DeskError('fileContentsMissing');
   });
-  if(!members.length){if(old){map.delete(file.id);continue;}throw new Error('空のクリアファイルは作成できません');}
+  if(!members.length){if(old){map.delete(file.id);continue;}throw new DeskError('fileEmpty');}
   if(new Set(members).size!==members.length)throw new Error('Duplicate file member');
-  for(const id of members){const o=map.get(id)!;if(['file','prop','label','wayfinder'].includes(o.type))throw new Error('クリアファイルに入れられない種類です');if(owners.has(id))throw new Error('Multiple clear file ownership');owners.set(id,file.id);}
-  for(const id of members){const c=clipFor(input,id);if(c&&(!c.clipMembers?.length||![c.id,...c.clipMembers].every(id=>members.includes(id))))throw new Error('クリップの束全体をクリアファイルへ入れてください');}
-  for(const id of members){const r=rulerFor(input,id);if(r&&![r.id,...r.rulerMembers?.map(m=>m.id)??[]].every(id=>members.includes(id)))throw Error('定規と所属カード全体をクリアファイルへ入れてください');}
+  for(const id of members){const o=map.get(id)!;if(['file','prop','label','wayfinder'].includes(o.type))throw new DeskError('fileUnsupportedMember');if(owners.has(id))throw new Error('Multiple clear file ownership');owners.set(id,file.id);}
+  for(const id of members){const c=clipFor(input,id);if(c&&(!c.clipMembers?.length||![c.id,...c.clipMembers].every(id=>members.includes(id))))throw new DeskError('fileWholeClip');}
+  for(const id of members){const r=rulerFor(input,id);if(r&&![r.id,...r.rulerMembers?.map(m=>m.id)??[]].every(id=>members.includes(id)))throw new DeskError('fileWholeRuler');}
   file.fileMembers=members;
   if(!old)continue;
   let dx=file.x-old.x,dy=file.y-old.y;
   const moved=members.map(id=>({now:map.get(id)!,old:previous.get(id)})).filter(p=>p.old&&(differs(p.now.x,p.old.x)||differs(p.now.y,p.old.y)));
   if(!dx&&!dy&&moved.length){dx=moved[0].now.x-moved[0].old!.x;dy=moved[0].now.y-moved[0].old!.y;file.x=old.x+dx;file.y=old.y+dy;}
-  if(moved.some(p=>Math.abs(p.now.x-p.old!.x-dx)>1e-8||Math.abs(p.now.y-p.old!.y-dy)>1e-8))throw new Error('ファイル内の相対位置は変更できません');
+  if(moved.some(p=>Math.abs(p.now.x-p.old!.x-dx)>1e-8||Math.abs(p.now.y-p.old!.y-dy)>1e-8))throw new DeskError('fileRelativePosition');
   if(dx||dy)for(const id of members){const o=map.get(id)!,prior=previous.get(id);if(!prior)continue;Object.assign(o,translated(prior,dx,dy));
    for(const field of ['startBinding','endBinding'] as const)if(o[field]&&!members.includes(o[field]!.objectId))o[field]=null;
    if(o.callout?.binding&&!members.includes(o.callout.binding.objectId))o.callout={...o.callout,binding:null};

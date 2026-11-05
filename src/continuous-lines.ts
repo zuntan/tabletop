@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import type {DeskObject,Operation} from './model';
 import {snap,type Point,type Binding} from './geometry';
 import {snapConnectorEndpoint,junctionField} from './connector-junctions';
@@ -43,7 +44,7 @@ export function continuousLineOperations(scene:DeskObject[],points:Point[],style
  const attach=(target:LinePoint,object:typeof objects[number],side:'start'|'end')=>{
   const binding=side==='start'?'startBinding':'endBinding';object[binding]=target.binding??null;
   if(!target.endpoint)return;
-  const old=scene.find(o=>o.id===target.endpoint!.id);if(!old||old.type!=='line')throw Error('接続先の線が変わりました');
+  const old=scene.find(o=>o.id===target.endpoint!.id);if(!old||old.type!=='line')throw new DeskError('lineTargetChanged');
   const field=junctionField(target.endpoint.side),id=patches.get(old.id)?.[field]??old[field]??'junction-'+randomUuid();
   object[junctionField(side)]=id;patches.set(old.id,{...patches.get(old.id),[field]:id});
  };

@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import type { DeskObject } from './model';
 import { endpoints, isConnector, type Point } from './geometry';
 import { bindingField, junctionField, type EndpointSide } from './connector-junctions';
@@ -16,7 +17,7 @@ function peersAt(scene:DeskObject[],junction:string){
 /** Explicit line and departure end are also the entry used after a branch choice. */
 export function lineRoute(scene:DeskObject[],lineId:string,from:EndpointSide):WayfinderRoute{
   const first=scene.find(o=>o.id===lineId&&isConnector(o));
-  if(!first)throw new Error('出発する線がありません');
+  if(!first)throw new DeskError('routeStartMissing');
   const visited=new Set<string>(),steps:{object:DeskObject;side:EndpointSide}[]=[];
   let current={object:first,side:from},destination:DeskObject|undefined,branch:RouteBranch|undefined,loop=false;
   while(current){
@@ -25,7 +26,7 @@ export function lineRoute(scene:DeskObject[],lineId:string,from:EndpointSide):Wa
     const exit=opposite(current.side),binding=current.object[bindingField(exit)];
     if(binding){
       const target=scene.find(o=>o.id===binding.objectId);
-      if(!target)throw new Error('経路の接続先がありません');
+      if(!target)throw new DeskError('routeTargetMissing');
       destination=target.type==='wayfinder'&&target.attachment?scene.find(o=>o.id===target.attachment!.objectId):target;
       break;
     }
@@ -57,9 +58,9 @@ export function lineRoute(scene:DeskObject[],lineId:string,from:EndpointSide):Wa
 
 /** Object attachment is separate from the road; arrows never choose travel direction. */
 export function wayfinderRoute(scene:DeskObject[],id:string):WayfinderRoute{
-  const source=scene.find(o=>o.id===id&&o.type==='wayfinder');if(!source)throw new Error('道しるべがありません');
+  const source=scene.find(o=>o.id===id&&o.type==='wayfinder');if(!source)throw new DeskError('wayfinderMissing');
   const ports=scene.filter(isConnector).flatMap(object=>(['start','end'] as const).filter(side=>object[bindingField(side)]?.objectId===id).map(side=>({object,side})));
-  if(ports.length!==1)throw new Error('道しるべには上下左右のどれかへ経路の線を1本つないでください');
+  if(ports.length!==1)throw new DeskError('wayfinderNeedsRoute');
   const start=ports[0],junction=start.object[junctionField(start.side)],peers=junction?peersAt(scene,junction):[];
   if(peers.length>1){const point=endpoints(start.object)[start.side];return {points:[center(source),point],lineIds:[],branch:{point,choices:peers.map(choice)}};}
   const route=lineRoute(scene,start.object.id,start.side);

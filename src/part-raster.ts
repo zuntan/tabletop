@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import {checkAssetBytes} from './data-limits';
 import {dataBytes} from './binary-envelope';
 import type { Desk, DeskObject } from './model';
@@ -31,8 +32,8 @@ export async function rasterRenderedPart(object: DeskObject, source: SVGGElement
     }
   }
   if(contentOnly){
-    if(!object.cutout?.enabled)throw new Error('型抜きがONのパーツを選んでください');
-    if(object.type==='web')throw new Error('Web資料のページ内容は画像コピーに対応していません');
+    if(!object.cutout?.enabled)throw new DeskError('cutoutRequired');
+    if(object.type==='web')throw new DeskError('webRasterUnsupported');
     for(const child of [...clone.children])if(child.tagName!=='defs'&&!child.hasAttribute('data-cutout-content'))child.remove();
     bbox={x:0,y:cutoutTitle(object),width:object.width,height:object.height-cutoutTitle(object)};
   }
@@ -82,16 +83,16 @@ export async function cloneSvgForRaster<T extends SVGElement>(source:T):Promise<
     }
     if (element instanceof SVGTextElement) copy.setAttribute('font-family', getComputedStyle(element).fontFamily);
   });
-  if(source.dataset.qrStatus==='loading'||source.querySelector('[data-qr-status="loading"]'))throw new Error('QRコードを描画中です。表示されてから再実行してください');
-  if(source.dataset.mermaidStatus === 'loading'||source.querySelector('[data-mermaid-status="loading"]')) throw new Error('Mermaidを描画中です。表示されてから再実行してください');
+  if(source.dataset.qrStatus==='loading'||source.querySelector('[data-qr-status="loading"]'))throw new DeskError('qrLoading');
+  if(source.dataset.mermaidStatus === 'loading'||source.querySelector('[data-mermaid-status="loading"]')) throw new DeskError('mermaidLoading');
   // Embedded media must be self-contained before SVG is decoded as an image.
   for (const media of clone.querySelectorAll('image')) {
     const href=media.getAttribute('href') ?? media.getAttributeNS('http://www.w3.org/1999/xlink','href');
     if(href && !href.startsWith('data:')) {
       const response=await fetch(href,{signal:AbortSignal.timeout(5000),credentials:'omit'});
-      if(!response.ok) throw new Error('画像をラスタ化できませんでした。画像の読み込みとアクセス許可を確認してください');
+      if(!response.ok) throw new DeskError('imageRasterFailed');
       const blob=await response.blob();
-      if(blob.size>10_000_000)throw new Error('画像が大きすぎます');
+      if(blob.size>10_000_000)throw new DeskError('imageTooLarge');
       const url=await new Promise<string>((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=reject;r.readAsDataURL(blob);});
       media.setAttribute('href',url);
     }

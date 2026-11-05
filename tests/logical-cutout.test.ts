@@ -1,3 +1,4 @@
+import { DeskError } from '../src/desk-errors';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {Desk} from '../src/model';
@@ -16,7 +17,7 @@ test('cutout copies mold, preserves source, follows move/resize, toggles and ove
 
 test('title is outside window; no intersection is atomic, including title-only overlap',()=>{
  const d=new Desk();d.execute({operations:[{kind:'add',object:{id:'a',type:'image',x:100,y:100,width:400,height:334,src:'data:image/png;base64,AA=='}},{kind:'add',object:{id:'m',type:'rect',x:100,y:100,width:100,height:30}}]});
- const revision=d.revision;assert.throws(()=>d.execute({operations:[{kind:'cutout',id:'a',moldId:'m'}]}),/重なって/);assert.equal(d.revision,revision);
+ const revision=d.revision;assert.throws(()=>d.execute({operations:[{kind:'cutout',id:'a',moldId:'m'}]}),error=>error instanceof DeskError&&error.code==='cutoutNoOverlap');assert.equal(d.revision,revision);
  d.execute({operations:[{kind:'update',id:'m',patch:{y:200,height:100}}]});d.execute({operations:[{kind:'cutout',id:'a',moldId:'m'}]});let a=d.get('a');assert.equal(a.y,166);assert.equal(a.height,134);assert.equal(a.cutout!.layout.height,300);
  d.execute({operations:[{kind:'update',id:'a',patch:{cutout:null}}]});a=d.get('a');assert.equal(a.x,100);assert.equal(a.y,100);assert.equal(a.width,400);assert.equal(a.height,334);
 });

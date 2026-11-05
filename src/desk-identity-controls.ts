@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import { t, languageChangeEvent } from './i18n';
 import { uiText, uiAttribute } from './i18n/dom';
 import type { Desk } from './model';
@@ -39,7 +40,7 @@ export function createDeskIdentityControls(header: HTMLElement, desk: Desk, canE
     try {
       desk.execute({ operations: [{ kind: 'desk_rename', name: input.value }], actor: 'human', expectedRevision });
       finish(); refresh(); report(t('controls:nameChanged'));
-    } catch (error) { report(t('controls:reopenName', { error: error instanceof Error ? error.message : String(error) }), true); }
+    } catch (error) { report(t('controls:reopenName', { error: uiErrorMessage(error) }), true); }
   };
   document.addEventListener(languageChangeEvent, () => {
     const title = desk.settingsSnapshot().name || t('controls:untitled');

@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import { t, languageChangeEvent } from './i18n';
 import { uiText, uiAttribute } from './i18n/dom';
 import { stickerShapeName } from './badge-labels';
@@ -56,7 +57,7 @@ export function createStickerControls(form: HTMLElement, selected:()=>DeskObject
   for(const button of picker.choices.querySelectorAll<HTMLButtonElement>('button')){uiText(button,names[button.dataset.value as keyof typeof names]);uiAttribute(button,'aria-label',names[button.dataset.value as keyof typeof names]);}
   const commit=(action:Parameters<typeof stickerOperations>[1])=>{
     try{const operations=stickerOperations(selected(),action);if(operations.length){apply(operations);if(action.kind==='append'){last={kind:'append',column:action.column??1,color:action.color,shape:action.shape??'circle'};showLastShape();repeated=true;repeatTitle();}}update();}
-    catch(error){update();report(error instanceof Error?error.message:String(error),true);}
+    catch(error){update();report(uiErrorMessage(error),true);}
   };
   origin.onchange=()=>commit({kind:'settings',patch:{origin:origin.value as Stickers['origin']}});
   diameter.onchange=()=>commit({kind:'settings',patch:{diameter:Number(diameter.value)}});

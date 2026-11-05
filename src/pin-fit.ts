@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import {z} from 'zod';
 import type {Desk,Operation} from './model';
 import {tightFrame,type PinFrame} from './pin-shape';
@@ -17,9 +18,9 @@ export function pinFitOperations(desk:Desk,seriesIds:string[],measure?:(text:str
  });
 }
 function browserPinMeasure(){
- if(document.fonts.status!=='loaded')throw new Error('フォントを読み込み中です。少し待って再実行してください');
+ if(document.fonts.status!=='loaded')throw new DeskError('fontsLoading');
  const context=document.createElement('canvas').getContext('2d');
- if(!context)throw new Error('ピン文字の計測を利用できません');
+ if(!context)throw new DeskError('pinCanvasUnavailable');
  return (text:string,size:number)=>{context.font=`${size}px sans-serif`;return context.measureText(text).width;};
 }
 

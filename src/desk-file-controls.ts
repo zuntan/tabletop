@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import {bytesDataUrl,dataBytes} from './binary-envelope';
 import { FILE_EXISTS_MESSAGE, isFileExistsError } from './file-errors';
 import { t } from './i18n';
@@ -94,10 +95,10 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
       history.record(result.path,desk.settingsSnapshot().name);refresh();
       report(t('files:loaded', { path: result.path, warning: result.missingAssets.length ? t('files:missingAssets') : '' }));
       return true;
-    }catch(error){report(t('files:loadFailedKept', { error: error instanceof Error ? error.message : String(error) }),true);}
+    }catch(error){report(t('files:loadFailedKept', { error: uiErrorMessage(error) }),true);}
     finally{normalBusy=false;}
   }
-  const startSave=(as=false)=>{menu.hidePopover();if(normalBusy||loading||saving||!canLoad())return;normalBusy=true;void saveNormal(as).catch(error=>report(t('files:saveFailed', { error: error instanceof Error ? error.message : String(error) }),true)).finally(()=>{normalBusy=false;});};
+  const startSave=(as=false)=>{menu.hidePopover();if(normalBusy||loading||saving||!canLoad())return;normalBusy=true;void saveNormal(as).catch(error=>report(t('files:saveFailed', { error: uiErrorMessage(error) }),true)).finally(()=>{normalBusy=false;});};
   normalSave.onclick=()=>startSave();saveAs.onclick=()=>startSave(true);
   normalLoad.onclick=()=>{menu.hidePopover();if(normalBusy||loading||!canLoad())return;void askFilePath(t('files:askLoad'),desk.filePath??'').then(path=>{if(path)return loadPath(path);}).catch(error=>report(String(error),true));};
   deskLink.onclick=()=>{menu.hidePopover();if(normalBusy||!canLoad())return;void askFilePath(t('files:linkLocation'),desk.filePath??'').then(path=>{if(path&&canLoad())addDeskLink?.(path,path.split(/[\\/]/).pop()??path);}).catch(error=>report(String(error),true));};
@@ -131,7 +132,7 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
   save.addEventListener('click', async () => {
     menu.hidePopover();
     try{await saveDownload();}
-    catch(error){report(t('files:saveFailed', { error: error instanceof Error ? error.message : String(error) }),true);}
+    catch(error){report(t('files:saveFailed', { error: uiErrorMessage(error) }),true);}
   });
   load.addEventListener('click', () => { menu.hidePopover();if (canLoad()) input.click(); });
   let pdfBusy=false;
@@ -147,7 +148,7 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
       const url=URL.createObjectURL(new Blob([new Uint8Array(result.bytes).buffer],{type:mime}));
       popup.location.replace(url);const cleanup=setInterval(()=>{if(popup.closed){clearInterval(cleanup);URL.revokeObjectURL(url);}},10_000);
       report(t('files:exportOpened', { revision: result.revision, format, warning: result.webCount ? t('files:webPlaceholder') : '' }));
-    }).catch(error=>{if(!popup.closed)popup.close();report(t('files:exportFailed', { format, error: error instanceof Error ? error.message : String(error) }),true);})
+    }).catch(error=>{if(!popup.closed)popup.close();report(t('files:exportFailed', { format, error: uiErrorMessage(error) }),true);})
       .finally(()=>{pdfBusy=false;pdf.disabled=!exportPdf;png.disabled=!exportPng;});
   });
   input.addEventListener('change', async () => {
@@ -164,7 +165,7 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
       desk.fileNameHint=file.name.endsWith('.tabletop')?file.name:`${file.name.replace(/\.[^.]+$/,'')}.tabletop`;
       refresh();
       report(result.warnings.length ? t('files:loadedMissing', { count: result.warnings.length }) : t('files:loadComplete'));
-    } catch (error) { report(t('files:loadFailedUnchanged', { error: error instanceof Error ? error.message : String(error) }),true); }
+    } catch (error) { report(t('files:loadFailedUnchanged', { error: uiErrorMessage(error) }),true); }
     finally { loading=false;load.disabled = false; }
   });
   return {
@@ -185,7 +186,7 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
         if(desk.documentGeneration!==generation||desk.revision!==revision)throw new Error(t('files:changedPdf'));
         const url=URL.createObjectURL(new Blob([new Uint8Array(result.bytes).buffer],{type:'application/pdf'}));
         location.replace(url);
-      }catch(error){report(t('files:exportFailed', { format: 'PDF', error: error instanceof Error ? error.message : String(error) }),true);}
+      }catch(error){report(t('files:exportFailed', { format: 'PDF', error: uiErrorMessage(error) }),true);}
       finally{pdfBusy=false;pdf.disabled=false;}
     },
     record:(path:string)=>history.record(path,desk.settingsSnapshot().name),

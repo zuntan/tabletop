@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import { uiText, uiAttribute } from './i18n/dom';
 import { t } from './i18n';
 import {checkAssetBytes} from './data-limits';
@@ -43,7 +44,7 @@ export function createCaptureCamera(desk:Desk,canvas:SVGSVGElement,camera:Camera
    // Start the clipboard operation in the click/key activation, before asynchronous rendering.
    await navigator.clipboard.write([new ClipboardItem({'image/png':png})]);
    last=crop;working=false;close();report(t('actions:captured',{warning:webCount?t('actions:webPlaceholder'):''}));
-  }catch(error){report(t('actions:captureFailed',{error:error instanceof Error?error.message:String(error)}),true);}
+  }catch(error){report(t('actions:captureFailed',{error:uiErrorMessage(error)}),true);}
   finally{working=false;cancel.disabled=false;draw();}
  }
  copy.onclick=()=>void capture();

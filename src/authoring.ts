@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import { t, languageChangeEvent } from './i18n';
 import { translateUi, uiText, uiAttribute } from './i18n/dom';
 import {createStrokeWidthMode} from './stroke-width-mode';
@@ -120,7 +121,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
     try{
       const frame=browserPinFrame(desk.settingsSnapshot().defaults.fontSize,'pin',['1','2']);
       addPin(id, [{kind:'series_add', series:{id, name:t('authoring:newSeries', { number: desk.settingsSnapshot().series.length + 1 }),...frame}}],frame);
-    }catch(error){report(error instanceof Error?error.message:String(error),true);}
+    }catch(error){report(uiErrorMessage(error),true);}
   }
   function populate() {
     const heading = document.createElement('div'); heading.className = 'number-preset-heading'; heading.textContent = t('authoring:chooseAdd');
@@ -149,7 +150,7 @@ export function createAuthoring(desk: Desk, toolbar: HTMLElement, panel: HTMLEle
   settingsButton.onclick = () => { panel.hidden = !panel.hidden; update(); };
   choice.onchange = () => { chosen = choice.value; update(); };
   form.querySelector<HTMLButtonElement>('#series-fit')!.onclick = () => {
-    try { apply(browserPinFitOperations(desk,[chosen])); } catch(error) { report(error instanceof Error?error.message:String(error),true); }
+    try { apply(browserPinFitOperations(desk,[chosen])); } catch(error) { report(uiErrorMessage(error),true); }
   };
   form.onsubmit = event => event.preventDefault();
   form.onchange = event => {

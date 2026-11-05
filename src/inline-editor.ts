@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import { t } from './i18n';
 import { createMarkdownPreview } from './markdown-preview';
 import { shapeTypes } from './shape-definitions';
@@ -49,7 +50,7 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       }
       save(object, patch, fresh); close(); return true;
     } catch (cause) {
-      error.textContent = cause instanceof Error ? cause.message : String(cause);
+      error.textContent = uiErrorMessage(cause);
       (url ?? text).focus(); return false;
     }
   }

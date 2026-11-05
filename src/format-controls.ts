@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import { t, languageChangeEvent } from './i18n';
 import { uiText, uiAttribute } from './i18n/dom';
 import type { Desk, Operation } from './model';
@@ -33,7 +34,7 @@ export function createFormatControls(desk: Desk, toolbar: HTMLElement, apply: (o
       if (capture && index) memory.slots[index - 1] = structuredClone(style);
       memory.current = { ...desk.settingsSnapshot().defaults, ...style };
       persist(); update(); report(capture ? (index ? t('paint:rememberSlot', { index }) : t('paint:rememberCurrent')) : t('paint:applied'));
-    } catch (error) { report(error instanceof Error ? error.message : String(error), true); }
+    } catch (error) { report(uiErrorMessage(error), true); }
   };
   for (let index = 0; index <= 3; index++) {
     const row = document.createElement('div'); row.className = 'format-row';

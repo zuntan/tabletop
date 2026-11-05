@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import {rulerFor} from './ruler-layout';
 import {fileFor} from './clear-files';
 import { clipAppearance } from './clip-appearance';
@@ -37,7 +38,7 @@ export function resolveClips(input: DeskObject[], before: DeskObject[] = []): De
     for(const id of members) {
       const member=map.get(id);
       if(!member || !clipTarget(member)) throw new Error('Clips require text/image/SVG/Mermaid/web/link cards');
-      if(rulerFor(input,id))throw Error('定規に所属するカードはクリップへ追加できません');
+      if(rulerFor(input,id))throw new DeskError('clipRulerMember');
       if(owners.has(id)) throw new Error('A card can belong to only one clip; nesting is not supported');
       owners.set(id,clip.id);
     }

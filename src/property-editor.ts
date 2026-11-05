@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import { t } from './i18n';
 import type { Desk, DeskObject } from './model';
 import { syncProperties, propertyValue, propertyFieldPatch } from './properties';
@@ -27,7 +28,7 @@ export function createPropertyEditor(form: HTMLFormElement, desk: Desk,
       drafts.delete(input);
       if (Object.keys(patch).length) apply(object.id, patch);
     } catch (error) {
-      restore(input); report(error instanceof Error ? error.message : String(error));
+      restore(input); report(uiErrorMessage(error));
     }
   }
   form.addEventListener('input', event => {

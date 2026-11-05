@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import { uiText, uiAttribute } from './i18n/dom';
 import { t } from './i18n';
 import type {Desk,DeskObject} from './model';
@@ -38,7 +39,7 @@ export function createLineInput(canvas:SVGSVGElement,viewport:SVGGElement,button
     if(Math.hypot(end.point.x-tail.point.x,end.point.y-tail.point.y)<1e-6)return;
     if(commit([tail.point,end.point],tail,end)){const id=existing().at(-1)!;tail={point:end.point,endpoint:{id,side:'end'}};preview([end.point]);if(closes)finish();}
    }else{pointer=event.pointerId;strokeZoom=zoom();tail=origin=point(event);stroke=[tail.point];canvas.setPointerCapture(pointer);preview(stroke);}
-  }catch(error){finish(false);report(error instanceof Error?error.message:String(error),true);}
+  }catch(error){finish(false);report(uiErrorMessage(error),true);}
  },true);
  canvas.addEventListener('pointermove',event=>{
   if(!mode||space)return;if(!valid())return;
@@ -53,7 +54,7 @@ export function createLineInput(canvas:SVGSVGElement,viewport:SVGGElement,button
    let end=point(event);const raw=world(event);stroke.push(raw);
    if(!event.altKey&&origin&&stroke.length>3&&Math.hypot(raw.x-origin.point.x,raw.y-origin.point.y)*strokeZoom<=12)end=origin;
    const points=simplifyStroke(stroke,strokeZoom);if(points.length>1){points[0]=tail!.point;points[points.length-1]=end.point;commit(points,tail!,end);}finish();
-  }catch(error){finish(false);report(error instanceof Error?error.message:String(error),true);}
+  }catch(error){finish(false);report(uiErrorMessage(error),true);}
  },true);
  canvas.addEventListener('pointercancel',event=>{if(mode&&pointer===event.pointerId){stop(event);finish();}},true);
  canvas.addEventListener('lostpointercapture',event=>{if(mode&&pointer===event.pointerId)finish();},true);
@@ -69,7 +70,7 @@ export function createLineInput(canvas:SVGSVGElement,viewport:SVGGElement,button
    try{if(event.shiftKey)desk.redo();else if(existing().length)desk.undo();else {tail=origin=undefined;layer.replaceChildren();return;}revision=desk.revision;
     const ids=existing();tail=ids.length?{point:endpoints(desk.get(ids.at(-1)!)).end,endpoint:{id:ids.at(-1)!,side:'end'}}:origin;
     refresh();if(tail)preview([tail.point]);else layer.replaceChildren();
-   }catch(error){report(error instanceof Error?error.message:String(error),true);}return;
+   }catch(error){report(uiErrorMessage(error),true);}return;
   }
   if(event.key==='Delete'||event.key==='Backspace'){stop(event);return;}
  },true);

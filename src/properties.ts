@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import { t } from './i18n';
 import {isUrlLink} from './link-values';
 import { objectPropertyNames } from './object-properties';
@@ -121,7 +122,7 @@ export function propertyFieldPatch(key: string, value: string, object: DeskObjec
     if(object.type!=='prop'||!['normal','head'].includes(value))throw new Error('Invalid prop selection mode');
     return {propSelection:value as 'normal'|'head'};
   }
-  if(headSelectedProp(object)&&['width','height'].includes(key))throw new Error('通常選択に戻すとリサイズできます');
+  if(headSelectedProp(object)&&['width','height'].includes(key))throw new DeskError('propHeadResize');
   if(key==='clipOffsetMode'){
     if(object.type!=='clip'||!['fixed','percent','base-short-side'].includes(value))throw new Error('Invalid clip offset mode');
     return {clipOffsetMode:value as 'fixed'|'percent'|'base-short-side',...(value!=='fixed'&&object.clipOffsetPercent===undefined?{clipOffsetPercent:30}:{})};
@@ -130,7 +131,7 @@ export function propertyFieldPatch(key: string, value: string, object: DeskObjec
     if (object.type !== 'clip' || !['true','false'].includes(value)) throw new Error('Invalid clip size mode');
     return { clipAutoSize: value === 'true' };
   }
-  if ((numeric.has(key) || key === 'fillOpacity') && (!value.trim() || !Number.isFinite(Number(value)))) throw new Error('有効な数値を入力してください');
+  if ((numeric.has(key) || key === 'fillOpacity') && (!value.trim() || !Number.isFinite(Number(value)))) throw new DeskError('invalidNumber');
   if (key === 'textFit') {
     if (!isShapeType(object.type) || !['auto', 'shrink'].includes(value)) throw new Error('Invalid text fit mode');
     return { textFit: value as 'auto' | 'shrink' };

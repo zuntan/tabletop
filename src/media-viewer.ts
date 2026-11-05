@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import { getUiLanguage, uiI18n } from './i18n';
 import {renderQrCode} from './qr-code';
 import type { DeskObject } from './model';
@@ -27,7 +28,7 @@ export function openMedia(object: DeskObject) {
     void renderQrCode(object.qrText??'',language).then(result=>show(result.src)).catch(()=>{if(!popup.closed)message.textContent=text('qrDisplayFailed');});
   }else if (object.type === 'mermaid') {
     void renderMermaid(object.mermaidSource ?? '').then(result => show(result.src)).catch(error => {
-      if (!popup.closed) message.textContent = text('diagramDisplayFailed',{error:error instanceof Error?error.message:String(error)});
+      if (!popup.closed) message.textContent = text('diagramDisplayFailed',{error:uiErrorMessage(error, language)});
     });
   } else if (object.src) show(object.src);
   else message.textContent = text('noImage');

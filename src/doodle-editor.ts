@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import { t } from './i18n';
 import type {DeskObject} from './model';
 import {doodleSchema,doodleSource,emptyDoodle,type Doodle} from './doodle-values';
@@ -53,7 +54,7 @@ export function createDoodleEditor(commit:(id:string,patch:Partial<DeskObject>)=
   const backing=document.createElementNS(view.namespaceURI,'rect');backing.setAttribute('width',String(width));backing.setAttribute('height',String(height));backing.setAttribute('fill','#f1f5f9');backing.setAttribute('stroke','#94a3b8');view.append(backing,paper);
   const hint=document.createElement('div');hint.className='doodle-hint';hint.textContent=t('doodle:hint');
   const footer=document.createElement('div');footer.className='doodle-footer';footer.append(hint);
-  const finish=(save:boolean)=>{if(gesture)return;try{if(save){const parsed=doodleSchema.parse(data);commit(object.id,{doodle:parsed,text:titleInput.value});}dialog.close();dialog.remove();active=false;paletteClose();}catch(e){report(e instanceof Error?e.message:String(e),true);}};
+  const finish=(save:boolean)=>{if(gesture)return;try{if(save){const parsed=doodleSchema.parse(data);commit(object.id,{doodle:parsed,text:titleInput.value});}dialog.close();dialog.remove();active=false;paletteClose();}catch(e){report(uiErrorMessage(e),true);}};
   const paletteClose=()=>palette.destroy();
   const cancel=document.createElement('button');cancel.textContent=t('doodle:cancel');cancel.onclick=()=>finish(false);const accept=document.createElement('button');accept.textContent=t('doodle:accept');accept.id='doodle-accept';accept.onclick=()=>finish(true);footer.append(cancel,accept);dialog.append(toolbar,stage,footer);
   let zoom=1,pan={x:0,y:0},space=false;

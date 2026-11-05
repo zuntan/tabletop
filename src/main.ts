@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import { localizedLaunchName } from './desk-launch-name';
 import { languageChangeEvent, t, getUiLanguage } from './i18n';
 import { translateUi, uiAttribute, uiText, type UiKey } from './i18n/dom';
@@ -399,11 +400,11 @@ const activityLed = createActivityLed($('footer'));
 const centerViewButton=document.createElement('button');centerViewButton.id='view-center';centerViewButton.type='button';
 iconButton(centerViewButton,'',t('messages:originCenter'));$('#fit').after(centerViewButton);
 centerViewButton.onclick=()=>{void cameraControls.move({center:{x:0,y:0}}).catch(error=>{
-  if(!(error instanceof Error&&error.message.startsWith('Camera animation cancelled:')))notify(error instanceof Error?error.message:String(error),true);
+  if(!(error instanceof Error&&error.message.startsWith('Camera animation cancelled:')))notify(uiErrorMessage(error),true);
 });};
 const bellControls=createBellControls(centerViewButton,$('footer'),note=>recovery.ringBell(desk.selected(),note),notify);
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
-  if(!busy&&!gesture&&!editor.isActive()&&operations.length)try{execute(operations);renderDecorations(operations.map(op=>'id' in op?op.id:''));notify(t('badges:updated'));}catch(error){notify(error instanceof Error?error.message:String(error),true);}
+  if(!busy&&!gesture&&!editor.isActive()&&operations.length)try{execute(operations);renderDecorations(operations.map(op=>'id' in op?op.id:''));notify(t('badges:updated'));}catch(error){notify(uiErrorMessage(error),true);}
 });
 const reactionSizeControls=createReactionSizeControls(form,()=>desk.selected().map(id=>desk.get(id)),operations=>{if(!busy&&!editor.isActive())attempt(()=>execute(operations));},notify);
 const stampContainer = document.createElement('div'); stampContainer.id = 'stamp-controls'; editActions.insertBefore(stampContainer, $('#reaction-controls'));
@@ -422,7 +423,7 @@ const stampControls = createStampControls(stampContainer, () => desk.selected().
       stampPressTimer=setTimeout(()=>{stampPressIds.clear();if(!gesture&&generation===desk.documentGeneration)renderDecorations(ids);},1600);
     }));
     notify(t('messages:stampUpdated'));return true;
-  }catch(error){notify(error instanceof Error?error.message:String(error),true);return false;}
+  }catch(error){notify(uiErrorMessage(error),true);return false;}
 });
 const propContainer = document.createElement('div'); propContainer.id = 'prop-controls'; $('#reaction-controls').after(propContainer);
 createPropControls(propContainer, (preset, src) => {
@@ -469,7 +470,7 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
 }, () => {
   if (busy || gesture || editor.isActive()) { notify(t('messages:finishExperiment'), true); return; }
   void rasterPointedCard(desk, id => drawnNodes.get(id)).then(raster => openBhPreview(raster.dataUrl))
-    .catch(error => notify(error instanceof Error ? error.message : String(error), true));
+    .catch(error => notify(uiErrorMessage(error), true));
 }, patch=>{
   if (busy || gesture || editor.isActive()) { notify(t('messages:finishSettings'), true); deskMenu.refresh(); return; }
   attempt(()=>execute([{kind:'grid_update',patch}]));
@@ -494,7 +495,7 @@ function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string,
 function notify(message: string, error = false) { $('#message').removeAttribute('data-i18n'); $('#message').textContent = message; $('#message').classList.toggle('error', error); }
 function attempt(action: () => void) {
   try { action(); render(); notify(t('messages:revisionObjects',{revision:desk.revision,count:desk.summary().count})); }
-  catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
+  catch (error) { notify(uiErrorMessage(error), true); }
 }
 function execute(operations: Operation[], snap: 'desk' | 'exact' = 'exact') { desk.execute({ actor: 'human', operations, snap }); }
 function screen(event: PointerEvent | WheelEvent) {
@@ -907,7 +908,7 @@ function animateDelete(mode: DeleteMode) {
   const ids=desk.selected();
   void bhDeletion.run(desk,ids,mode,id=>drawnNodes.get(id),canvas,()=>camera,
     ()=>execute(ids.map(id=>({kind:'delete',id}))),()=>{render();notify(t('messages:revisionObjects',{revision:desk.revision,count:desk.summary().count}));})
-    .catch(error=>notify(error instanceof Error?error.message:String(error),true));
+    .catch(error=>notify(uiErrorMessage(error),true));
 }
 const bhDelete = bhDeleteControls($<HTMLButtonElement>('#delete'), animateDelete);
 const cutoutControls=createCutoutControls($('#image'),form,()=>desk.selected().map(id=>desk.get(id)),operations=>{
@@ -931,7 +932,7 @@ $('#text-measure').onclick = () => {
       ? `${item.overflow!.x ? t('messages:overflowX') : ''}${item.overflow!.x && item.overflow!.y ? t('messages:overflowSeparator') : ''}${item.overflow!.y ? t('messages:overflowY') : ''}` : t('messages:fits');
     return t('messages:measureResult',{name,state,needed:item.requiredHeight,current:item.frame.height,warning:item.canFitByHeight?'':t('messages:heightInsufficient')});
   }).join('\n');
-  } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
+  } catch (error) { notify(uiErrorMessage(error), true); }
 };
 $('#zoom-in').onclick = () => zoom(1.25);
 $('#zoom-out').onclick = () => zoom(0.8);
@@ -967,7 +968,7 @@ function fitView(ids: string[], animation?: AnimationOptions) {
 function focusObjects(ids: string[]) {
   void fitView(ids, {})?.catch(error => {
     if (!(error instanceof Error && error.message.startsWith('Camera animation cancelled:')))
-      notify(error instanceof Error ? error.message : String(error), true);
+      notify(uiErrorMessage(error), true);
   });
 }
 function focusHumanSelection() { focusObjects(desk.selected()); }
@@ -986,7 +987,7 @@ function startPinTravel(id:string,direction:'previous'|'next'){
     const pin=desk.get(id),series=pinSeriesMap.get(pin.seriesId!);if(pin.type!=='label'||!series)return;
     const target=pinNeighbours(desk.snapshot(),series,id)[direction];if(!target)return;
     launchNavigation({points:[pinRoot(pin),pinRoot(target)],lineIds:[],destinationId:target.id},'move',{pinId:id},desk.snapshot());
-  }catch(error){notify(error instanceof Error?error.message:String(error),true);}
+  }catch(error){notify(uiErrorMessage(error),true);}
 }
 function launchNavigation(first:WayfinderRoute,mode:'move'|'tour',input:WayfinderStartInput&{pinId?:string},scene:DeskObject[]){
   const label=input.pinId?'messages:pinThread':'messages:wayfinder';
@@ -1021,11 +1022,11 @@ function launchNavigation(first:WayfinderRoute,mode:'move'|'tour',input:Wayfinde
   })().catch(error=>{
     if(run!==wayfinderRun)return;updateMarker(null);
     if(error instanceof WayfinderCancelled){navigation={...navigation!,status:'cancelled',reason:error.reason,choices:undefined,point:cameraView(camera,cameraSize()).center};drawSelection();notify(label+'：'+reportStop(error.reason));return;}
-    navigation={...navigation!,status:'failed',reason:'error',choices:undefined,message:error instanceof Error?error.message:String(error)};drawSelection();notify(navigation.message!,true);
+    navigation={...navigation!,status:'failed',reason:'error',choices:undefined,message:error instanceof Error?error.message:String(error)};drawSelection();notify(uiErrorMessage(error),true);
   });
   return {id:input.id,lineId:input.lineId,from:input.from,runId:run,status:'started',mode,lineIds:first.lineIds,destinationId:first.destinationId};
 }
-function startWayfinder(id:string){try{beginWayfinder({id});}catch(error){notify(error instanceof Error?error.message:String(error),true);}}
+function startWayfinder(id:string){try{beginWayfinder({id});}catch(error){notify(uiErrorMessage(error),true);}}
 
 canvas.addEventListener('dblclick', event => {
   const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
@@ -1169,7 +1170,7 @@ function finishKeyboardEdit(){
     const ids=desk.selected();if(ids.length===1)propertyEditor.sync(desk.get(ids[0]));
     refreshHistory();
     notify(t('messages:revisionObjects',{revision:desk.revision,count:desk.summary().count}));
-  }catch(error){render();notify(error instanceof Error?error.message:String(error),true);}
+  }catch(error){render();notify(uiErrorMessage(error),true);}
 }
 window.addEventListener('keyup',event=>{if(event.key.startsWith('Arrow'))finishKeyboardEdit();});
 window.addEventListener('blur',finishKeyboardEdit);
@@ -1190,7 +1191,7 @@ window.addEventListener('keydown', event => {
       busy=true;
       keyboardEdit.edit.step(event.key,event.shiftKey,event.altKey,camera.zoom);
       drawMoveFrame(keyboardEdit.edit.scene,true);
-    }catch(error){keyboardEdit=undefined;busy=false;render();notify(error instanceof Error?error.message:String(error),true);}
+    }catch(error){keyboardEdit=undefined;busy=false;render();notify(uiErrorMessage(error),true);}
     return;
   }
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase()==='g') {
@@ -1229,7 +1230,7 @@ async function addFiles(files: File[]) {
       }) });
     }
     if (operations.length) attempt(() => { execute(operations); desk.select(operations.map(op => op.kind === 'add' ? op.object.id : '')); });
-  } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
+  } catch (error) { notify(uiErrorMessage(error), true); }
   finally { busy = false; }
 }
 function clipboardTextTarget(target: EventTarget | null) {
@@ -1251,7 +1252,7 @@ for (const kind of ['copy', 'cut'] as const) window.addEventListener(kind, event
       render();
     }
     notify(t(kind==='cut'?'messages:cut':'messages:copied',{count:copied.count,scope:copied.text?'':t('messages:localPasteOnly')}));
-  } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
+  } catch (error) { notify(uiErrorMessage(error), true); }
 });
 async function pasteClipboard(content: ClipboardContent) {
   if (partClipboard.matches(content.token, content.html)) {
@@ -1301,7 +1302,7 @@ $('#clipboard').onclick = async () => {
   } catch (error) {
     notify(error instanceof DOMException && error.name === 'NotAllowedError'
       ? t('messages:clipboardPermission')
-      : error instanceof Error ? error.message : String(error), true);
+      : uiErrorMessage(error), true);
   } finally { busy = false; }
 };
 $('#image').onclick = () => { $<HTMLInputElement>('#file').click(); };
@@ -1326,7 +1327,7 @@ window.addEventListener('paste', event => {
   if (!content.text && !content.files.length && !partClipboardToken(content.token,content.html)) return;
   event.preventDefault();
   busy = true;
-  void pasteClipboard(content).catch(error => notify(error instanceof Error ? error.message : String(error), true))
+  void pasteClipboard(content).catch(error => notify(uiErrorMessage(error), true))
     .finally(() => { busy = false; });
 });
 
@@ -1334,7 +1335,7 @@ const recovery = new BrowserConnection({
   identity: id => { desk.deskId=id; render(); },
   beforeRelease: () => thinkingMode.assertAllowed('release'),
   handoff: url => { void connectionPanel.display(url); },
-  handoffError: message => notify(message, true),
+  handoffError: message => notify(uiErrorMessage(message), true),
   disconnected: () => { cancelWayfinding('changed');cancelConfirmDialog(); bhDeletion.stop(); activityLed.clear(); objectAnimator.finish(); cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
   status: (state, detail, detailKey) => {
     bellControls.connected(state==='connected');
@@ -1463,8 +1464,8 @@ $<HTMLFormElement>('#connect-form').onsubmit = event => {
   event.preventDefault();
   try {
     const url = $<HTMLInputElement>('#connection-url');
-    void connectUrl(url.value, true).catch(error => notify(error instanceof Error ? error.message : String(error), true));
-  } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
+    void connectUrl(url.value, true).catch(error => notify(uiErrorMessage(error), true));
+  } catch (error) { notify(uiErrorMessage(error), true); }
 };
 const startupParameters=new URLSearchParams(location.search);
 const launchName=startupParameters.get('newDeskName');
@@ -1485,7 +1486,7 @@ if (location.hash&&!standaloneStartup) {
   const initialUrl = location.href;
   history.replaceState(null, '', location.pathname + location.search);
   $<HTMLInputElement>('#connection-url').value = initialUrl;
-  void connectUrl(initialUrl, false).catch(error => notify(error instanceof Error ? error.message : String(error), true));
+  void connectUrl(initialUrl, false).catch(error => notify(uiErrorMessage(error), true));
 }
 const lineInput=createLineInput(canvas,viewport,$<HTMLButtonElement>('[data-add="line"]'),desk,world,()=>camera.zoom,
  ()=>formatControls.appearance('line',desk.settingsSnapshot().defaults),()=>render(),()=>!busy&&!gesture&&!editor.isActive()&&!identityControls.isEditing()&&!(isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive()),notify,()=>desk.snapshot().filter(pinIsVisible).map(o=>pinScreenObject(o,camera.zoom)));

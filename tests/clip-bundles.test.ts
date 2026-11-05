@@ -1,3 +1,4 @@
+import { DeskError } from '../src/desk-errors';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Desk, dispatch } from '../src/model';
@@ -77,7 +78,7 @@ test('clip locks toggle the whole bundle through patches and AI pointing, persis
   {kind:'update',id,patch:{clipOffset:200}},
   {kind:'update',id,patch:{clipMembers:['a']}},
   {kind:'delete',id}, {kind:'delete',id:'b'},
- ] as const) {assert.throws(()=>d.execute({actor:'human',operations:[operation as import('../src/model').Operation]}),/ロック/);assert.deepEqual(d.snapshot(),locked);}
+ ] as const) {assert.throws(()=>d.execute({actor:'human',operations:[operation as import('../src/model').Operation]}),error=>error instanceof DeskError&&['clipLocked','clipLockedMember'].includes(error.code));assert.deepEqual(d.snapshot(),locked);}
  d.execute({actor:'human',operations:[{kind:'update',id:'a',patch:{text:'Editable'}}]});
  const archive=await decodeDeskFile(await encodeDeskFile(d)),restored=new Desk();restored.replaceDocument({objects:archive.objects,settings:archive.settings});assert.ok(ids.every(id=>restored.get(id).locked));
  d.point(['c']);const result=dispatch(d,{method:'lock',locked:false}) as {ids:string[]};assert.deepEqual(result.ids,ids);assert.ok(ids.every(id=>d.get(id).locked===false));
@@ -108,7 +109,7 @@ test('automatic clip size follows first paper, preserves manual size and respect
  const cb=new PartClipboard(),data=new Map<string,string>();cb.write({setData:(k,v)=>{data.set(k,v)},getData:k=>data.get(k)??''},clipGroup(d.snapshot(),id));cb.paste(d);const copy=d.list().find(o=>o.type==='clip'&&o.id!==id)!;assert.equal(copy.clipAutoSize,true);assert.equal(copy.clipSize,96);
  const free=new Desk();free.execute({operations:[{kind:'add',object:{id:'free',type:'clip',clipAutoSize:true,clipSize:80}}]});assert.equal(clipAppearance(free.get('free')).size,80);
  assert.throws(()=>d.execute({operations:[{kind:'update',id:'c',patch:{clipAutoSize:true}}]}),/Clip fields/);
- d.execute({operations:[{kind:'update',id,patch:{locked:true}}]});assert.throws(()=>d.execute({actor:'human',operations:[{kind:'update',id,patch:{clipAutoSize:false}}]}),/ロック/);
+ d.execute({operations:[{kind:'update',id,patch:{locked:true}}]});assert.throws(()=>d.execute({actor:'human',operations:[{kind:'update',id,patch:{clipAutoSize:false}}]}),error=>error instanceof DeskError&&['clipLocked','clipLockedMember'].includes(error.code));
 });
 
 test('new clips default to automatic while legacy loaded clips remain manual',()=>{

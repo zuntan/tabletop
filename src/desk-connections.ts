@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import {BinaryTransfer} from './binary-transfer';
 import {temporaryTransferSink} from './binary-transfer-node';
 import {clipboardTokenSchema,clipboardTransferSchema,type ClipboardRead} from './clipboard-transfer';
@@ -38,7 +39,7 @@ export class DeskConnection {
    try{
     if(this.peer!==ws)return;
     if(message.type==='capabilities'){compatible=message.binaryTransfer===1;this.binaryCapable=compatible;}
-    if(!this.binaryCapable&&message.type!=='capabilities'){this.send({type:'file_result',id:message.id,error:'ブラウザを再読込してください（分割転送非対応）'});return;}
+    if(!this.binaryCapable&&message.type!=='capabilities'){this.send({type:'file_result',id:message.id,error:new DeskError('oldBrowserTransfer').message});return;}
     if(message.type==='file_request'){
      const id=typeof message.id==='string'?message.id:'';
      if(!id||id.length>100)throw Error('Invalid file request');
@@ -46,13 +47,13 @@ export class DeskConnection {
       const token=clipboardTokenSchema.parse(message.request.token);
       void this.clipboard(this,token).then(result=>{if(this.peer===ws&&ws.readyState===WebSocket.OPEN)this.send({type:'file_result',id,result});}).catch(()=>{if(this.peer===ws&&ws.readyState===WebSocket.OPEN)this.send({type:'file_result',id,result:null});});return;
      }
-     if(this.fileBusy||this.pending.size||this.releasing||this.changing()){this.send({type:'file_result',id,error:'別の処理が進行中です。完了してから再実行してください'});return;}
+     if(this.fileBusy||this.pending.size||this.releasing||this.changing()){this.send({type:'file_result',id,error:new DeskError('operationBusy').message});return;}
      this.fileBusy=true;
      void this.files.browser(message.request).then(result=>{if(this.peer===ws&&ws.readyState===WebSocket.OPEN)this.send({type:'file_result',id,result});})
       .catch(error=>{if(this.peer===ws&&ws.readyState===WebSocket.OPEN)this.send({type:'file_result',id,error:error instanceof Error?error.message:String(error)});})
       .finally(()=>{this.fileBusy=false;});return;
     }
-    if(message.type==='handoff_request'){void this.handoff(this).catch(()=>{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'handoff_error',error:'引き渡しできませんでした。LANの許可・接続状態・処理中の操作を確認してください。'}));});return;}
+    if(message.type==='handoff_request'){void this.handoff(this).catch(()=>{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'handoff_error',error:new DeskError('handoffFailed').message}));});return;}
     if(message.type==='bell_press'){const press=bellPressSchema.parse(message);this.bell.ring(press.ids,press.text,press.draftVersion);return;}
     if(message.type==='capabilities'&&message.release===true){this.releaseCapable=true;this.bellCapable=message.bell===true;this.toastCapable=message.toast===true;if(message.fileOperations===true&&compatible)this.send({type:'file_ready',binaryTransfer:1});if(this.bellCapable)this.send({type:'bell_state',...this.bell.state()});return;}
     const item=this.pending.get(message.id);if(!item)return;

@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import { constants } from 'node:fs';
 import { mkdir, realpath, open, lstat, rename, unlink, link } from 'node:fs/promises';
 import { resolve, join, dirname, basename, isAbsolute } from 'node:path';
@@ -16,8 +17,8 @@ export function validateDeskFilename(name: string): string {
 export class DeskFileStore {
   constructor(private root = process.env.TABLETOP_SAVE_ROOT ?? join(homedir(), '.tabletop', 'saves'), private extension = '.tabletop') {}
   async reference(value: string): Promise<string> {
-    if (!value || value.length > 4096 || /[\x00-\x1f]/.test(value) || !value.endsWith(this.extension)) throw new Error(`保存先には${this.extension}ファイルのパスを指定してください`);
-    if (!isAbsolute(value) && basename(value) !== value) throw new Error('相対指定はファイル名のみ使用できます。別の場所は絶対パスで指定してください');
+    if (!value || value.length > 4096 || /[\x00-\x1f]/.test(value) || !value.endsWith(this.extension)) throw new DeskError('storePathExtension',{extension:this.extension});
+    if (!isAbsolute(value) && basename(value) !== value) throw new DeskError('storeRelativePath');
     const path = isAbsolute(value) ? resolve(value) : resolve(this.root, value);
     if (!isAbsolute(value)) await mkdir(resolve(this.root), {recursive:true,mode:0o700});
     return join(await realpath(dirname(path)), basename(path));
@@ -35,8 +36,8 @@ export class DeskFileStore {
       await file.writeFile(bytes);await file.sync();await file.close();
       if(overwrite){
         const now=await lstat(path).catch(e=>{if(e.code==='ENOENT')return null;throw e;});
-        if(now&&(!now.isFile()||now.isSymbolicLink()||!before||now.ino!==before.ino||now.dev!==before.dev||now.mtimeMs!==before.mtimeMs||now.size!==before.size))throw new Error('保存先が処理中に変更されました');
-        if(before&&!now)throw new Error('保存先が処理中に削除されました');
+        if(now&&(!now.isFile()||now.isSymbolicLink()||!before||now.ino!==before.ino||now.dev!==before.dev||now.mtimeMs!==before.mtimeMs||now.size!==before.size))throw new DeskError('storeTargetChanged');
+        if(before&&!now)throw new DeskError('storeTargetDeleted');
         await rename(temporary,path);
       }else{await link(temporary,path);await unlink(temporary);}
       return path;

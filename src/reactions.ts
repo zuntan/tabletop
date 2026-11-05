@@ -1,3 +1,4 @@
+import { uiErrorMessage } from './i18n/errors';
 import { t } from './i18n';
 import { uiText, uiAttribute } from './i18n/dom';
 import {reactionPositions,defaultReactionPlacement} from './reaction-layout';
@@ -76,11 +77,11 @@ export function createReactionSizeControls(form:HTMLElement, selected:()=>DeskOb
   const row=document.createElement('div');row.className='reaction-settings-row';
   label.append(input);row.append(label);box.append(legend,row);form.after(box);
   addNumberPresets(input,[...reactionSizePresets],t('badges:reactionSize'),'badges:reactionSize');
-  input.onchange=()=>{try{const size=Number(input.value);if(!input.value||!input.checkValidity())throw new Error(t('badges:invalidSize'));apply(selectedTargets().map(object=>({kind:'update',id:object.id,patch:{reactionSize:size}})));}catch(error){report(error instanceof Error?error.message:String(error),true);}update();};
-  const placement=createReactionPlacementPicker(row,value=>{try{apply(selectedTargets().map(object=>({kind:'update',id:object.id,patch:{reactionPlacement:value}})));}catch(error){report(error instanceof Error?error.message:String(error),true);}update();});
+  input.onchange=()=>{try{const size=Number(input.value);if(!input.value||!input.checkValidity())throw new Error(t('badges:invalidSize'));apply(selectedTargets().map(object=>({kind:'update',id:object.id,patch:{reactionSize:size}})));}catch(error){report(uiErrorMessage(error),true);}update();};
+  const placement=createReactionPlacementPicker(row,value=>{try{apply(selectedTargets().map(object=>({kind:'update',id:object.id,patch:{reactionPlacement:value}})));}catch(error){report(uiErrorMessage(error),true);}update();});
   const fixedLabel=document.createElement('label');fixedLabel.className='reaction-fixed';
   const fixed=document.createElement('input');fixed.type='checkbox';fixed.id='reaction-fixed';fixedLabel.append(fixed,uiText(document.createElement('span'),'badges:fixed'));box.append(fixedLabel);
-  fixed.onchange=()=>{try{apply(selectedTargets().map(object=>({kind:'update',id:object.id,patch:{reactionFixed:fixed.checked}})));}catch(error){report(error instanceof Error?error.message:String(error),true);}update();};
+  fixed.onchange=()=>{try{apply(selectedTargets().map(object=>({kind:'update',id:object.id,patch:{reactionFixed:fixed.checked}})));}catch(error){report(uiErrorMessage(error),true);}update();};
   input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();input.blur();}});
   box.addEventListener('keydown',event=>event.stopPropagation());
   function update(){const objects=selectedTargets();box.hidden=!objects.length;const flags=objects.map(o=>o.reactionFixed??false);fixed.checked=flags[0]??false;fixed.indeterminate=flags.some(value=>value!==flags[0]);const sizes=objects.map(o=>o.reactionSize??defaultReactionSize);input.value=sizes.length&&sizes.every(s=>s===sizes[0])?String(sizes[0]):'';uiAttribute(input,'placeholder','badges:mixed');const values=objects.map(o=>o.reactionPlacement??defaultReactionPlacement);placement.update(values.length&&values.every(value=>value===values[0])?values[0]:undefined);}

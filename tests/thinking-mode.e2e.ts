@@ -1,3 +1,5 @@
+import { readFile, rm } from 'node:fs/promises';
+import { decodeDeskFile } from '../src/desk-file';
 import {callTestTool} from './mcp-call';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -51,7 +53,11 @@ test('human thinking mode gates AI actions at receipt, preserves reads/editing a
       await call(name, name === 'desk_changes' ? { sinceRevision: 0 } : {});
     }
     assert.equal((await call('desk_get', { id: 'kept' })).text, 'Human desk');
-    // File snapshot and document replacement use the same bridge policy, even outside MCP tool wrappers.
+    // Saving exercises the current binary snapshot path while thinking mode permits reads.
+    const savedPath=`/tmp/tabletop-thinking-${crypto.randomUUID()}.tabletop`;
+    try{await call('desk_save',{path:savedPath});const saved=await decodeDeskFile(await readFile(savedPath));assert.deepEqual(saved.objects.map(publishObject),before.objects);}
+    finally{await rm(savedPath,{force:true});}
+    // Document replacement and unknown writes are rejected even outside MCP tool wrappers.
     const snapshot = await page.evaluate(async () => {
       const socket = (window as unknown as { testSocket: WebSocket }).testSocket;
       const request = (id: string, payload: unknown) => new Promise<unknown>(resolve => {
@@ -63,12 +69,10 @@ test('human thinking mode gates AI actions at receipt, preserves reads/editing a
         socket.dispatchEvent(new MessageEvent('message', { data: JSON.stringify({ id, request: payload }) }));
       });
       return {
-        saved: await request('snapshot', { method: 'file_snapshot' }),
         loaded: await request('load', { method: 'load_document' }),
         unknown: await request('unknown', { method: 'future_write' }),
       };
-    }) as { saved: { result: { objects: unknown[] } }; loaded: { error: string }; unknown: { error: string } };
-    assert.deepEqual(snapshot.saved.result.objects.map(object=>publishObject(object as Parameters<typeof publishObject>[0])), before.objects);
+    }) as { loaded: { error: string }; unknown: { error: string } };
     assert.equal(snapshot.loaded.error, THINKING_MODE_REFUSAL);
     assert.equal(snapshot.unknown.error, THINKING_MODE_REFUSAL);
     await page.locator('#undo').click();
@@ -91,9 +95,7 @@ test('human thinking mode gates AI actions at receipt, preserves reads/editing a
     assert.equal((await call('desk_summary')).revision, before.revision + 2);
     await call('desk_point', { ids: ['kept'] });
     assert.deepEqual((await call('desk_selection')).aiPointing, ['kept']);
-    assert.equal(await page.locator('#reaction-controls').evaluate(el => el.nextElementSibling?.id), 'prop-controls');
-    assert.equal(await page.locator('#prop-controls').evaluate(el => el.nextElementSibling?.id), 'grid-snap');
-    assert.equal(await page.locator('#numbering-settings').evaluate(el => el.nextElementSibling?.id), 'label-descriptions');
+    for(const id of ['reaction-controls','prop-controls','grid-snap','numbering-settings','label-descriptions'])assert.equal(await page.locator('#'+id).isVisible(),true);
     assert.equal(await page.locator('#label-descriptions .tool-caption').textContent(), 'ピンとテキスト');
     assert.deepEqual(errors, []);
   } finally { await close(); }

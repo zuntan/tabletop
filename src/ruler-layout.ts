@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import type {DeskObject,Operation} from './model';
 import {isShapeType} from './shape-definitions';
 import {randomUuid} from './portable-crypto';
@@ -10,7 +11,7 @@ const filed=(scene:DeskObject[],id:string)=>scene.find(o=>o.type==='file'&&o.fil
 const clipped=(scene:DeskObject[],id:string)=>scene.some(o=>o.type==='clip'&&o.clipMembers?.includes(id));
 export function rulerCreateOperations(scene:DeskObject[],ids:string[],point:{x:number;y:number},title='定規'):Operation[]{
  const objects=ids.map(id=>scene.find(o=>o.id===id)!);
- if(objects.some(o=>!o||!rulerTarget(o)||rulerFor(scene,o.id)||filed(scene,o.id)||clipped(scene,o.id)||o.locked))throw Error('束・ファイルに属さないカードや図形を選んでください');
+ if(objects.some(o=>!o||!rulerTarget(o)||rulerFor(scene,o.id)||filed(scene,o.id)||clipped(scene,o.id)||o.locked))throw new DeskError('rulerSelection');
  const x=objects.length?Math.min(...objects.map(o=>o.x))-36:point.x;
  const y=objects.length?Math.min(...objects.map(o=>o.y)):point.y;
  const length=objects.length?Math.max(120,...objects.map(o=>o.y+o.height-y)):480;
@@ -25,7 +26,7 @@ export function resolveRulers(input:DeskObject[],before:DeskObject[]=[]):DeskObj
   if(old?.rulerMembers?.some(m=>!map.has(m.id))){map.delete(r.id);continue;}
   if(new Set(members.map(m=>m.id)).size!==members.length)throw Error('Duplicate ruler member');
   for(const m of members){const o=map.get(m.id);if(!o||!rulerTarget(o))throw Error('Invalid ruler member');if(owners.has(m.id)||clipped(input,m.id))throw Error('A card can belong to only one layout container');owners.set(m.id,r.id);
-   const f=filed(input,m.id),rf=filed(input,r.id);if(f?.id!==rf?.id)throw Error('定規と所属カード全体を同じファイルへ入れてください');}
+   const f=filed(input,m.id),rf=filed(input,r.id);if(f?.id!==rf?.id)throw new DeskError('rulerSameFile');}
   const thickness=r.rulerThickness??36;
   const axis=r.width===r.height?(old?.rulerAxis??r.rulerAxis??'horizontal'):(r.width>r.height?'horizontal':'vertical');
   r.rulerAxis=axis;r.rulerThickness=thickness;r.rulerMode??='free';r.rulerMaterial??='acrylic';r.rulerMembers=members;
@@ -68,8 +69,8 @@ export function resolveRulers(input:DeskObject[],before:DeskObject[]=[]):DeskObj
 export function assertRulerOperation(scene:DeskObject[],op:Operation,actor:string){
  if(!('id'in op))return;const r=rulerFor(scene,op.id);if(!r)return;
  const structural=op.kind==='delete'||op.kind==='update'&&Object.keys(op.patch).some(k=>['x','y','width','height','rulerMembers','rulerMode','rulerThickness','rulerAxis'].includes(k));
- if(actor==='human'&&structural&&rulerGroup(scene,op.id).some(o=>o.locked))throw Error('定規の束をロック解除してください');
- if(filed(scene,r.id)&&(op.kind==='delete'||op.kind==='update'&&Object.keys(op.patch).some(k=>k.startsWith('ruler'))))throw Error('ファイル内の定規は変更・削除できません');
+ if(actor==='human'&&structural&&rulerGroup(scene,op.id).some(o=>o.locked))throw new DeskError('rulerLocked');
+ if(filed(scene,r.id)&&(op.kind==='delete'||op.kind==='update'&&Object.keys(op.patch).some(k=>k.startsWith('ruler'))))throw new DeskError('rulerFiled');
 }
 export function rulerDropTarget(scene:DeskObject[],point:{x:number;y:number},zoom:number,exclude:string[]=[]){
  let best:{ruler:DeskObject;side:'before'|'after';distance:number}|undefined;

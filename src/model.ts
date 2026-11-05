@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import {partialInputSchema} from './partial-input-schema';
 import {equalValue} from './value-equality';
 import {MAX_ASSET_BYTES,MAX_OBJECTS} from './data-limits';
@@ -300,7 +301,7 @@ export class Desk {
       const normalized = placement.normalize(inputOperation, materializeLabels(after, afterSettings), afterSettings);
       const operation = normalized.kind==='cutout' ? (()=>{
         const target=after.find(o=>o.id===normalized.id),mold=after.find(o=>o.id===normalized.moldId);
-        if(!target||!mold||target.id===mold.id)throw new Error('型と対象を一つずつ選んでください');
+        if(!target||!mold||target.id===mold.id)throw new DeskError('cutoutChoosePair');
         return {kind:'update' as const,id:target.id,patch:applyCutoutPatch(target,mold)};
       })() : normalized;
       if (operation.kind === 'desk_rename' || operation.kind === 'initial_view_update' || operation.kind === 'grid_update' || operation.kind === 'background_update' || operation.kind === 'defaults_update' || operation.kind === 'series_add'
@@ -309,13 +310,13 @@ export class Desk {
         continue;
       }
       if (operation.kind === 'add') {
-        if(operation.object.type==='ruler'&&operation.object.rulerMembers?.some(m=>fileFor(after,m.id)||batch.actor==='human'&&after.find(o=>o.id===m.id)?.locked))throw Error('ファイル内やロック中のカードは定規へ追加できません');
-        if(operation.object.type==='clip'&&operation.object.clipMembers?.some(id=>{const owner=fileFor(after,id);return owner&&before.some(o=>o.id===owner.id);}))throw new Error('ファイル内ではクリップの追加・組み替えはできません');
+        if(operation.object.type==='ruler'&&operation.object.rulerMembers?.some(m=>fileFor(after,m.id)||batch.actor==='human'&&after.find(o=>o.id===m.id)?.locked))throw new DeskError('rulerUnavailableMember');
+        if(operation.object.type==='clip'&&operation.object.clipMembers?.some(id=>{const owner=fileFor(after,id);return owner&&before.some(o=>o.id===owner.id);}))throw new DeskError('clipFiled');
         if (after.some(o => o.id === operation.object.id)) throw new Error(`Duplicate ID: ${operation.object.id}`);
         if (after.length >= MAX_OBJECTS) throw new Error('Object limit reached');
         if (operation.object.type === 'label') throw new Error('Use label_add to create a series label');
         if (batch.actor === 'human' && operation.object.type === 'clip' && operation.object.clipMembers?.some(id => after.find(object => object.id === id)?.locked))
-          throw new Error('ロック中の紙はクリップへ追加できません');
+          throw new DeskError('clipLockedMember');
         after.push(validateObject({ ...creationAppearance(operation.object.type, afterSettings.defaults), ...(operation.object.type === 'clip' ? {fill:'#26313d',clipAutoSize:true} : {}), ...operation.object }));
         continue;
       }
@@ -326,13 +327,13 @@ export class Desk {
         const structural = operation.kind === 'delete' || operation.kind === 'update' && Object.keys(operation.patch).some(key =>
           ['x', 'y', 'width', 'height', 'clipMembers', 'clipAnchor', 'clipOffset', 'clipOffsetMode', 'clipOffsetPercent', 'clipSize', 'clipAutoSize'].includes(key));
         if (bundle && structural && clipGroup(after, operation.id).some(object => object.locked))
-          throw new Error('クリップの束をロック解除してから操作してください');
+          throw new DeskError('clipLocked');
         if (operation.kind === 'update' && operation.patch.clipMembers?.some(id =>
           !bundle?.clipMembers?.includes(id) && after.find(object => object.id === id)?.locked))
-          throw new Error('ロック中の紙はクリップへ追加できません');
+          throw new DeskError('clipLockedMember');
       }
       assertRulerOperation(after,operation,batch.actor);
-      if(operation.kind==='update'&&operation.patch.rulerMembers?.some(m=>{const previous=after.find(o=>o.id===operation.id)?.rulerMembers;return !previous?.some(p=>p.id===m.id)&&(fileFor(after,m.id)||batch.actor==='human'&&after.find(o=>o.id===m.id)?.locked);}))throw Error('ファイル内やロック中のカードは定規へ追加できません');
+      if(operation.kind==='update'&&operation.patch.rulerMembers?.some(m=>{const previous=after.find(o=>o.id===operation.id)?.rulerMembers;return !previous?.some(p=>p.id===m.id)&&(fileFor(after,m.id)||batch.actor==='human'&&after.find(o=>o.id===m.id)?.locked);}))throw new DeskError('rulerUnavailableMember');
       assertFileOperation(after,operation);
       if (operation.kind === 'update') {
         if(after[index].doodle&&operation.patch.src!==undefined&&operation.patch.doodle===undefined)throw Error('Update doodle originals instead of replacing their generated SVG source');

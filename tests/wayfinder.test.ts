@@ -1,3 +1,4 @@
+import { DeskError } from '../src/desk-errors';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Desk,dispatch } from '../src/model';
@@ -26,11 +27,11 @@ test('wayfinder bottom attachment follows its card; four ports share one route l
   assert.equal(wayfinderDirection(desk.snapshot(),'go'),'left');
   desk.execute({operations:[{kind:'update',id:'a',patch:{x:50,width:300}}]});
   assert.deepEqual(anchorPoint(desk.get('go'),'bottom'),anchorPoint(desk.get('a'),'right'));
-  assert.throws(()=>desk.execute({operations:[{kind:'add',object:{id:'bad',type:'line',startBinding:{objectId:'go',anchor:'top'}}}]}),/1本/);
+  assert.throws(()=>desk.execute({operations:[{kind:'add',object:{id:'bad',type:'line',startBinding:{objectId:'go',anchor:'top'}}}]}),error=>error instanceof DeskError&&error.code==='wayfinderOneRoute');
   desk.execute({operations:[{kind:'update',id:'l1',patch:{startBinding:{objectId:'go',anchor:'bottom'}}}]});
   assert.equal(wayfinderDirection(desk.snapshot(),'go'),'bottom');
-  assert.throws(()=>desk.execute({operations:[{kind:'update',id:'l1',patch:{startBinding:{objectId:'go',anchor:'top-left'}}}]}),/4点/);
-  assert.throws(()=>desk.execute({operations:[{kind:'add',object:{id:'file',type:'file',fileMembers:['go']}}]}),/入れられない/);
+  assert.throws(()=>desk.execute({operations:[{kind:'update',id:'l1',patch:{startBinding:{objectId:'go',anchor:'top-left'}}}]}),error=>error instanceof DeskError&&error.code==='wayfinderAnchor');
+  assert.throws(()=>desk.execute({operations:[{kind:'add',object:{id:'file',type:'file',fileMembers:['go']}}]}),error=>error instanceof DeskError&&error.code==='fileUnsupportedMember');
   desk.execute({operations:[{kind:'delete',id:'a'}]});assert.equal(desk.get('go').attachment,null);
 });
 

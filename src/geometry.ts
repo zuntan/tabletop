@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import {resolveRulers} from './ruler-layout';
 import {resolveFiles,freezeFileGeometry} from './clear-files';
 import { resolveClips, clipFollower } from './clip-bundles';
@@ -117,9 +118,9 @@ export function resolveConnections(objects: DeskObject[], before: DeskObject[] =
       } else {
         if (!isConnectable(target,objects)) throw new Error('Connections require a connectable shape');
         if(target.type==='wayfinder'){
-          if(!['top','right','bottom','left'].includes(binding.anchor))throw new Error('道しるべの線は上下左右の4点へ接続してください');
+          if(!['top','right','bottom','left'].includes(binding.anchor))throw new DeskError('wayfinderAnchor');
           const count=(wayfinderPorts.get(target.id)??0)+1;wayfinderPorts.set(target.id,count);
-          if(count>1)throw new Error('初版の道しるべに接続できる経路線は1本だけです');
+          if(count>1)throw new DeskError('wayfinderOneRoute');
         }
         points[side] = anchorPoint(target, binding.anchor);
       }

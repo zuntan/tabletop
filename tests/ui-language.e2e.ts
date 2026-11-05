@@ -373,3 +373,21 @@ test('object control labels keep user text literal and translated drawing hints 
   assert.deepEqual(await call('desk_state'),before);assert.deepEqual(errors,[]);
  }finally{await close();}
 });
+
+test('shared validation translates human errors but keeps MCP diagnostics English without edits', {timeout:40_000},async()=>{
+ const {page,client,call,close,errors}=await openTestDesk('ui-language-errors',undefined,undefined,'en-US');page.setDefaultTimeout(5000);
+ try{
+  await call('desk_execute',{operations:[{kind:'label_add',id:'pin',seriesId:'series-1',x:100,y:100}]});await call('desk_select',{ids:['pin']});
+  const before=await call('desk_state'),deskId=await page.locator('#desk-id').textContent();
+  const invalid=()=>client.callTool({name:'desk_execute',arguments:{deskId,operations:[{kind:'add',object:{id:'bad',type:'file',fileMembers:[]}}]}});
+  const en=await invalid();assert.equal(en.isError,true);assert.equal((en.content as {text:string}[])[0].text,'Cannot create an empty clear folder.');
+  await page.locator('#file-create').click();
+  await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.startsWith('Pins, props and wayfinders cannot go in a clear folder.'));
+  assert.deepEqual(await call('desk_state'),before);
+  await page.locator('#desk-menu').click();await page.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();await page.locator('#ui-language').selectOption('ja');await page.waitForFunction(()=>document.documentElement.lang==='ja');
+  await page.locator('#desk-menu').click();await page.locator('#file-create').click();
+  await page.waitForFunction(()=>document.querySelector('#message')?.textContent==='ピン・小物・道しるべはクリアファイルに入れられません。選択から外してください');
+  const ja=await invalid();assert.equal(ja.isError,true);assert.deepEqual(ja.content,en.content);
+  assert.deepEqual(await call('desk_state'),before);assert.deepEqual(errors,[]);
+ }finally{await close();}
+});

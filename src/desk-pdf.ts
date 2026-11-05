@@ -1,3 +1,4 @@
+import { DeskError } from './desk-errors';
 import {checkAssetBytes} from './data-limits';
 import type { Desk } from './model';
 import { cloneSvgForRaster } from './part-raster';
@@ -29,11 +30,11 @@ export async function deskSceneRaster(desk:Desk,canvas:SVGSVGElement,description
  const revision=desk.revision,objects=desk.snapshot(),name=desk.settingsSnapshot().name;
  if(document.fonts.status!=='loaded'){
   let timer:ReturnType<typeof setTimeout>|undefined;
-  try{await Promise.race([document.fonts.ready,new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new Error('フォントを読み込み中です。少し待って再実行してください')),5000);})]);}finally{clearTimeout(timer);}
+  try{await Promise.race([document.fonts.ready,new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new DeskError('fontsLoading')),5000);})]);}finally{clearTimeout(timer);}
  }
  const webCount=canvas.querySelectorAll('#objects iframe').length;
  const root=await cloneSvgForRaster(canvas);
- if(desk.revision!==revision)throw new Error('生成中に机が変更されました。もう一度実行してください');
+ if(desk.revision!==revision)throw new DeskError('exportDeskChanged');
  root.removeAttribute('id');root.removeAttribute('style');root.setAttribute('width','1024');root.setAttribute('height','768');
  root.setAttribute('font-family',getComputedStyle(canvas).fontFamily);
  root.setAttribute('color',getComputedStyle(canvas).color);
@@ -92,15 +93,15 @@ export async function deskSceneRaster(desk:Desk,canvas:SVGSVGElement,description
  root.setAttribute('viewBox',`${box.x} ${box.y} ${box.width} ${box.height}`);root.setAttribute('width',String(raster.width));root.setAttribute('height',String(raster.height));root.setAttribute('preserveAspectRatio','none');
  const image=new Image();image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(root));
  let timer:ReturnType<typeof setTimeout>|undefined;
- try{await Promise.race([image.decode(),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new Error('机の画像化が時間内に完了しませんでした')),15000);})]);}finally{clearTimeout(timer);}
+ try{await Promise.race([image.decode(),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new DeskError('exportTimeout')),15000);})]);}finally{clearTimeout(timer);}
  const bitmap=document.createElement('canvas');bitmap.width=raster.width;bitmap.height=raster.height;
- const ctx=bitmap.getContext('2d');if(!ctx)throw new Error('PDF画像を作成できません');
+ const ctx=bitmap.getContext('2d');if(!ctx)throw new DeskError('pdfCanvas');
  ctx.fillStyle='#fff';ctx.fillRect(0,0,bitmap.width,bitmap.height);ctx.drawImage(image,0,0,bitmap.width,bitmap.height);
  return{bitmap,revision,bounds:box,raster,webCount,name};
 }
 
 export function captureRasterSize(width:number,height:number,requestedScale=1){
- if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)throw new Error('撮影範囲が不正です');
+ if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)throw new DeskError('captureBounds');
  const scale=Math.min(requestedScale,8192/Math.max(width,height),Math.sqrt(16_000_000/(width*height)));
  return{width:Math.max(1,Math.floor(width*scale)),height:Math.max(1,Math.floor(height*scale)),scale};
 }
@@ -116,7 +117,7 @@ export async function deskPdf(desk:Desk,canvas:SVGSVGElement,descriptions:(id:st
 
 export async function deskPng(desk:Desk,canvas:SVGSVGElement,descriptions:(id:string)=>boolean){
  const {bitmap,revision,webCount}=await deskSceneRaster(desk,canvas,descriptions);
- const blob=await new Promise<Blob>((resolve,reject)=>bitmap.toBlob(blob=>blob?resolve(blob):reject(new Error('PNGを作成できません')),'image/png'));
+ const blob=await new Promise<Blob>((resolve,reject)=>bitmap.toBlob(blob=>blob?resolve(blob):reject(new DeskError('pngFailed')),'image/png'));
  checkAssetBytes(blob.size);
  return{bytes:new Uint8Array(await blob.arrayBuffer()),revision,webCount};
 }

@@ -1,3 +1,5 @@
+import { uiErrorMessage } from './i18n/errors';
+import { DeskError } from './desk-errors';
 import { uiText } from './i18n/dom';
 import { resources } from './i18n/resources';
 import type { DeskObject } from './model';
@@ -25,11 +27,11 @@ export function renderMermaid(source: string): Promise<Rendered> {
   const task = (async () => {
     if (!source.trim()) throw new Error('Enter Mermaid source.');
     // This first version is self-contained: external pictures are not part of the document.
-    if (/\bimg\s*:|!\[[^\]]*\]\s*\(/i.test(source)) throw new Error('外部画像を使うMermaid図は未対応です');
+    if (/\bimg\s*:|!\[[^\]]*\]\s*\(/i.test(source)) throw new DeskError('mermaidExternalImages');
     const mermaid = await loadLibrary();
     const { svg } = await mermaid.render(`tabletop-mermaid-${++sequence}`, source);
     const document = new DOMParser().parseFromString(svg, 'image/svg+xml');
-    if (document.querySelector('parsererror')) throw new Error('SVGを生成できませんでした');
+    if (document.querySelector('parsererror')) throw new DeskError('svgGenerationFailed');
     const root = document.documentElement;
     // SVG used as an image needs intrinsic dimensions rather than a percentage width.
     const viewBox = root.getAttribute('viewBox')?.split(/[ ,]+/).map(Number);
@@ -56,6 +58,6 @@ export function drawMermaidCard(group: SVGGElement, object: DeskObject) {
   }).catch(error => {
     group.dataset.mermaidStatus = 'error';
     message.setAttribute('fill', '#b91c1c'); uiText(message,'creation:mermaidFailed');
-    const title = element('title'); title.textContent = error instanceof Error ? error.message : String(error); group.append(title);
+    const title = element('title'); title.textContent = uiErrorMessage(error); group.append(title);
   });
 }

@@ -1,3 +1,5 @@
+import { uiErrorMessage } from './i18n/errors';
+import { DeskError } from './desk-errors';
 import { publicAsset } from './runtime-mode';
 import { propPresets } from './prop-presets';
 import { stationeryButton } from './stationery-button';
@@ -25,12 +27,12 @@ export function createPropControls(container: HTMLElement, place: (preset: typeo
       button.disabled = true;
       try {
         const response = await fetch(publicAsset(`props/${preset.filename}`));
-        if (!response.ok) throw new Error('小物のSVGを読み込めませんでした');
+        if (!response.ok) throw new DeskError('propSvgLoad');
         const source = await response.text();
         const bytes = new TextEncoder().encode(source);
         const src = `data:image/svg+xml;base64,${btoa(Array.from(bytes, byte => String.fromCharCode(byte)).join(''))}`;
         place(preset, src);
-      } catch (error) { report(error instanceof Error ? error.message : String(error), true); }
+      } catch (error) { report(uiErrorMessage(error), true); }
       finally { button.disabled = false; }
     };
   }
