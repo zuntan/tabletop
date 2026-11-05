@@ -115,7 +115,7 @@ import { headerIcon } from './header-icon';
 import { addFormNumberPresets, addPresetPalette } from './number-presets';
 import { createLineStylePicker } from './line-style-picker';
 import { createEndpointPicker } from './endpoint-picker';
-import { parseConnectionUrl } from './connection-url';
+import { parseConnectionUrl, ConnectionUrlError } from './connection-url';
 import { randomUuid } from './portable-crypto';
 import { connectionControls } from './connection-controls';
 import { fittedCamera } from './focus-camera';
@@ -1336,14 +1336,15 @@ const recovery = new BrowserConnection({
   handoff: url => { void connectionPanel.display(url); },
   handoffError: message => notify(message, true),
   disconnected: () => { cancelWayfinding('changed');cancelConfirmDialog(); bhDeletion.stop(); activityLed.clear(); objectAnimator.finish(); cameraAnimator.cancel('Desk disconnected'); desk.point([]); drawSelection(); },
-  status: (state, detail) => {
+  status: (state, detail, detailKey) => {
     bellControls.connected(state==='connected');
     if (state === 'connected') connectionPanel.hide();
     const status = $('#connection');
     uiText(status, state === 'connected' ? 'shell:connected' : state === 'released' ? 'shell:released' : state === 'blocked' ? 'shell:blocked' : 'shell:reconnecting');
     status.classList.toggle('connected', state === 'connected');
     status.classList.toggle('error', state === 'blocked');
-    $('#connection-detail').textContent = detail;
+    const detailNode=$('#connection-detail');
+    if(detailKey)uiText(detailNode,detailKey);else{detailNode.removeAttribute('data-i18n');detailNode.textContent=detail;}
     if (state === 'blocked') notify(detail, true);
     else if ($('#message').dataset.connection === 'true') notify('');
     $('#message').dataset.connection = state === 'blocked' ? 'true' : 'false';
@@ -1453,7 +1454,8 @@ async function connectUrl(value: string, manual: boolean) {
     }
   } catch { /* Fail closed for LAN; local URLs remain usable during downtime. */ }
   if (attempt !== connectionAttempt) return;
-  const parsed = parseConnectionUrl(value, allowedHosts);
+  let parsed:ReturnType<typeof parseConnectionUrl>;
+  try{parsed=parseConnectionUrl(value,allowedHosts);}catch(error){if(error instanceof ConnectionUrlError)throw new Error(t(`connection:${error.code}`));throw error;}
   if (!parsed.token) throw new Error(t('messages:missingToken'));
   await connect(parsed.token, parsed.port, manual, parsed.host,()=>attempt===connectionAttempt);
 }

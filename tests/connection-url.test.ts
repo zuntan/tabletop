@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { parseConnectionUrl } from '../src/connection-url';
+import { parseConnectionUrl, ConnectionUrlError } from '../src/connection-url';
 
 const token = '0123456789abcdefghijklmnop';
 test('connection URLs extract local ports and fragment tokens without networking', () => {
@@ -31,3 +31,9 @@ test('invalid or ambiguous URLs fail without echoing secrets', () => {
     assert.throws(() => parseConnectionUrl(value), error => error instanceof Error && !error.message.includes(token));
   }
 });
+
+ test('connection validation publishes stable diagnostic codes without retaining URL secrets',()=>{
+  for(const [value,code] of [[`https://localhost/#token=${token}`,'invalidUrl'],[`http://localhost:4317/#port=4318&token=${token}`,'portMismatch'],['http://localhost/#token=short','invalidToken']] as const){
+   assert.throws(()=>parseConnectionUrl(value),error=>error instanceof ConnectionUrlError&&error.code===code&&!error.message.includes(token)&&/connection URL/.test(error.message));
+  }
+ });

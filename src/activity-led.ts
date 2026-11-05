@@ -1,11 +1,12 @@
+import { uiAttribute } from './i18n/dom';
 const activityColor = '#00ff00';
 const onMs = 120, offMs = 60, maxPending = 4;
 
 /** A lossy traffic lamp, independent of command execution or success. */
 export function createActivityLed(container: HTMLElement) {
   const lamp = document.createElement('span'); lamp.id = 'ai-activity-led';
-  lamp.setAttribute('role', 'img'); lamp.setAttribute('aria-label', 'AIとの通信ランプ');
-  lamp.title = 'AIとの通信ランプ'; lamp.dataset.lit = 'false';
+  lamp.setAttribute('role', 'img'); uiAttribute(lamp,'aria-label','connection:activity');
+  uiAttribute(lamp,'title','connection:activity'); lamp.dataset.lit = 'false';
   container.append(lamp);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let timer: ReturnType<typeof setTimeout> | undefined;

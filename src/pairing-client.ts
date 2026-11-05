@@ -1,9 +1,11 @@
+import { t, getUiLanguage } from './i18n';
+import type { UiKey } from './i18n/dom';
 import {BinaryTransfer} from './binary-transfer';
 import { challengeSchema, readySchema, randomHex, signPair, verifyPair, type Pairing, connectionDeskId } from './pairing-protocol';
 
 type Callbacks = {
   identity?: (deskId:string)=>void;
-  status: (state: 'waiting' | 'connected' | 'blocked' | 'released', detail: string) => void;
+  status: (state: 'waiting' | 'connected' | 'blocked' | 'released', detail: string, detailKey?: UiKey) => void;
   disconnected: () => void;
   beforeRelease?: () => void;
   handoff?: (url: string) => void;
@@ -20,25 +22,26 @@ export class BrowserConnection {
   private handoffRequested = false;
   private fileReady=false;
   private filePending=new Map<string,{resolve:(value:any)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>|undefined}>();
-  private clearFiles(){this.transport?.close();this.transport=null;this.fileReady=false;for(const p of this.filePending.values()){clearTimeout(p.timer);p.reject(new Error('接続が切れました。保存結果は未確定の場合があります。自動再実行はしません'));}this.filePending.clear();}
+  private clearFiles(){this.transport?.close();this.transport=null;this.fileReady=false;for(const p of this.filePending.values()){clearTimeout(p.timer);p.reject(new Error(t('connection:fileDisconnected')));}this.filePending.clear();}
   fileRequest(request:unknown,timeoutMs=0):Promise<any>{
-    if(!this.fileReady||this.socket?.readyState!==WebSocket.OPEN)return Promise.reject(new Error('通常SAVE／LOADには対応したMCP接続が必要です。未保存の机はダウンロードできます'));
+    if(!this.fileReady||this.socket?.readyState!==WebSocket.OPEN)return Promise.reject(new Error(t('connection:fileUnsupported')));
     const id=crypto.randomUUID();return new Promise((resolve,reject)=>{
-      const timer=timeoutMs>0?setTimeout(()=>{this.filePending.delete(id);reject(new Error('ファイル処理が時間切れになりました。結果を確認してから操作してください（自動再実行なし）'));},timeoutMs):undefined;
+      const timer=timeoutMs>0?setTimeout(()=>{this.filePending.delete(id);reject(new Error(t('connection:fileTimeout')));},timeoutMs):undefined;
       this.filePending.set(id,{resolve,reject,timer});
       void this.transport!.send({type:'file_request',id,request}).catch(error=>{clearTimeout(timer);this.filePending.delete(id);reject(error);});
     });
   }
   clipboardRequest(token:string):Promise<unknown>{return this.fileRequest({method:'clipboard_lookup',token});}
   constructor(private callbacks: Callbacks) {}
+  private status(state:'waiting'|'blocked'|'released',key:UiKey){this.callbacks.status(state,t(key),key);}
   hasPairing() { return this.pair !== null; }
   ringBell(ids:string[],note:{text:string;draftVersion:number}) {
-    if(!this.pair||this.socket?.readyState!==WebSocket.OPEN)throw new Error('AIとの接続が必要です');
+    if(!this.pair||this.socket?.readyState!==WebSocket.OPEN)throw new Error(t('connection:needConnection'));
     this.socket.send(JSON.stringify({type:'bell_press',ids:ids.slice(0,200),...note}));
   }
   requestHandoff() {
     if (this.handoffRequested) return;
-    if (!this.pair || this.socket?.readyState !== WebSocket.OPEN) throw new Error('AIとの接続が必要です。');
+    if (!this.pair || this.socket?.readyState !== WebSocket.OPEN) throw new Error(t('connection:needConnectionPeriod'));
     this.handoffRequested = true;
     this.socket.send(JSON.stringify({ type: 'handoff_request' }));
   }
@@ -48,7 +51,7 @@ export class BrowserConnection {
     const generation = ++this.generation;
     clearTimeout(this.timer); this.socket?.close();
     this.clearFiles();this.callbacks.disconnected();
-    this.callbacks.status('waiting', 'サーバーの復帰と接続確認を待っています。机の編集・保存は続けられます。');
+    this.status('waiting','connection:waiting');
     const paired = this.pair;
     const clientNonce = randomHex();
     let serverNonce = '', candidate = paired, authenticated = false, blocked = false;
@@ -58,13 +61,13 @@ export class BrowserConnection {
     const block = () => {
       if (!current()) return;
       blocked = true; ws.close();
-      this.callbacks.status('blocked', '接続相手を確認できないため、自動再接続を停止しました。机を保存するか、接続欄から手動で再接続してください。');
+      this.status('blocked','connection:blocked');
     };
     const deadline = setTimeout(() => ws.close(), 9000);
     ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', pairId: paired?.pairId ?? null, nonce: clientNonce }));
     const handle=(value:any)=>{
       if(!current())return;
-      if(value.type==='file_ready'){this.fileReady=value.binaryTransfer===1;if(!this.fileReady)this.callbacks.status('blocked','MCPを再起動してください（分割転送非対応）。机は保持しています。');return;}
+      if(value.type==='file_ready'){this.fileReady=value.binaryTransfer===1;if(!this.fileReady)this.status('blocked','connection:oldTransfer');return;}
       if(value.type==='file_result'){
         const pending=this.filePending.get(value.id);if(!pending)return;
         clearTimeout(pending.timer);this.filePending.delete(value.id);
@@ -101,7 +104,7 @@ export class BrowserConnection {
             ++this.generation; clearTimeout(this.timer); clearTimeout(deadline);
             this.pair = null; this.socket = null;
             this.clearFiles();this.callbacks.disconnected();
-            this.callbacks.status('released', 'AIとの接続を解放しました。自動再接続は停止しています。机の編集・保存は続けられます。再接続する場合は接続欄から手動で接続してください。');
+            this.status('released','connection:released');
             ws.send(JSON.stringify({ type: 'release_ack', id: value.id }));
             ws.close(4003, 'Desk released');
             this.handoffRequested = false;
@@ -123,7 +126,7 @@ export class BrowserConnection {
           if (!current() || ws.readyState !== WebSocket.OPEN) return;
           this.pair = candidate; authenticated = true; this.attempt = 0;
           ws.binaryType='arraybuffer';
-          this.transport=new BinaryTransfer(data=>ws.send(data as any),handle,undefined,(done,total)=>{const message=document.querySelector('#message');if(message)message.textContent=`データ転送中 ${Math.round(done/total*100)}%（${done.toLocaleString()} / ${total.toLocaleString()} bytes）`;});
+          this.transport=new BinaryTransfer(data=>ws.send(data as any),handle,undefined,(done,total)=>{const message=document.querySelector('#message');if(message){message.removeAttribute('data-i18n');message.textContent=t('connection:progress',{percent:Math.round(done/total*100),done:done.toLocaleString(getUiLanguage()),total:total.toLocaleString(getUiLanguage())});}});
           this.callbacks.identity?.(connectionDeskId(candidate.pairId));
           ws.send(JSON.stringify({ type: 'capabilities', release: true, bell:true, toast:true, fileOperations:true, binaryTransfer:1 }));
           clearTimeout(deadline); this.callbacks.status('connected', '');
@@ -136,7 +139,7 @@ export class BrowserConnection {
       if (!current() || blocked) return;
       this.clearFiles();this.callbacks.disconnected();
       if (event.code === 4003) { block(); return; }
-      this.callbacks.status('waiting', 'サーバーの復帰と接続確認を待っています。机の編集・保存は続けられます。');
+      this.status('waiting','connection:waiting');
       const delay = [250, 1000, 2000, 5000][Math.min(this.attempt++, 3)];
       this.timer = setTimeout(() => this.connect(token, port, request, false, host), delay);
     };

@@ -324,3 +324,24 @@ test('automatic launch names use the initial language and explicit names stay li
   assert.deepEqual(await call('desk_state'),before);assert.deepEqual(errors,[]);
  }finally{await ja.close();await en.close();await close();}
 });
+
+test('connection diagnostics and released details use the UI language without exposing a URL', {timeout:35_000},async()=>{
+ const {page,call,close,errors}=await openTestDesk('ui-language-connection',undefined,undefined,'en-US');page.setDefaultTimeout(5000);
+ try{
+  await call('desk_execute',{operations:[{kind:'add',object:{id:'kept',type:'text',text:'Stay here',x:100,y:100}}]});
+  const before=await call('desk_state');
+  await page.getByRole('tab',{name:'AI',exact:true}).click();
+  let sockets=0;page.on('websocket',()=>sockets++);
+  await page.locator('#connection-url').fill('https://example.invalid/#token=do-not-echo-this');
+  await page.getByRole('button',{name:'Connect',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('#message')?.textContent?.startsWith('Check the connection URL.'));
+  assert.doesNotMatch(await page.locator('#message').textContent()??'',/do-not-echo|example.invalid/);assert.equal(sockets,0);
+  assert.deepEqual(await call('desk_state'),before);
+  await call('desk_release',{confirm:true});
+  await page.waitForFunction(()=>document.querySelector('#connection-detail')?.textContent?.startsWith('The AI connection was released'));
+  await page.locator('#desk-menu').click();await page.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();await page.locator('#ui-language').selectOption('ja');
+  await page.waitForFunction(()=>document.documentElement.lang==='ja');
+  assert.match(await page.locator('#connection-detail').textContent()??'',/^AIとの接続を解放しました/);
+  assert.equal((await page.locator('[data-id="kept"] .markdown-text').textContent())?.trim(),'Stay here');assert.equal(sockets,0);assert.deepEqual(errors,[]);
+ }finally{await close();}
+});

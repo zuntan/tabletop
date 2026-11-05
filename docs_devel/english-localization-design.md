@@ -374,3 +374,11 @@ messagesリソースへ共通UIの残りの通知・案内を移した。操作�
 検証：関連ブラウザ14件、起動の単体5件通過。自動名の日英初期化、明示名・既存名の保持、URL掃除、複数机の操作分離を確認。複数机テストはベル状態の画面通知到着を待ち、第二ブラウザのlocaleを明示した。全単体331件通過、通常版・Pagesビルド成功。ログ：`/tmp/tabletop-v011-launch-final-e2e.log`、`/tmp/tabletop-v011-launch-unit.log`、`/tmp/tabletop-v011-current-unit.log`、`/tmp/tabletop-v011-launch-build.log`、`/tmp/tabletop-v011-current-pages.log`。
 
 残り：再接続の詳しい案内、オブジェクトを開く操作や補助表示などの細部、共有処理の検証エラーの英語標準化と人間表示の扱い、小物名・英語意匠。工程2は継続中で、MCPヘルプ・英語文書・最終通し確認もまだ必要。
+
+### 工程2：再接続の詳細案内と接続URL診断
+
+connection名前空間を追加。復帰待ち・検証停止・MCP転送非対応・解放後の詳細案内、ブラウザの通常Save/Loadの接続エラー、転送進捗、通信ランプを翻訳。詳細案内のキーをブラウザ内部のコールバックで保持し、言語切替でも状態に合う説明を表示する。握手・認証・再接続間隔・転送・MCPプロトコルは変更しない。
+
+接続URL検証は英語の標準診断と固定コードを持つConnectionUrlErrorを返し、人間向けの呼出し元でのみコードを翻訳する。URL・トークンを診断へ埋め込まない。利用者データや接続先は変更しない。
+
+検証：接続URL／翻訳単体9件、関連ブラウザ計20件通過（追加した表示確認1件はMarkdownの末尾改行を考慮して再実行）。通常ビルド成功。英語の不正URL案内、秘密情報非表示、解放後の日本語切替とカード保持を確認。ログ：`/tmp/tabletop-v011-connection-unit.log`、`/tmp/tabletop-v011-connection-e2e.log`、`/tmp/tabletop-v011-connection-rerun.log`、`/tmp/tabletop-v011-connection-build.log`。

@@ -1,0 +1,16 @@
+{
+  "waiting": "Waiting for the server and connection verification. You can keep editing and saving this desk.",
+  "blocked": "Automatic reconnection stopped because the peer could not be verified. Save the desk or reconnect manually from the connection panel.",
+  "oldTransfer": "Restart MCP to enable chunked transfer. The desk contents are kept.",
+  "released": "The AI connection was released and automatic reconnection stopped. You can keep editing and saving. Use the connection panel to reconnect manually.",
+  "fileDisconnected": "Connection lost. The save outcome may be unknown; it will not be retried automatically.",
+  "fileUnsupported": "Normal Save/Load requires a compatible MCP connection. You can download the unsaved desk.",
+  "fileTimeout": "The file operation timed out. Check the outcome before continuing; no automatic retry.",
+  "needConnection": "An AI connection is required",
+  "needConnectionPeriod": "An AI connection is required.",
+  "progress": "Transferring data: {{percent}}% ({{done}} / {{total}} bytes)",
+  "invalidUrl": "Check the connection URL. Paste an HTTP URL for localhost or a LAN address authorized through AI.",
+  "portMismatch": "The connection URL port numbers do not match. Check the URL.",
+  "invalidToken": "The connection URL token is invalid. Check the URL.",
+  "activity": "AI communication indicator"
+}
