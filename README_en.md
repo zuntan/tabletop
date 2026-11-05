@@ -12,13 +12,11 @@ Then ask your AI:
 
 Tabletop is a browser-based desk that you and your AI can both read and edit. The AI uses MCP; your conversation stays in your usual AI chat. The contents and arrangement of the desk become shared references for the discussion.
 
-> English support is being developed for v0.1.1 on `develop`. The published v0.1.0 release predates this work. The English tutorial below is included in this branch and becomes public with its Pages deployment. This document does not announce a new release.
-
 ## Try a desk
 
-**[English tutorial desk](docs/tabletop/tabletop-guide-en.tabletop)** · [Japanese tutorial](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop)
+**[Open the English tutorial](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide-en.tabletop)** · [Japanese tutorial](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop)
 
-Download the English `.tabletop` file and open it with File → Upload in the v0.1.1 browser or normal edition. After deploying this branch to Pages, [open the English tour directly](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide-en.tabletop).
+You can also [download the English desk file](docs/tabletop/tabletop-guide-en.tabletop) and open it with File → Upload.
 
 Try the tools and real examples in your browser without installing anything. Select a green wayfinder and press the ▶ button that appears to follow its route through the desk.
 
@@ -62,7 +60,7 @@ Export PDF or PNG for use elsewhere. The static Pages edition lets people open a
 
 ## Language
 
-On the v0.1.1 development version, choose **Menu → Language… → English / 日本語**. The first launch uses Japanese for a Japanese browser language, and English otherwise. Your explicit choice is stored in the browser, independently of the desk file.
+Choose **Menu → Language… → English / 日本語**. The first launch uses Japanese for a Japanese browser language, and English otherwise. Your explicit choice is stored in the browser, independently of the desk file.
 
 Changing the UI language does not translate existing cards, names, Mermaid source or other saved content. Japanese stamp artwork remains Japanese; tooltips and the MCP catalog explain its meaning in English. New default names use the language active when they are created.
 

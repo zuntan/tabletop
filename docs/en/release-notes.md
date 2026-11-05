@@ -2,7 +2,7 @@
 
 [日本語](../release-notes.md) · [Guide](README.md)
 
-## v0.1.1 — Preparing for release
+## v0.1.1
 
 Tabletop now supports Japanese and English UI, with English documentation and a separate English tutorial desk.
 

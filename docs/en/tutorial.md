@@ -4,9 +4,9 @@
 
 The tutorial lays out explanations and real examples of cards, lines, pins, clips, stamps and other tools on one large desk.
 
-**[English tutorial desk file](../tabletop/tabletop-guide-en.tabletop)** · [Japanese public tour](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop)
+**[Open the English tutorial](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide-en.tabletop)** · [Japanese public tour](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop)
 
-The separate English tour is included in the v0.1.1 development branch. Download the file and use File → Upload in the v0.1.1 browser or normal edition. Once this branch is deployed to Pages, [open it directly](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide-en.tabletop) without an AI connection. The published v0.1.0 release predates English support.
+It opens directly in your browser without installation or an AI connection. You can also [download the desk file](../tabletop/tabletop-guide-en.tabletop) and open it with File → Upload in the browser or normal edition.
 
 UI language and desk content are independent: switching the UI does not translate a saved desk. The English tour keeps Japanese stamp artwork and explains its meaning in English.
 

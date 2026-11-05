@@ -88,4 +88,4 @@ The output is `dist-pages`, separate from normal `dist`; generated output need n
 
 For this repository's GitHub Pages workflow, set Pages → Build and deployment → Source to GitHub Actions. Relevant changes pushed to main trigger deployment; “Deploy Tabletop Pages” can also be run manually.
 
-When updating a desk, save and replace the source file before publishing. Review what it contains and verify the actual public URL afterward. English documentation on develop does not itself update the current public site.
+When updating a desk, save and replace the source file before publishing. Review what it contains and verify the actual public URL afterward. Pages follows the deployed main branch rather than a fixed release tag.

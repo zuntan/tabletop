@@ -6,13 +6,13 @@ See the [release notes](release-notes.md) for changes between versions.
 
 Tabletop is a place for humans and AI to spread out material, look at it, move it and think together. Read the parts you need; this is not a course you must finish in order.
 
-These English guides describe the v0.1.1 development work. The published v0.1.0 release predates English UI support; the English tutorial file is included in this branch for the next Pages deployment.
+These guides cover Tabletop v0.1.1. Japanese and English UI share the same desk file format.
 
 ## Try it first
 
-[English tutorial desk file](../tabletop/tabletop-guide-en.tabletop) · [Japanese public tour](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop)
+[Open the English tutorial](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide-en.tabletop) · [Japanese public tour](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop)
 
-Download the English file and use File → Upload in the v0.1.1 browser or normal edition. No AI connection is needed to explore it. Select the green wayfinder near the central introduction and press ▶ to visit explanations and examples. See [Touring the tutorial](tutorial.md) for navigation and the PDF overview.
+It opens in your browser without installation or an AI connection. Select the green wayfinder near the central introduction and press ▶ to visit explanations and examples. See [Touring the tutorial](tutorial.md) for navigation and the PDF overview.
 
 ## Read what you need
 
