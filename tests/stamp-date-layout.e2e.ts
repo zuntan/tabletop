@@ -40,3 +40,27 @@ test('date labels use two explicit weights and preserve shared heights and divid
   assert.deepEqual(errors,[]);
  }finally{await close();}
 });
+
+test('Excellent fits its rotated rings and footer date inside short cards, including compact selection',{timeout:45000},async()=>{
+ const {page,call,close,errors}=await openTestDesk('excellent-card-fit');
+ try{
+  const angles=[-45,-9,-6,0,6,45];
+  const cards=angles.flatMap((angle,i)=>[true,false].map((dated,j)=>({id:`award-${i}-${j}`,type:'text',x:i*900,y:j*400,width:864,height:312,text:'',stamp:{designId:'excellent_en',text:dated?'2026.11.06':'',angle}})));
+  await call('desk_execute',{operations:cards.map(object=>({kind:'add',object}))});
+  const before=await call('desk_state');
+  for(const compact of [false,true]){
+   await call('desk_select',{ids:compact?cards.map(o=>o.id):[]});
+   const boxes=await page.locator('[data-stamp="excellent_en"]').evaluateAll(nodes=>nodes.map(node=>{
+    const stamp=node as SVGGraphicsElement,body=stamp.parentElement as unknown as SVGGraphicsElement;
+    const b=stamp.getBBox(),m=body.getCTM()!.inverse().multiply(stamp.getCTM()!);
+    const p=[b.x,b.x+b.width].flatMap(x=>[b.y,b.y+b.height].map(y=>new DOMPoint(x,y).matrixTransform(m)));
+    return{id:body.getAttribute('data-id'),compact:stamp.getAttribute('data-compact'),left:Math.min(...p.map(v=>v.x)),right:Math.max(...p.map(v=>v.x)),top:Math.min(...p.map(v=>v.y)),bottom:Math.max(...p.map(v=>v.y))};
+   }));
+   assert.equal(boxes.length,cards.length);
+   for(const b of boxes){assert.equal(b.compact,String(compact));assert.ok(b.left>=0&&b.top>=0&&b.right<=864&&b.bottom<=312,JSON.stringify(b));}
+  }
+  await call('desk_select',{ids:[]});
+  assert.deepEqual(await call('desk_state'),before,'fitting must not edit card or stamp data');
+  assert.deepEqual(errors,[]);
+ }finally{await close();}
+});

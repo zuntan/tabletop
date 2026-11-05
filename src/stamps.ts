@@ -7,7 +7,20 @@ import { stampPattern, type Stamp } from './stamp-values';
 let stampMaskSerial = 0;
 
 /** Body-relative geometry. Decoration never changes object bounds or hit targets. */
-export function stampLayout(width: number, height: number, compact: boolean, shape: string) {
+export function stampLayout(width: number, height: number, compact: boolean, shape: string, angle = 0) {
+  if (shape === 'award') {
+    // Include both decorative rings and the footer date, even when the date is blank.
+    // Keep a conservative text allowance: the date uses a system monospace font.
+    const radians = angle * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians);
+    const corners = [-106, 106].flatMap(x => [-54, 78].map(y => ({x:x*cos-y*sin,y:x*sin+y*cos})));
+    const left = Math.min(...corners.map(p=>p.x)), right = Math.max(...corners.map(p=>p.x));
+    const top = Math.min(...corners.map(p=>p.y)), bottom = Math.max(...corners.map(p=>p.y));
+    const scale = Math.min(width * (compact ? .3 : .78) / (right-left), height * (compact ? .34 : .78) / (bottom-top));
+    const margin = Math.min(4, width*.04, height*.04);
+    return {width:210*scale,height:132*scale,
+      x:compact?width-margin-right*scale:width/2-(left+right)/2*scale,
+      y:compact?height-margin-bottom*scale:height/2-(top+bottom)/2*scale};
+  }
   const ratio = shape === 'tall-square' ? 444 / 258 : shape === 'square' ? 2.1 : 1;
   const w = Math.min(width * (compact ? .3 : .78), height * (compact ? .34 : .78) * ratio);
   const h = w / ratio;
@@ -142,7 +155,7 @@ export function drawStamp(group: SVGGElement, object: DeskObject, compact: boole
   if (!['text','file'].includes(object.type) || !object.stamp) return;
   const pattern = stampPattern(object.stamp.designId);
   const layout = stampLayout(object.width, object.height, compact,
-    ['caution_en','danger_en','do_not_remove_ja'].includes(pattern.id)?'tall-square':pattern.shape);
+    pattern.id==='excellent_en'?'award':['caution_en','danger_en','do_not_remove_ja'].includes(pattern.id)?'tall-square':pattern.shape, object.stamp.angle);
   const layer = svg('g', { 'data-stamp': object.stamp.designId, 'data-compact': String(compact),
     'pointer-events': 'none', 'aria-hidden': 'true',
     transform: `translate(${layout.x} ${layout.y}) rotate(${object.stamp.angle}) scale(${layout.width / (pattern.shape === 'square' ? 210 : 100)})` });
