@@ -192,3 +192,35 @@ test('localized stationery explains Japanese artwork and preserves badge data wh
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });
+
+test('English editing controls and connection display preserve drafts and local state', { timeout: 35_000 }, async () => {
+  const { page, call, close, errors } = await openTestDesk('ui-language-editing', undefined, undefined, 'en-US');
+  page.setDefaultTimeout(5000);
+  try {
+    await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'note', type: 'text', text: '本文', x: 100, y: 100 } }] });
+    await page.locator('[data-id="note"]').dblclick();
+    await page.locator('.inline-editor').getByRole('textbox', { name: 'Text', exact: true }).fill('Uncommitted text');
+    await page.getByRole('button', { name: 'Markdown preview', exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Enter inserts a new line', exact: true }).waitFor();
+    await page.keyboard.press('Escape');
+    const before = await call('desk_state');
+    await page.getByRole('tab', { name: 'AI', exact: true }).click();
+    await page.locator('#connection-url').fill('https://example.invalid/');
+    await page.getByRole('button', { name: 'Show URL', exact: true }).click();
+    await page.locator('#desk-bell-options').click();
+    await page.getByRole('textbox', { name: 'Bell note', exact: true }).fill('Keep this bell draft');
+    await page.getByRole('button', { name: 'Keep the note and close', exact: true }).click();
+    await page.locator('#desk-menu').click();
+    await page.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();
+    await page.locator('#ui-language').selectOption('ja');
+    await page.waitForFunction(() => document.documentElement.lang === 'ja');
+    assert.equal(await page.locator('#connection-url').inputValue(), 'https://example.invalid/');
+    assert.equal(await page.locator('#connection-url').getAttribute('type'), 'text');
+    assert.equal(await page.locator('#connection-show').getAttribute('aria-label'), 'URLを隠す');
+    await page.locator('#desk-menu').click();
+    await page.locator('#desk-bell-options').click();
+    assert.equal(await page.getByRole('textbox', { name: 'ベルに添える文章', exact: true }).inputValue(), 'Keep this bell draft');
+    assert.deepEqual(await call('desk_state'), before);
+    assert.deepEqual(errors, []);
+  } finally { await close(); }
+});

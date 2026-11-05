@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import { createMarkdownPreview } from './markdown-preview';
 import { shapeTypes } from './shape-definitions';
 import { pinScreenObject } from './pin-series';
@@ -39,11 +40,11 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       const patch: EditorPatch = object.type === 'label' ? { description: text.value } : { text: text.value };
       if(source){if(object.type==='qrcode')patch.qrText=source.value;else patch.mermaidSource=source.value;}
       if(url&&object.deskPath){
-        const value=url.value.trim();if(!value.endsWith('.tabletop')||/[\x00-\x1f]/.test(value))throw new Error('.tabletopファイルのパスを入力してください');patch.deskPath=value;
+        const value=url.value.trim();if(!value.endsWith('.tabletop')||/[\x00-\x1f]/.test(value))throw new Error(t('editing:pathRequired'));patch.deskPath=value;
       }else if (url && ['image', 'svg'].includes(object.type) && !url.value.trim()) patch.url = '';
       else if (url) {
         const value = new URL(url.value);
-        if (!['http:', 'https:'].includes(value.protocol)) throw new Error('HTTP(S) URLを入力してください');
+        if (!['http:', 'https:'].includes(value.protocol)) throw new Error(t('editing:httpRequired'));
         patch.url = value.href;
       }
       save(object, patch, fresh); close(); return true;
@@ -62,33 +63,33 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       if (active && !commit()) return;
       const panel = document.createElement('div'); panel.className = 'inline-editor';
       const text = document.createElement('textarea'); text.dataset.inlineText = ''; text.rows = 3;
-      text.setAttribute('aria-label', object.type === 'label' ? 'ピンの説明文' : ['image', 'svg', 'mermaid', 'qrcode', 'prop', 'file'].includes(object.type) ? 'タイトル' : ['link', 'web'].includes(object.type) ? '表示名' : 'テキスト');
-      if (['image', 'svg'].includes(object.type)) text.placeholder = 'タイトル';
+      text.setAttribute('aria-label', object.type === 'label' ? t('editing:pinDescription') : ['image', 'svg', 'mermaid', 'qrcode', 'prop', 'file'].includes(object.type) ? t('editing:title') : ['link', 'web'].includes(object.type) ? t('editing:displayName') : t('editing:text'));
+      if (['image', 'svg'].includes(object.type)) text.placeholder = t('editing:title');
       text.value = object.type === 'label' ? object.description ?? '' : object.text;
       panel.append(text);
       let source: HTMLTextAreaElement | undefined;
       if (object.type === 'mermaid'||object.type==='qrcode') {
         source = document.createElement('textarea'); source.rows = 10; source.spellcheck = false;
-        if(object.type==='qrcode')source.dataset.inlineQr='';else source.dataset.inlineMermaid=''; source.setAttribute('aria-label',object.type==='qrcode'?'QRコードの内容':'Mermaidソース');
+        if(object.type==='qrcode')source.dataset.inlineQr='';else source.dataset.inlineMermaid=''; source.setAttribute('aria-label',object.type==='qrcode'?t('editing:qrContent'):t('editing:mermaidSource'));
         source.value = (object.type==='qrcode'?object.qrText:object.mermaidSource) ?? ''; panel.append(source);
       }
       let url: HTMLInputElement | undefined;
       if (['link', 'web', 'image', 'svg'].includes(object.type)) {
         url = document.createElement('input'); url.type = object.deskPath?'text':'url'; url.dataset.inlineUrl = '';
         const optional = ['image', 'svg'].includes(object.type);
-        url.setAttribute('aria-label', optional ? 'HTTP(S) URL（任意）' : 'HTTP(S) URL');
-        url.placeholder = optional ? 'リンク先URL（任意）https://' : 'https://'; url.value = object.deskPath??object.url??'';if(object.deskPath){url.setAttribute('aria-label','机ファイルのパス');url.placeholder='.tabletopファイルのパス';} panel.append(url);
+        url.setAttribute('aria-label', optional ? t('editing:optionalHttp') : t('editing:http'));
+        url.placeholder = optional ? t('editing:optionalLink') : 'https://'; url.value = object.deskPath??object.url??'';if(object.deskPath){url.setAttribute('aria-label',t('editing:path'));url.placeholder=t('editing:pathPlaceholder');} panel.append(url);
       }
       const hint = document.createElement('small'); hint.id = 'inline-editor-hint'; hint.setAttribute('aria-live', 'polite');
       text.setAttribute('aria-describedby', hint.id);
       const actions = document.createElement('div'); actions.className = 'inline-editor-actions';
       const mode = document.createElement('button'); mode.type = 'button'; mode.textContent = '⇄';
-      mode.className = 'editor-mode-toggle'; mode.setAttribute('aria-label', 'Enter改行モード');
+      mode.className = 'editor-mode-toggle'; mode.setAttribute('aria-label', t('editing:enterMode'));
       const updateHint = () => {
         hint.textContent = !source && submitMode === 'enter'
-          ? 'Enter：確定 · Shift＋Enter：改行 · Esc：取消' : 'Enter：改行 · Ctrl/⌘＋Enter：確定 · Esc：取消';
+          ? t('editing:enterHint') : t('editing:modEnterHint');
         mode.setAttribute('aria-pressed', String(submitMode === 'mod-enter'));
-        mode.title = submitMode === 'enter' ? 'Enterで改行する方式へ切替' : 'Enterで確定する方式へ切替';
+        mode.title = submitMode === 'enter' ? t('editing:useNewline') : t('editing:useSubmit');
       };
       mode.onclick = () => {
         if (composing) return;

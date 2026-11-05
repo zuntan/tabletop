@@ -1,13 +1,14 @@
+import { uiAttribute } from './i18n/dom';
 import { createIcon } from './icons';
 import { renderMarkdown } from './markdown';
 
 /** A held view of the draft, never a write to the desk or a second editor. */
 export function createMarkdownPreview(panel: HTMLElement, input: HTMLTextAreaElement, actions: HTMLElement) {
   const button = document.createElement('button'); button.type = 'button'; button.className = 'editor-preview-toggle';
-  button.append(createIcon('eye', 18)); button.title = '押している間だけMarkdownを確認';
-  button.setAttribute('aria-label', 'Markdownプレビュー'); button.setAttribute('aria-pressed', 'false');
+  button.append(createIcon('eye', 18)); uiAttribute(button,'title','editing:previewHold');
+  uiAttribute(button,'aria-label','editing:preview'); button.setAttribute('aria-pressed', 'false');
   const preview = document.createElement('div'); preview.className = 'markdown-text editor-markdown-preview'; preview.hidden = true;
-  preview.setAttribute('aria-label', '未確定のMarkdownプレビュー'); preview.inert = true;
+  uiAttribute(preview,'aria-label','editing:previewDraft'); preview.inert = true;
   panel.append(preview); actions.append(button);
   let showing = false;
   const stop = (returnFocus = false) => {

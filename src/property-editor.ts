@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import type { Desk, DeskObject } from './model';
 import { syncProperties, propertyValue, propertyFieldPatch } from './properties';
 
@@ -20,8 +21,8 @@ export function createPropertyEditor(form: HTMLFormElement, desk: Desk,
     if (!shownId || draft && draft.id !== shownId) { restore(input); return; }
     try {
       const object = desk.get(shownId);
-      if (draft && propertyValue(object, input.name) !== draft.base) throw new Error('編集中にこの値が変更されました。最新の値を確認してください');
-      if (!input.checkValidity()) throw new Error('入力値を確認してください');
+      if (draft && propertyValue(object, input.name) !== draft.base) throw new Error(t('editing:changedDraft'));
+      if (!input.checkValidity()) throw new Error(t('editing:invalidValue'));
       const patch = propertyFieldPatch(input.name, input.value, object);
       drafts.delete(input);
       if (Object.keys(patch).length) apply(object.id, patch);
