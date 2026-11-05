@@ -60,6 +60,21 @@
       "name": "仮置き場",
       "caption": "仮置き場",
       "description": "青灰色の浅いトレー風の枠と仮置き場の看板。中央は透明。枠だけ伸縮し、看板や文字は大きさを保つ。"
+    },
+    "vacant-lot-en": {
+      "name": "空き地（英語）",
+      "caption": "空き地\n（英語）",
+      "description": "緑の枠と草、英語のVACANT LOTの看板。枠だけ伸縮し、看板は大きさを保つ。中央は透明。"
+    },
+    "work-in-progress-en": {
+      "name": "作業中（英語）",
+      "caption": "作業中\n（英語）",
+      "description": "控えめな枠と英語のWORK IN PROGRESSの木製看板。枠だけ伸縮し、看板は大きさを保つ。"
+    },
+    "temporary-area-en": {
+      "name": "仮置き場（英語）",
+      "caption": "仮置き場\n（英語）",
+      "description": "青灰色のトレー風の枠と英語のTEMP AREAの看板。枠だけ伸縮し、看板は大きさを保つ。中央は透明。"
     }
   }
 }

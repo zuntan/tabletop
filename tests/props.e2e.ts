@@ -5,13 +5,13 @@ import { openTestDesk } from './desk-browser';
 test('human palette and AI read-only preset IF place embedded props, including custom SVGs, without open controls', { timeout: 60_000 }, async () => {
   const { page, call, client, close, errors } = await openTestDesk('props');
   try {
-    const catalog = await call('desk_prop_list'); assert.equal(catalog.presets.length, 12);
+    const catalog = await call('desk_prop_list'); assert.equal(catalog.presets.length, 15);
     for (const item of catalog.presets) {
       const source = await call('desk_prop_get', { id: item.id }); assert.match(source.svg, /<svg/);
     }
     const preset = await call('desk_prop_get', { id: 'teacup' }); assert.match(preset.svg, /<svg/);
     const bad = await callTestTool(client, { name: 'desk_prop_get', arguments: { id: '../server.ts' } }); assert.equal(bad.isError, true);
-    assert.equal(await page.locator('#prop-palette img').count(), 12);
+    assert.equal(await page.locator('#prop-palette img').count(), 15);
     await page.locator('#prop-palette img').evaluateAll(images => Promise.all(images.map(image => (image as HTMLImageElement).decode())));
     const before = await call('desk_summary');
     await page.locator('#prop-open').click(); await page.locator('[data-prop-preset="senpai-robot"]').click();
@@ -53,7 +53,7 @@ test('prop catalog stays English while UI names follow creation language without
     assert.match(preset.description,/Japanese sign/);
     await page.locator('#prop-open').click();
     assert.equal(await page.locator('#prop-open').getAttribute('aria-label'),'Props');
-    assert.equal(await page.locator('[data-prop-preset="temporary-area"] .prop-caption').textContent(),'Temporary\narea');
+    assert.equal(await page.locator('[data-prop-preset="temporary-area"] .prop-caption').textContent(),'Temporary\narea JP');
     await page.locator('#prop-palette').screenshot({path:'/tmp/tabletop-v011-props-en.png'});
     await page.locator('[data-prop-preset="senpai-robot"]').click();
     await page.locator('[data-id^="prop-"]').first().waitFor();

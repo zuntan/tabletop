@@ -13,8 +13,11 @@ export const propPresets = [
   { id: 'desk-bell', filename: 'desk-bell.svg', width: 240, height: 274 },
   { id: 'senpai-robot', filename: 'senpai-robot.svg', width: 240, height: 292 },
   { id: 'vacant-lot', filename: 'vacant-lot.svg', width: 480, height: 354, responsive: true },
+  { id: 'vacant-lot-en', filename: 'vacant-lot-en.svg', width: 480, height: 354, responsive: true },
   { id: 'work-in-progress', filename: 'work-in-progress.svg', width: 480, height: 354, responsive: true },
+  { id: 'work-in-progress-en', filename: 'work-in-progress-en.svg', width: 480, height: 354, responsive: true },
   { id: 'temporary-area', filename: 'temporary-area.svg', width: 480, height: 354, responsive: true },
+  { id: 'temporary-area-en', filename: 'temporary-area-en.svg', width: 480, height: 354, responsive: true },
 ] as const;
 export type PropPreset = typeof propPresets[number];
 

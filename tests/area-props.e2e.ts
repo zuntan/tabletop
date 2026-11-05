@@ -7,7 +7,7 @@ test('area prop frames resize while sign lettering stays fixed, with transparent
   const {page,call,close,errors}=await openTestDesk('area-props');
   try{
     const presets=[];
-    for(const id of ['vacant-lot','work-in-progress','temporary-area']){
+    for(const id of ['vacant-lot','work-in-progress','temporary-area','vacant-lot-en','work-in-progress-en','temporary-area-en']){
       const preset=await call('desk_prop_get',{id});presets.push(preset);
       await call('desk_asset_import',{id,asProp:true,source:{svg:preset.svg},title:preset.name,x:0,y:0,width:480,height:354});
       const source=(await call('desk_get',{id})).src;
@@ -22,7 +22,7 @@ test('area prop frames resize while sign lettering stays fixed, with transparent
         const row=document.createElement('div');row.style.display='flex';row.style.gap='16px';stage.append(row);
         const measurements=[];
         for(const [width,height] of [[480,320],[720,400],[2400,1200]]){
-          const color=preset.id==='vacant-lot'?[68,107,80]:preset.id==='work-in-progress'?[103,85,62]:[78,105,123];
+          const color=preset.id.startsWith('vacant-lot')?[68,107,80]:preset.id.startsWith('work-in-progress')?[103,85,62]:[78,105,123];
           const src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(preset.svg)));
           const root=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><image href="${src}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet"/></svg>`;
           const image=new Image();image.src='data:image/svg+xml;base64,'+btoa(root);await image.decode();
@@ -46,7 +46,7 @@ test('area prop frames resize while sign lettering stays fixed, with transparent
       assert.ok(Math.abs(a.textWidth-b.textWidth)<=2,`${id}: fixed lettering width`);
       assert.ok(Math.abs(a.textHeight-b.textHeight)<=2,`${id}: fixed lettering height`);
       assert.ok(a.frameAlpha>0&&b.frameAlpha>0,`${id}: frame follows new dimensions`);
-      if(id!=='work-in-progress')assert.equal(a.centerAlpha+b.centerAlpha,0,`${id}: center is transparent`);
+      if(!id.startsWith('work-in-progress'))assert.equal(a.centerAlpha+b.centerAlpha,0,`${id}: center is transparent`);
     }
     await mkdir('tmp/area-props',{recursive:true});await page.screenshot({path:'tmp/area-props/size-comparison.png'});
     assert.deepEqual(errors,[]);

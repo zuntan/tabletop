@@ -48,18 +48,33 @@
     },
     "vacant-lot": {
       "name": "Vacant lot",
-      "caption": "Vacant lot",
+      "caption": "Vacant lot JP",
       "description": "A green frame with a Japanese sign reading “Vacant lot” (空き地), grass and sprouts. Transparent center. Only the frame stretches; the sign and lettering keep their size."
     },
     "work-in-progress": {
       "name": "Work in progress",
-      "caption": "Work in\nprogress",
+      "caption": "Work in\nprogress JP",
       "description": "A subtle frame and a wooden sign on legs reading “Work in progress” (作業中) in Japanese. Transparent outside the sign. Only the frame stretches; the sign and lettering keep their size."
     },
     "temporary-area": {
       "name": "Temporary area",
-      "caption": "Temporary\narea",
+      "caption": "Temporary\narea JP",
       "description": "A shallow blue-gray tray frame and a Japanese sign reading “Temporary area” (仮置き場). Transparent center. Only the frame stretches; the sign and lettering keep their size."
+    },
+    "vacant-lot-en": {
+      "name": "Vacant lot (EN)",
+      "caption": "Vacant lot\nEN",
+      "description": "Green frame and grass with an English VACANT LOT sign. Only the frame stretches; the sign keeps its size and the center is transparent."
+    },
+    "work-in-progress-en": {
+      "name": "Work in progress (EN)",
+      "caption": "Work in\nprogress EN",
+      "description": "A subtle frame and wooden WORK IN PROGRESS sign in English. Only the frame stretches; the sign keeps its size."
+    },
+    "temporary-area-en": {
+      "name": "Temporary area (EN)",
+      "caption": "Temporary\narea EN",
+      "description": "A blue-gray tray frame with an English TEMP AREA sign. Only the frame stretches; the sign keeps its size and the center is transparent."
     }
   }
 }

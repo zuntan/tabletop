@@ -434,3 +434,15 @@ README_en.md、INSTALL_en.md、docs/en/の7文書（案内・考え方・基本�
 現在公開済み0.1.0とdevelopの英語対応を混同しないよう、開発版であることとcheckout先を区別。公開チュートリアル・既存紹介机・図版はまだ日本語と明示し、未作成の英語机や未発行v0.1.1へのリンクは置いていない。英語チュートリアル完成後に案内を差し替える。
 
 検証：18 Markdown文書のローカルリンク81件が実在。TypeScript型検査成功。英語MCP代表操作のブラウザ1件通過（`/tmp/tabletop-v011-english-mcp.log`）。今回はアプリコード変更なし。文書の実導入試験・英語チュートリアル・英語看板・印影のフォント依存・全体表示確認は引き続き必要。
+
+### 工程4：英語看板の別意匠と、印影のフォント不足の再現
+
+vacant-lot-en／work-in-progress-en／temporary-area-enを新しい小物IDとして追加。既存3種類の日本語SVGは変更せず、その隣に選択肢を配置。英語看板はVACANT LOT、WORK IN PROGRESS、TEMP AREA。リソースへ各言語の名称・説明を追加し、英語UIではJP／ENで意匠を区別する。選択肢は15種類になった。枠だけの伸縮・透明部分・看板の固定サイズを日英6種類で検証し、パレットの画像も確認した。
+
+検証：小物のブラウザ3件、通常ビルド成功。ログ：`/tmp/tabletop-v011-area-en-tests.log`、`/tmp/tabletop-v011-area-en-build.log`。既存日本語小物のソースと配置済みコピーは不変。
+
+印影について、隔離したChromeのFONTCONFIG_FILEにLatinフォントだけを指定して調査。OSの設定や既存ブラウザは変更していない。fontconfigの日本語対応一覧は空で、通常の「済」はNoto Sans CJK JP、制限環境ではLiberation Monoの代替文字になることをCDPとスクリーンショットで確認。「済」が四角形になる問題を再現した。日付や英字は出るが日本語固定印影には対策が必要。ログ：`/tmp/tabletop-v011-font-probe.log`。比較画像：`/tmp/tabletop-v011-stamp-normal.png`、`/tmp/tabletop-v011-stamp-latin-only.png`。
+
+次の対策候補は固定印影文字のアウトライン化。ユーザーの補足文字列まで機械的に変更しない。使用するフォントの利用条件、見た目と寸法、SVG／PNG／PDFへの出力を確認してから実装する。今回のコミットは英語小物の追加と再現記録までで、フォント不足は未修正。
+
+追加確認：Pagesビルド成功（`/tmp/tabletop-v011-area-en-pages.log`）。
