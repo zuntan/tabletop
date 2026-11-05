@@ -1,45 +1,45 @@
-# 道しるべ：経路をたどる視点移動
+# Wayfinders: follow a route with the camera
 
-道しるべを選び、表示される移動ボタンを押すと、つながった線に沿って視点が移動します。移動中は原則としてズームを変えず、到着先のカードを中央に表示して選択します。
+Select a wayfinder and press its launch popup to move the view along connected lines. Navigation normally keeps zoom unchanged, centers the destination card and selects it.
 
-## 配置と接続
+## Placement and connections
 
-道しるべには上下左右の4アンカーがあり、用途は固定しません。取り付け先は1オブジェクト、経路線は1本です。取り付けと線で同じアンカーを共用できます。
+A wayfinder has four anchors: top, right, bottom and left. Their roles are not fixed. It can attach to one object and connect to one route line. Attachment and line connection may share the same anchor.
 
-AIから作る場合は `type:wayfinder`、取り付け先は `attachment:{objectId,anchor}`、自身の取り付け点は `attachmentAnchor:top|right|bottom|left` を指定します。自身の点を省略した既存データはbottomです。取り付け先の移動・リサイズに追従し、削除されると現在位置で外れます。
+AI creates `type:wayfinder`, uses `attachment:{objectId,anchor}` for its target and `attachmentAnchor:top|right|bottom|left` for its own attachment point. Missing attachmentAnchor in existing data means bottom. It follows target movement/resizing; target deletion detaches it in place.
 
-線は `startBinding/endBinding` で道しるべの上下左右いずれかへ接続します。折れ線の接続は `startJunction/endJunction` を使います。単なる交差や近接は接続と扱いません。矢印の向きは進行方向を制限しません。
+Connect a line to any of the wayfinder's four anchors using `startBinding/endBinding`. Join line segments with `startJunction/endJunction`. Crossing or proximity alone is not a connection. Arrowheads do not restrict travel direction.
 
-## 移動と観光
+## Move and tour
 
-- 移動：加速・減速して移動します。長距離でも走行時間に上限があります。
-- 観光：周囲を眺められるよう、経路上を一定の画面速度で進みます。移動と同じ時間上限はありません。
+- Move eases in and out and caps travel duration even for long distances.
+- Tour follows the route at constant screen speed so the surroundings can be viewed, without the same duration cap.
 
-プロパティで選んだ方式は道しるべごとに保存されます。到着先が道しるべの場合は、その取り付け先へ進みます。接続先のない線端でも停止します。
+The mode selected in properties is saved per wayfinder. If the destination is another wayfinder, navigation proceeds to its attached target. An unconnected line end also stops navigation.
 
-分岐では小さな地図を表示して進路を待ちます。方向ボタンで再発進し、停止ボタン・Escape・地図の外のクリックで中止します。線の角度が近くてボタンが重なる場合は、机上の配置を調整してください。
+At a branch, a small map waits for a direction. Choose a direction to resume; the stop button, Escape or clicking outside the map cancels. If similar line angles make direction buttons overlap, adjust the desk layout.
 
-## AIから開始する
+## Start through AI
 
-まず `desk_connections` で対象の机IDを確認します。
+First identify the target desk with `desk_connections`.
 
-- `desk_wayfinder_start({deskId,id})`：道しるべから開始します。
-- `desk_wayfinder_start({deskId,lineId,from:"start"|"end"})`：道しるべなしで、線の指定端から開始します。idとの同時指定はできません。透明な線も使えます。
-- 任意の `mode:"move"|"tour"` は今回の走行だけに適用し、道しるべの保存設定は変えません。
+- `desk_wayfinder_start({deskId,id})`: start from a wayfinder.
+- `desk_wayfinder_start({deskId,lineId,from:"start"|"end"})`: start at a line endpoint without a wayfinder. Do not also supply id. Transparent lines work too.
+- Optional `mode:"move"|"tour"` affects only this run, not the wayfinder's saved setting.
 
-返答の `status:started` は到着の保証ではありません。走行中も他の読み取りはできます。`desk_camera_get` の `navigation` で最新の状態を確認します。
+A `status:started` response does not guarantee arrival. Other reads remain possible during travel. Inspect `desk_camera_get`'s `navigation` for the latest state.
 
-- `status`：moving、waiting、completed、cancelled、failed。
-- 分岐待ち：`reason:branch` と地点・選択肢。
-- 終了理由：arrived、line-end、loop。
-- 中止理由：human、changed、hidden、superseded、timeout。
+- Status: moving, waiting, completed, cancelled, failed.
+- Branch wait: `reason:branch`, location and choices.
+- Completion reasons: arrived, line-end, loop.
+- Cancellation reasons: human, changed, hidden, superseded, timeout.
 
-これはタブ内の最新1回の状態で、保存履歴でもpush通知でもありません。人間の注目先を動かすため、依頼や会話上の必要がある場合に使います。編集中・確認中・ひとりで考える状態・スクロール直後は開始を拒否します。中止された操作を自動で再試行しないでください。
+This is the tab's latest run state, not saved history or a push notification. Navigation moves human attention, so use it when requested or needed in the conversation. Starting is refused during editing, review, thinking mode or just after scrolling. Do not automatically retry cancelled navigation.
 
-## 中止・選択・保存
+## Cancellation, selection and saving
 
-人間の操作、机や経路の変更、別のカメラ操作、表示状態の変化などで中止し、その場に留まります。視点移動は机の編集ではなく、revisionやUndoを変更しません。
+Human input, desk/route edits, another camera operation or visibility changes can cancel navigation in place. Camera travel is not a document edit and does not change revision or Undo.
 
-出発した道しるべは選択解除します。カードの中央へ到着したら、そのカードを選択します。線端や途中中止では、出発後に人間が選び直した対象を維持します。ピンの前後移動も、出発時に選択解除し、到着したピンを選択します。
+The departing wayfinder is deselected. Arrival at a card's center selects that card. At a line end or cancellation, preserve any selection the human made after departure. Pin previous/next navigation also deselects on departure and selects the destination pin.
 
-道しるべの取り付けと線の接続は机に保存され、コピー・Undoにも対応します。速度指定や他のオブジェクトとの同時アニメーション制御は提供していません。
+Attachments and route connections are saved and support copy/Undo. Custom speed and simultaneous animation of other objects are not provided.

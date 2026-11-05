@@ -1,22 +1,22 @@
-# 机を開くこととAIを接続すること
+# Opening a desk and connecting AI
 
-接続する机か、人間だけの机かを明示して判断します。初回かどうかで推測しません。
+Explicitly distinguish an AI-connected desk from a human-only desk. Do not infer this from whether it is the first launch.
 
-- `desk_browser_open({mode:"connected"})`：了承された新規／手動ペアリング用。先に `desk_pairing_open({confirm:true})` で追加受付を開きます。既存の机は接続を維持します。復旧には保持した秘密recordを使います。
-- `desk_browser_open({mode:"standalone"})`：認証情報を渡さず、空の机を開きます。受付・解放は不要です。既存の接続を維持します。
+- `desk_browser_open({mode:"connected"})`: for an authorized new connection or manual pairing. First open additional pairing with `desk_pairing_open({confirm:true})`. Existing desks stay connected. For recovery, use the privately retained secret record.
+- `desk_browser_open({mode:"standalone"})`: opens an empty desk without passing credentials. No pairing window or release is needed. Existing connections remain active.
 
-`desk_connections()` で接続先の `deskId`・名前・配色・接続状態を確認します。**個別の机の全ツールは1机でもdeskId必須**です。カレント机・省略時の推測はありません。例えば `desk_summary({deskId})`、`desk_execute({deskId,operations:[...]})`。会話上の「元の机」などとの対応はAIが判断し、不明なら確認します。
+Use `desk_connections()` to inspect each target's `deskId`, name, colors and connection state. **Every per-desk tool requires deskId, even when there is only one desk.** There is no current desk or inferred fallback. Examples: `desk_summary({deskId})`, `desk_execute({deskId,operations:[...]})`. Resolve conversational references such as “the original desk” from context; ask if ambiguous.
 
-起動要求の成功はOSへ要求した意味だけです。既存のbrowserConnected:trueでは追加机の接続を確認できません。一覧で追加先を確認し、`desk_pairing_info({deskId})` のrecordを非公開で保持します。MCPから新規起動する机は「無題」「無題(2)」等で区別しますが、LOADした名前は変えません。
+A successful launch request only means it was sent to the OS. An existing `browserConnected:true` does not prove the additional desk connected. Verify it in the connection list and privately retain the record from `desk_pairing_info({deskId})`. Automatically named new desks use the initial UI language (for example, Untitled and Untitled(2)); loaded names and explicitly supplied names remain unchanged.
 
-単独の机はアップロード／ダウンロードで使います。サーバーSAVE／LOAD・机リンクでのサーバー読込には認証済み接続が必要です。AIは未接続の机を操作できません。閉じる操作は人間に任せます。
+Standalone desks use browser upload/download. Server Save/Load and server loading through desk links require an authenticated connection. AI cannot operate an unconnected desk. Leave closing standalone desks to the human.
 
-独自に起動する場合はサーバーの `/?connect=off` を開けば認証情報を渡さず開始できます。トークン付きURLを転用しません。
+For a manual standalone launch, open the server's `/?connect=off` without credentials. Do not reuse a token-bearing URL.
 
-接続中の机間では、人間のCtrl+C／Ctrl+Vもオブジェクトとして転送できます。コピー時の登録はなく、貼り付け先のローカル印が一致しない場合だけ、他のタブへMCP経由で同じ印を照会します。取得できなければ従来のテキスト・画像へ進みます。AIによる机間複製は引き続き個別の取得・編集ツールで行います。
+Human Ctrl+C/Ctrl+V can transfer objects between connected desks. Copy does not register data with the server. Only when the destination's local clipboard marker does not match does it query other tabs through MCP for the same marker. If unavailable, it falls back to ordinary text/image paste. AI copying between desks still uses individual read/edit tools.
 
-Pages版はAI・MCPへ接続しない静的配信モードです。ブラウザで開かれていてもdesk_connectionsの操作対象にはなりません。通常の接続机とは別に扱い、接続受付を勝手に開いてペアリングさせません。
+The Pages edition is statically served and does not connect to AI or MCP. An open Pages tab is not an operation target in `desk_connections`. Treat it separately; do not open pairing and connect it without authorization.
 
-## MCPツール自体が見つからない場合
+## If the MCP tools themselves are unavailable
 
-別のCodex・CopilotなどがTabletopを起動済みなら、既定ポート4317の競合も疑う。MCP起動ログの `EADDRINUSE` を確認し、確認前に断定しない。既存の机は起動元のエージェントから操作する。独立したサーバーが必要なら、後から起動するMCPの環境変数 `TABLETOP_PORT` に空きポートを指定する。ツールがない段階では実行時のポート変更ツールも使えない。既存プロセスや机を勝手に終了しない。これはブラウザ未接続や、一つのMCPで複数机を扱う機能とは別の問題。詳細はREADMEの「MCPツールが見つからない・ポート使用中」。起動失敗時はこのHelp自体も読めないので、READMEとサーバーの標準エラーにも案内を置いている。
+If another Codex, Copilot or other agent already started Tabletop, check for a conflict on default port 4317. Look for `EADDRINUSE` in the MCP startup log before concluding that this is the cause. Operate existing desks from the agent that started their server. For an independent server, set the later MCP process's `TABLETOP_PORT` environment variable to an available port. Runtime port tools cannot help when the MCP tools are unavailable. Do not terminate existing processes or desks without permission. This is distinct from a disconnected browser or multiple desks on one MCP server. See README troubleshooting for missing MCP tools and occupied ports. Startup failures may also prevent reading this Help; README and server stderr provide guidance too.

@@ -11,11 +11,11 @@ export function registerHelpTools(mcp: McpServer) {
   }, async ({ topic }) => {
     try {
       const text = topic === 'index'
-        ? '# Tabletop AI向け説明書\n\n利用したいtopicを指定してdesk_helpを呼んでください。\n\n- mermaid-imitation：Mermaid原本を残し、既存部品で編集可能な図を模造する手順と心得。\n- bell-conversation：ベルによる期限付き操作待ちと机上の短いやり取り。実験的な補助機能。\n- desk-connections：AI接続あり／なしの起動と操作対象の区別。\n- card-splitting：長文を意味単位で分割し、原本を残してクリップで縦／横に並べる。\n- colors：画面と共通のおすすめ色。塗り・輪郭・文字・シール。既存の配色・利用者指定を優先。\n- rulers：定規の両側配置・素材・所属・ファイル収納。\n- wayfinder：道しるべの取り付け・一本道の視点移動・中止。\n\n説明書を読むだけでは机は変わりません。実際の操作は人間からの依頼の範囲で行ってください。'
+        ? '# Tabletop working manual for AI\n\nCall desk_help with a topic from this index.\n\n- mermaid-imitation: Preserve a Mermaid original and rebuild its meaning with editable desk parts.\n- bell-conversation: Bounded waits for human actions and short desk-side exchanges; an experimental helper.\n- desk-connections: Connected versus standalone launches and choosing the target desk.\n- card-splitting: Split long text by meaning, retain the original, and arrange cards vertically or horizontally with a clip.\n- colors: The same recommended fill, outline, text and sticker colors as the UI. User choices and existing desk conventions take priority.\n- rulers: Layout on both sides, materials, membership and clear-file storage.\n- wayfinder: Attach a signpost, follow connected routes, handle branches and stop navigation.\n\nReading this manual does not change the desk or authorize operations. Act within the human request.'
         : topic === 'colors' ? colorPaletteHelp() : await readFile(new URL(`../docs/help/${topic}.md`, import.meta.url), 'utf8');
       return { content: [{ type: 'text' as const, text }] };
     } catch {
-      return { isError: true, content: [{ type: 'text' as const, text: '説明書を読み込めませんでした。Tabletopの配布ファイルを確認してください。' }] };
+      return { isError: true, content: [{ type: 'text' as const, text: 'Could not read the manual. Check the Tabletop distribution files.' }] };
     }
   });
 }

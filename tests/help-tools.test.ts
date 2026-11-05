@@ -16,16 +16,16 @@ test('desk_help returns discoverable plain-text manuals without any browser; rej
     const index=await callTestTool(client, {name:'desk_help',arguments:{}});
     assert.notEqual(index.isError,true);assert.match((index.content as any)[0].text,/mermaid-imitation/);
     const guide=await callTestTool(client, {name:'desk_help',arguments:{topic:'mermaid-imitation'}});
-    assert.notEqual(guide.isError,true);assert.match((guide.content as any)[0].text,/原本を残し/);
-    assert.match((guide.content as any)[0].text,/再現できなかった/);
-    for(const [topic,title] of [['bell-conversation','ベル'],['desk-connections','机を開くこと'],['card-splitting','原本'],['rulers','定規'],['wayfinder','desk_wayfinder_start']] as const){
+    assert.notEqual(guide.isError,true);assert.match((guide.content as any)[0].text,/Preserve the original/);
+    assert.match((guide.content as any)[0].text,/could not be reproduced/);
+    for(const [topic,title] of [['bell-conversation','Bell'],['desk-connections','Opening a desk'],['card-splitting','original'],['rulers','ruler'],['wayfinder','desk_wayfinder_start']] as const){
       const result=await callTestTool(client, {name:'desk_help',arguments:{topic}});
-      assert.notEqual(result.isError,true,topic);assert.ok((result.content as any)[0].text.includes(title),topic);
+      assert.notEqual(result.isError,true,topic);assert.doesNotMatch((result.content as any)[0].text,/[\u3040-\u30ff\u3400-\u9fff]/,topic);assert.ok((result.content as any)[0].text.includes(title),topic);
     }
     const colors=await callTestTool(client,{name:'desk_help',arguments:{topic:'colors'}});
     assert.notEqual(colors.isError,true);
     const body=(colors.content as any)[0].text;
-    assert.match(body,/利用者の色指定/);assert.match(body,/既存の配色/);
+    assert.match(body,/User color choices/);assert.match(body,/existing desk colors/);
     const palettes=JSON.parse(body.match(/```json\n([\s\S]*?)\n```/)[1]);
     for(const role of ['fill','stroke','text','sticker'] as const){
       assert.deepEqual(palettes.recommended[role],paletteColors(role));

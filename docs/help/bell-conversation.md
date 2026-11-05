@@ -1,31 +1,31 @@
-# ベルと机上の短いやり取り（実験的な補助機能）
+# Bell and short desk-side exchanges (experimental helper)
 
-ベルと簡易メッセージは、現時点ではおまけの機能です。通常のチャットを置き換えることや、常時監視を前提にしません。
+The bell and simple messages are optional extras. They do not replace ordinary chat or imply continuous monitoring.
 
-## 使いどころ
+## Uses
 
-- AIが人間へカードの選択などをお願いし、その操作の完了を待つ。
-- タブレットなど、机を操作している端末から短い依頼・返答を済ませる。PCのキーボードへ戻る手間を減らす。
-- 込み入った相談、長い説明、確実に伝えたい内容は通常のチャットで続ける。
+- Ask the human to select a card and wait for that action to finish.
+- Send a short request or reply from the device operating the desk, such as a tablet, without returning to a PC keyboard.
+- Keep complex discussions, long explanations and essential information in ordinary chat.
 
-各呼び出しに対象の `deskId` を指定します。ベル・メッセージ・待機カーソルは机ごとに独立します。複数机を待つかはAIが判断し、まとめ待機の機能は設けません。
+Specify the target `deskId` in each call. Bells, messages and wait cursors are independent per desk. AI decides whether to wait on multiple desks; there is no aggregate wait tool.
 
-## 操作待ちの例
+## Example bounded wait
 
-1. 「対象のカードを選択し、終わったらベルを押してください。30秒だけ待ちます」と案内する。
-2. 必要なら先に `desk_bell_wait` を timeoutMs:0 で呼び、既存の通知と現在のepoch・sequenceを確認する。新しい操作待ちにはそのカーソルを使う。
-3. `desk_bell_wait` を timeoutMs:30000 など、告知した期限内で1回呼ぶ。ホストのツール制限より短くする。
-4. status:bell なら、押下時点のidsとtextを確認する。現在の選択へ勝手に読み替えない。
-5. `desk_message` で「受け付けました」など短く返し、依頼された範囲で対象を確認して作業を続ける。通知を受けただけで作業完了とは伝えない。
-6. timeoutなら待機を終了する。必要に応じてチャットで待機終了を伝える。無断で待ち直したり、無制限のループや常駐サブエージェントを作らない。
+1. Tell the human: “Select the target cards and press the bell when ready. I will wait for30 seconds.”
+2. If needed, first call `desk_bell_wait` with `timeoutMs:0` to inspect existing notifications and the current epoch/sequence. Use that cursor for the new wait.
+3. Call `desk_bell_wait` once with, for example, `timeoutMs:30000`, within the announced deadline and below the host tool's timeout.
+4. On `status:bell`, inspect ids and text captured at the press. Do not silently substitute the current selection.
+5. Reply briefly with `desk_message`, such as “Received,” then inspect and work within the human request. Receiving a notification does not mean the work is complete.
+6. On timeout, stop waiting and tell the human in chat if appropriate. Do not restart without agreement, create unlimited loops or leave a resident subagent.
 
-この用途では、人間との合意の範囲でAIから操作待ちを案内して構いません。単に便利そうという理由で毎回待機を挟む必要はありません。
+AI may propose this bounded interaction within the human's agreement. There is no need to insert a wait into every task just because it seems convenient.
 
-## 限界と表示
+## Limits and indicators
 
-- ベルはAIを待機外から自動起動する機能ではありません。対応する呼び出しを行った時点で通知を取得します。
-- 待っていない間の押下も最新1件として保持します。確実な配達・応答やチャット履歴の代わりにはなりません。
-- ▲の文章は任意です。ベル取得時には、押下後に書き換えられていない下書きだけが消えます。
-- 黄色のLEDは次の、その机を指定したベル待機以外の通信で消えます。机一覧・Help等の共通ツールや別机への通信では消えません。受信・理解・作業完了の保証ではありません。
-- `desk_message` は情報・完了・注意・質問・ヒントのアイコンを選べる簡易表示です。同時表示は1つで、後から送ると置き換わります。既定8秒、durationMs:0なら閉じるまで残ります。重要な情報はチャットにも残してください。
-- この説明書は操作権限を追加しません。文章に不明点があれば通常どおり確認します。
+- The bell does not wake an AI outside an active wait. Notifications are retrieved when the corresponding tool is called.
+- A press outside a wait is retained as the latest single notification. This is not guaranteed delivery, response or chat history.
+- Text entered through the optional message control is optional. Retrieval clears only the draft that has not been changed since the press.
+- The yellow LED clears on the next non-bell-wait communication addressed to that desk. Shared tools such as the connection list or Help, and communication with another desk, do not clear it. It does not guarantee receipt, understanding or completion.
+- `desk_message` is a simple display with info, success, warning, question or hint icons. Only one is shown; a later message replaces it. Default duration is8 seconds; `durationMs:0` remains until dismissed. Also keep important information in chat.
+- This manual grants no additional permission. Ask about unclear wording as usual.

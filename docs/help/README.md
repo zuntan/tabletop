@@ -1,12 +1,12 @@
-# MCPから読める操作説明書
+# Working manuals available through MCP
 
-`desk_help` は、操作方法をAIが必要に応じて読むための既存のMCPツールです。人間もこのフォルダーの文章を直接読めます。説明書を読むだけで、机の編集が許可されるわけではありません。
+`desk_help` lets AI read working instructions when needed. People may also read these files directly. Reading a manual does not authorize desk edits. These MCP manuals use English independently of the human UI language; user content and saved data retain their original language.
 
-- [複数の机・接続](desk-connections.md)
-- [カードの分割](card-splitting.md)
-- [定規](rulers.md)
-- [道しるべ](wayfinder.md)
-- [Mermaid図の模造](mermaid-imitation.md)
-- [ベルを使った操作待ち](bell-conversation.md)
+- [Multiple desks and connections](desk-connections.md)
+- [Splitting cards](card-splitting.md)
+- [Rulers](rulers.md)
+- [Wayfinders](wayfinder.md)
+- [Rebuilding Mermaid diagrams](mermaid-imitation.md)
+- [Waiting with the bell](bell-conversation.md)
 
-色の候補を返す `colors` は、画面と共通のパレットから生成します。独立した原稿ファイルはありません。
+The `colors` topic is generated from the same palettes as the UI; it has no separate manuscript file.

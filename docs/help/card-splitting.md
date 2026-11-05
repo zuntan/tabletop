@@ -1,16 +1,16 @@
-# 長文カードを意味単位で分割する
+# Split a long card into meaningful cards
 
-人間から「読みやすく分割して」等の依頼があったときに、既存のカード生成・クリップ操作を組み合わせる定型手順です。専用UIや自動分割機能ではありません。
+Use this procedure when the human asks to split text for readability. It combines existing card and clip operations; it is not a dedicated UI or an automatic splitting feature.
 
-- desk_connectionsで対象机を確認し、本文・書式・周囲の配置を読む。
-- 文字数ではなく意味のまとまりで分割する。要約の依頼がなければ内容を省略しない。見出しや必要な文脈を補い、意味と順序を保つ。
-- 原本は全文・位置・書式・ハンコ・シール・リアクション・矢印やピンの接続を含め、そのまま残す。
-- 分割先へ基本書式を引き継ぐ。ただしstamp・stickers・reactionsや原本への接続はコピーしない。クリップにもコピーしない。
-- 原本と重ならない空き場所へ配置する。縦並びでは幅を揃え、本文に合わせて高さを調整する。desk_text_measureで収まりを確認する。横並びの寸法は内容に応じて判断する。
-- 指定がなければ縦並び。clipAnchor:top、clipOffsetMode:percent、clipOffsetPercent:100で束ねる。直前カードの高さ分だけ進む。
-- 横並びの指定ならclipAnchor:left、clipOffsetMode:percent、clipOffsetPercent:100。直前カードの幅分だけ進む。
-- 100は100pxではない。クリップの並び順は本文の順序とする。異なる寸法では対応アンカーで揃う。保存形式や配置アルゴリズムを増やさない。
-- snap:exactと最新expectedRevisionで整合したカード集合・clipMembersを生成し、既存束やファイルの所属制約を守る。元が束やファイル内でも原本の所属を変更しない。
-- 結果を指差し、分割数・方向・原本を残したことを報告する。不明な参照や意味がある場合は推測で省略せず相談する。
+- Identify the target desk with `desk_connections`. Read the text, formatting and surrounding layout.
+- Split by meaning rather than character count. Unless asked to summarize, do not omit content. Add useful headings or context while preserving meaning and order.
+- Preserve the original in full, including its position, formatting, stamp, stickers, reactions and line or pin connections.
+- Carry basic formatting into the new cards, but do not copy stamps, stickers, reactions or connections to the original. Do not copy those marks onto the clip either.
+- Place the new cards in free space without covering the original. For a vertical layout, use equal widths and adjust heights to the text. Check fit with `desk_text_measure`. Choose horizontal dimensions to suit the content.
+- Default to vertical: `clipAnchor:top`, `clipOffsetMode:percent`, `clipOffsetPercent:100`. Each card advances by the previous card's height.
+- If horizontal is requested, use `clipAnchor:left`, `clipOffsetMode:percent`, `clipOffsetPercent:100`. Each card advances by the previous card's width.
+- 100 means percent, not 100px. Set clip membership in text order. Unequal cards align by their corresponding anchors. Do not add storage formats or layout algorithms.
+- Use `snap:exact` and a current `expectedRevision` to create a consistent set of cards and `clipMembers`. Respect existing bundle and clear-file membership. Leave the original's membership unchanged even if it is already contained.
+- Point at the result and report the number of cards, layout direction and preservation of the original. Ask about unclear references or meanings rather than silently omitting them.
 
-クリップを1枚へ結合する定型操作は、今回の合意範囲に含めません。
+Combining a clip bundle into one card is outside this procedure's agreed scope.

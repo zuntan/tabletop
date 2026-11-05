@@ -2,21 +2,21 @@ import {paletteColors,swatches} from './color-palettes';
 
 /** Generated at read time from the same palette definitions used by the UI. */
 export function colorPaletteHelp(){
-  return `# おすすめカラー（colors）
+  return `# Recommended colors (colors)
 
-人間の色選択UIと同じ候補です。色の指定がないとき、用途別おすすめを出発点にできます。強制する規則や、既存の机を塗り直す指示ではありません。
+These are the same choices as the human color picker. Use role-specific recommendations as a starting point when no color is specified. They are suggestions, not rules or instructions to recolor an existing desk.
 
-- 利用者の色指定・意図を優先してください。
-- 既存の配色・分類色・揃え方があれば、その文脈を優先してください。
-- 背景や透明度を見て組み合わせを選び、候補外の色も必要に応じて使えます。
-- 意味を色へ勝手に固定しないでください。分類の意味は机ごとの使い方に従います。
-- この説明書を読むだけでは、机の設定やオブジェクトは変わりません。
+- User color choices and intent take priority.
+- Preserve existing desk colors, classification conventions and visual grouping when applicable.
+- Consider the background and transparency. Use colors outside this palette when useful.
+- Do not assign universal meanings to colors. Classification depends on how each desk is used.
+- Reading this manual does not change desk settings or objects.
 
-## 用途と適用先
+## Roles and targets
 
-fill：塗り（淡い色）、stroke：輪郭・線、text：文字（textColor）、sticker：シールの各要素のcolor。
-各おすすめは14色。配列は画面の上段→下段、各段は左→右の順です。輪郭とシールの白・黒は左端に縦並びです。
-allはUIの全42色で、利用可能な色をこの一覧へ制限する意味ではありません。
+fill: pale object fills; stroke: outlines and lines; text: textColor; sticker: each sticker item's color.
+Each recommended palette has 14 colors. Arrays follow the UI from top row to bottom row, left to right within each row. White and black occupy the leftmost column of the outline and sticker palettes.
+all contains the UI's 42 swatches; it does not restrict which colors are allowed.
 
 \`\`\`json
 ${JSON.stringify({recommended:{fill:paletteColors('fill'),stroke:paletteColors('stroke'),text:paletteColors('text'),sticker:paletteColors('sticker')},all:swatches},null,2)}

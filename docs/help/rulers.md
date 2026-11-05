@@ -1,31 +1,31 @@
-# 定規を使って並べる
+# Arrange cards with rulers
 
-定規は机上に複数置ける、保存・コピー・Undo対応のレイアウトコンテナ。AIにも人間にも同じ規則を適用する。まずdesk_connectionsで対象deskIdを確認する。
+Rulers are layout containers that can coexist on a desk and support save, copy and Undo. The same rules apply to AI and humans. First identify the target `deskId` with `desk_connections`.
 
-## データ
+## Data
 
-`type:ruler`、`rulerMembers:[{id,side:before|after}]`。順序・所属は定規側だけに保存する。対象はカード（text）・8種の図形・画像・SVG・Mermaid・Web資料・リンク。線・ピン・小物・コンテナは不可。クリップ・別定規・ファイル内のカードを重複所属させない。別定規へは元のmembersから取り除いてから付け替える（同一バッチでも可）。
+Use `type:ruler` and `rulerMembers:[{id,side:before|after}]`. Only the ruler stores membership and order. Targets are text cards, eight shape types, images, SVG, Mermaid, web cards and links. Lines, pins, props and containers are excluded. Do not duplicate membership with a clip, another ruler or a clear file. To transfer a card between rulers, remove it from the original members first (the same batch is allowed).
 
-- 矩形の長い方向が配置方向。導出された `rulerAxis` は horizontal/vertical。縦横同寸なら以前の向き、初回ならhorizontal。
-- 短辺は `rulerThickness:24|36|48`、初期36。長辺の下限120。width/heightの更新は短辺を設定値へ正規化する。
-- `side:before` は縦の左／横の上、`after` は縦の右／横の下。両側は独立。対応するカードの外枠の辺を定規へ接するよう揃える。タイトル付き資料ではタイトルを含む。
-- `rulerMode:free|gap|center`、初期free。freeは長辺に沿う位置を保持する。gap（均等）は外枠間の隙間を等しくし、入りきらなければ負の隙間で重ねる。center（中心均等）は中心の距離を揃える。
-- 自動配置は先頭始端・末尾終端を定規両端へ合わせる。ただし中心の前進幅は最低4机上単位。下限時は後方へはみ出してよい。1枚なら始端、0枚は計算しない。ズームで再計算しない。
-- freeでは対象x/yを更新しても直交方向は定規へ戻る。autoで順序を変えるにはrulerMembers配列を編集する。座標だけ変更しても自動配置に戻る。
-- 定規のx/yを変更すると束全体が移動する。縦横変更時は順序・所属側を保ち、freeは始端からの距離を引き継ぐ（カードは回転しない）。
-- `rulerMaterial:acrylic|bamboo|steel`、初期acrylic。素材は表示のみ。目盛りは意匠で、数字・測定単位なし。表示OFFは設けない。
+- The rectangle's long dimension defines its layout axis. Derived `rulerAxis` is horizontal/vertical. Equal dimensions retain the previous axis, or horizontal for a new ruler.
+- The short dimension is `rulerThickness:24|36|48`, default36. Minimum length is120. Width/height updates normalize the short dimension to that setting.
+- `side:before` is left of a vertical ruler or above a horizontal ruler; `after` is right or below. The sides are independent. Align the corresponding outer card edge to the ruler, including a media card's title.
+- `rulerMode:free|gap|center`, default free. Free preserves along-axis positions. Gap equalizes outer-edge gaps and allows negative gaps when cards do not fit. Center equalizes center spacing.
+- Automatic layout aligns the first leading edge and last trailing edge with the ruler's ends. Center spacing is at least4 world units; overflow is allowed at that minimum. One card aligns at the start; zero cards need no calculation. Zoom does not recalculate layout.
+- In free mode, x/y edits still snap the perpendicular position back to the ruler. In automatic modes, edit `rulerMembers` to reorder; coordinate-only edits return to automatic layout.
+- Moving the ruler's x/y translates the whole bundle. Axis changes preserve order and side; free mode retains offsets from the start. Cards do not rotate.
+- `rulerMaterial:acrylic|bamboo|steel`, default acrylic, affects appearance only. Tick marks are decorative, without numbers or measurement units. There is no hide option.
 
-## 人間の操作
+## Human operations
 
-「クリアファイル」の隣の「定規」で追加。選択があれば対象を右側へまとめる。未選択なら空の定規。
-カードを定規の長辺へドロップして追加。freeならその方向へ移動、autoならドラッグで所属側の順序変更。Alt＋ドラッグで1枚外す。別側へは一度外して付け直す。
-定規のドラッグは全体移動。右下ハンドルで矩形リサイズ、確定時に正規化・再配置する。プロパティで素材・幅・方式を選ぶ。
+Add a ruler using the toolbar button beside Clear file. Eligible selected cards go on its right side; without a selection, it starts empty.
+Drop a card on a long edge to add it. In free mode, drag along the ruler to move a card; in automatic modes, drag to reorder on its side. Alt+drag removes a card. Remove and reattach to change sides.
+Dragging the ruler moves the bundle. The bottom-right resize handle changes its rectangle; commit normalizes dimensions and lays out members. Properties choose material, thickness and mode.
 
-## 束の管理
+## Bundle management
 
-カード群はmembers順、定規が最前面の連続レイヤー。前後移動は束全体。ロックは定規・所属カードに一括適用。定規を削除するとカードはその場で解放。所属カードの削除でも、クリップと同じく定規を解放して生存カードを残す。
-コピーは定規と全所属カードを含め、membersのIDを付け替える。UIで定規だけ選んだコピーは全体へ展開される。カード単独コピーなら所属はコピーしない。
+Members follow array order in one contiguous layer block, with the ruler in front. Layer changes move the whole bundle. Lock applies to the ruler and all members together. Deleting the ruler releases its cards in place. Deleting a member also dissolves the ruler and leaves surviving cards, as with a clip.
+Copy the ruler with every member and remap member IDs. UI copying of a selected ruler expands to the whole bundle. Copying a card alone does not copy its membership.
 
-クリアファイルには定規と全所属カードをまとめて収納する。ファイル作成UIは一部の選択を全体へ展開する。収納中は追加・削除・個別サイズ・素材・方式・内部順序・前後関係の変更を禁止。ドラッグはファイル全体の平行移動だけ。解除後は定規操作に戻る。本文・色など既存の内容編集は可能。
+Store the ruler and all its members together in a clear file. The file creation UI expands partial selections to full bundles. While filed, adding/removing members, individual resizing, material, mode, internal order and layer changes are disabled. Dragging only translates the whole clear file. Releasing the file restores ruler controls. Text and color edits remain available.
 
-AIはrulerMembersを読み、expectedRevision付きで配列全体を更新する。原本や他の所属を無断で崩さない。手順説明を読むだけで操作を開始しない。
+AI should read `rulerMembers` and replace the whole array with `expectedRevision`. Do not disrupt originals or other memberships without authorization. Reading these instructions does not start an operation.
