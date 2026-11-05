@@ -42,3 +42,42 @@ test('human palette and AI read-only preset IF place embedded props, including c
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });
+
+test('prop catalog stays English while UI names follow creation language without changing placed artwork', {timeout:45000}, async () => {
+  const {page,call,close,errors}=await openTestDesk('props-language',undefined,undefined,'en-US');
+  try {
+    const catalog=await call('desk_prop_list');
+    assert.equal(catalog.presets.find((p:any)=>p.id==='teacup').name,'Tea cup');
+    const preset=await call('desk_prop_get',{id:'temporary-area'});
+    assert.equal(preset.name,'Temporary area');
+    assert.match(preset.description,/Japanese sign/);
+    await page.locator('#prop-open').click();
+    assert.equal(await page.locator('#prop-open').getAttribute('aria-label'),'Props');
+    assert.equal(await page.locator('[data-prop-preset="temporary-area"] .prop-caption').textContent(),'Temporary\narea');
+    await page.locator('#prop-palette').screenshot({path:'/tmp/tabletop-v011-props-en.png'});
+    await page.locator('[data-prop-preset="senpai-robot"]').click();
+    await page.locator('[data-id^="prop-"]').first().waitFor();
+    const placed=await call('desk_state');
+    const robot=placed.objects.find((p:any)=>p.type==='prop');
+    assert.equal(robot.text,'Robot');
+    await page.keyboard.press('Escape');
+    const before=await call('desk_state');
+    await page.locator('#desk-menu').click();
+    await page.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();
+    await page.locator('#ui-language').selectOption('ja');
+    await page.waitForFunction(()=>document.documentElement.lang==='ja');
+    assert.deepEqual(await call('desk_state'),before);
+    assert.equal(await page.locator('#prop-open').getAttribute('aria-label'),'小物一覧');
+    await page.keyboard.press('Escape');
+    await page.locator('#prop-open').click();
+    assert.equal(await page.locator('[data-prop-preset="temporary-area"] .prop-caption').textContent(),'仮置き場');
+    await page.locator('[data-prop-preset="teacup"]').click();
+    await page.waitForFunction(()=>document.querySelectorAll('[data-id^="prop-"]').length===2);
+    const after=await call('desk_state');
+    assert.equal(after.objects.find((p:any)=>p.type==='prop'&&p.id!==robot.id).text,'ひと息の湯呑み');
+    assert.deepEqual(after.objects.find((p:any)=>p.id===robot.id),robot);
+    assert.deepEqual(await call('desk_prop_list'),catalog);
+    assert.deepEqual(await call('desk_prop_get',{id:'temporary-area'}),preset);
+    assert.deepEqual(errors,[]);
+  } finally {await close();}
+});

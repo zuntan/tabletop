@@ -71,7 +71,7 @@ test('MCP external share lets a human follow the URL and read current context, m
     const imageHref = new URL(hrefs.find(href => new URL(href).pathname.endsWith('/desk_asset_read') && new URL(href).searchParams.get('id') === 'share-image')!);
     assert.match(noteHref.searchParams.get('read') ?? '', /^[A-Za-z0-9_-]{1,64}$/);
     assert.match(imageHref.searchParams.get('read') ?? '', /^[A-Za-z0-9_-]{1,64}$/);
-    assert.equal(await human.getByRole('link', { name: '最新状態を再取得' }).count(), 1);
+    assert.equal(await human.getByRole('link', { name: 'Fetch latest state' }).count(), 1);
     const contextResponse = await human.request.get(`${shareOrigin}/share/${opened.shareId}/desk_context`);
     assert.equal(contextResponse.status(), 200, await contextResponse.text());
     const context = await contextResponse.json();

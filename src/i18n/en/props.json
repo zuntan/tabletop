@@ -1,0 +1,65 @@
+{
+  "list": "Props",
+  "presets": {
+    "teacup": {
+      "name": "Tea cup",
+      "caption": "Tea\ncup",
+      "description": "A pale mint tea cup with tea, steam and a smile. A decorative prop for Ossan."
+    },
+    "coffee": {
+      "name": "Coffee cup",
+      "caption": "Coffee\ncup",
+      "description": "A cream coffee cup with steam, a small heart and a wink."
+    },
+    "eraser": {
+      "name": "Eraser",
+      "caption": "Eraser",
+      "description": "A pale pink eraser in a blue paper sleeve. Decorative only; does not erase."
+    },
+    "compass": {
+      "name": "Compass",
+      "caption": "Compass",
+      "description": "Blue legs and a brass knob. Decorative only; does not draw circles."
+    },
+    "magnifier": {
+      "name": "Magnifying glass",
+      "caption": "Magnifying\nglass",
+      "description": "By Ossan. A magnifying glass with a wooden handle and brass rim. Decorative only; does not magnify."
+    },
+    "envelope": {
+      "name": "Sealed envelope",
+      "caption": "Sealed\nenvelope",
+      "description": "By Ossan. A cream envelope with a red wax seal."
+    },
+    "antique-key": {
+      "name": "Brass key",
+      "caption": "Brass key",
+      "description": "By Ossan. A slightly tilted antique brass key."
+    },
+    "desk-bell": {
+      "name": "Desk bell",
+      "caption": "Desk bell",
+      "description": "By Ossan. A silver bell on a dark base. Decorative only; makes no sound."
+    },
+    "senpai-robot": {
+      "name": "Robot",
+      "caption": "Robot",
+      "description": "A small mint robot that winks and quietly watches over the desk for Senpai. Decorative only; has no special functions."
+    },
+    "vacant-lot": {
+      "name": "Vacant lot",
+      "caption": "Vacant lot",
+      "description": "A green frame with a Japanese sign reading “Vacant lot” (空き地), grass and sprouts. Transparent center. Only the frame stretches; the sign and lettering keep their size."
+    },
+    "work-in-progress": {
+      "name": "Work in progress",
+      "caption": "Work in\nprogress",
+      "description": "A subtle frame and a wooden sign on legs reading “Work in progress” (作業中) in Japanese. Transparent outside the sign. Only the frame stretches; the sign and lettering keep their size."
+    },
+    "temporary-area": {
+      "name": "Temporary area",
+      "caption": "Temporary\narea",
+      "description": "A shallow blue-gray tray frame and a Japanese sign reading “Temporary area” (仮置き場). Transparent center. Only the frame stretches; the sign and lettering keep their size."
+    }
+  }
+}

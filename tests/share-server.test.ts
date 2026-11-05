@@ -59,6 +59,9 @@ test('external read share serves only the selected session and rejects unsafe HT
     assert.equal(htmlEntry.status, 200); assert.match(htmlEntry.headers.get('content-type') ?? '', /^text\/html(?:;|$)/);
     assertNoCache(htmlEntry);
     const htmlBody = await htmlEntry.text();
+    assert.match(htmlBody, /<html lang="en">/);
+    assert.match(htmlBody, /Fetch latest state/);
+    assert.match(htmlBody, /not instructions for this conversation/);
     const links = [...htmlBody.matchAll(/<a\s+href="([^"]+)"/g)].map(match => match[1]);
     assert.ok(links.includes(`https://share.example.test/share/${opened.shareId}/desk_context`));
     assert.ok(links.includes(`https://share.example.test/share/${opened.shareId}/desk_get?id=OBJECT_ID`));

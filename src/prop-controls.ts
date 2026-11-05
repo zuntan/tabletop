@@ -1,13 +1,15 @@
+import {t, getUiLanguage} from './i18n';
+import {uiAttribute, uiText} from './i18n/dom';
 import { uiErrorMessage } from './i18n/errors';
 import { DeskError } from './desk-errors';
 import { publicAsset } from './runtime-mode';
-import { propPresets } from './prop-presets';
+import { propPresets, localizedPropPreset } from './prop-presets';
 import { stationeryButton } from './stationery-button';
-export function createPropControls(container: HTMLElement, place: (preset: typeof propPresets[number], src: string) => void, report: (message: string, error?: boolean) => void) {
-  const trigger = document.createElement('button'); trigger.type = 'button'; trigger.id = 'prop-open'; trigger.textContent = '小物 ▾';
-  trigger.setAttribute('aria-label', '小物一覧');
-  stationeryButton(trigger, 'prop', '小物一覧');
-  const panel = document.createElement('div'); panel.id = 'prop-palette'; panel.popover = 'auto'; panel.setAttribute('aria-label', '小物一覧');
+export function createPropControls(container: HTMLElement, place: (preset: ReturnType<typeof localizedPropPreset>, src: string) => void, report: (message: string, error?: boolean) => void) {
+  const trigger = document.createElement('button'); trigger.type = 'button'; trigger.id = 'prop-open';
+  stationeryButton(trigger, 'prop', t('props:list'));
+  uiAttribute(trigger, 'title', 'props:list'); uiAttribute(trigger, 'aria-label', 'props:list');
+  const panel = document.createElement('div'); panel.id = 'prop-palette'; panel.popover = 'auto'; uiAttribute(panel, 'aria-label', 'props:list');
   trigger.popoverTargetElement = panel;
   for (const preset of propPresets) {
     const button = document.createElement('button'); button.type = 'button'; button.dataset.propPreset = preset.id;
@@ -21,9 +23,10 @@ export function createPropControls(container: HTMLElement, place: (preset: typeo
       Object.assign(image.style,{width:`${width}px`,height:`${height}px`,transform:`translate(-50%,-50%) scale(${scale})`});
       holder.append(image);preview=holder;
     }
-    const name = document.createElement('span'); name.className='prop-caption'; name.textContent = preset.name.replace(/^(ひと息の|まるっと|くるりの)/,'$1\n');
-    button.title = preset.description; button.append(preview, name); panel.append(button);
+    const name = document.createElement('span'); name.className='prop-caption'; uiText(name, `props:presets.${preset.id}.caption`);
+    uiAttribute(button, 'title', `props:presets.${preset.id}.description`); button.append(preview, name); panel.append(button);
     button.onclick = async () => {
+      const creationPreset = localizedPropPreset(preset, getUiLanguage());
       button.disabled = true;
       try {
         const response = await fetch(publicAsset(`props/${preset.filename}`));
@@ -31,7 +34,7 @@ export function createPropControls(container: HTMLElement, place: (preset: typeo
         const source = await response.text();
         const bytes = new TextEncoder().encode(source);
         const src = `data:image/svg+xml;base64,${btoa(Array.from(bytes, byte => String.fromCharCode(byte)).join(''))}`;
-        place(preset, src);
+        place(creationPreset, src);
       } catch (error) { report(uiErrorMessage(error), true); }
       finally { button.disabled = false; }
     };
