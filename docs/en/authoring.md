@@ -2,7 +2,7 @@
 
 [日本語](../authoring.md) · [Guide](README.md)
 
-Place cards and images, arrange them and add marks while you think. The [Japanese tutorial](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop) contains real tool examples.
+Place cards and images, arrange them and add marks while you think. The [English tutorial](tutorial.md) contains real tool examples.
 
 ## Look around
 

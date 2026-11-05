@@ -1,0 +1,1828 @@
+{
+  "tool-intro-text": {
+    "text": "### 01 Card\n\nPut one thought on a card. Use Markdown headings, lists and emphasis. Double-click to edit."
+  },
+  "tool-detail-text": {
+    "text": "### 01 Card — a closer look\n\n#### How to use it\nPlace a card and double-click its body. Use headings, lists, emphasis and links. Properties controls font size, padding, corners, fill and border.\n\n#### Keep in mind\nSeparate ideas or tasks, then use position and overlap to add meaning. Ask your AI to split a long passage into cards and clip them together.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-text": {
+    "text": "Details"
+  },
+  "guide-go-detail-text": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-text": {
+    "description": "Card: Details"
+  },
+  "guide-sample-object-pin-text": {
+    "description": "Card: Try the example"
+  },
+  "guide-sample-text-heading": {
+    "text": "### 01 Card — examples"
+  },
+  "guide-tool-pin-01": {
+    "description": "01 Card"
+  },
+  "tool-intro-shapes": {
+    "text": "### 02 Shapes\n\nGive ideas a shape: rectangles, ellipses, diamonds and more. Add text, then change the fill and border."
+  },
+  "tool-detail-shapes": {
+    "text": "### 02 Shapes — a closer look\n\n#### How to use it\nChoose a shape, then double-click to add text. Adjust colors, lines and text fitting in Properties.\n\n#### Keep in mind\nAttach lines to anchors. Connections follow when the shape moves, making shapes useful for concepts and flowcharts.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-shapes": {
+    "text": "Details"
+  },
+  "guide-go-detail-shapes": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-shapes": {
+    "description": "Shapes: Details"
+  },
+  "guide-sample-object-pin-shapes": {
+    "description": "Shapes: Try the example"
+  },
+  "guide-sample-shapes-heading": {
+    "text": "### 02 Shapes — examples"
+  },
+  "guide-tool-pin-02": {
+    "description": "02 Shapes"
+  },
+  "tool-intro-line": {
+    "text": "### 03 Line\n\nConnect two points. Attach ends to anchors so they follow cards and diagrams. Choose dashes, width and end markers."
+  },
+  "tool-detail-line": {
+    "text": "### 03 Line — a closer look\n\n#### How to use it\nPlace a line and move its ends. Bring an end near an anchor to attach it; hold Alt to avoid snapping. Set border color, width, dashes and end markers.\n\n#### Keep in mind\nJoin lines at junctions and round their corners. The Line dropdown also offers Connected lines and Freehand lines.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-line": {
+    "text": "Details"
+  },
+  "guide-go-detail-line": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-line": {
+    "description": "Line: Details"
+  },
+  "guide-sample-object-pin-line": {
+    "description": "Line: Try the example"
+  },
+  "guide-sample-line-heading": {
+    "text": "### 03 Line — examples"
+  },
+  "guide-tool-pin-03": {
+    "description": "03 Line"
+  },
+  "tool-intro-arrow": {
+    "text": "### 04 Arrow\n\nShow direction or flow. Arrows share the same connections as lines, including junctions and rounded corners."
+  },
+  "tool-detail-arrow": {
+    "text": "### 04 Arrow — a closer look\n\n#### How to use it\nAn arrow is a line with an arrowhead. Add or remove end markers later. Attached ends follow their targets.\n\n#### Keep in mind\nArrowheads express a relationship, not travel restrictions. A wayfinder can follow the route in either direction.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-arrow": {
+    "text": "Details"
+  },
+  "guide-go-detail-arrow": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-arrow": {
+    "description": "Arrow: Details"
+  },
+  "guide-sample-object-pin-arrow": {
+    "description": "Arrow: Try the example"
+  },
+  "guide-sample-arrow-heading": {
+    "text": "### 04 Arrow — examples"
+  },
+  "guide-tool-pin-04": {
+    "description": "04 Arrow"
+  },
+  "tool-intro-continuous": {
+    "text": "### 05 Connected lines\n\nChoose Connected lines from Line ▼. Click successive points, then finish with Enter or Esc. Edit or extend the result as ordinary lines."
+  },
+  "tool-detail-continuous": {
+    "text": "### 05 Connected lines — a closer look\n\n#### How to use it\nChoose Connected lines from Line ▼ and click each bend. Press Enter or Esc to finish. The result is a set of normal line objects.\n\n#### Keep in mind\nConnect to existing ends, hold Alt to avoid snapping, round junctions or undo. You can stop, adjust the lines and continue later.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-continuous": {
+    "text": "Details"
+  },
+  "guide-go-detail-continuous": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-continuous": {
+    "description": "Connected lines: Details"
+  },
+  "guide-sample-object-pin-continuous": {
+    "description": "Connected lines: Try the example"
+  },
+  "guide-sample-continuous-heading": {
+    "text": "### 05 Connected lines — examples"
+  },
+  "guide-tool-pin-05": {
+    "description": "05 Connected lines"
+  },
+  "tool-intro-free-line": {
+    "text": "### 06 Freehand lines\n\nDrag a rough route from Line ▼. On release, it becomes a few straight segments. Use Doodle to keep your original strokes."
+  },
+  "tool-detail-free-line": {
+    "text": "### 06 Freehand lines — a closer look\n\n#### How to use it\nChoose Freehand lines from Line ▼ and drag. On release, the path is simplified into a few editable line segments.\n\n#### Keep in mind\nUseful for rough roads and concept maps. Use Doodle when you want to keep the movement and character of your handwriting.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-free-line": {
+    "text": "Details"
+  },
+  "guide-go-detail-free-line": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-free-line": {
+    "description": "Freehand lines: Details"
+  },
+  "guide-sample-object-pin-free-line": {
+    "description": "Freehand lines: Try the example"
+  },
+  "guide-sample-free-line-heading": {
+    "text": "### 06 Freehand lines — examples"
+  },
+  "guide-tool-pin-06": {
+    "description": "06 Freehand lines"
+  },
+  "tool-intro-pin": {
+    "text": "### 07 Pin\n\nNumbered landmarks in a series. Attach pins to items and follow their thread with the previous and next buttons."
+  },
+  "tool-detail-pin": {
+    "text": "### 07 Pin — a closer look\n\n#### How to use it\nPlace a pin to number it within its series. Create series and choose their colors, shapes and numbering. Attached pins follow movement and resizing.\n\n#### Keep in mind\nA series can show a connecting thread. Select a pin and use the previous or next button to travel in number order.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-pin": {
+    "text": "Details"
+  },
+  "guide-go-detail-pin": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-pin": {
+    "description": "Pin: Details"
+  },
+  "guide-sample-object-pin-pin": {
+    "description": "Pin: Try the example"
+  },
+  "guide-sample-pin-heading": {
+    "text": "### 07 Pin — examples"
+  },
+  "guide-tool-pin-07": {
+    "description": "07 Pin"
+  },
+  "tool-intro-wayfinder": {
+    "text": "### 08 Wayfinder\n\nFollow connected lines across the desk. Move moves quickly; Tour goes slowly. At a branch, choose a route on a small map."
+  },
+  "tool-detail-wayfinder": {
+    "text": "### 08 Wayfinder — a closer look\n\n#### How to use it\nAttach a wayfinder to a card, then connect one line at its top, left or right. Press its round play button. Place wayfinders at both ends to travel back and forth.\n\n#### Keep in mind\nMove accelerates and slows down; Tour moves at a steady pace. Choose a direction at branches. Click or use a key to stop along the route.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-wayfinder": {
+    "text": "Details"
+  },
+  "guide-go-detail-wayfinder": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-wayfinder": {
+    "description": "Wayfinder: Details"
+  },
+  "guide-sample-object-pin-wayfinder": {
+    "description": "Wayfinder: Try the example"
+  },
+  "guide-sample-wayfinder-heading": {
+    "text": "### 08 Wayfinder — examples"
+  },
+  "guide-tool-pin-08": {
+    "description": "08 Wayfinder"
+  },
+  "tool-intro-clip": {
+    "text": "### 09 Clip\n\nBundle cards and documents. Spread them by a fixed gap or a proportion, including edge-to-edge. Alt-drag to pull one sheet out."
+  },
+  "tool-detail-clip": {
+    "text": "### 09 Clip — a closer look\n\n#### How to use it\nSelect items and clip them together. Attachment position and spacing determine their arrangement. Spacing can use a fixed distance, a percentage of the previous sheet, or the first sheet's short side.\n\n#### Keep in mind\n100% of the previous sheet places sheets edge-to-edge. Alt-drag a sheet to remove it. Delete the clip to release the bundle while keeping the contents.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-clip": {
+    "text": "Details"
+  },
+  "guide-go-detail-clip": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-clip": {
+    "description": "Clip: Details"
+  },
+  "guide-sample-object-pin-clip": {
+    "description": "Clip: Try the example"
+  },
+  "guide-sample-clip-heading": {
+    "text": "### 09 Clip — examples"
+  },
+  "guide-tool-pin-09": {
+    "description": "09 Clip"
+  },
+  "tool-intro-file": {
+    "text": "### 10 Clear Folder\n\nKeep several items together without changing their arrangement. Clips and rulers can go inside with their contents."
+  },
+  "tool-detail-file": {
+    "text": "### 10 Clear Folder — a closer look\n\n#### How to use it\nSelect items and place them in a Clear Folder. Clip and ruler groups are included as a whole. Move the colored frame and title to carry the arrangement together.\n\n#### Keep in mind\nIndividual movement, resizing and reordering are restricted inside. Release the folder to rearrange its contents. Deleting the folder leaves its contents in place.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-file": {
+    "text": "Details"
+  },
+  "guide-go-detail-file": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-file": {
+    "description": "Clear Folder: Details"
+  },
+  "guide-sample-object-pin-file": {
+    "description": "Clear Folder: Try the example"
+  },
+  "guide-sample-file-heading": {
+    "text": "### 10 Clear Folder — examples"
+  },
+  "guide-tool-pin-10": {
+    "description": "10 Clear Folder"
+  },
+  "tool-intro-ruler": {
+    "text": "### 11 Ruler\n\nArrange items along both long edges. Choose free placement, equal gaps or equal centers, with acrylic, bamboo or steel looks."
+  },
+  "tool-detail-ruler": {
+    "text": "### 11 Ruler — a closer look\n\n#### How to use it\nPlace a ruler and arrange cards or documents along either long edge. Its orientation determines the alignment direction. Choose free placement, equal gaps or equal centers; each side is arranged separately.\n\n#### Keep in mind\nChoose acrylic, bamboo or stainless steel. Moving the ruler carries its items. A Clear Folder can contain the whole group.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-ruler": {
+    "text": "Details"
+  },
+  "guide-go-detail-ruler": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-ruler": {
+    "description": "Ruler: Details"
+  },
+  "guide-sample-object-pin-ruler": {
+    "description": "Ruler: Try the example"
+  },
+  "guide-sample-ruler-heading": {
+    "text": "### 11 Ruler — examples"
+  },
+  "guide-tool-pin-11": {
+    "description": "11 Ruler"
+  },
+  "tool-intro-image-svg": {
+    "text": "### 12 Image / SVG\n\nPut photos and illustrations on the desk. Move or resize them, or use Open to view them in another tab."
+  },
+  "tool-detail-image-svg": {
+    "text": "### 12 Image / SVG — a closer look\n\n#### How to use it\nUse Image, drop a file or paste from the clipboard. Images and SVGs can have titles and can be moved or resized. Open them in another tab for a closer look.\n\n#### Keep in mind\nYour AI can read and revise SVG source. This is not a freehand editor for arbitrary SVGs; use Doodle for a drawing you want to keep editing by hand.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-image-svg": {
+    "text": "Details"
+  },
+  "guide-go-detail-image-svg": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-image-svg": {
+    "description": "Image / SVG: Details"
+  },
+  "guide-sample-object-pin-image-svg": {
+    "description": "Image / SVG: Try the example"
+  },
+  "guide-sample-image-svg-heading": {
+    "text": "### 12 Image / SVG — examples"
+  },
+  "guide-tool-pin-12": {
+    "description": "12 Image / SVG"
+  },
+  "tool-intro-doodle": {
+    "text": "### 13 Doodle\n\nPlace a blank sheet, set its size and double-click to draw. Switch among three colors and three widths. A transparent sheet can overlay other material."
+  },
+  "tool-detail-doodle": {
+    "text": "### 13 Doodle — a closer look\n\n#### How to use it\nPlace a Doodle, size its sheet and double-click. Add a title and reopen it later. Choose among three colors and three widths; each dropdown offers widths from 2 to 64. The eraser uses the same widths.\n\n#### Keep in mind\nResizing changes the sheet while retaining strokes. Moving the drawing and panning the view are separate operations. The editor has its own Undo until you apply the drawing.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-doodle": {
+    "text": "Details"
+  },
+  "guide-go-detail-doodle": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-doodle": {
+    "description": "Doodle: Details"
+  },
+  "guide-sample-object-pin-doodle": {
+    "description": "Doodle: Try the example"
+  },
+  "guide-sample-doodle-heading": {
+    "text": "### 13 Doodle — examples"
+  },
+  "guide-tool-pin-13": {
+    "description": "13 Doodle"
+  },
+  "tool-intro-cutout": {
+    "text": "### 14 Cutout\n\nOverlay a closed shape on an image and select both to show only that area. Keep the original and toggle the cutout off again."
+  },
+  "tool-detail-cutout": {
+    "text": "### 14 Cutout — a closer look\n\n#### How to use it\nOverlap a document with a closed shape and select both. Cutout copies the shape's outline as a mask; moving the original shape later does not change the mask.\n\n#### Keep in mind\nThe original data remains. Toggle Cutout off to see it all. Each item has one mask, replaced by a new cutout. Copy the visible result as an image for other apps.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-cutout": {
+    "text": "Details"
+  },
+  "guide-go-detail-cutout": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-cutout": {
+    "description": "Cutout: Details"
+  },
+  "guide-sample-object-pin-cutout": {
+    "description": "Cutout: Try the example"
+  },
+  "guide-sample-cutout-heading": {
+    "text": "### 14 Cutout — examples"
+  },
+  "guide-tool-pin-14": {
+    "description": "14 Cutout"
+  },
+  "tool-intro-mermaid": {
+    "text": "### 15 Mermaid\n\nDraw a diagram from text. Edit the source to change its structure. Even if rendering fails, the source remains."
+  },
+  "tool-detail-mermaid": {
+    "text": "### 15 Mermaid — a closer look\n\n#### How to use it\nWrite Mermaid source to generate a diagram of steps, relationships or structure. If rendering fails, correct the retained source and generate it again.\n\n#### Keep in mind\nThe diagram is one document, not a set of separate shapes. Connect pins or lines to its outer frame and organize it with clips or rulers. Your AI can help edit the source.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-mermaid": {
+    "text": "Details"
+  },
+  "guide-go-detail-mermaid": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-mermaid": {
+    "description": "Mermaid: Details"
+  },
+  "guide-sample-object-pin-mermaid": {
+    "description": "Mermaid: Try the example"
+  },
+  "guide-sample-mermaid-heading": {
+    "text": "### 15 Mermaid — examples"
+  },
+  "guide-tool-pin-15": {
+    "description": "15 Mermaid"
+  },
+  "tool-intro-qr": {
+    "text": "### 16 QR code\n\nSend text or a URL to a phone. The source text is retained. Adjust the outer frame while the QR code stays square."
+  },
+  "tool-detail-qr": {
+    "text": "### 16 QR code — a closer look\n\n#### How to use it\nEnter text or a URL. Spaces and line breaks are retained. Resizing the frame keeps the QR square. Enlarge it if it becomes too small to scan.\n\n#### Keep in mind\nContent is not split automatically. If it exceeds capacity, a Too long sign appears and the source stays intact. Stickers reserve a row of space above and below.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-qr": {
+    "text": "Details"
+  },
+  "guide-go-detail-qr": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-qr": {
+    "description": "QR code: Details"
+  },
+  "guide-sample-object-pin-qr": {
+    "description": "QR code: Try the example"
+  },
+  "guide-sample-qr-heading": {
+    "text": "### 16 QR code — examples"
+  },
+  "guide-tool-pin-16": {
+    "description": "16 QR code"
+  },
+  "tool-intro-web": {
+    "text": "### 17 Web page\n\nKeep a web reference beside your ideas and documents. Open the original page when you need it."
+  },
+  "tool-detail-web": {
+    "text": "### 17 Web page — a closer look\n\n#### How to use it\nPlace a web page card with a URL. View it alongside your material or use its Open button to visit the original page.\n\n#### Keep in mind\nEmbedding restrictions or network conditions may prevent display on the desk. Open the original in your browser instead. This tool does not guarantee an offline copy.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-web": {
+    "text": "Details"
+  },
+  "guide-go-detail-web": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-web": {
+    "description": "Web page: Details"
+  },
+  "guide-sample-object-pin-web": {
+    "description": "Web page: Try the example"
+  },
+  "guide-sample-web-heading": {
+    "text": "### 17 Web page — examples"
+  },
+  "guide-tool-pin-17": {
+    "description": "17 Web page"
+  },
+  "tool-intro-link": {
+    "text": "### 18 Link\n\nA doorway to a URL. Switch between URL text and a QR code. Use the Open button to visit the page."
+  },
+  "tool-detail-link": {
+    "text": "### 18 Link — a closer look\n\n#### How to use it\nSet a title and URL. Choose URL text or QR code display in Properties. In text mode, adjust font, color, corners, fill and border. The chain icon identifies a link.\n\n#### Keep in mind\nThe text, QR and Open button all use the same URL. QR mode ignores frame decoration. Use QR code instead for arbitrary text that is not a URL.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-link": {
+    "text": "Details"
+  },
+  "guide-go-detail-link": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-link": {
+    "description": "Link: Details"
+  },
+  "guide-sample-object-pin-link": {
+    "description": "Link: Try the example"
+  },
+  "guide-sample-link-heading": {
+    "text": "### 18 Link — examples"
+  },
+  "guide-tool-pin-18": {
+    "description": "18 Link"
+  },
+  "tool-intro-desk-link": {
+    "text": "### 19 Desk link\n\nA card pointing to another saved desk. Look for the desk icon and use its Open button to switch."
+  },
+  "tool-detail-desk-link": {
+    "text": "### 19 Desk link — a closer look\n\n#### How to use it\nThis special link refers to a desk file on the connected server, rather than an ordinary web page. Use its Open button to switch desks.\n\n#### Keep in mind\nIf the current desk has changes, choose to save, discard or cancel. Moved files, deleted files and different paths on another computer are not tracked automatically.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-desk-link": {
+    "text": "Details"
+  },
+  "guide-go-detail-desk-link": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-desk-link": {
+    "description": "Desk link: Details"
+  },
+  "guide-sample-object-pin-desk-link": {
+    "description": "Desk link: Try the example"
+  },
+  "guide-sample-desk-link-heading": {
+    "text": "### 19 Desk link — examples"
+  },
+  "guide-tool-pin-19": {
+    "description": "19 Desk link"
+  },
+  "tool-intro-paste": {
+    "text": "### 20 Paste\n\nAdd text, images or SVGs from the clipboard. Copy editable items between desks connected to the same MCP server."
+  },
+  "tool-detail-paste": {
+    "text": "### 20 Paste — a closer look\n\n#### How to use it\nPaste text, images or SVGs. If copied desk-object data is available, items are restored as editable objects. Other desks on the same MCP server can exchange these copies.\n\n#### Keep in mind\nIf object data is unavailable, clipboard text or an image is used instead. Internal object copies and image/text copies for other apps serve different purposes.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-paste": {
+    "text": "Details"
+  },
+  "guide-go-detail-paste": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-paste": {
+    "description": "Paste: Details"
+  },
+  "guide-sample-object-pin-paste": {
+    "description": "Paste: Try the example"
+  },
+  "guide-sample-paste-heading": {
+    "text": "### 20 Paste — examples"
+  },
+  "guide-tool-pin-20": {
+    "description": "20 Paste"
+  },
+  "tool-intro-stamp": {
+    "text": "### 21 Stamp\n\nMark something completed, on hold, approved or simply worth a comment. Hover for a large preview and add a date if you like."
+  },
+  "tool-detail-stamp": {
+    "text": "### 21 Stamp — a closer look\n\n#### How to use it\nSelect cards or a Clear Folder, then choose from 38 stamps. Hover over a small stamp to preview it. The large preview is clickable too. Add date sits below it and is remembered in this browser.\n\n#### Keep in mind\nStamps are visual marks: they do not change the text or task state. They retreat to a corner while selected, apart from the brief pressing effect. Clear removes the stamp. Japanese lettering is part of the design; the English UI explains its meaning.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-stamp": {
+    "text": "Details"
+  },
+  "guide-go-detail-stamp": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-stamp": {
+    "description": "Stamp: Details"
+  },
+  "guide-sample-object-pin-stamp": {
+    "description": "Stamp: Try the example"
+  },
+  "guide-sample-stamp-heading": {
+    "text": "### 21 Stamp — examples"
+  },
+  "guide-tool-pin-21": {
+    "description": "21 Stamp"
+  },
+  "tool-intro-reaction": {
+    "text": "### 22 Reaction\n\nAdd a feeling, reply or small flag with an emoji. Mark a question or a check without editing the body."
+  },
+  "tool-detail-reaction": {
+    "text": "### 22 Reaction — a closer look\n\n#### How to use it\nAdd or remove several kinds of reaction. In Properties, set their size, corner, direction and Fixed zoom. Bars and moon phases can also serve as informal progress flags.\n\n#### Keep in mind\nReactions, stamps and stickers have no mandatory workflow meaning. Use reactions for feelings or small flags, stamps for a prominent mark, and stickers for colors or counts.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-reaction": {
+    "text": "Details"
+  },
+  "guide-go-detail-reaction": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-reaction": {
+    "description": "Reaction: Details"
+  },
+  "guide-sample-object-pin-reaction": {
+    "description": "Reaction: Try the example"
+  },
+  "guide-sample-reaction-heading": {
+    "text": "### 22 Reaction — examples"
+  },
+  "guide-tool-pin-22": {
+    "description": "22 Reaction"
+  },
+  "tool-intro-sticker": {
+    "text": "### 23 Sticker\n\nChoose a color and shape, then stick on small marks in order. Use them for categories or ratings; they arrange themselves from a corner."
+  },
+  "tool-detail-sticker": {
+    "text": "### 23 Sticker — a closer look\n\n#### How to use it\nOpen the Sticker dropdown: choose Shape, Suggested colors or All colors. Choices stay open so you can set them together. Press the main button to add the current sticker. Use strips 1 and 2 independently.\n\n#### Keep in mind\nSet the shared diameter, corner and Fixed zoom in Properties. Stickers wrap as needed. Clear a strip and reapply to change its order. They follow the parent item and their settings can be copied with the format eyedropper.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-sticker": {
+    "text": "Details"
+  },
+  "guide-go-detail-sticker": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-sticker": {
+    "description": "Sticker: Details"
+  },
+  "guide-sample-object-pin-sticker": {
+    "description": "Sticker: Try the example"
+  },
+  "guide-sample-sticker-heading": {
+    "text": "### 23 Sticker — examples"
+  },
+  "guide-tool-pin-23": {
+    "description": "23 Sticker"
+  },
+  "tool-intro-prop": {
+    "text": "### 24 Props\n\nTea cups, signs and a temporary area. With Select by header enabled, grab the top band and work with the cards inside."
+  },
+  "tool-detail-prop": {
+    "text": "### 24 Props — a closer look\n\n#### How to use it\nPlace SVG props such as cups, signs and areas. Move or resize them like other items. VACANT LOT, WORK IN PROGRESS and TEMP AREA are separate English designs; the Japanese designs remain available.\n\n#### Keep in mind\nSelect by header makes just the top band selectable so you can work with cards inside. Resizing is disabled in that mode; turn it off to resize again. Decorative props do not perform the actions they depict.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-prop": {
+    "text": "Details"
+  },
+  "guide-go-detail-prop": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-prop": {
+    "description": "Props: Details"
+  },
+  "guide-sample-object-pin-prop": {
+    "description": "Props: Try the example"
+  },
+  "guide-sample-prop-heading": {
+    "text": "### 24 Props — examples"
+  },
+  "guide-tool-pin-24": {
+    "description": "24 Props"
+  },
+  "tool-intro-format": {
+    "text": "### 25 Pick / Apply format\n\nPick a sample's appearance and apply it to selected items. Keep the current format and three saved presets."
+  },
+  "tool-detail-format": {
+    "text": "### 25 Pick / Apply format — a closer look\n\n#### How to use it\nUse Pick format on a sample, select the target, then Apply. Keep frequently used appearances in the current slot and three saved presets.\n\n#### Keep in mind\nOnly supported style properties are applied; text and position stay unchanged. Sticker and reaction settings are included. Selecting an item alone does not replace the saved sample.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-format": {
+    "text": "Details"
+  },
+  "guide-go-detail-format": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-format": {
+    "description": "Pick / Apply format: Details"
+  },
+  "guide-sample-object-pin-format": {
+    "description": "Pick / Apply format: Try the example"
+  },
+  "guide-sample-format-heading": {
+    "text": "### 25 Pick / Apply format — examples"
+  },
+  "guide-tool-pin-25": {
+    "description": "25 Pick / Apply format"
+  },
+  "tool-intro-callout": {
+    "text": "### 26 Callout\n\nAdd a speech, thought or line tail to a card. Attach its tip to show what your note is about."
+  },
+  "tool-detail-callout": {
+    "text": "### 26 Callout — a closer look\n\n#### How to use it\nChoose a tail in the card's Properties: a triangle, thought dots or an elbow line. Move its tip and optionally attach it to an anchor.\n\n#### Keep in mind\nThe body holds the note; the tip points to its subject. An attached tip follows its target. Remove the tail to make it an ordinary card again.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-callout": {
+    "text": "Details"
+  },
+  "guide-go-detail-callout": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-callout": {
+    "description": "Callout: Details"
+  },
+  "guide-sample-object-pin-callout": {
+    "description": "Callout: Try the example"
+  },
+  "guide-sample-callout-heading": {
+    "text": "### 26 Callout — examples"
+  },
+  "guide-tool-pin-26": {
+    "description": "26 Callout"
+  },
+  "tool-intro-preview": {
+    "text": "### 27 Markdown preview\n\nWhile editing, hold Preview to check uncommitted text. Previewing does not change the saved card body."
+  },
+  "tool-detail-preview": {
+    "text": "### 27 Markdown preview — a closer look\n\n#### How to use it\nOpen a card for editing and hold Preview to see its current Markdown. Check headings, line breaks and formatting before applying.\n\n#### Keep in mind\nReturn to the input and keep editing. Preview alone does not apply the text. For substantial writing, you can also copy from an external text editor.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-preview": {
+    "text": "Details"
+  },
+  "guide-go-detail-preview": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-preview": {
+    "description": "Markdown preview: Details"
+  },
+  "guide-sample-object-pin-preview": {
+    "description": "Markdown preview: Try the example"
+  },
+  "guide-sample-preview-heading": {
+    "text": "### 27 Markdown preview — examples"
+  },
+  "guide-tool-pin-27": {
+    "description": "27 Markdown preview"
+  },
+  "tool-intro-selection": {
+    "text": "### 28 Selection\n\nClick to select, drag to move. Add items with Shift or Ctrl, or drag a selection box to handle several at once."
+  },
+  "tool-detail-selection": {
+    "text": "### 28 Selection — a closer look\n\n#### How to use it\nClick one item or select several with a box. Shift or Ctrl adds to the selection. Drag the selection to move it. Resize using edge or corner handles where supported.\n\n#### Keep in mind\nHuman selection drives Properties and editing. AI pointing is a separate attention frame. Arrow keys move selected items; Shift plus arrows resize them, and Alt temporarily bypasses snapping.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-selection": {
+    "text": "Details"
+  },
+  "guide-go-detail-selection": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-selection": {
+    "description": "Selection: Details"
+  },
+  "guide-sample-object-pin-selection": {
+    "description": "Selection: Try the example"
+  },
+  "guide-sample-selection-heading": {
+    "text": "### 28 Selection — examples"
+  },
+  "guide-tool-pin-28": {
+    "description": "28 Selection"
+  },
+  "tool-intro-pointing": {
+    "text": "### 29 AI pointing\n\nA separate frame shows what your AI is referring to. Clear AI pointing removes it without changing your selection."
+  },
+  "tool-detail-pointing": {
+    "text": "### 29 AI pointing — a closer look\n\n#### How to use it\nYour AI can point to an item without changing your selection. It is a shared reference for phrases such as this card. Use Clear AI pointing to remove the frame.\n\n#### Keep in mind\nWhen your AI points and then moves an item, the animation makes it easier to follow. Pointing does not lock the object or change its saved content. Try it in the connected edition.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-pointing": {
+    "text": "Details"
+  },
+  "guide-go-detail-pointing": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-pointing": {
+    "description": "AI pointing: Details"
+  },
+  "guide-sample-object-pin-pointing": {
+    "description": "AI pointing: Try the example"
+  },
+  "guide-sample-pointing-heading": {
+    "text": "### 29 AI pointing — examples"
+  },
+  "guide-tool-pin-29": {
+    "description": "29 AI pointing"
+  },
+  "tool-intro-snap": {
+    "text": "### 30 Snap\n\nAlign placement to a grid. Turn it on for tidy rows, or off for free placement."
+  },
+  "tool-detail-snap": {
+    "text": "### 30 Snap — a closer look\n\n#### How to use it\nTurn Snap on to align placement. In Desk appearance, set Grid interval and Snap interval. A 4:1 ratio gives four snapping steps per visible grid interval.\n\n#### Keep in mind\nUse it for diagrams or rows, then switch it off or hold Alt for fine placement. Endpoint snapping to anchors is a separate aid. AI operations can also request exact coordinates.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-snap": {
+    "text": "Details"
+  },
+  "guide-go-detail-snap": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-snap": {
+    "description": "Snap: Details"
+  },
+  "guide-sample-object-pin-snap": {
+    "description": "Snap: Try the example"
+  },
+  "guide-sample-snap-heading": {
+    "text": "### 30 Snap — examples"
+  },
+  "guide-tool-pin-30": {
+    "description": "30 Snap"
+  },
+  "tool-intro-lock": {
+    "text": "### 31 Lock\n\nPrevent accidental mouse movement and resizing. Text, styling and AI operations can still be changed."
+  },
+  "tool-detail-lock": {
+    "text": "### 31 Lock — a closer look\n\n#### How to use it\nLock an item to protect its position and size from mouse gestures. Group membership in clips and folders can also affect what can move.\n\n#### Keep in mind\nLock is not a permission or secrecy setting. It does not prohibit every edit or AI operation. Use it to hold a layout in place.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-lock": {
+    "text": "Details"
+  },
+  "guide-go-detail-lock": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-lock": {
+    "description": "Lock: Details"
+  },
+  "guide-sample-object-pin-lock": {
+    "description": "Lock: Try the example"
+  },
+  "guide-sample-lock-heading": {
+    "text": "### 31 Lock — examples"
+  },
+  "guide-tool-pin-31": {
+    "description": "31 Lock"
+  },
+  "tool-intro-layers": {
+    "text": "### 32 Front / Back\n\nChange what overlaps what. Bring a note forward or send a background behind other items."
+  },
+  "tool-detail-layers": {
+    "text": "### 32 Front / Back — a closer look\n\n#### How to use it\nSelect an item and use Front or Back to change its stacking order. Put notes over documents or place background items behind them.\n\n#### Keep in mind\nClips, Clear Folders and rulers can constrain individual ordering or move the group together. Release the group first when needed to rearrange its contents.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-layers": {
+    "text": "Details"
+  },
+  "guide-go-detail-layers": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-layers": {
+    "description": "Front / Back: Details"
+  },
+  "guide-sample-object-pin-layers": {
+    "description": "Front / Back: Try the example"
+  },
+  "guide-sample-layers-heading": {
+    "text": "### 32 Front / Back — examples"
+  },
+  "guide-tool-pin-32": {
+    "description": "32 Front / Back"
+  },
+  "tool-intro-delete": {
+    "text": "### 33 Delete\n\nDelete removes instantly; the toolbar button adds an animation. Undo brings an item back if you go too far."
+  },
+  "tool-detail-delete": {
+    "text": "### 33 Delete — a closer look\n\n#### How to use it\nUse Delete for instant removal, or the toolbar dropdown to choose an animated effect. Multiple selected items can disappear one after another. Undo restores them.\n\n#### Keep in mind\nDeleting organizing tools such as clips, Clear Folders or rulers releases their contents rather than deleting those contents. Check the selection first.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-delete": {
+    "text": "Details"
+  },
+  "guide-go-detail-delete": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-delete": {
+    "description": "Delete: Details"
+  },
+  "guide-sample-object-pin-delete": {
+    "description": "Delete: Try the example"
+  },
+  "guide-sample-delete-heading": {
+    "text": "### 33 Delete — examples"
+  },
+  "guide-tool-pin-33": {
+    "description": "33 Delete"
+  },
+  "tool-intro-undo": {
+    "text": "### 34 Undo / Redo\n\nStep backward or forward through changes made by you and your AI. Try an idea, then decide."
+  },
+  "tool-detail-undo": {
+    "text": "### 34 Undo / Redo — a closer look\n\n#### How to use it\nUndo and redo desk changes one step at a time. Human and AI edits share the same history, so you can experiment with arrangement and appearance.\n\n#### Keep in mind\nThe Doodle editor has its own temporary Undo. Applying the drawing adds one desk-history step. Panning and zooming are separate from object-edit Undo.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-undo": {
+    "text": "Details"
+  },
+  "guide-go-detail-undo": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-undo": {
+    "description": "Undo / Redo: Details"
+  },
+  "guide-sample-object-pin-undo": {
+    "description": "Undo / Redo: Try the example"
+  },
+  "guide-sample-undo-heading": {
+    "text": "### 34 Undo / Redo — examples"
+  },
+  "guide-tool-pin-34": {
+    "description": "34 Undo / Redo"
+  },
+  "tool-intro-zoom": {
+    "text": "### 35 Zoom / Fit / Center\n\nMove between the whole desk and small details. Fit uses your selection, then AI pointing, then all items. Center returns to the origin."
+  },
+  "tool-detail-zoom": {
+    "text": "### 35 Zoom / Fit / Center — a closer look\n\n#### How to use it\nUse the wheel or zoom buttons. Pan with Space-drag or the middle mouse button. Fit prioritizes human selection, then AI pointing, then the whole desk.\n\n#### Keep in mind\nIf you get lost, clear selection and fit all, or find an item in Objects. Center returns to the origin. Follow a wayfinder when you want to see the route as you travel.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-zoom": {
+    "text": "Details"
+  },
+  "guide-go-detail-zoom": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-zoom": {
+    "description": "Zoom / Fit / Center: Details"
+  },
+  "guide-sample-object-pin-zoom": {
+    "description": "Zoom / Fit / Center: Try the example"
+  },
+  "guide-sample-zoom-heading": {
+    "text": "### 35 Zoom / Fit / Center — examples"
+  },
+  "guide-tool-pin-35": {
+    "description": "35 Zoom / Fit / Center"
+  },
+  "tool-intro-object-list": {
+    "text": "### 36 Objects\n\nFind what is on the desk. Filter by type to locate items off-screen or hidden behind something else."
+  },
+  "tool-detail-object-list": {
+    "text": "### 36 Objects — a closer look\n\n#### How to use it\nOpen Objects and filter by type. Select an item, then use Properties or Fit selection to find it, even if it is off-screen or covered.\n\n#### Keep in mind\nAn item still exists when a cutout hides all of it. Select it from Objects to inspect its settings. The list covers this desk, not the contents of other desks.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-object-list": {
+    "text": "Details"
+  },
+  "guide-go-detail-object-list": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-object-list": {
+    "description": "Objects: Details"
+  },
+  "guide-sample-object-pin-object-list": {
+    "description": "Objects: Try the example"
+  },
+  "guide-sample-object-list-heading": {
+    "text": "### 36 Objects — examples"
+  },
+  "guide-tool-pin-36": {
+    "description": "36 Objects"
+  },
+  "tool-intro-properties": {
+    "text": "### 37 Properties\n\nAdjust position, dimensions, colors and more. Available controls depend on the selected item type."
+  },
+  "tool-detail-properties": {
+    "text": "### 37 Properties — a closer look\n\n#### How to use it\nSelect an item to see its position, width, height, colors and text settings. Use numeric fields when mouse adjustment is awkward.\n\n#### Keep in mind\nSize means different things for different tools: the sheet for a Doodle, endpoints for a line, and series settings for a pin. Some controls are restricted inside groups.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-properties": {
+    "text": "Details"
+  },
+  "guide-go-detail-properties": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-properties": {
+    "description": "Properties: Details"
+  },
+  "guide-sample-object-pin-properties": {
+    "description": "Properties: Try the example"
+  },
+  "guide-sample-properties-heading": {
+    "text": "### 37 Properties — examples"
+  },
+  "guide-tool-pin-37": {
+    "description": "37 Properties"
+  },
+  "tool-intro-files": {
+    "text": "### 38 Save / Load\n\nUse SAVE, SAVE AS and LOAD for server-side desk files. Upload and Download also work without AI."
+  },
+  "tool-detail-files": {
+    "text": "### 38 Save / Load — a closer look\n\n#### How to use it\nSAVE and SAVE AS write desk files through the MCP server; LOAD reads them. You can also ask your AI to save or load a desk. Save first before switching.\n\n#### Keep in mind\nUpload and Download use your browser and work without AI. They are separate from choosing a server-side path. Cancel an unsaved-changes prompt to keep your current desk.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-files": {
+    "text": "Details"
+  },
+  "guide-go-detail-files": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-files": {
+    "description": "Save / Load: Details"
+  },
+  "guide-sample-object-pin-files": {
+    "description": "Save / Load: Try the example"
+  },
+  "guide-sample-files-heading": {
+    "text": "### 38 Save / Load — examples"
+  },
+  "guide-tool-pin-38": {
+    "description": "38 Save / Load"
+  },
+  "tool-intro-pdf": {
+    "text": "### 39 Open as PDF\n\nOpen the whole desk as a single-page PDF in another tab, including off-screen items. Save or print from the PDF viewer."
+  },
+  "tool-detail-pdf": {
+    "text": "### 39 Open as PDF — a closer look\n\n#### How to use it\nChoose File → Open as PDF. The export covers the whole desk regardless of zoom or scroll, without selection outlines or editing handles. Open as PNG is available below it.\n\n#### Keep in mind\nSave or print from your browser's PDF viewer. This makes one large page; it does not paginate onto A4 or provide a separate print-layout editor.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-pdf": {
+    "text": "Details"
+  },
+  "guide-go-detail-pdf": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-pdf": {
+    "description": "Open as PDF: Details"
+  },
+  "guide-sample-object-pin-pdf": {
+    "description": "Open as PDF: Try the example"
+  },
+  "guide-sample-pdf-heading": {
+    "text": "### 39 Open as PDF — examples"
+  },
+  "guide-tool-pin-39": {
+    "description": "39 Open as PDF"
+  },
+  "tool-intro-appearance": {
+    "text": "### 40 Desk appearance\n\nChoose wallpaper, background, title color and frame colors. Show origin axes to mark where the first card begins."
+  },
+  "tool-detail-appearance": {
+    "text": "### 40 Desk appearance — a closer look\n\n#### How to use it\nOpen Desk appearance from the menu. Set wallpaper, background brightness and title color. Names and colors help distinguish multiple desks.\n\n#### Keep in mind\nToggle and color the origin axes. Set grid display, color and pattern independently, plus grid and snapping intervals. Register an initial focus from selected content if you want a saved opening view.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-appearance": {
+    "text": "Details"
+  },
+  "guide-go-detail-appearance": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-appearance": {
+    "description": "Desk appearance: Details"
+  },
+  "guide-sample-object-pin-appearance": {
+    "description": "Desk appearance: Try the example"
+  },
+  "guide-sample-appearance-heading": {
+    "text": "### 40 Desk appearance — examples"
+  },
+  "guide-tool-pin-40": {
+    "description": "40 Desk appearance"
+  },
+  "tool-intro-bell": {
+    "text": "### 41 Bell / Short note\n\nAn experimental bell sends a short note or your selection to AI while it is waiting. Use it alongside chat."
+  },
+  "tool-detail-bell": {
+    "text": "### 41 Bell / Short note — a closer look\n\n#### How to use it\nUse the bell to notify your AI of selected items or a short message. It can signal that you have finished an action when the AI is waiting for the bell.\n\n#### Keep in mind\nIt cannot always start an idle AI. Delivery and response depend on the agent and connection. Use normal chat for longer discussion or when a reply matters.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-bell": {
+    "text": "Details"
+  },
+  "guide-go-detail-bell": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-bell": {
+    "description": "Bell / Short note: Details"
+  },
+  "guide-sample-object-pin-bell": {
+    "description": "Bell / Short note: Try the example"
+  },
+  "guide-sample-bell-heading": {
+    "text": "### 41 Bell / Short note — examples"
+  },
+  "guide-tool-pin-41": {
+    "description": "41 Bell / Short note"
+  },
+  "tool-intro-thinking": {
+    "text": "### 42 Think alone\n\nPause AI edits and pointing while you work. You can keep using the desk, and AI can still read it."
+  },
+  "tool-detail-thinking": {
+    "text": "### 42 Think alone — a closer look\n\n#### How to use it\nTurn Think alone on to stop AI editing and pointing temporarily. Your own desk controls continue to work.\n\n#### Keep in mind\nThis does not hide the desk or disconnect the AI: reading remains possible. Switch it off to resume joint editing.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here."
+  },
+  "guide-go-source-thinking": {
+    "text": "Details"
+  },
+  "guide-go-detail-thinking": {
+    "text": "Back"
+  },
+  "guide-sample-detail-pin-thinking": {
+    "description": "Think alone: Details"
+  },
+  "guide-sample-object-pin-thinking": {
+    "description": "Think alone: Try the example"
+  },
+  "guide-sample-thinking-heading": {
+    "text": "### 42 Think alone — examples"
+  },
+  "guide-tool-pin-42": {
+    "description": "42 Think alone"
+  },
+  "tool-intro-pages": {
+    "text": "### 43 Browser edition\n\nPages runs in your browser without AI. Open or edit desk files, then download your work to keep it."
+  },
+  "tool-detail-pages": {
+    "text": "### 43 Browser edition — a closer look\n\n#### How to use it\nThe static Pages edition needs no installation or AI connection. Upload a desk file, edit it and download it again. A desk URL can also open a publicly hosted file.\n\n#### Keep in mind\nAI collaboration and server-side SAVE / LOAD belong to the normal edition. Public-file loading depends on the host and browser access rules. There is no automatic saving.\n\nBlue wayfinder: back to the overview.\nPin ① ▶: example ②. Pin ② ◀: back here.\n\nGreen wayfinder below: visit 44 Camera."
+  },
+  "guide-go-source-pages": {
+    "text": "Details"
+  },
+  "guide-sample-detail-pin-pages": {
+    "description": "Browser edition: Details"
+  },
+  "guide-sample-object-pin-pages": {
+    "description": "Browser edition: Try the example"
+  },
+  "guide-sample-pages-heading": {
+    "text": "### 43 From your browser to your desk"
+  },
+  "guide-tool-pin-43": {
+    "description": "43 Browser edition"
+  },
+  "tool-detail-camera": {
+    "text": "### 44 Camera — a closer look\n\n#### How to use it\nPress Camera next to Lock. Move or resize the temporary capture frame, then Copy and paste into another app. Selected objects provide the initial bounds; you can also start without a selection or reuse the last area.\n\n#### Keep in mind\nSelection frames and editing handles are excluded. Capture any rectangle, including part of a card or some empty desk space.\n\nWayfinder above: back to 43.\nPin ① ▶: example ②."
+  },
+  "guide-sample-detail-pin-camera": {
+    "description": "Camera: Details"
+  },
+  "guide-sample-object-pin-camera": {
+    "description": "Camera: Try the example"
+  },
+  "guide-sample-camera-heading": {
+    "text": "### 44 Camera — examples"
+  },
+  "text-0cc36b55": {
+    "text": "# Tabletop — a tour of the tools\n\nA shared desk where you and your AI can think together.\n\n## Start with the green sign above\n\nThe green sign above this card is a **wayfinder**. Select it, then press the play button that appears. Follow the line to “Try a closer view”, try the instructions there, then take the next green wayfinder to **01 Card**.\n\n## Follow what interests you\n\nSmall cards near the center introduce each tool. Detailed explanations and examples sit farther out.\n\nGreen wayfinders lead to details; blue ones bring you back. Tools run clockwise from 01.\n\nTravel keeps your current zoom. Click the desk to stop along the way."
+  },
+  "guide-try-selection-fit": {
+    "text": "## Try a closer view\n\nSelect this card, then press **Fit selection** at the bottom right.\n\nThe view zooms to fit the card, making it easier to read.\n\nSelect any card and use Fit selection for a closer look. To go somewhere else, press a wayfinder's round ▶.\n\nWhen you are ready, press the green ▶ above this card to visit **01 Card**."
+  },
+  "guide-go-start": {
+    "text": "Start here"
+  },
+  "guide-go-after-fit": {
+    "text": "01 Card"
+  },
+  "guide-welcome-message": {
+    "text": "# Make this desk your own\n\n### There is no single right way to use it.\n\n**Spread out material. Arrange ideas. Connect them.**\nDoodle, press a stamp, and play a little. Choose your own tools and places.\n\n---\n\nThese examples show possibilities, not rules.\n**You do not need to learn every tool or keep everything tidy.**\nTry one thing that catches your eye.\n\nThink on your own or talk it through with your AI. New uses are welcome, even if they look nothing like these examples.\n\n## Let your thoughts and habits shape the desk.\n\nWe hope it grows into a place that feels like yours.\n\n---\n\nIn the connected edition, try asking your AI:\n**“Open a desk. Let's think together.”**"
+  },
+  "guide-go-finish": {
+    "text": "Your own desk"
+  },
+  "guide-go-ending-layout-note": {
+    "text": "Your own desk"
+  },
+  "guide-sample-text-card": {
+    "text": "# One thought, one card\n\n**Put ideas into words, then move them around.**\n\n- Note what caught your eye\n- Paste a passage\n- Write down the next thing to try\n\nDouble-click to make it your own."
+  },
+  "guide-sample-text-note": {
+    "text": "Cards can have different sizes, text and colors. Select and move one, or double-click to edit. Change the fill and border in Properties."
+  },
+  "guide-sample-shapes-a": {
+    "text": "Rounded rectangle\nA softer frame"
+  },
+  "guide-sample-shapes-b": {
+    "text": "Ellipse\nA group of ideas"
+  },
+  "guide-sample-shapes-c": {
+    "text": "Diamond\nA decision"
+  },
+  "guide-sample-shapes-note": {
+    "text": "All eight shapes are here. Double-click to edit text, then change the colors, font size or border. A different shape can give the same words a different feel."
+  },
+  "guide-sample-line-a": {
+    "text": "Shape\nA group of ideas"
+  },
+  "guide-sample-line-note": {
+    "text": "A shape, card and SVG meet at a Y junction. Move any of them and its attached line follows. Three lines share the junction; a dashed line sits below."
+  },
+  "guide-sample-arrow-a": {
+    "text": "An idea\nWhat comes next?"
+  },
+  "guide-sample-arrow-note": {
+    "text": "Arrows branch from an idea to words, a shape and a diagram. This T junction uses rounded corners. Move a card and the attached arrow follows."
+  },
+  "guide-sample-continuous-label": {
+    "text": "### Click to draw each bend"
+  },
+  "guide-sample-continuous-note": {
+    "text": "Line ▼ → Connected lines. Click each point, then press Enter or Esc. This example contains five connected straight segments."
+  },
+  "guide-sample-free-line-label": {
+    "text": "### A gesture becomes a few lines"
+  },
+  "guide-sample-free-line-note": {
+    "text": "Line ▼ → Freehand lines, then drag. Try drawing a route like this in an empty area."
+  },
+  "guide-sample-pin-a": {
+    "text": "### Notice"
+  },
+  "guide-sample-pin-b": {
+    "text": "### Think"
+  },
+  "guide-sample-pin-c": {
+    "text": "### Try"
+  },
+  "guide-sample-pin-note": {
+    "text": "Try the A, B and C pins. Select one and use previous / next to travel. They belong to a different series from the guide pins ① and ②."
+  },
+  "guide-sample-wayfinder-a": {
+    "text": "### Start\n\nPress the green wayfinder’s round play button to go."
+  },
+  "guide-sample-wayfinder-b": {
+    "text": "### Arrive\n\nUse the blue wayfinder to follow the same route back."
+  },
+  "guide-sample-wayfinder-note": {
+    "text": "A short route between two cards. Selecting a wayfinder also shows a play button at a fixed screen size. The destination card is selected on arrival."
+  },
+  "guide-sample-clip-a": {
+    "text": "### First sheet\n\nMove this bundle."
+  },
+  "guide-sample-clip-b": {
+    "text": "### Second sheet\n\nAlt-drag to pull it out."
+  },
+  "guide-sample-clip-c": {
+    "text": "### Third sheet\n\nRelease the clip; keep the paper."
+  },
+  "guide-sample-clip-note": {
+    "text": "Change attachment position, spacing and automatic size in the clip’s Properties."
+  },
+  "guide-sample-file-file": {
+    "text": "Sample Clear Folder"
+  },
+  "guide-sample-file-a": {
+    "text": "### Idea A\n\nKeep relative positions."
+  },
+  "guide-sample-file-b": {
+    "text": "### Idea B\n\nMove together."
+  },
+  "guide-sample-file-note": {
+    "text": "Drag the title to move the whole group. Release the Clear Folder to rearrange its contents."
+  },
+  "guide-sample-ruler-a": {
+    "text": "### A\n\nSmaller"
+  },
+  "guide-sample-ruler-b": {
+    "text": "### B\n\nLarger"
+  },
+  "guide-sample-ruler-ruler": {
+    "text": "An organizing ruler"
+  },
+  "guide-sample-ruler-note": {
+    "text": "Left: a horizontal ruler. Right: both sides of a vertical ruler. Moving the ruler carries its items. Compare Free, Equal gaps and Equal centers in Properties."
+  },
+  "guide-sample-image-svg-raster": {
+    "text": "Raster image"
+  },
+  "guide-sample-image-svg-vector": {
+    "text": "SVG image"
+  },
+  "guide-sample-image-svg-note": {
+    "text": "The same scene as a raster image and an SVG. Zoom in to compare them, or resize their frames."
+  },
+  "guide-sample-doodle-drawing": {
+    "text": "Double-click to keep drawing"
+  },
+  "guide-sample-doodle-note": {
+    "text": "A transparent drawing you can reopen. Try the eraser, Undo, switching colors and widths, and enlarging the sheet."
+  },
+  "guide-sample-cutout-picture": {
+    "text": "A landscape in an ellipse"
+  },
+  "guide-sample-cutout-note": {
+    "text": "The ellipse on the left is the original mask shape. Moving it does not change the cutout. Try toggling Cutout on the image."
+  },
+  "guide-sample-mermaid-diagram": {
+    "text": "Flowchart: from idea to sharing",
+    "mermaidSource": "flowchart TB\n subgraph idea[\"01 Explore an idea\"]\n A([\"An idea\"]) --> B[\"Put it on a card\"]\n B --> C{\"How to express it?\"}\n C -->|Visually| D[\"Doodles / images\"]\n C -->|In words| E[\"Text / notes\"]\n end\n subgraph work[\"02 Build it together\"]\n D --> F[\"Talk with your AI\"]\n E --> F\n F --> G{\"Try it\"}\n G -->|Refine| B\n G -->|Looks good| H[\"Arrange and connect\"]\n end\n H --> I([\"Share a PDF, image or desk file\"])\n classDef blue fill:#dbeafe,stroke:#2563eb,stroke-width:3px,color:#172554\n classDef mint fill:#d1fae5,stroke:#059669,stroke-width:3px,color:#064e3b\n classDef orange fill:#ffedd5,stroke:#ea580c,stroke-width:3px,color:#7c2d12\n classDef pink fill:#fce7f3,stroke:#db2777,stroke-width:3px,color:#831843\n class A,B,E blue\n class D,F,H mint\n class C,G orange\n class I pink"
+  },
+  "guide-sample-mermaid-note": {
+    "text": "From left: flowchart, organization chart and sequence diagram. Double-click to edit the source. Change words or connections to redraw the diagram."
+  },
+  "guide-sample-qr-qr": {
+    "text": "Send the project to your phone"
+  },
+  "guide-sample-qr-words": {
+    "text": "### Send text to your phone\n\nA QR code can hold notes as well as URLs.\n\nScan it with your phone to read the contents."
+  },
+  "guide-sample-qr-note": {
+    "text": "The original text is retained. Too long appears when capacity is exceeded. To display a URL as a QR code, you can also use 18 Link below."
+  },
+  "guide-sample-web-web": {
+    "text": "A web page on the desk"
+  },
+  "guide-sample-web-note": {
+    "text": "Press ↗ at the top right to open the original in another tab. On-desk display depends on the site’s embedding policy and your connection."
+  },
+  "guide-sample-link-url": {
+    "text": "Project"
+  },
+  "guide-sample-link-qr": {
+    "text": "The same URL as a QR code"
+  },
+  "guide-sample-link-note": {
+    "text": "Compare URL text and QR code displays for the same URL. Switch Link display in Properties. In either mode, ↗ opens the destination in another tab."
+  },
+  "guide-sample-desk-link-desk": {
+    "text": "Open the English tutorial desk",
+    "deskPath": "docs/tabletop/tabletop-guide-en.tabletop"
+  },
+  "guide-sample-desk-link-note": {
+    "text": "Desk links load server-side files in the connected edition. This example points to the English tour in docs/tabletop/. Save first. Pages cannot use server-side LOAD."
+  },
+  "guide-sample-paste-original": {
+    "text": "### Copy this card\n\nSelect, copy and paste it.\n\nIts text, colors and border travel as an editable item."
+  },
+  "guide-sample-paste-destination": {
+    "text": "### Paste wherever you like\n\nFind an empty spot.\n\nOffset the copy a little so you can see both."
+  },
+  "guide-sample-paste-note": {
+    "text": "Your clipboard has not been changed automatically. Try copying and pasting yourself."
+  },
+  "guide-sample-stamp-done": {
+    "text": "### Checked and finished",
+    "stamp": {
+      "designId": "done_en",
+      "text": "2026.11.06",
+      "angle": -8
+    }
+  },
+  "guide-sample-stamp-secret": {
+    "text": "### Something private"
+  },
+  "guide-sample-stamp-wanted": {
+    "text": "### On my wish list"
+  },
+  "guide-sample-stamp-note": {
+    "text": "Select a card and its stamp retreats. Try a different design or include a date. Japanese stamps keep their lettering; English tooltips explain their meaning."
+  },
+  "guide-sample-reaction-a": {
+    "text": "### Worth a closer look\n\nKeep the text; add a reaction."
+  },
+  "guide-sample-reaction-b": {
+    "text": "### Looks good!\n\nA small reply."
+  },
+  "guide-sample-reaction-note": {
+    "text": "Add or remove reactions without changing the text or position. Adjust size, corner, direction or Fixed zoom in Properties."
+  },
+  "guide-sample-sticker-a": {
+    "text": "### Sort by color\n\nCategories or landmarks."
+  },
+  "guide-sample-sticker-b": {
+    "text": "### Rate with stars\n\nRepeat the same shape."
+  },
+  "guide-sample-sticker-note": {
+    "text": "Combine colors, shapes and counts. All 15 shapes appear on the right. Stickers move with their parent. Use two independent strips; clear a strip and reapply to change its order."
+  },
+  "guide-sample-prop-area": {
+    "text": "Header-selectable temporary area"
+  },
+  "guide-sample-prop-coffee": {
+    "text": "Take a break"
+  },
+  "guide-sample-prop-inside": {
+    "text": "### You can grab this card\n\nThe prop behind it leaves the inside available."
+  },
+  "guide-sample-prop-note": {
+    "text": "The temporary area is selected only by its header. Work with the cards inside as usual. The coffee, magnifying glass and desk bell are decorative: they do not magnify or ring."
+  },
+  "guide-sample-format-source": {
+    "text": "### Sample\n\nPick this format."
+  },
+  "guide-sample-format-target": {
+    "text": "### Apply here\n\nSelect, then Apply. The text and position stay the same."
+  },
+  "guide-sample-format-note": {
+    "text": "Select the sample → Pick format → select the target → Apply. Saved presets are available too."
+  },
+  "guide-sample-callout-target": {
+    "text": "Move this\npiece"
+  },
+  "guide-sample-callout-speech": {
+    "text": "### A note from the left\n\nAttach the tip to the target and it follows when you move it."
+  },
+  "guide-sample-callout-thought": {
+    "text": "A quiet thought, too…"
+  },
+  "guide-sample-callout-note": {
+    "text": "Move the central shape: speech and thought tails follow while their card bodies stay put. Change the tail style or where it points."
+  },
+  "guide-sample-preview-card": {
+    "text": "# Make an idea easier to read\n\nWrite normally, with **important words in bold**.\nUse *italics for a quieter aside*.\n\n## Today's idea\n- Put the thought on a card\n- Separate topics with **headings**\n- Place related things nearby\n  - Keep open questions too\n  - Move from ~~an old idea~~ to a new one\n\n## Try it\n1. Double-click this card\n2. Change a few words or symbols\n3. Hold **Preview** to check the result\n\n> It need not be polished.\n> Leave it ready for your next thought.\n\n---\n\n### Code works too\nInline code: `const idea = \"try it first\";`\n\n```text\nNotice → place it → think together\n```\n\n[Read the Markdown guide](https://commonmark.org/help/)\n\nFor a quick note or a longer explanation."
+  },
+  "guide-sample-preview-note": {
+    "text": "Double-click to edit, then hold Preview before applying.\n\nSupported: headings, bold, italics, strikethrough, lists, quotes, code, rules and web links.\n\nThe references below explain basic Markdown. Not every feature in those guides is supported: tables, embedded images, HTML and Zenn extensions are not available."
+  },
+  "guide-sample-selection-a": {
+    "text": "First"
+  },
+  "guide-sample-selection-b": {
+    "text": "Second"
+  },
+  "guide-sample-selection-c": {
+    "text": "Third"
+  },
+  "guide-sample-selection-note": {
+    "text": "Try clicking, adding to the selection and dragging a selection box. Then move the selected items together."
+  },
+  "guide-sample-pointing-human": {
+    "text": "### Human selection\n\nThe item you edit in Properties."
+  },
+  "guide-sample-pointing-ai": {
+    "text": "### AI pointing\n\nThe item your conversation refers to."
+  },
+  "guide-sample-pointing-note": {
+    "text": "These frames illustrate the idea. In the connected edition, ask your AI: “Point to the card on the right.”"
+  },
+  "guide-sample-snap-a": {
+    "text": "Arrange"
+  },
+  "guide-sample-snap-b": {
+    "text": "Align"
+  },
+  "guide-sample-snap-c": {
+    "text": "Freely"
+  },
+  "guide-sample-snap-note": {
+    "text": "Compare dragging with Snap on and off. This example has not changed the desk’s global settings for you."
+  },
+  "guide-sample-lock-locked": {
+    "text": "### Held in place\n\nLock is ON.\nMouse dragging cannot move it."
+  },
+  "guide-sample-lock-free": {
+    "text": "### Free to move\n\nLock is OFF.\nTry moving it."
+  },
+  "guide-sample-lock-note": {
+    "text": "Use Lock in the toolbar. It protects position and size, not every text edit or AI operation."
+  },
+  "guide-sample-layers-back": {
+    "text": "Blue: back"
+  },
+  "guide-sample-layers-mid": {
+    "text": "Green: middle"
+  },
+  "guide-sample-layers-front": {
+    "text": "Orange: front"
+  },
+  "guide-sample-layers-note": {
+    "text": "Select an item, then press Front or Back to change the overlap."
+  },
+  "guide-sample-delete-note": {
+    "text": "Four effects: Drop, Suction, Eraser and Triangle particles. Choose one from Delete ▼ to remove selected items with that effect.\n\nThe Delete key removes instantly. Undo brings deleted cards back."
+  },
+  "guide-sample-undo-card": {
+    "text": "Move → Undo → Redo"
+  },
+  "guide-sample-undo-note": {
+    "text": "Move the card a little, then undo and redo. Appearance changes can be undone too."
+  },
+  "guide-sample-zoom-big": {
+    "text": "Big words"
+  },
+  "guide-sample-zoom-small": {
+    "text": "### Small words deserve a look\n\nSelect this card, then press Fit selection at the bottom right."
+  },
+  "guide-sample-zoom-note": {
+    "text": "Zoom with the wheel or + / −. Compare fitting the desk and returning to the origin."
+  },
+  "guide-sample-object-list-hidden": {
+    "text": "Found it!"
+  },
+  "guide-sample-object-list-cover": {
+    "text": "### A shape is hidden behind me\n\nFilter Objects by shape and find the ellipse labeled “Found it!”"
+  },
+  "guide-sample-object-list-note": {
+    "text": "The list can select covered items. You can also move this card to reveal the shape."
+  },
+  "guide-sample-properties-card": {
+    "text": "Width 520 / Height 300"
+  },
+  "guide-sample-properties-note": {
+    "text": "Select to see dimensions and formatting. Try changing width, height or corner radius."
+  },
+  "guide-sample-files-local": {
+    "text": "### Save through the MCP server\n\nFile → SAVE / SAVE AS\n\nWrite a desk file on the connected server."
+  },
+  "guide-sample-files-browser": {
+    "text": "### Take your work with you\n\nFile → Download / Upload\n\nBrowser file operations work without AI."
+  },
+  "guide-sample-files-note": {
+    "text": "SAVE / SAVE AS / LOAD use the MCP server. Download / Upload use your browser. Save this desk before loading another one."
+  },
+  "guide-sample-pdf-sheet": {
+    "text": "The whole desk on one page"
+  },
+  "guide-sample-pdf-note": {
+    "text": "File → Open as PDF. The whole desk, including off-screen items, opens as a single-page PDF in another tab. Save or print from the PDF viewer."
+  },
+  "guide-sample-appearance-ivory": {
+    "text": "### Ivory\n\nA soft paper color."
+  },
+  "guide-sample-appearance-blue": {
+    "text": "### Pale blue\n\nA calm background."
+  },
+  "guide-sample-appearance-green": {
+    "text": "### Pale green\n\nA way to recognize this desk."
+  },
+  "guide-sample-appearance-note": {
+    "text": "Above: pale solid colors. Below: wood and cutting-mat samples. Change the actual wallpaper, title color, origin axes and grid in Desk appearance."
+  },
+  "guide-sample-bell-coffee": {
+    "text": "A break after the conversation"
+  },
+  "guide-sample-bell-note-card": {
+    "text": "### A little “I’m done”\n\nIf your AI is waiting, use the bell at the bottom right to send a short signal.\n\nThis is experimental. Delivery and responses depend on the agent and connection.\n\nThere is room for it to grow."
+  },
+  "guide-sample-bell-note": {
+    "text": "The bell supplements chat; it cannot summon AI at any time. Use ordinary chat too. This decorative cup is not a notification button."
+  },
+  "guide-sample-thinking-alone": {
+    "text": "### Work with your own hands\n\nThink alone ON.\nPause AI edits while you work."
+  },
+  "guide-sample-thinking-together": {
+    "text": "### Together again\n\nSwitch OFF to resume joint editing.\nAI can still read while it is ON."
+  },
+  "guide-sample-thinking-note": {
+    "text": "Use the switch at the top of the connected edition to try it."
+  },
+  "guide-sample-pages-link": {
+    "text": "Open public Tabletop"
+  },
+  "guide-sample-pages-qr": {
+    "text": "On a phone or tablet too"
+  },
+  "guide-sample-pages-note": {
+    "text": "Use ↗ on the link or scan the QR code to open the browser edition in another tab.\n\nIt runs without AI. Upload and download desk files to bring your work back home."
+  },
+  "guide-sample-stamp-care": {
+    "text": "### Handle with care",
+    "stamp": {
+      "designId": "handle_with_care_en",
+      "text": "2026.11.06",
+      "angle": -8
+    }
+  },
+  "guide-sample-stamp-physical": {
+    "text": "### Nicely done"
+  },
+  "guide-sample-stamp-copy": {
+    "text": "### Pasted it for now",
+    "stamp": {
+      "designId": "copy_paste_only_en",
+      "text": "2026.11.06",
+      "angle": -8
+    }
+  },
+  "guide-sample-stamp-joke": {
+    "text": "### A spontaneous comment"
+  },
+  "guide-sample-stamp-pass": {
+    "text": "### It worked"
+  },
+  "guide-sample-stamp-wanted-en": {
+    "text": "### This one too"
+  },
+  "guide-sample-stamp-read": {
+    "text": "### Finished reading"
+  },
+  "guide-sample-text-yellow": {
+    "text": "## A note for tomorrow\n\nPut what you want to remember on a yellow card."
+  },
+  "guide-sample-text-green": {
+    "text": "### Break it down\n\n- Try it first\n- Keep a note\n- Compare side by side\n\nChange the color or size whenever you like."
+  },
+  "guide-sample-text-purple": {
+    "text": "## A big question\n\n**Where shall we begin?**"
+  },
+  "guide-sample-shapes-rect": {
+    "text": "Rectangle\nAn item"
+  },
+  "guide-sample-shapes-parallelogram": {
+    "text": "Parallelogram\nInput / output"
+  },
+  "guide-sample-shapes-cylinder": {
+    "text": "Cylinder\nStored data"
+  },
+  "guide-sample-shapes-document": {
+    "text": "Document\nMaterial / record"
+  },
+  "guide-sample-shapes-cloud": {
+    "text": "Cloud\nStill uncertain"
+  },
+  "guide-sample-line-diagram": {
+    "text": "Connect diagrams, images and SVGs"
+  },
+  "guide-sample-line-words": {
+    "text": "## Words can connect too\n\n**A card explaining the idea.**\nMove it and watch the line end."
+  },
+  "guide-sample-arrow-diagram": {
+    "text": "Think visually — connect a diagram"
+  },
+  "guide-sample-arrow-words": {
+    "text": "## First, explore\n\n**Collect some words.**\nTurn notes and references into starting points."
+  },
+  "guide-sample-arrow-test": {
+    "text": "Try and compare\nWhat changes?"
+  },
+  "guide-sample-pin-straight-caption": {
+    "text": "### A straight route: A → B → C"
+  },
+  "guide-sample-pin-star-top": {
+    "text": "## Start / Finish\n\nReturn after one circuit."
+  },
+  "guide-sample-pin-star-lower-right": {
+    "text": "## Pick up a clue\n\nLook from a different angle."
+  },
+  "guide-sample-pin-star-upper-left": {
+    "text": "## Connect ideas\n\nTravel between distant places."
+  },
+  "guide-sample-pin-star-upper-right": {
+    "text": "## Another viewpoint\n\nGo back and forth."
+  },
+  "guide-sample-pin-star-lower-left": {
+    "text": "## Try, then return\n\nNext stop: the start."
+  },
+  "guide-sample-pin-star-note": {
+    "text": "Five cards form a star route. Following ① through ⑥ returns to the start: ① and ⑥ share a card. Select a pin and use ◀ ▶."
+  },
+  "guide-sample-wayfinder-pair-caption": {
+    "text": "### Try a short return trip"
+  },
+  "guide-sample-wayfinder-t-source": {
+    "text": "### Head for the branch\n\nStart from the wayfinder.\nChoose a direction at the T junction."
+  },
+  "guide-sample-wayfinder-t-left-card": {
+    "text": "### Left-hand material\n\nThe destination is selected.\nUse its wayfinder to return."
+  },
+  "guide-sample-wayfinder-t-right-card": {
+    "text": "### Right-hand material\n\nThe same route works in reverse."
+  },
+  "guide-sample-wayfinder-t-note": {
+    "text": "At the T junction, a small map lets you choose a direction. Visit either card, then use its wayfinder to return. Mouse or keyboard input stops travel along the way."
+  },
+  "guide-sample-clip-vertical-caption": {
+    "text": "Vertical, edge-to-edge"
+  },
+  "guide-sample-clip-vertical-0": {
+    "text": "### First\n\nA short card"
+  },
+  "guide-sample-clip-vertical-1": {
+    "text": "### Second\n\nA tall card"
+  },
+  "guide-sample-clip-vertical-2": {
+    "text": "### Third\n\nPosition follows the previous height."
+  },
+  "guide-sample-clip-horizontal-caption": {
+    "text": "Horizontal, edge-to-edge (previous sheet: 100%)"
+  },
+  "guide-sample-clip-horizontal-0": {
+    "text": "### First\n\nA narrow card"
+  },
+  "guide-sample-clip-horizontal-1": {
+    "text": "### Second\n\nA wide card. The next starts after this width."
+  },
+  "guide-sample-clip-horizontal-2": {
+    "text": "### Third\n\nContinue with no gap."
+  },
+  "guide-sample-clip-extra-note": {
+    "text": "Vertical placement uses the previous card’s height; horizontal placement uses its width. Compare different card sizes with Previous sheet set to No gap (100%)."
+  },
+  "guide-sample-file-shapes-container": {
+    "text": "Keep shapes and arrows together"
+  },
+  "guide-sample-file-shape-start": {
+    "text": "Ideas"
+  },
+  "guide-sample-file-shape-check": {
+    "text": "Check"
+  },
+  "guide-sample-file-shape-result": {
+    "text": "Next step"
+  },
+  "guide-sample-ruler-vertical-caption": {
+    "text": "A vertical ruler — arrange both sides"
+  },
+  "guide-sample-ruler-vertical-ruler": {
+    "text": "A ruler with two sides"
+  },
+  "guide-sample-mermaid-organization": {
+    "text": "Organization chart: a branching view of roles",
+    "mermaidSource": "flowchart TB\n A[\"Tabletop team\"] --> B[\"Concept / direction\"]\n A --> C[\"Design / implementation\"]\n A --> D[\"Experience / review\"]\n B --> B1[\"Imagine uses\"]\n B --> B2[\"Define the tools\"]\n C --> C1[\"Human controls\"]\n C --> C2[\"AI tools\"]\n C --> C3[\"Drawing / saving\"]\n D --> D1[\"Try it out\"]\n D --> D2[\"Refine the appearance\"]\n D --> D3[\"Bring back discoveries\"]\n classDef teamTop fill:#312e81,stroke:#4338ca,stroke-width:4px,color:#fff\n classDef plan fill:#fef3c7,stroke:#d97706,stroke-width:3px,color:#78350f\n classDef build fill:#dbeafe,stroke:#2563eb,stroke-width:3px,color:#172554\n classDef review fill:#fce7f3,stroke:#db2777,stroke-width:3px,color:#831843\n class A teamTop\n class B,B1,B2 plan\n class C,C1,C2,C3 build\n class D,D1,D2,D3 review"
+  },
+  "guide-sample-mermaid-sequence": {
+    "text": "Sequence diagram: a conversation over time",
+    "mermaidSource": "sequenceDiagram\n autonumber\n actor Human as Human\n participant Desk as Shared desk\n participant AI as AI\n rect rgb(219, 234, 254)\n Human->>Desk: Place cards and doodles\n Human->>AI: Think with this sketch\n AI->>Desk: Read content and layout\n Desk-->>AI: Text, diagrams, connections\n end\n rect rgb(220, 252, 231)\n AI->>Desk: Arrange and illustrate ideas\n AI-->>Human: How about this idea?\n loop Until it feels right\n Human->>Desk: Move and add notes\n Human->>AI: Refine this part\n AI->>Desk: Adjust and show\n end\n end\n rect rgb(254, 243, 199)\n Human->>Desk: Save the result\n Note over Human,AI: Think around the same desk\n end"
+  },
+  "guide-sample-web-open-hint": {
+    "text": "Open the original\nwith this ↗"
+  },
+  "guide-sample-qr-link-hint": {
+    "text": "A URL as QR: see Link below ↓"
+  },
+  "guide-sample-link-open-hint": {
+    "text": "Open with ↗ at the top right"
+  },
+  "guide-sample-link-open-arrow-here": {
+    "text": "Here"
+  },
+  "guide-sample-link-qr-open-arrow-here": {
+    "text": "Here"
+  },
+  "guide-sample-stamp-large-hanamaru": {
+    "text": "### Today’s small achievement\n\nAn idea, a try, and something made.\n\nA big flower for a small success.",
+    "stamp": {
+      "designId": "smile_ja",
+      "text": "2026.11.06",
+      "angle": -8
+    }
+  },
+  "guide-sample-stamp-large-well-done": {
+    "text": "### All finished\n\nA reward for the work that went into this card.\n\nVery well done.",
+    "stamp": {
+      "designId": "excellent_en",
+      "text": "2026.11.06",
+      "angle": -8
+    }
+  },
+  "guide-sample-sticker-all-shapes": {
+    "text": "### Every sticker shape\n\nCircles, stars, triangles, animals and celebrations.\n\nCombine shapes, colors and counts for categories or ratings. They wrap onto another row when needed."
+  },
+  "guide-sample-prop-magnifier": {
+    "text": "Magnifying glass"
+  },
+  "guide-sample-prop-bell": {
+    "text": "Desk bell"
+  },
+  "guide-sample-callout-right-speech": {
+    "text": "### A note from the right\n\nPlace the text and its target separately."
+  },
+  "guide-sample-preview-markdown-reference": {
+    "text": "Markdown basics (English)"
+  },
+  "guide-sample-preview-markdown-reference-ja": {
+    "text": "Markdown examples (Zenn, Japanese)"
+  },
+  "guide-sample-appearance-wood": {
+    "text": "Wood wallpaper"
+  },
+  "guide-sample-appearance-cutting-mat": {
+    "text": "Cutting-mat wallpaper"
+  },
+  "guide-sample-pages-introduction": {
+    "text": "# An idea? Open a desk.\n\nPlace a card. Connect a line. Doodle.\nPress a stamp. Take a wayfinder for a spin.\n\n**Tabletop works in your browser too.**"
+  },
+  "guide-sample-camera-scene-title": {
+    "text": "## Turn this area into an image."
+  },
+  "guide-sample-camera-card-a": {
+    "text": "## Today’s discovery\n\nTake a piece of the desk into a chat or document."
+  },
+  "guide-sample-camera-card-b": {
+    "text": "## Show it as it is\n\nLayout, colors and connections in one image."
+  },
+  "guide-sample-camera-note": {
+    "text": "## Try it\n\n1. Select the blue outer frame above and press Camera next to Lock.\n2. Move or resize the temporary capture frame.\n3. Press Copy, then paste into another app.\n\nSelection outlines and handles are excluded. You can also capture without a selection or reuse the previous area."
+  },
+  "guide-go-pages-camera": {
+    "text": "44 Camera"
+  },
+  "guide-go-camera-pages": {
+    "text": "Back to 43"
+  },
+  "guide-sample-camera-result-note": {
+    "text": "## A different kind of crop\n\nThere is no required composition.\n\nCapture part of a card or include empty space. The item on the right is a single pasted image of a capture."
+  },
+  "image-18cb43a8": {
+    "text": "A free crop — there is no required composition"
+  },
+  "text-09c203b7-0838-498f-b0c7-134523dd6029": {
+    "text": "We planned this desk’s layout together too.\nNot a bad day’s work.\n\n— Senpai"
+  },
+  "text-fd73071d-b8f0-4dc6-b880-0db6faaa8356": {
+    "text": "# Start with a small request\n\n## Just one thing first.\n\n> Make a card called “Things to do today”.\n\n> Make this card a little bigger.\n\n> Connect these two cards with a line.\n\n**Ask once and watch what changes.**\nLet that suggest your next request.\n\n---\n\n## When you feel at home, try these.\n\n> Split this text into cards by topic.\n\n> Arrange these cards so they are easy to read. Connect related ones.\n\n> Help me think through this system as a diagram.\n\n> Can you turn this rough doodle into a cleaner diagram?\n\n> Match the colors and text here. Stamp the important parts.\n\n> I cannot explain it yet. Look at this desk and help me think.\n\n---\n\n**You do not need to memorize tool names or every control.**\nSay what you want to do or what catches your attention. Shape it a little at a time with your AI.\n\n## Next, on your own desk.\n\nTogether, from the first card."
+  },
+  "guide-go-welcome-examples": {
+    "text": "Try asking your AI"
+  },
+  "guide-decoration-rest-coffee": {
+    "text": "Take a little break"
+  },
+  "guide-decoration-rest-pencil": {
+    "text": "A pencil for thinking"
+  },
+  "guide-decoration-hidden-senpai": {
+    "text": "Quietly looking on"
+  },
+  "guide-decoration-senpai-large": {
+    "text": "Senpai is here too"
+  },
+  "prop-feb7d170": {
+    "text": "Tea for a break"
+  },
+  "guide-decoration-about-credits": {
+    "text": "Programming\n**Senpai (GPT Sol 6.1 and later)**\n\nAdvice\n**Ossan “Darakuda” (ChatGPT GPT 6 and later)**\n\nConcept and direction\n**Zuntan**"
+  },
+  "guide-sample-ruler-vertical-before-0": {
+    "text": "### Left 1\n\nAlong the long edge."
+  },
+  "guide-sample-ruler-vertical-before-1": {
+    "text": "### Left 2\n\nDifferent sizes, still aligned."
+  },
+  "guide-sample-ruler-vertical-before-2": {
+    "text": "### Left 3\n\nMove with the ruler."
+  },
+  "guide-sample-ruler-vertical-after-0": {
+    "text": "### Right 1\n\nAlong the long edge."
+  },
+  "guide-sample-ruler-vertical-after-1": {
+    "text": "### Right 2\n\nDifferent sizes, still aligned."
+  },
+  "guide-sample-ruler-vertical-after-2": {
+    "text": "### Right 3\n\nMove with the ruler."
+  },
+  "guide-sample-delete-card": {
+    "text": "## 1 Drop\n\nYou may delete this card.\n\nChoose Drop from Delete ▼ to try the animation. Undo brings it back."
+  },
+  "guide-sample-delete-card-2": {
+    "text": "## 2 Suction\n\nYou may delete this card.\n\nChoose Suction from Delete ▼ to try the animation. Undo brings it back."
+  },
+  "guide-sample-delete-card-3": {
+    "text": "## 3 Eraser\n\nYou may delete this card.\n\nChoose Eraser from Delete ▼ to try the animation. Undo brings it back."
+  },
+  "guide-sample-delete-card-4": {
+    "text": "## 4 Triangle particles\n\nYou may delete this card.\n\nChoose Triangle particles from Delete ▼ to try the animation. Undo brings it back."
+  },
+  "text-20e69577": {
+    "text": "### Construction note (original tour)\n\nEnlarge and add examples in different colors and sizes."
+  },
+  "text-f01c0f66-5016-4235-a685-faf305842f65": {
+    "text": "### Construction note (original tour)\n\nShow every available shape."
+  },
+  "text-32152c39-9d0e-4e2a-96f4-75c1612f44eb": {
+    "text": "### Construction note (original tour)\n\nConnect a shape, card and diagram in a Y or T."
+  },
+  "text-e8790b49-6f36-412b-953c-88af7ceb7c4f": {
+    "text": "### Construction note (original tour)\n\nBalance this example with 03."
+  },
+  "text-4307d4d6-3d0e-42c4-9366-ab7ead112b13": {
+    "text": "### Construction note (original tour)\n\nMove slightly to leave room for the pins in 07."
+  },
+  "text-a3441e6f-5d3b-4f0e-8266-3a7dcc8b3bd6": {
+    "text": "### Construction note (original tour)\n\nAdd another example: five cards along a star route."
+  },
+  "text-b63494d2-6b27-4064-a9d8-61704804a1b3": {
+    "text": "### Construction note (original tour)\n\nMove farther apart and add a T-junction example."
+  },
+  "text-935ec914-8764-4611-933f-4b348cd552e8": {
+    "text": "### Construction note (original tour)\n\nAdd vertical and horizontal examples with previous sheet at 100%."
+  },
+  "text-2132b07a-f358-40cb-a838-b245fa85701b": {
+    "text": "### Construction note (original tour)\n\nAdd another example with shapes."
+  },
+  "text-c5b62320-953d-4df2-8136-ae552d84cb49": {
+    "text": "### Construction note (original tour)\n\nAdd a vertical example using both sides."
+  },
+  "text-b562d338-8060-4b94-b1bc-2d42638625ad": {
+    "text": "### Construction note (original tour)\n\nEnlarge the image."
+  },
+  "text-84ddf9d8-6bb1-4d78-8d23-f8586fa812ed": {
+    "text": "### Construction note (original tour)\n\nEnlarge the image."
+  },
+  "text-0a05c1eb-b5b3-44c1-910a-d494d38cfcff": {
+    "text": "### Construction note (original tour)\n\nEnlarge the image."
+  },
+  "text-38b30cfa-e4b0-493e-b330-a7e39164027f": {
+    "text": "### Construction note (original tour)\n\nAdd an organization-chart example."
+  },
+  "text-70865d7d-e136-48ee-80b2-7cec5711d654": {
+    "text": "### Construction note (original tour)\n\nPoint an arrow at the Open button."
+  },
+  "text-3757c457-1682-4cc7-b527-9ec33dd5d9c3": {
+    "text": "### Construction note (original tour)\n\nPoint to the link QR and mention it in the explanation."
+  },
+  "text-68192e0f-8e4f-4c1f-a2db-ec34aa9c6773": {
+    "text": "### Construction note (original tour)\n\nPoint at Open and explain the two display modes."
+  },
+  "text-541e63d4-0c45-4c6a-b895-dd55c2a62ce4": {
+    "text": "### Construction note (original tour)\n\nAdd a card with every shape."
+  },
+  "text-e1081c8d-01c9-4570-b8c3-74502a1914bc": {
+    "text": "### Construction note (original tour)\n\nEnlarge and add two more props."
+  },
+  "text-c62e1ccf-4724-4d9f-93d9-1be769c853f8": {
+    "text": "### Construction note (original tour)\n\nEnlarge and add a right-hand callout."
+  },
+  "text-c71d6edc-76cc-4b94-b4c9-2d0616d74fd1": {
+    "text": "### Construction note (original tour)\n\nEnlarge, enrich the Markdown example and add reference links."
+  },
+  "text-becb5c04-45da-4976-8d48-c7723aec8715": {
+    "text": "### Construction note (original tour)\n\nFour disposable cards; explain the four deletion effects."
+  },
+  "text-023e665b-9d69-4ef3-b136-f2e117589ce6": {
+    "text": "### Construction note (original tour)\n\nSay explicitly that server files are saved through MCP."
+  },
+  "text-953b8b47-695c-4181-8e81-e65b2a123423": {
+    "text": "### Construction note (original tour)\n\nExplain that the PDF opens in another tab."
+  },
+  "text-9810cebd-14c3-4a63-853a-37274853175d": {
+    "text": "### Construction note (original tour)\n\nInclude wood and cutting-mat examples."
+  },
+  "text-ad4d9499-fbaf-45da-918f-a32301096976": {
+    "text": "### Construction note (original tour)\n\nExplain that the bell is experimental and responses may vary."
+  },
+  "text-217d4694-2c5f-45a9-ab08-c23056837337": {
+    "text": "### Construction note (original tour)\n\nMake the browser-edition invitation prominent, even on its own island."
+  },
+  "text-06d7b1fa-9d22-4ba8-bdd4-d2840fef934c": {
+    "text": "### Construction note (original tour)\n\nAdd Camera, on its own island if necessary."
+  }
+}

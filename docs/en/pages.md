@@ -6,7 +6,7 @@ Static Pages opens Tabletop desks in a browser without running AI or MCP. Share 
 
 ## Open and keep a desk
 
-Try the [Japanese tutorial](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop). Without a desk parameter, Pages opens an empty desk. Use File → Upload for a local file.
+Try the [English tutorial](tutorial.md). Without a desk parameter, Pages opens an empty desk. Use File → Upload for a local file.
 
 Select a card and use Fit selection at the bottom right to read it. See [Basic operations](authoring.md) for editing.
 
@@ -19,7 +19,7 @@ PDF and PNG export the composition, but cannot restore editable desk objects. Ke
 Add `desk` to the application URL:
 
 ```text
-https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop
+https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide-en.tabletop
 ```
 
 The value can be relative to the app or a full HTTP(S) URL. For a desk file at `https://example.com/guide.tabletop`, use:
@@ -41,7 +41,7 @@ In the normal edition, ask AI to “Use this card as the initial view” or “C
 To link to another card, pass its ID in `focus`:
 
 ```text
-https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop&focus=text-0cc36b55
+https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide-en.tabletop&focus=text-0cc36b55
 ```
 
 URL focus overrides the saved target. Without either, the whole desk is fitted. A missing target falls back to the whole desk with a notice.
@@ -53,7 +53,7 @@ Initial focus applies to the desk loaded by `desk` at startup. It does not apply
 Add `pdf=1`:
 
 ```text
-https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop&pdf=1
+https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide-en.tabletop&pdf=1
 ```
 
 Pages waits for the desk and Mermaid rendering, generates a PDF and opens it in the same tab. Remove `pdf` to reopen the desk UI. Loading or generation failures show an error on the desk.

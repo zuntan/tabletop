@@ -59,4 +59,4 @@ Pins in a series give places an order. Select a pin and use its previous/next co
 
 Zoom in and check which endpoint or anchor is highlighted before releasing. Locked or filed material may restrict direct manipulation. If navigation stops early, inspect whether the route is actually joined rather than only overlapping.
 
-Try the [Japanese tutorial](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop) to see working examples.
+Try the [English tutorial](tutorial.md) to see working examples.

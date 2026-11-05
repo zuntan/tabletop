@@ -12,15 +12,17 @@ Then ask your AI:
 
 Tabletop is a browser-based desk that you and your AI can both read and edit. The AI uses MCP; your conversation stays in your usual AI chat. The contents and arrangement of the desk become shared references for the discussion.
 
-> English support is being developed for v0.1.1 on `develop`. The published v0.1.0 release and current public tutorial predate this work. This document does not announce a new release.
+> English support is being developed for v0.1.1 on `develop`. The published v0.1.0 release predates this work. The English tutorial below is included in this branch and becomes public with its Pages deployment. This document does not announce a new release.
 
 ## Try a desk
 
-**[Open the tutorial desk — Japanese](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop)**
+**[English tutorial desk](docs/tabletop/tabletop-guide-en.tabletop)** · [Japanese tutorial](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop)
+
+Download the English `.tabletop` file and open it with File → Upload in the v0.1.1 browser or normal edition. After deploying this branch to Pages, [open the English tour directly](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide-en.tabletop).
 
 Try the tools and real examples in your browser without installing anything. Select a green wayfinder and press the ▶ button that appears to follow its route through the desk.
 
-The public page does not connect to AI. To work with your AI on your own desk, install the normal edition and register its MCP server. An English tutorial desk is still to come.
+The public page does not connect to AI. To work with your AI on your own desk, install the normal edition and register its MCP server.
 
 You can also [read the Japanese introduction as a desk](https://zuntan.github.io/tabletop/?desk=desks/README.tabletop).
 
@@ -42,7 +44,7 @@ Look at the alternatives together, draw a connection or add a sketch to show wha
 
 Decide how much to delegate each time. You do not need to describe every detail in words, and the AI does not need to decide everything.
 
-The [workflow](docs/images/tabletop-workflow.svg) and [collaboration sequence](docs/images/tabletop-collaboration.svg) diagrams are examples from the tutorial; their labels are currently Japanese.
+The [workflow](docs/images/tabletop-workflow-en.svg) and [collaboration sequence](docs/images/tabletop-collaboration-en.svg) diagrams are English examples from the tutorial.
 
 ## Start using your desk with AI
 
@@ -80,7 +82,7 @@ AI decisions, actions and results can differ. Identical behavior or results are 
 - [Shapes, lines and connections](docs/en/diagram.md)
 - [Working with AI](docs/en/ai-interface.md)
 - [Using and publishing static Pages](docs/en/pages.md)
-- [Touring the Japanese tutorial](docs/en/tutorial.md)
+- [Touring the tutorial](docs/en/tutorial.md)
 
 ## License
 

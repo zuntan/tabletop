@@ -4,9 +4,11 @@
 
 The tutorial lays out explanations and real examples of cards, lines, pins, clips, stamps and other tools on one large desk.
 
-**[Open the current tutorial — Japanese](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop)**
+**[English tutorial desk file](../tabletop/tabletop-guide-en.tabletop)** · [Japanese public tour](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop)
 
-It opens directly in your browser without installation or an AI connection. The desk content is Japanese; changing UI language does not translate it. A separate English tutorial is planned but not yet available.
+The separate English tour is included in the v0.1.1 development branch. Download the file and use File → Upload in the v0.1.1 browser or normal edition. Once this branch is deployed to Pages, [open it directly](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide-en.tabletop) without an AI connection. The published v0.1.0 release predates English support.
+
+UI language and desk content are independent: switching the UI does not translate a saved desk. The English tour keeps Japanese stamp artwork and explains its meaning in English.
 
 ## First steps
 
@@ -20,7 +22,7 @@ The numbered inner cards introduce tools. The outer cards contain more detail, w
 
 - Green wayfinders lead toward detailed explanations.
 - Blue wayfinders return to the introduction for that tool.
-- Pins1 and2 let you travel between a detail card and its sample using previous/next controls.
+- Pins ① and ② let you travel between a detail card and its sample using previous/next controls.
 
 Wayfinders retain zoom while following their routes. Click the desk to stop during travel.
 
