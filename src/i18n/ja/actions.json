@@ -53,5 +53,6 @@
   "stop": "停止",
   "routeChoice": "進路 {{number}}：{{name}}",
   "linesCreated_one": "{{count}}本の線を作成しました",
-  "linesCreated_other": "{{count}}本の線を作成しました"
+  "linesCreated_other": "{{count}}本の線を作成しました",
+  "webCapturePlaceholder": "Web資料（ページ内容の画像化は対象外）"
 }

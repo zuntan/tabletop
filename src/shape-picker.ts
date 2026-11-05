@@ -21,7 +21,7 @@ export function createShapePicker(anchor: HTMLButtonElement, create: (type: Shap
   const select = document.createElement('select'); select.hidden = true;
   for (const type of shapeTypes) { const option = document.createElement('option'); option.value = type; select.append(option); }
   anchor.after(select);
-  const { menu, choices, wrapper } = addPresetPalette(select, shapeTypes, t('tools:shapesLabel'));
+  const { menu, choices, wrapper } = addPresetPalette(select, shapeTypes, t('tools:shapesLabel'), 'tools:shapesLabel');
   menu.dataset.add = 'rect'; iconButton(menu, '▭', t('tools:addShape')); uiText(menu.querySelector('.tool-caption')!, 'tools:shapesLabel');
   uiAttribute(menu, 'aria-label', 'tools:shapeChoices'); uiAttribute(menu, 'title', 'tools:shapeChoices'); anchor.replaceWith(menu); wrapper.hidden = true;
   for (const button of choices.querySelectorAll<HTMLButtonElement>('button')) {
@@ -32,7 +32,7 @@ export function createShapePicker(anchor: HTMLButtonElement, create: (type: Shap
 }
 export function createTextFitPicker(select: HTMLSelectElement) {
   const labels = { auto: 'shell:autoText', shrink: 'shell:shrinkText' } as const;
-  const { menu, choices, wrapper } = addPresetPalette(select, ['auto', 'shrink'], t('shell:textFit'));
+  const { menu, choices, wrapper } = addPresetPalette(select, ['auto', 'shrink'], t('shell:textFit'), 'shell:textFit');
   select.hidden = true; wrapper.classList.add('line-style-picker');
   for (const button of choices.querySelectorAll<HTMLButtonElement>('button')) {
     const key = labels[button.dataset.value as keyof typeof labels]; uiText(button, key); uiAttribute(button, 'aria-label', key);

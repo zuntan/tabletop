@@ -31,6 +31,10 @@ test('Pages ships and opens the English tutorial at its saved introduction',{tim
   assert.match((await start.textContent())!,/Start with the green/);
   await page.locator('#sidebar-toggle').click();
   await page.screenshot({path:'/tmp/tabletop-english-tutorial-pages.png'});
+  await page.setViewportSize({width:1000,height:800});
+  await page.locator('#fit').click();
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'English UI must not widen the page');
+  await page.screenshot({path:'/tmp/tabletop-english-tutorial-pages-narrow.png'});
   await page.locator('#desk-menu').click();
   await page.getByRole('button',{name:'Language…',exact:true}).click();
   await page.locator('#ui-language').selectOption('ja');

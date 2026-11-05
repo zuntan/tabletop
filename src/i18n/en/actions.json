@@ -53,5 +53,6 @@
   "stop": "Stop",
   "routeChoice": "Route {{number}}: {{name}}",
   "linesCreated_one": "Created {{count}} line",
-  "linesCreated_other": "Created {{count}} lines"
+  "linesCreated_other": "Created {{count}} lines",
+  "webCapturePlaceholder": "Web page (page content is not captured)"
 }

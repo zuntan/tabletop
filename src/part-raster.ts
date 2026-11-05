@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import { DeskError } from './desk-errors';
 import {checkAssetBytes} from './data-limits';
 import {dataBytes} from './binary-envelope';
@@ -99,7 +100,7 @@ export async function cloneSvgForRaster<T extends SVGElement>(source:T):Promise<
   }
   for(const iframe of clone.querySelectorAll('iframe')) {
     const placeholder=document.createElement('div');placeholder.style.cssText='padding:18px;color:#64748b;font:14px sans-serif';
-    placeholder.textContent='Web資料（ページ内容の画像化は対象外）';iframe.replaceWith(placeholder);
+    placeholder.textContent=t('actions:webCapturePlaceholder');iframe.replaceWith(placeholder);
   }
   return clone;
 }

@@ -391,3 +391,39 @@ test('shared validation translates human errors but keeps MCP diagnostics Englis
   assert.deepEqual(await call('desk_state'),before);assert.deepEqual(errors,[]);
  }finally{await close();}
 });
+
+test('shape and text-fitting palette headings follow a language switch',{timeout:30000},async()=>{
+ const {page,call,close,errors}=await openTestDesk('ui-language-shape-heading');
+ try{
+  await call('desk_execute',{operations:[{kind:'add',object:{id:'shape',type:'rect',text:'Keep me',x:50,y:60}}]});
+  await call('desk_select',{ids:['shape']});
+  const before=await call('desk_state');
+  await page.locator('#desk-menu').click();
+  await page.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();
+  await page.locator('#ui-language').selectOption('en');await page.keyboard.press('Escape');
+  await page.locator('[data-add="rect"]').click();
+  await page.getByRole('dialog',{name:'Shapes choices',exact:true}).waitFor();
+  assert.equal(await page.locator('.number-preset-palette:popover-open .number-preset-heading').textContent(),'Shapes');
+  await page.keyboard.press('Escape');
+  const fit=page.locator('select[name="textFit"]').locator('..').locator('.number-preset-menu');
+  await fit.click();
+  assert.equal(await page.locator('.number-preset-palette:popover-open .number-preset-heading').textContent(),'Text fitting');
+  assert.deepEqual(await call('desk_state'),before);assert.deepEqual(errors,[]);
+ }finally{await close();}
+});
+
+test('raster web placeholders use the UI language without rewriting the web card',{timeout:30000},async()=>{
+ const capture=`window.rasterCopies=[];const serialize=XMLSerializer.prototype.serializeToString;XMLSerializer.prototype.serializeToString=function(node){const value=serialize.call(this,node);window.rasterCopies.push(value);return value;};`;
+ const {page,call,close,errors}=await openTestDesk('ui-language-web-capture',capture,undefined,'en-US');
+ try{
+  await call('desk_execute',{operations:[{kind:'add',object:{id:'web',type:'web',x:0,y:0,width:400,height:260,text:'元のタイトル',url:'https://example.invalid/'}}]});
+  const before=await call('desk_state');
+  await call('desk_raster',{ids:['web']});
+  assert.ok(await page.evaluate(()=>(window as any).rasterCopies.some((s:string)=>s.includes('Web page (page content is not captured)'))));
+  await page.locator('#desk-menu').click();await page.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();await page.locator('#ui-language').selectOption('ja');await page.keyboard.press('Escape');
+  await page.evaluate(()=>(window as any).rasterCopies=[]);
+  await call('desk_raster',{ids:['web']});
+  assert.ok(await page.evaluate(()=>(window as any).rasterCopies.some((s:string)=>s.includes('Web資料（ページ内容の画像化は対象外）'))));
+  assert.deepEqual(await call('desk_state'),before);assert.deepEqual(errors,[]);
+ }finally{await close();}
+});

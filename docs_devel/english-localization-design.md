@@ -458,3 +458,9 @@ vacant-lot-en／work-in-progress-en／temporary-area-enを新しい小物IDと�
 ログ：`/tmp/tabletop-stamp-outline-unit.log`、`/tmp/tabletop-stamp-outline-build.log`、`/tmp/tabletop-stamp-outline-pages.log`、`/tmp/tabletop-stamp-outline-e2e.log`、`/tmp/tabletop-stamp-outline-final-check.log`、`/tmp/tabletop-stamp-outline-export.log`。比較画像：`/tmp/stamp-gallery-before.png`／`/tmp/stamp-gallery-after.png`。
 
 開発机の確認カード33枚へ✔リアクションを追加。字体シールとユーザーの赤▲（items2）は保持。凡例を通常32＋互換用1へ訂正。机は保存済み。現在開いている旧UIへは再読込後に反映される。ここでは勝手に机を再読込せず、日付調整と形別の並べ替えは次工程に残した。
+
+### 工程4〜5：確定した印影・英語チュートリアルと通し確認（2026-11-06）
+
+上記の33種・字体未選定・日付未調整・英語机未作成という記述は当時の履歴。最終の印影38種と取得手順は `stamp-outlines.md`／`stamp-font-review/README.md`、英語机と再生成方法は `english-tutorial.md` を参照する。
+
+工程5の通し確認を実施。全単体337件、関連ブラウザ31件、通常版・Pagesビルド、文書ローカルリンク65件を確認。日英同時接続と旧日本語机の保存往復を追加検証。図形パレットの見出し追従とWeb資料のラスタ代替文の翻訳を修正した。詳細・確認環境・公開前の区切りは `v0.1.1-verification.md`。mainへの反映・タグ・公開・バージョン番号変更はまだ行わない。
