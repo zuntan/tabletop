@@ -74,7 +74,7 @@ export function stampArtwork(stamp: Stamp) {
     g.append(svg('rect', { x: -99, y: -44, width: 198, height: 88, rx: 5 }),
       svg('rect', { x: -94, y: -39, width: 188, height: 78, rx: 2, 'stroke-width': 1 }));
     text(pattern.title, -10, 33, 176, 'sans-serif');
-    g.append(svg('path', { d: 'M -86 15 H 86', 'stroke-width': 1 }));
+    g.append(svg('path', { d: 'M -86 15 H 86', 'stroke-width': .69 }));
   } else {
     if (pattern.shape === 'flower') {
       // Separate, rounded pentagonal petals, rather than a sinusoidal scalloped ring.
@@ -135,7 +135,7 @@ export function stampArtwork(stamp: Stamp) {
       g.append(svg('circle', { r: 46 }), svg('circle', { r: 41, 'stroke-width': 1 }));
       // Match the single-character 「秘」 artwork (103 units at scale .46).
       text(pattern.title, -9, pattern.title.length === 1 ? 103 * .46 : 32, 74);
-      g.append(svg('path', { d: 'M -37 20.5 H 37', 'stroke-width': 1 }));
+      g.append(svg('path', { d: 'M -29.9 20.5 H 29.9', 'stroke-width': .69 }));
     }
   }
   if (pattern.shape === 'care' || stamp.designId === 'shirangana_ja' || stamp.designId === 'nandeyanen_ja') {

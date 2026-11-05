@@ -37,6 +37,22 @@ test('date labels use two explicit weights and preserve shared heights and divid
   for(const ids of [['done_ja','confidential_ja','pass_ja','fail_ja','read_ja','unread_ja'],['unread_en','read_en','good_en','bad_en'],['copy_paste_only_ja','wanted_ja'],['hanamaru_ja','smile_ja','well_done_ja','keep_going_ja']]){
    const heights=ids.map(id=>labels.find(n=>n.id===id)!.height);assert.ok(Math.max(...heights)-Math.min(...heights)<.01,JSON.stringify({ids,heights}));
   }
+  const dividers=await page.locator('[data-stamp]').evaluateAll(nodes=>nodes.filter(n=>['done_ja','on_hold_ja','rejected_ja','sealed_ja'].includes(n.getAttribute('data-stamp')??'')).map(root=>{
+   const line=[...root.querySelectorAll('path')].find(p=>/^M\s*-?[\d.]+[ ,]+20\.5\s*H/.test(p.getAttribute('d')??''))!;
+   const b=line.getBBox(),inner=root.querySelector('circle[r="41"]')!;
+   return {id:root.getAttribute('data-stamp'),endpointRadius:Math.max(Math.hypot(b.x,b.y),Math.hypot(b.x+b.width,b.y)),innerRadius:Number(inner.getAttribute('r'))};
+  }));
+  const dividerStyles=await page.locator('[data-stamp]').evaluateAll(roots=>roots.flatMap(root=>[...root.querySelectorAll('path')].flatMap(p=>{
+   const match=/^M\s*(-?[\d.]+)[ ,]+(-?[\d.]+)\s*H\s*(-?[\d.]+)$/.exec(p.getAttribute('d')??'');if(!match)return [];
+   const m=(root as SVGGraphicsElement).getCTM()!.inverse().multiply(p.getCTM()!);
+   return [{id:root.getAttribute('data-stamp'),width:parseFloat(getComputedStyle(p).strokeWidth)*Math.hypot(m.a,m.b),length:Math.abs(Number(match[3])-Number(match[1]))*Math.hypot(m.a,m.b)}];
+  })));
+  assert.equal(dividerStyles.length,29);
+  for(const line of dividerStyles)assert.ok(Math.abs(line.width-.69)<.001,JSON.stringify(line));
+  const roundIds=['done_ja','on_hold_ja','rejected_ja','sealed_ja','physical_checked_ja','confidential_ja','unread_ja','read_ja','keep_secret_ja','pass_ja','fail_ja','pass_en','fail_en'];
+  for(const line of dividerStyles.filter(d=>roundIds.includes(d.id!)))assert.ok(Math.abs(line.length-59.8)<.001,JSON.stringify(line));
+  assert.equal(dividers.length,4);
+  for(const d of dividers)assert.ok(d.endpointRadius<d.innerRadius-1.5,JSON.stringify(d));
   assert.deepEqual(errors,[]);
  }finally{await close();}
 });
