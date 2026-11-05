@@ -1,5 +1,7 @@
 # Tabletopのチュートリアル机
 
+[English tour guide](../en/tutorial.md)
+
 Tabletopの道具を、説明やサンプルを眺めながら試せる机です。カード、線、ピン、クリップ、ハンコなどを、一つの広い机に並べています。
 
 [チュートリアル机を開く](https://zuntan.github.io/tabletop/?desk=desks/tabletop-guide.tabletop)
