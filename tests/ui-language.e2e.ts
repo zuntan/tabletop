@@ -283,3 +283,25 @@ test('camera, deletion and pin navigation labels switch without editing the sele
   assert.deepEqual(await call('desk_state'),pins);assert.deepEqual(errors,[]);
  }finally{await close();}
 });
+
+test('English copy notices and standalone status survive language switching', {timeout:35_000}, async()=>{
+ const {page,call,close,errors,port}=await openTestDesk('ui-language-notices',undefined,undefined,'en-US');page.setDefaultTimeout(5000);
+ try{
+  await call('desk_execute',{operations:[{kind:'add',object:{id:'note',type:'text',text:'Keep',x:100,y:100}}]});await call('desk_select',{ids:['note']});
+  const before=await call('desk_state');
+  await page.evaluate(()=>document.querySelector('#canvas')!.dispatchEvent(new ClipboardEvent('copy',{bubbles:true,cancelable:true,clipboardData:new DataTransfer()})));
+  assert.equal(await page.locator('#message').textContent(),'Copied 1 item');
+  assert.deepEqual(await call('desk_state'),before);
+  const standalone=await page.context().browser()!.newPage({locale:'en-US'});standalone.on('pageerror',error=>errors.push(error.message));
+  try{
+   await standalone.goto(`http://127.0.0.1:${port}/?connect=off`);
+   await standalone.waitForFunction(()=>document.querySelector('#connection')?.textContent==='No AI connection (standalone desk)');
+   await standalone.locator('#desk-menu').click();await standalone.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();await standalone.locator('#ui-language').selectOption('ja');
+   await standalone.waitForFunction(()=>document.documentElement.lang==='ja');
+   assert.equal(await standalone.locator('#connection').textContent(),'AI未接続（単独の机）');
+   assert.match(await standalone.locator('#connection-detail').textContent()??'',/アップロード／ダウンロード/);
+   assert.deepEqual(await call('desk_state'),before);
+  }finally{await standalone.close();}
+  assert.deepEqual(errors,[]);
+ }finally{await close();}
+});

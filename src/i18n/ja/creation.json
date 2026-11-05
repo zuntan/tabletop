@@ -15,5 +15,7 @@
   "imageFailed": "画像を表示できませんでした。",
   "qrDisplayFailed": "QRコードを表示できませんでした",
   "diagramDisplayFailed": "図を表示できませんでした：{{error}}",
-  "noImage": "画像がありません。"
+  "noImage": "画像がありません。",
+  "clipboardSvg": "クリップボード.svg",
+  "clipboardImage": "クリップボード画像"
 }

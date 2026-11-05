@@ -51,5 +51,7 @@
   "branchTitle": "Branch: choose a route",
   "branchHint": "Arrows show the relationship direction",
   "stop": "Stop",
-  "routeChoice": "Route {{number}}: {{name}}"
+  "routeChoice": "Route {{number}}: {{name}}",
+  "linesCreated_one": "Created {{count}} line",
+  "linesCreated_other": "Created {{count}} lines"
 }

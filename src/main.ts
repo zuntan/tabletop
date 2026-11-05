@@ -264,7 +264,7 @@ $('#prop-head-selection').onclick=()=>{
   control.dispatchEvent(new Event('change',{bubbles:true}));
 };
 const propertyEditor = createPropertyEditor(form, desk, (id, patch) => {
-  execute([{ kind: 'update', id, patch }]); render(); notify(`revision ${desk.revision} · ${desk.summary().count} オブジェクト`);
+  execute([{ kind: 'update', id, patch }]); render(); notify(t('messages:revisionObjects',{revision:desk.revision,count:desk.summary().count}));
 }, message => notify(message, true));
 addFormNumberPresets(form);
 const clipMenuUpdates = ([
@@ -291,10 +291,10 @@ const clipMenuUpdates = ([
 });
 const updateStrokeWidthMode=createStrokeWidthMode(form.elements.namedItem('fixedWidth') as HTMLInputElement,'authoring:fixedLine');
 const updateConnectorLineStyle = createLineStylePicker(form.elements.namedItem('dash') as HTMLSelectElement);
-const updateStartMarker = createEndpointPicker(form.elements.namedItem('startMarker') as HTMLSelectElement, '始点形状', 'start');
+const updateStartMarker = createEndpointPicker(form.elements.namedItem('startMarker') as HTMLSelectElement, t('messages:startMarker'), 'start');
 const updateTextFit = createTextFitPicker(form.elements.namedItem('textFit') as HTMLSelectElement);
 const updateCallout = createCalloutPicker(form.elements.namedItem('calloutMode') as HTMLSelectElement);
-const updateEndMarker = createEndpointPicker(form.elements.namedItem('endMarker') as HTMLSelectElement, '終点形状', 'end');
+const updateEndMarker = createEndpointPicker(form.elements.namedItem('endMarker') as HTMLSelectElement, t('messages:endMarker'), 'end');
 const camera = { x: 60, y: 50, zoom: 1 };
 const bhDeletion = new BhDeletion();
 const humanScroll = new HumanScrollGuard();
@@ -367,16 +367,16 @@ const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'
   if (!busy && !editor.isActive()) attempt(() => { execute(operations, selectId ? 'desk' : 'exact'); if (selectId) desk.select([selectId]); });
 }, newPartPoint,notify);
 const formatControls = createFormatControls(desk, $('#authoring-tools'), operations => {
-  if (busy || editor.isActive()) throw new Error('編集中の操作を終えてから書式を使ってください');
+  if (busy || editor.isActive()) throw new Error(t('messages:finishFormat'));
   execute(operations); render();
 }, notify);
 const editActions = document.createElement('div'); editActions.className = 'toolbar-edit-actions';
-editActions.setAttribute('role', 'group'); editActions.setAttribute('aria-label', '重なり順・削除・スナップ・ロック');
-for (const [id, icon, label] of [['front', '▣↑', '最前面'], ['back', '▣↓', '最背面']]) {
+editActions.setAttribute('role', 'group'); uiAttribute(editActions,'aria-label','messages:editGroup');
+for (const [id, icon, label] of [['front', '▣↑', t('messages:front')], ['back', '▣↓', t('messages:back')]]) {
   const button = $<HTMLButtonElement>(`#${id}`); iconButton(button, icon, label); editActions.append(button);
 }
 const animatedDeleteButton=document.createElement('button');animatedDeleteButton.id='delete-animated';animatedDeleteButton.type='button';
-iconButton(animatedDeleteButton,'×','アニメ削除（落下／吸引／消しゴム／三角片をランダム）');
+iconButton(animatedDeleteButton,'×',t('messages:animatedDelete'));
 animatedDeleteButton.onclick=()=>animateDelete(DELETE_MODES[Math.floor(Math.random()*DELETE_MODES.length)]);
 editActions.append(animatedDeleteButton);
 editActions.append($('#reaction-controls'), $('#grid-snap')); $('.toolbar-parts').append(editActions);
@@ -390,13 +390,13 @@ const lockControls = createLockControls($('#grid-snap'), form, () => {
   });
 });
 const captureCamera=createCaptureCamera(desk,canvas,camera,()=>{cameraChanged();drawSelection();},id=>pinDescriptionVisible(desk.get(id)),notify);
-const captureButton=document.createElement('button');captureButton.id='camera-capture';captureButton.type='button';iconButton(captureButton,'▣','カメラ');$('#mouse-lock').after(captureButton);
+const captureButton=document.createElement('button');captureButton.id='camera-capture';captureButton.type='button';iconButton(captureButton,'▣',t('messages:camera'));$('#mouse-lock').after(captureButton);
 captureButton.onclick=()=>{if(busy||gesture||editor.isActive()||identityControls.isEditing()||doodleEditor.isActive()||lineInput.isActive()||isConfirmDialogOpen())return;stopCamera();captureCamera.open();};
 $('#numbering-settings').after($('#label-descriptions'));
 $('main').append($('.toolbar-view'));
 const activityLed = createActivityLed($('footer'));
 const centerViewButton=document.createElement('button');centerViewButton.id='view-center';centerViewButton.type='button';
-iconButton(centerViewButton,'','原点（0, 0）を画面の中心へ');$('#fit').after(centerViewButton);
+iconButton(centerViewButton,'',t('messages:originCenter'));$('#fit').after(centerViewButton);
 centerViewButton.onclick=()=>{void cameraControls.move({center:{x:0,y:0}}).catch(error=>{
   if(!(error instanceof Error&&error.message.startsWith('Camera animation cancelled:')))notify(error instanceof Error?error.message:String(error),true);
 });};
@@ -420,34 +420,34 @@ const stampControls = createStampControls(stampContainer, () => desk.selected().
       if(serial!==stampPressSerial||generation!==desk.documentGeneration)return;
       stampPressTimer=setTimeout(()=>{stampPressIds.clear();if(!gesture&&generation===desk.documentGeneration)renderDecorations(ids);},1600);
     }));
-    notify('ハンコを更新しました');return true;
+    notify(t('messages:stampUpdated'));return true;
   }catch(error){notify(error instanceof Error?error.message:String(error),true);return false;}
 });
 const propContainer = document.createElement('div'); propContainer.id = 'prop-controls'; $('#reaction-controls').after(propContainer);
 createPropControls(propContainer, (preset, src) => {
-  if (busy || editor.isActive()) throw new Error('編集を終えてから小物を置いてください');
+  if (busy || editor.isActive()) throw new Error(t('messages:finishProp'));
   attempt(() => newObject('prop', { src, text: preset.name, width: preset.width, height: preset.height }));
 }, notify);
 $('#clipboard').before(stampContainer, $('#reaction-controls'), propContainer);
-const formatGroup=document.createElement('div');formatGroup.className='toolbar-format-group';formatGroup.setAttribute('role','group');formatGroup.setAttribute('aria-label','色・線幅・書式');
-const deskOptions=document.createElement('div');deskOptions.className='toolbar-options-group';deskOptions.setAttribute('role','group');deskOptions.setAttribute('aria-label','ピン・スナップ・ロック');
+const formatGroup=document.createElement('div');formatGroup.className='toolbar-format-group';formatGroup.setAttribute('role','group');uiAttribute(formatGroup,'aria-label','messages:formatGroup');
+const deskOptions=document.createElement('div');deskOptions.className='toolbar-options-group';deskOptions.setAttribute('role','group');uiAttribute(deskOptions,'aria-label','messages:deskOptions');
 deskOptions.append($('#numbering-settings'),$('#label-descriptions'),$('#grid-snap'),$('#mouse-lock'),captureButton);
 formatGroup.append(...$('#authoring-tools').children);
-editActions.prepend($('#clipboard'));editActions.setAttribute('aria-label','貼り付け・重なり順・削除');
+editActions.prepend($('#clipboard'));uiAttribute(editActions,'aria-label','messages:editActions');
 $('#authoring-tools').append(formatGroup,editActions,deskOptions);
-const wayfinderCreate=document.createElement('button');wayfinderCreate.id='wayfinder-create';wayfinderCreate.type='button';iconButton(wayfinderCreate,'','道しるべ');
+const wayfinderCreate=document.createElement('button');wayfinderCreate.id='wayfinder-create';wayfinderCreate.type='button';iconButton(wayfinderCreate,'',t('messages:wayfinder'));
 $('#pin-series-menu').after(wayfinderCreate);
 wayfinderCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>newObject('wayfinder',{fill:'#dcfce7',fillOpacity:1,stroke:'#166534',text:t('creation:wayfinder')}));};
-const clipCreate=document.createElement('button');clipCreate.id='clip-create';iconButton(clipCreate, '', 'クリップ');clipCreate.title='選択を束ねる（Ctrl/⌘＋G）。未選択ならクリップを置く';
+const clipCreate=document.createElement('button');clipCreate.id='clip-create';iconButton(clipCreate, '', t('messages:clip'));uiAttribute(clipCreate,'title','messages:clipHint');
 clipCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{
   const operations=bundleOperations(desk.snapshot(),desk.selected());
   if(operations.length){execute(operations);const last=operations[0];if(last.kind==='add')desk.select([last.object.id]);}
   else if(!desk.selected().length)newObject('clip',{clipMembers:[],clipSize:64,clipAutoSize:true,clipOffset:32,clipStyle:'binder',fill:'#26313d'});
 });};
 app.querySelector('[data-add="text"]')!.after(clipCreate);
-const fileCreate=document.createElement('button');fileCreate.id='file-create';iconButton(fileCreate,'','クリアファイル');fileCreate.title='選択を配置ごとクリアファイルにまとめる';
+const fileCreate=document.createElement('button');fileCreate.id='file-create';iconButton(fileCreate,'',t('messages:clearFolder'));uiAttribute(fileCreate,'title','messages:fileHint');
 fileCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{const operations=fileCreateOperations(desk.snapshot(),desk.selected(),desk.settingsSnapshot().grid);execute(operations);const add=operations.find(op=>op.kind==='add');if(add?.kind==='add')desk.select([add.object.id]);});};clipCreate.after(fileCreate);
-const rulerCreate=document.createElement('button');rulerCreate.id='ruler-create';iconButton(rulerCreate,'','定規');rulerCreate.title='定規を置く。選択したカードや図形を右側へ並べます';
+const rulerCreate=document.createElement('button');rulerCreate.id='ruler-create';iconButton(rulerCreate,'',t('messages:ruler'));uiAttribute(rulerCreate,'title','messages:rulerHint');
 rulerCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{const operations=rulerCreateOperations(desk.snapshot(),desk.selected(),newPartPoint());execute(operations,'exact');const op=operations[0];if(op.kind==='add')desk.select([op.object.id]);});};fileCreate.after(rulerCreate);
 const thinkingMode = createThinkingMode($('header'), () => { objectAnimator.finish(); cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
@@ -460,17 +460,17 @@ const deskFiles=createDeskFileControls($('header'), desk, () => { bhDeletion.sto
   () => {objectAnimator.finish();return deskPng(desk,canvas,id=>pinDescriptionVisible(desk.get(id)));});
 createUiThemeButton($('header'));
 const deskMenu = createDeskMenu($('header'), desk, patch => {
-  if (busy || gesture || editor.isActive()) { notify('操作が終わってから設定を変更してください', true); deskMenu.refresh(); return; }
+  if (busy || gesture || editor.isActive()) { notify(t('messages:finishSettings'), true); deskMenu.refresh(); return; }
   attempt(() => execute([{ kind: 'background_update', patch }]));
 }, preview => {
   const background = desk.settingsSnapshot().background;
   deskBackground.update({ ...background, ...preview }, camera);
 }, () => {
-  if (busy || gesture || editor.isActive()) { notify('操作が終わってから実験を開いてください', true); return; }
+  if (busy || gesture || editor.isActive()) { notify(t('messages:finishExperiment'), true); return; }
   void rasterPointedCard(desk, id => drawnNodes.get(id)).then(raster => openBhPreview(raster.dataUrl))
     .catch(error => notify(error instanceof Error ? error.message : String(error), true));
 }, patch=>{
-  if (busy || gesture || editor.isActive()) { notify('操作が終わってから設定を変更してください', true); deskMenu.refresh(); return; }
+  if (busy || gesture || editor.isActive()) { notify(t('messages:finishSettings'), true); deskMenu.refresh(); return; }
   attempt(()=>execute([{kind:'grid_update',patch}]));
 }, () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing()
   && !lineInput.isActive() && !doodleEditor.isActive() && !captureCamera.isActive() && !isConfirmDialogOpen());
@@ -492,7 +492,7 @@ function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string,
 }
 function notify(message: string, error = false) { $('#message').removeAttribute('data-i18n'); $('#message').textContent = message; $('#message').classList.toggle('error', error); }
 function attempt(action: () => void) {
-  try { action(); render(); notify(`revision ${desk.revision} · ${desk.summary().count} オブジェクト`); }
+  try { action(); render(); notify(t('messages:revisionObjects',{revision:desk.revision,count:desk.summary().count})); }
   catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
 }
 function execute(operations: Operation[], snap: 'desk' | 'exact' = 'exact') { desk.execute({ actor: 'human', operations, snap }); }
@@ -656,7 +656,7 @@ function drawObjectRaw(object: DeskObject) {
     if (object.type === 'web' && h > 40) {
       const foreign = svg('foreignObject', { x: 0, y: 34, width: w, height: h - 34 });
       const iframe = document.createElement('iframe');
-      iframe.src = object.url!; iframe.title = object.text || 'Web資料';
+      iframe.src = object.url!; if(object.text)iframe.title=object.text;else uiAttribute(iframe,'title','messages:webPage');
       iframe.setAttribute('sandbox', 'allow-scripts'); iframe.referrerPolicy = 'no-referrer';
       iframe.loading = 'lazy'; iframe.style.pointerEvents = 'none';
       foreign.append(iframe); group.append(foreign);
@@ -845,7 +845,7 @@ function refreshHistory(){
   const changes = desk.getChanges(Math.max(0, desk.revision - 50), 50).changes.reverse();
   for (const change of changes) {
     const row = document.createElement('div'); row.className = 'history-row';
-    const kinds = change.details.map(d => !d.before ? '追加' : !d.after ? '削除' : '変更');
+    const kinds = change.details.map(d => !d.before ? t('messages:added') : !d.after ? t('messages:deleted') : t('messages:changed'));
     row.textContent = `r${change.revision} · ${change.actor} · ${change.operation === 'batch' ? [...new Set(kinds)].join(' / ') : change.operation} (${change.targets.length})`;
     row.title = change.targets.join(', '); $('#history').append(row);
   }
@@ -882,7 +882,7 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
   if (['text', 'web', 'link', 'mermaid', 'qrcode'].includes(type)) { editor.open(object, true); return; }
   execute([{ kind: 'add', object }], 'desk'); desk.select([object.id]);
 }
-const doodleButton=document.createElement('button');doodleButton.id='doodle-create';iconButton(doodleButton,'✎','落書き');$('#image').after(doodleButton);
+const doodleButton=document.createElement('button');doodleButton.id='doodle-create';iconButton(doodleButton,'✎',t('messages:doodle'));$('#image').after(doodleButton);
 doodleButton.onclick=()=>{if(busy||gesture||editor.isActive()||doodleEditor.isActive())return;attempt(()=>{const doodle=emptyDoodle();newObject('svg',{doodle,src:doodleSource(doodle,480,320),text:t('creation:doodle'),width:480,height:354});});};
 app.querySelectorAll<HTMLButtonElement>('[data-add]').forEach(button => button.onclick = () => {
   const kind = button.dataset.add!;
@@ -905,7 +905,7 @@ function animateDelete(mode: DeleteMode) {
   objectAnimator.finish();
   const ids=desk.selected();
   void bhDeletion.run(desk,ids,mode,id=>drawnNodes.get(id),canvas,()=>camera,
-    ()=>execute(ids.map(id=>({kind:'delete',id}))),()=>{render();notify(`revision ${desk.revision} · ${desk.summary().count} オブジェクト`);})
+    ()=>execute(ids.map(id=>({kind:'delete',id}))),()=>{render();notify(t('messages:revisionObjects',{revision:desk.revision,count:desk.summary().count}));})
     .catch(error=>notify(error instanceof Error?error.message:String(error),true));
 }
 const bhDelete = bhDeleteControls($<HTMLButtonElement>('#delete'), animateDelete);
@@ -915,8 +915,8 @@ const cutoutControls=createCutoutControls($('#image'),form,()=>desk.selected().m
 },id=>drawnNodes.get(id),notify);
 const stickerContainer=document.createElement('div');stickerContainer.id='sticker-toolbar';stampContainer.after(stickerContainer);
 const stickerControls=createStickerControls(form,()=>desk.selected().map(id=>desk.get(id)),operations=>{
-  if(busy||gesture||editor.isActive())throw new Error('編集中の操作を終えてからシールを使ってください');
-  execute(operations);renderDecorations(operations.map(op=>'id' in op?op.id:''));notify('シールを更新しました');
+  if(busy||gesture||editor.isActive())throw new Error(t('messages:finishStickers'));
+  execute(operations);renderDecorations(operations.map(op=>'id' in op?op.id:''));notify(t('messages:stickersUpdated'));
 },notify,stickerContainer);
 $('#front').onclick = () => attempt(() => execute(desk.selected().map(id => ({ kind: 'reorder', id, index: desk.summary().count - 1 }))));
 $('#back').onclick = () => attempt(() => execute(desk.selected().slice().reverse().map(id => ({ kind: 'reorder', id, index: 0 }))));
@@ -925,10 +925,10 @@ $('#text-measure').onclick = () => {
   const report = measureDeskText(desk, desk.selected(), id => drawnNodes.get(id));
   $('#text-measure-result').textContent = report.measurements.map(item => {
     const name = desk.get(item.id).text.split('\n')[0].slice(0, 24) || item.id;
-    if (item.status !== 'measured') return `${name}：${item.status === 'pending-fonts' ? 'フォント読込中' : item.status === 'unsupported' ? '対象外' : '測定できません'}`;
+    if (item.status !== 'measured') return t('messages:measureStatus',{name,status:item.status==='pending-fonts'?t('messages:fontsLoading'):item.status==='unsupported'?t('messages:unsupported'):t('messages:cannotMeasure')});
     const state = item.overflow!.x || item.overflow!.y
-      ? `${item.overflow!.x ? '横にはみ出し' : ''}${item.overflow!.x && item.overflow!.y ? '・' : ''}${item.overflow!.y ? '縦にはみ出し' : ''}` : '枠内に収まっています';
-    return `${name}：${state}。必要な高さ ${item.requiredHeight}（現在 ${item.frame.height}）${item.canFitByHeight ? '' : '。高さだけでは解消できません'}`;
+      ? `${item.overflow!.x ? t('messages:overflowX') : ''}${item.overflow!.x && item.overflow!.y ? t('messages:overflowSeparator') : ''}${item.overflow!.y ? t('messages:overflowY') : ''}` : t('messages:fits');
+    return t('messages:measureResult',{name,state,needed:item.requiredHeight,current:item.frame.height,warning:item.canFitByHeight?'':t('messages:heightInsufficient')});
   }).join('\n');
   } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
 };
@@ -981,19 +981,19 @@ function beginWayfinder(raw:WayfinderStartInput){
 }
 function startPinTravel(id:string,direction:'previous'|'next'){
   try{
-    if(busy||editor.isActive()||identityControls.isEditing()||lineInput.isActive()||(isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())||document.hidden)throw new Error('編集中は移動できません');
+    if(busy||editor.isActive()||identityControls.isEditing()||lineInput.isActive()||(isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())||document.hidden)throw new Error(t('messages:finishTravel'));
     const pin=desk.get(id),series=pinSeriesMap.get(pin.seriesId!);if(pin.type!=='label'||!series)return;
     const target=pinNeighbours(desk.snapshot(),series,id)[direction];if(!target)return;
     launchNavigation({points:[pinRoot(pin),pinRoot(target)],lineIds:[],destinationId:target.id},'move',{pinId:id},desk.snapshot());
   }catch(error){notify(error instanceof Error?error.message:String(error),true);}
 }
 function launchNavigation(first:WayfinderRoute,mode:'move'|'tour',input:WayfinderStartInput&{pinId?:string},scene:DeskObject[]){
-  const label=input.pinId?'ピンの糸':'道しるべ';
+  const label=input.pinId?'messages:pinThread':'messages:wayfinder';
   const revision=desk.revision,generation=desk.documentGeneration,run=++wayfinderRun;
   cancelWayfinding('superseded');cameraAnimator.cancel('Wayfinder travel');objectAnimator.finish();
   const valid=()=>desk.revision===revision&&desk.documentGeneration===generation;
   const updateMarker=(marker:{x:number;y:number}|null)=>{wayfinderMarker.replaceChildren();if(marker)wayfinderMarker.append(svg('circle',{cx:marker.x,cy:marker.y,r:5/camera.zoom,fill:'#f59e0b',stroke:'#fff','stroke-width':2/camera.zoom}));};
-  const reportStop=(reason:WayfinderStopReason)=>reason==='changed'?'経路が変更されたため中止しました':reason==='hidden'?'画面が非表示になったため中止しました':reason==='superseded'?'別の移動に切り替えました':reason==='timeout'?'移動の応答が止まったため中止しました':'操作により中止しました';
+  const reportStop=(reason:WayfinderStopReason)=>reason==='changed'?t('messages:routeChanged'):reason==='hidden'?t('messages:hiddenStop'):reason==='superseded'?t('messages:superseded'):reason==='timeout'?t('messages:travelTimeout'):t('messages:humanStop');
   navigation={runId:run,status:'moving',mode,id:input.id,lineId:input.lineId,from:input.from,pinId:input.pinId};
   const departureId=input.id??input.pinId;
   if(departureId){desk.select(desk.selected().filter(id=>id!==departureId));render(false);}else drawSelection();
@@ -1001,13 +1001,13 @@ function launchNavigation(first:WayfinderRoute,mode:'move'|'tour',input:Wayfinde
     let route:WayfinderRoute=first;
     while(run===wayfinderRun){
       navigation={...navigation!,status:'moving',reason:undefined,point:undefined,choices:undefined};
-      notify(mode==='tour'?label+'：観光します（操作すると停止）':label+'：経路をたどります（操作すると停止）');
+      notify(mode==='tour'?t('messages:tourNotice',{name:t(label)}):t('messages:travelNotice',{name:t(label)}));
       await wayfinderTravel.run(route.points,camera,cameraSize,valid,
         (next,marker)=>{Object.assign(camera,next);cameraChanged();drawSelection();updateMarker(marker);},reducedMotion.matches,mode);
       if(!valid())throw new WayfinderCancelled('changed');
       if(route.branch){
         navigation={...navigation!,status:'waiting',reason:'branch',point:route.branch.point,choices:route.branch.choices};
-        updateMarker(route.branch.point);notify('道しるべ：分岐です。進路を選んでください');
+        updateMarker(route.branch.point);notify(t('messages:branch'));
         const choice=await wayfinderMap.choose(scene,route.branch,valid);
         if(!valid())throw new WayfinderCancelled('changed');
         updateMarker(null);route=lineRoute(scene,choice.lineId,choice.from);continue;
@@ -1015,7 +1015,7 @@ function launchNavigation(first:WayfinderRoute,mode:'move'|'tour',input:Wayfinde
       const reason=route.loop?'loop':route.destinationId?'arrived':'line-end';
       navigation={...navigation!,status:'completed',reason,point:cameraView(camera,cameraSize()).center};
       if(route.destinationId){desk.select([route.destinationId]);render(false);}else drawSelection();
-      notify(route.loop?'道しるべ：ループを検出したため終了しました':route.destinationId?label+'：到着しました':'道しるべ：線の端に到着しました');return;
+      notify(route.loop?t('messages:loop'):route.destinationId?t('messages:arrived',{name:t(label)}):t('messages:lineEnd'));return;
     }
   })().catch(error=>{
     if(run!==wayfinderRun)return;updateMarker(null);
@@ -1032,7 +1032,7 @@ canvas.addEventListener('dblclick', event => {
   const id = target.closest('[data-id]')?.getAttribute('data-id');
   if (!id || busy || editor.isActive() || lineInput.isActive()) return;
   const object = desk.get(id);
-  if(object.doodle){if(!fileFor(desk.snapshot(),object.id))doodleEditor.open(object);else notify('クリアファイルから取り出して編集してください',true);return;}
+  if(object.doodle){if(!fileFor(desk.snapshot(),object.id))doodleEditor.open(object);else notify(t('messages:unfileDoodle'),true);return;}
   if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg', 'mermaid', 'qrcode', 'prop', 'file'].includes(object.type)) editor.open(object);
 });
 canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture) zoom(Math.exp(-event.deltaY * 0.001), screen(event)); }, { passive: false });
@@ -1080,7 +1080,7 @@ function previewGesture(current: Gesture, point: { x: number; y: number }) {
     const target=clipTarget(source)&&!fileFor(current.scene,source.id)&&!clipFor(current.scene,source.id)?clipDropTarget(current.scene,point,camera.zoom,[source.id]):null;
     const rulerHit=rulerTarget(source)&&!fileFor(current.scene,source.id)&&!clipFor(current.scene,source.id)&&!rulerFor(current.scene,source.id)?rulerDropTarget(current.scene,point,camera.zoom,[source.id]):null;
     if(rulerHit){const hint=svg('rect',{x:rulerHit.ruler.x,y:rulerHit.ruler.y,width:rulerHit.ruler.width,height:rulerHit.ruler.height,fill:'none',stroke:'#15803d','stroke-width':3/camera.zoom,'pointer-events':'none'});overlays.append(hint);}
-    if(target){const text=svg('text',{x:target.x,y:target.y-12/camera.zoom,fill:'#15803d','font-size':14/camera.zoom,'pointer-events':'none'});text.textContent='クリップへ追加';overlays.append(text);}
+    if(target){const text=svg('text',{x:target.x,y:target.y-12/camera.zoom,fill:'#15803d','font-size':14/camera.zoom,'pointer-events':'none'});text.textContent=t('messages:addClip');overlays.append(text);}
     if(source.type==='clip'&&!source.clipMembers?.length) drawSnapTargets(overlays,current.scene.filter(o=>clipTarget(o)&&!o.locked&&!clipFor(current.scene,o.id)),{x:source.x+source.width/2+point.x-current.start.x,y:source.y+source.height*.5+point.y-current.start.y},camera.zoom);
   }
   if (current.mode === 'move') for (const object of scene.filter(o => o.type === 'label' && desk.selected().includes(o.id))) {
@@ -1167,7 +1167,7 @@ function finishKeyboardEdit(){
     $<HTMLButtonElement>('#redo').disabled=!desk.summary().canRedo;
     const ids=desk.selected();if(ids.length===1)propertyEditor.sync(desk.get(ids[0]));
     refreshHistory();
-    notify(`revision ${desk.revision} · ${desk.summary().count} オブジェクト`);
+    notify(t('messages:revisionObjects',{revision:desk.revision,count:desk.summary().count}));
   }catch(error){render();notify(error instanceof Error?error.message:String(error),true);}
 }
 window.addEventListener('keyup',event=>{if(event.key.startsWith('Arrow'))finishKeyboardEdit();});
@@ -1195,8 +1195,8 @@ window.addEventListener('keydown', event => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase()==='g') {
     event.preventDefault();if(busy)return;
     attempt(()=>{const scene=desk.snapshot(),selected=desk.selected();const files=selected.filter(id=>desk.get(id).type==='file');
-      if(selected.some(id=>fileFor(scene,id)&&desk.get(id).type!=='file'))throw new Error('ファイル内ではグループ操作できません。ファイル本体を選んで解除してください');
-      if(files.length&&(!event.shiftKey||files.length!==selected.length))throw new Error('クリアファイルの結合はできません');
+      if(selected.some(id=>fileFor(scene,id)&&desk.get(id).type!=='file'))throw new Error(t('messages:groupInFile'));
+      if(files.length&&(!event.shiftKey||files.length!==selected.length))throw new Error(t('messages:mergeFiles'));
       const operations:Operation[]=files.length?files.map(id=>({kind:'delete',id})):event.shiftKey?unbundleOperations(scene,selected):bundleOperations(scene,selected);
       if(operations.length){execute(operations);if(!event.shiftKey&&operations[0].kind==='add')desk.select([operations[0].object.id]);}});return;
   }
@@ -1213,10 +1213,10 @@ async function addFiles(files: File[]) {
   busy = true;
   try {
     for (const file of files) {
-      if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'].includes(file.type)) throw new Error('対応していない画像形式です');
-      if (file.size > MAX_ASSET_BYTES) throw new Error('画像は1枚10MB以下にしてください');
+      if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'].includes(file.type)) throw new Error(t('messages:unsupportedImage'));
+      if (file.size > MAX_ASSET_BYTES) throw new Error(t('messages:imageLimit'));
       const src = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(new Error('画像の読み込みに失敗しました')); reader.readAsDataURL(file);
+        const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(new Error(t('messages:imageReadFailed'))); reader.readAsDataURL(file);
       });
       const image = new Image(); image.src = src;
       await image.decode();
@@ -1249,13 +1249,13 @@ for (const kind of ['copy', 'cut'] as const) window.addEventListener(kind, event
       desk.execute({ actor: 'human', expectedRevision: desk.revision, operations: objects.map(object => ({ kind: 'delete', id: object.id })) });
       render();
     }
-    notify(`${copied.count}パーツを${kind === 'cut' ? 'カット' : 'コピー'}しました${copied.text ? '' : '（机内の貼り付けのみ）'}`);
+    notify(t(kind==='cut'?'messages:cut':'messages:copied',{count:copied.count,scope:copied.text?'':t('messages:localPasteOnly')}));
   } catch (error) { notify(error instanceof Error ? error.message : String(error), true); }
 });
 async function pasteClipboard(content: ClipboardContent) {
   if (partClipboard.matches(content.token, content.html)) {
     desk.select(partClipboard.paste(desk));
-    render(); notify(`${desk.selected().length}パーツを貼り付けました`);
+    render(); notify(t('messages:pasted',{count:desk.selected().length}));
     return;
   }
   const token=partClipboardToken(content.token,content.html);
@@ -1263,7 +1263,7 @@ async function pasteClipboard(content: ClipboardContent) {
     const revision=desk.revision,generation=desk.documentGeneration;
     let remote:unknown=null;
     try{remote=await recovery.clipboardRequest(token);}catch{/* Best effort: ordinary paste remains available. */}
-    if(desk.revision!==revision||desk.documentGeneration!==generation||(isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())||editor.isActive()||identityControls.isEditing()||gesture)throw new Error('読み取り中に机の状態が変わりました。もう一度貼り付けてください');
+    if(desk.revision!==revision||desk.documentGeneration!==generation||(isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())||editor.isActive()||identityControls.isEditing()||gesture)throw new Error(t('messages:pasteChanged'));
     const parsed=clipboardTransferSchema.safeParse(remote);
     if(parsed.success&&parsed.data.token===token){
       const frames=parsed.data.objects.map(bounds),left=Math.min(...frames.map(b=>b.x)),top=Math.min(...frames.map(b=>b.y));
@@ -1271,14 +1271,14 @@ async function pasteClipboard(content: ClipboardContent) {
       const origin=gridPosition(centeredPartPoint(camera,cameraSize(),{width:right-left,height:bottom-top}));
       // The existing paste transaction remaps every ID/reference and creates independent pin series.
       desk.select(partClipboard.pasteRemote(desk,parsed.data,token,{x:origin.x-left,y:origin.y-top}));
-      render();notify(`${desk.selected().length}パーツを別の机から貼り付けました`);return;
+      render();notify(t('messages:pastedFromDesk',{count:desk.selected().length}));return;
     }
   }
   if (content.files.length) { await addFiles(content.files); return; }
   const file = svgClipboardFile(content.text);
   if (file) { await addFiles([file]); return; }
-  if (!content.text.trim()) { notify('貼り付けられる文字列・画像・SVGがありません', true); return; }
-  if (content.text.length > 100_000) throw new Error('貼り付ける文字列は10万文字以下にしてください');
+  if (!content.text.trim()) { notify(t('messages:nothingToPaste'), true); return; }
+  if (content.text.length > 100_000) throw new Error(t('messages:pasteTextLimit'));
   const url = singleClipboardUrl(content.text);
   const id = `${url ? 'link' : 'text'}-${randomUuid()}`;
   const type=url?'link':'text';
@@ -1287,7 +1287,7 @@ async function pasteClipboard(content: ClipboardContent) {
   execute([{ kind: 'add', object: { ...appearance,
     id, type, ...size,...gridPosition(centeredPartPoint(camera,cameraSize(),size)),
     text: url ?? content.text, ...(url ? { url } : {}) } }]);
-  desk.select([id]); render(); notify(url ? 'リンクを貼り付けました' : 'カードを貼り付けました');
+  desk.select([id]); render(); notify(url ? t('messages:linkPasted') : t('messages:cardPasted'));
 }
 $('#clipboard').onclick = async () => {
   if (busy || gesture || editor.isActive() || identityControls.isEditing()) return;
@@ -1295,11 +1295,11 @@ $('#clipboard').onclick = async () => {
   busy = true;
   try {
     const content = await readClipboardContent();
-    if (desk.revision !== revision) throw new Error('読み取り中に机が変更されました。もう一度貼り付けてください');
+    if (desk.revision !== revision) throw new Error(t('messages:pasteReadChanged'));
     await pasteClipboard(content);
   } catch (error) {
     notify(error instanceof DOMException && error.name === 'NotAllowedError'
-      ? 'クリップボードの読み取りを許可するか、Ctrl+Vで貼り付けてください'
+      ? t('messages:clipboardPermission')
       : error instanceof Error ? error.message : String(error), true);
   } finally { busy = false; }
 };
@@ -1351,9 +1351,9 @@ const recovery = new BrowserConnection({
 const deskToast=createDeskToast();
 const connectionPanel = connectionControls(app, () => recovery.requestHandoff(), message => notify(message, true));
 async function connect(token: string, port: string, manual = false, host = '127.0.0.1', current=()=>true) {
-  if (manual && (recovery.hasPairing() || desk.summary().count > 0) && !await confirmAction('AI接続を切り替える','机の内容を保持したまま、接続先のペアリングを置き換えますか？','接続を切り替える')) return;
+  if (manual && (recovery.hasPairing() || desk.summary().count > 0) && !await confirmAction(t('messages:switchConnectionTitle'),t('messages:switchConnectionMessage'),t('messages:switchConnection'))) return;
   if(!current())return;
-  if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535 || token.length < 22) { notify('有効なポートと接続トークンを入力してください', true); return; }
+  if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535 || token.length < 22) { notify(t('messages:invalidConnection'), true); return; }
 
   // Do not serialize flights in the protocol chain: reads/release must remain responsive.
   recovery.connect(token, port, async (ws, event) => {
@@ -1441,7 +1441,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
 }
 let connectionAttempt = 0;
 async function connectUrl(value: string, manual: boolean) {
-  if(pagesMode)throw new Error('Pages版ではAIに接続しません');
+  if(pagesMode)throw new Error(t('messages:pagesNoConnection'));
   const attempt = ++connectionAttempt;
   let allowedHosts = ['127.0.0.1', 'localhost'];
   try {
@@ -1453,7 +1453,7 @@ async function connectUrl(value: string, manual: boolean) {
   } catch { /* Fail closed for LAN; local URLs remain usable during downtime. */ }
   if (attempt !== connectionAttempt) return;
   const parsed = parseConnectionUrl(value, allowedHosts);
-  if (!parsed.token) throw new Error('接続URLに #token=… を含めてください。環境変数のトークンはAIから表示されません。');
+  if (!parsed.token) throw new Error(t('messages:missingToken'));
   await connect(parsed.token, parsed.port, manual, parsed.host,()=>attempt===connectionAttempt);
 }
 $<HTMLFormElement>('#connect-form').onsubmit = event => {
@@ -1466,14 +1466,14 @@ $<HTMLFormElement>('#connect-form').onsubmit = event => {
 const startupParameters=new URLSearchParams(location.search);
 const suggestedDeskName=startupParameters.get('newDeskName');
 if(suggestedDeskName&&!desk.list().length&&!desk.settingsSnapshot().name){
- try{desk.execute({operations:[{kind:'desk_rename',name:suggestedDeskName}]});notify(`机の名前を「${suggestedDeskName}」にしました`);}catch{/* Invalid launch hints never prevent opening a desk. */}
+ try{desk.execute({operations:[{kind:'desk_rename',name:suggestedDeskName}]});notify(t('messages:deskNamed',{name:suggestedDeskName}));}catch{/* Invalid launch hints never prevent opening a desk. */}
  startupParameters.delete('newDeskName');history.replaceState(null,'',location.pathname+(startupParameters.size?'?'+startupParameters.toString():'')+location.hash);
 }
 const standaloneStartup=pagesMode||startupParameters.get('connect')==='off';
 if(standaloneStartup){
   if(location.hash)history.replaceState(null,'',location.pathname+location.search);
-  $('#connection').textContent='AI未接続（単独の机）';
-  $('#connection-detail').textContent='アップロード／ダウンロードで利用できます。AIを接続する場合は接続欄から操作してください。';
+  uiText($('#connection'),'messages:standalone');
+  uiText($('#connection-detail'),'messages:standaloneHelp');
 }
 if (location.hash&&!standaloneStartup) {
   const initialUrl = location.href;
@@ -1488,7 +1488,7 @@ createTopbarCollapse(app,()=>!busy&&!gesture&&!editor.isActive()&&!identityContr
 render();
 
 if(pagesMode){
- $('#empty small').textContent='ファイルからアップロード · 上のツールから追加 · 画像をドロップ';
+ uiText($('#empty small'),'messages:pagesEmptyHint');
  const reference=startupParameters.get('desk');
  if(reference)void deskFiles.openInitial(reference).then(async loaded=>{
   if(!loaded)return;
@@ -1497,7 +1497,7 @@ if(pagesMode){
   if(!id)return;
   await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
   if(!desk.snapshot().some(object=>object.id===id)){
-    desk.select([]);fitView([]);notify(`初期表示の対象が見つかりません：${id}`,true);return;
+    desk.select([]);fitView([]);notify(t('messages:focusMissing',{id}),true);return;
   }
   desk.select([id]);fitView([id]);
  });

@@ -51,5 +51,7 @@
   "branchTitle": "分岐：進路を選んでください",
   "branchHint": "矢印は関係の向きです",
   "stop": "停止",
-  "routeChoice": "進路 {{number}}：{{name}}"
+  "routeChoice": "進路 {{number}}：{{name}}",
+  "linesCreated_one": "{{count}}本の線を作成しました",
+  "linesCreated_other": "{{count}}本の線を作成しました"
 }

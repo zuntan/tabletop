@@ -57,3 +57,11 @@ test('localized badge labels cover all existing symbols, placements, sticker sha
   assert.equal(english.t('badges:stamps.done_ja'), '済 — Completed');
   assert.equal(stampPatterns.find(pattern => pattern.id === 'done_ja')!.title, '済');
 });
+
+test('counted notices choose natural English singular and plural forms',()=>{
+ const english=createUiI18n('en'),japanese=createUiI18n('ja');
+ assert.equal(english.t('messages:copied',{count:1,scope:''}),'Copied 1 item');
+ assert.equal(english.t('messages:copied',{count:2,scope:''}),'Copied 2 items');
+ assert.equal(japanese.t('messages:copied',{count:1,scope:''}),'1パーツをコピーしました');
+ assert.equal(english.t('actions:linesCreated',{count:1}),'Created 1 line');
+});

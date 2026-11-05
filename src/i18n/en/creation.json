@@ -15,5 +15,7 @@
   "imageFailed": "Could not display the image.",
   "qrDisplayFailed": "Could not display the QR code",
   "diagramDisplayFailed": "Could not display the diagram: {{error}}",
-  "noImage": "No image available."
+  "noImage": "No image available.",
+  "clipboardSvg": "Clipboard.svg",
+  "clipboardImage": "Clipboard image"
 }
