@@ -1,0 +1,39 @@
+# Release notes
+
+[日本語](../release-notes.md) · [Guide](README.md)
+
+## v0.1.1 — Preparing for release
+
+Tabletop now supports Japanese and English UI, with English documentation and a separate English tutorial desk.
+
+### English support
+
+- Menus, Properties, dialogs, notifications and errors are available in Japanese and English. Switch from Menu → Language.
+- On first use, a Japanese browser starts in Japanese; other browser languages start in English. Your choice is remembered in the browser.
+- Added English README, installation instructions, user guides and a separate tutorial desk file.
+- Standardized AI-facing descriptions and help in English. You can still talk to your AI in Japanese.
+- Added VACANT LOT, WORK IN PROGRESS and TEMP AREA sign props. The Japanese designs remain available.
+
+### Stamps
+
+- Converted fixed stamp lettering to SVG outlines to reduce font differences and missing glyphs. Japanese lettering remains part of the design.
+- Added GOOD, BAD, CAUTION, DANGER and Excellent, bringing the menu to 38 designs.
+- Refined date placement, weight, spacing and divider lines. Excellent now fits inside a card with its date, even when tilted.
+- Moved Add date below the large preview. Click the preview itself to apply the stamp. Turning the date off leaves the artwork unchanged.
+
+### Editing improvements
+
+- Added Fit frame to text below the card text input in Properties. It adjusts height to the content and padding while keeping width and font size. With Snap on, height rounds up to the snap interval.
+- Initial sticker choices are now a red circle in column 1 and a green star in column 2. Existing stickers are unchanged.
+- Fixed palette headings after a language switch and localized the web-page placeholder used in image exports.
+- Made README diagrams readable on dark backgrounds.
+
+### Existing desks and updating
+
+Switching UI language does not translate saved text, names or stamp artwork. The desk file format is unchanged, and existing desks remain usable. Stamps keep their IDs and render with the updated designs.
+
+Save your desks before updating, and update both Tabletop and its browser UI. There is no autosave. See the [documentation guide](README.md) for installation and updating.
+
+## v0.1.0
+
+Initial release.

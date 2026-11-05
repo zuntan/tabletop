@@ -77,6 +77,7 @@ AI decisions, actions and results can differ. Identical behavior or results are 
 ## Read when needed
 
 - [Documentation guide](docs/en/README.md)
+- [Release notes](docs/en/release-notes.md)
 - [The idea behind the desk](docs/en/tabletop-philosophy.md)
 - [Basic operations and desk tools](docs/en/authoring.md)
 - [Shapes, lines and connections](docs/en/diagram.md)

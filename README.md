@@ -75,6 +75,7 @@ AIによって判断・操作の進め方・結果は異なる可能性があり
 ## 必要なときに読む
 
 - [ドキュメントの案内](docs/README.md)
+- [リリースノート](docs/release-notes.md)
 - [机という考え方](docs/tabletop-philosophy.md)
 - [基本操作と机の上の道具](docs/authoring.md)
 - [図形・線・接続](docs/diagram.md)

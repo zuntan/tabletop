@@ -2,6 +2,8 @@
 
 [日本語](../README.md) · [Tabletop](../../README_en.md) · [Installation](../../INSTALL_en.md)
 
+See the [release notes](release-notes.md) for changes between versions.
+
 Tabletop is a place for humans and AI to spread out material, look at it, move it and think together. Read the parts you need; this is not a course you must finish in order.
 
 These English guides describe the v0.1.1 development work. The published v0.1.0 release predates English UI support; the English tutorial file is included in this branch for the next Pages deployment.
