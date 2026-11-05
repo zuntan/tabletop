@@ -5,6 +5,7 @@ import { translateUi, uiAttribute, uiText, type UiKey } from './i18n/dom';
 import {initialFocusTarget} from './initial-focus';
 import {KeyboardGeometryEdit} from './keyboard-geometry';
 import {newPartGridSize} from './grid';
+import {snapInterval} from './grid-settings';
 import {MAX_ASSET_BYTES,checkAssetBytes} from './data-limits';
 import {encodeDeskFile,decodeDeskFile} from './desk-file';
 import {bytesDataUrl,dataBytes} from './binary-envelope';
@@ -194,6 +195,7 @@ app.innerHTML = `
           <label hidden><span data-i18n="shell:clipPercent"></span><input name="clipOffsetPercent" type="number" min="0" step="any"></label>
           <label hidden><span data-i18n="shell:clipOffset"></span><input name="clipOffset" type="number" min="0" step="any"></label>
           <label class="wide"><span data-i18n="shell:text"></span><textarea name="text" rows="3"></textarea></label>
+          <button id="card-fit-text" class="wide" type="button" hidden data-i18n="authoring:fit"></button>
           <label class="wide" hidden><span data-i18n="shell:qrText"></span><textarea name="qrText" rows="8" spellcheck="false" disabled></textarea></label>
           <label class="wide" hidden><span data-i18n="shell:mermaidSource"></span><textarea name="mermaidSource" rows="8" spellcheck="false" disabled></textarea></label>
           <label class="wide">URL<input name="url" type="url"></label>
@@ -783,6 +785,7 @@ function render(rebuild = true) {
   $('#selected-label').removeAttribute('data-i18n');
   $('#selected-label').textContent = ids.length ? t('shell:selected', { count: ids.length, ids: ids.join(', ') }) : t('shell:nothingSelected');
   form.hidden = ids.length !== 1;
+  $<HTMLButtonElement>('#card-fit-text').hidden = true;
   if (ids.length !== 1) propertyEditor.clear();
   // Human measurement UI is paused; the read-only MCP tool remains available.
   $<HTMLButtonElement>('#text-measure').hidden = true;
@@ -792,6 +795,9 @@ function render(rebuild = true) {
     const object = desk.get(ids[0]);
     propertyEditor.sync(object);
     if(fileFor(renderedScene,object.id))for(const name of ['width','height',...(object.type==='file'?[]:['rulerMode','rulerMaterial','rulerThickness','x','y','x2','y2','calloutMode','clipOffset','clipOffsetMode','clipOffsetPercent','clipAnchor','clipSize','clipAutoSize','clipStyle'])]){const control=form.elements.namedItem(name) as HTMLInputElement|null;if(control)control.disabled=true;}
+    const fitText=$<HTMLButtonElement>('#card-fit-text');
+    fitText.hidden=object.type!=='text';
+    fitText.disabled=object.type!=='text'||!!object.cutout||(form.elements.namedItem('height') as HTMLInputElement).disabled;
     clipMenuUpdates.forEach(update=>update());
     updateConnectorLineStyle();updateStrokeWidthMode();
     updateStartMarker(); updateEndMarker(); updateCallout(); updateTextFit();
@@ -922,6 +928,19 @@ const stickerControls=createStickerControls(form,()=>desk.selected().map(id=>des
 },notify,stickerContainer);
 $('#front').onclick = () => attempt(() => execute(desk.selected().map(id => ({ kind: 'reorder', id, index: desk.summary().count - 1 }))));
 $('#back').onclick = () => attempt(() => execute(desk.selected().slice().reverse().map(id => ({ kind: 'reorder', id, index: 0 }))));
+$('#card-fit-text').onclick = () => {
+  if(busy||gesture||editor.isActive()||desk.selected().length!==1)return;
+  const object=desk.get(desk.selected()[0]);
+  if(object.type!=='text'||object.cutout||fileFor(desk.snapshot(),object.id))return;
+  attempt(()=>{
+    const measured=measureDeskText(desk,[object.id],id=>drawnNodes.get(id)).measurements[0];
+    if(measured.status!=='measured')throw new Error(t(measured.status==='pending-fonts'?'messages:fontsLoading':'messages:cannotMeasure'));
+    const grid=desk.settingsSnapshot().grid,step=grid.enabled?snapInterval(grid):1;
+    const height=Math.max(step,Math.ceil(measured.requiredHeight!/step)*step);
+    if(height>100000)throw new Error(t('editing:invalidValue'));
+    if(height!==object.height)execute([{kind:'update',id:object.id,patch:{height}}]);
+  });
+};
 $('#text-measure').onclick = () => {
   try {
   const report = measureDeskText(desk, desk.selected(), id => drawnNodes.get(id));

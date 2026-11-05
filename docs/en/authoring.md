@@ -32,6 +32,8 @@ Menu → Desk appearance controls grid appearance, grid spacing and snap divisio
 
 Double-click a card or shape to edit its text in place, or use Properties.
 
+For cards, press **Fit frame to text** below the text input in Properties. It adjusts height to the Markdown content and padding while keeping width and font size. With Snap on, height rounds up to the snap interval. It is unavailable inside Clear Folders or while a cutout is applied.
+
 Follow the editor's instructions to commit. Ctrl+Enter (⌘+Enter on Mac) also commits; Escape cancels this edit. The editor's toggle chooses whether Enter commits or inserts a newline.
 
 Cards support safe Markdown: headings, emphasis, lists, quotes, code and HTTP(S) links. Tables, embedded images and raw HTML are not supported. Text inside shapes is plain text.
