@@ -81,3 +81,22 @@ test('sticker controls append repeated colors, wrap/reflow, configure mixed targ
   assert.deepEqual(errors,[]);
  }finally{await close();}
 });
+
+test('initial sticker choices are red circle and green star without changing existing stickers',{timeout:30000},async()=>{
+ const {page,call,close,errors}=await openTestDesk('sticker-initial-columns');
+ try{
+  await call('desk_execute',{operations:[{kind:'add',object:{id:'existing',type:'text',text:'Keep these stickers',stickers:{items:[{shape:'triangle',color:'#3b82f6'}],items2:[{shape:'heart',color:'#ec4899'}]}}}]});
+  const original=await call('desk_get',{id:'existing'});
+  await call('desk_select',{ids:['existing']});
+  assert.deepEqual(await call('desk_get',{id:'existing'}),original);
+  await page.locator('#sticker-menu').click();
+  assert.equal(await page.locator('#sticker-add svg').getAttribute('data-sticker-shape'),'circle');
+  assert.equal(await page.locator('#sticker-add-2 svg').getAttribute('data-sticker-shape'),'star');
+  await page.locator('#sticker-add').click();
+  await page.locator('#sticker-add-2').click();
+  const stickers=(await call('desk_get',{id:'existing'})).stickers;
+  assert.deepEqual(stickers.items,[...original.stickers.items,{shape:'circle',color:'#ef4444'}]);
+  assert.deepEqual(stickers.items2,[...original.stickers.items2,{shape:'star',color:'#22c55e'}]);
+  assert.deepEqual(errors,[]);
+ }finally{await close();}
+});

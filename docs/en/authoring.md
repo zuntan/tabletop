@@ -68,6 +68,8 @@ Try a layout before deciding every measurement.
 
 Stamps, stickers and reactions add marks without changing the main text. Decide what they mean: completion, classification, attention or something else. A stamp is a visual mark, not a built-in task-state transition.
 
+The initial sticker choices are a red circle for column 1 and a green star for column 2. Existing stickers are unchanged.
+
 Pins label places or sequences. Members of a series are numbered and share color, shape and other appearance settings. Double-click a pin to edit its own description. Some settings affect the whole series; descriptions and positions belong to individual pins. Pin frames and numbers retain screen size when zooming, so they can remain useful when zoomed out.
 
 See [Shapes and connections](diagram.md) for lines and navigation with pins and wayfinders.

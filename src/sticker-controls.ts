@@ -31,7 +31,7 @@ export function createStickerControls(form: HTMLElement, selected:()=>DeskObject
   window.addEventListener('resize',()=>{if(panel.matches(':popover-open'))position();});
   const rows=([1,2] as const).map(column=>{
     const suffix=column===1?'':'-2';
-    let ink='#ef4444',shape:StickerShape='circle';
+    let ink=column===1?'#ef4444':'#22c55e',shape:StickerShape=column===1?'circle':'star';
     const add=document.createElement('button');add.type='button';add.id='sticker-add'+suffix;add.className='sticker-preview-add';add.setAttribute('aria-label',t('badges:addColumn',{column}));
     const clear=document.createElement('button');clear.type='button';clear.id='sticker-clear'+suffix;uiText(clear,'badges:clear');clear.setAttribute('aria-label',t('badges:clearColumn',{column}));
     const actions=document.createElement('div');actions.className='sticker-actions';actions.setAttribute('role','group');actions.setAttribute('aria-label',t('badges:column',{column}));
