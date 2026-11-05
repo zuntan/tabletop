@@ -224,3 +224,35 @@ test('English editing controls and connection display preserve drafts and local 
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });
+
+test('creation uses the current language and QR fallback refreshes without changing stored content', { timeout: 40_000 }, async () => {
+ const {page,call,close,errors}=await openTestDesk('ui-language-creation',undefined,undefined,'en-US');
+ page.setDefaultTimeout(5000);
+ try {
+  assert.equal((await call('desk_settings')).series[0].name,'Numbers');
+  await page.locator('#doodle-create').click();
+  const doodle=(await call('desk_state')).objects.find((object:any)=>object.doodle);
+  assert.equal(doodle.text,'Doodle');
+  await page.locator('[data-add="mermaid"]').click();
+  const source=await page.getByRole('textbox',{name:'Mermaid source',exact:true}).inputValue();
+  assert.match(source,/A\[Start\]/);await page.keyboard.press('Control+Enter');
+  const input='あ'.repeat(1000);
+  await call('desk_execute',{operations:[{kind:'add',object:{id:'overflow',type:'qrcode',qrText:input,text:'元の題名',x:100,y:100}}]});
+  await page.locator('[data-id="overflow"][data-qr-status="too-long"]').waitFor();
+  assert.match((await call('desk_asset_read',{id:'overflow'})).svg,/>Too long<\/text>/);
+  const [popup]=await Promise.all([page.waitForEvent('popup'),page.locator('[data-open-media="overflow"]').click()]);
+  await popup.waitForFunction(()=>document.querySelector('img')?.complete&&document.querySelector('img')!.naturalWidth>0);
+  assert.equal(await popup.locator('html').getAttribute('lang'),'en');
+  assert.match(decodeURIComponent((await popup.locator('img').getAttribute('src'))!.split(',')[1]),/>Too long<\/text>/);
+  await popup.close();
+  const before=await call('desk_state');
+  await page.locator('#desk-menu').click();await page.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();await page.locator('#ui-language').selectOption('ja');
+  await page.waitForFunction(()=>document.documentElement.lang==='ja');
+  await page.waitForFunction(()=>decodeURIComponent(document.querySelector('[data-id="overflow"] .qr-image')!.getAttribute('href')??'').includes('長すぎます'));
+  assert.match((await call('desk_asset_read',{id:'overflow'})).svg,/>長すぎます<\/text>/);
+  assert.deepEqual(await call('desk_state'),before);
+  assert.equal((await call('desk_get',{id:'overflow'})).qrText,input);
+  assert.equal((await call('desk_settings')).series[0].name,'Numbers');
+  assert.deepEqual(errors,[]);
+ }finally{await close();}
+});

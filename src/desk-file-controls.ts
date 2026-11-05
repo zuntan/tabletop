@@ -52,7 +52,7 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
   async function saveNormal(as=false){
     if(!remote)throw new Error(t('files:needMcp'));
     const generation=desk.documentGeneration;
-    const path=as?await askFilePath(t('files:saveAsTitle'),(desk.filePath??desk.fileNameHint)||downloadDeskFilename(desk.settingsSnapshot().name)):desk.filePath??await askFilePath(t('files:saveLocation'),desk.fileNameHint||downloadDeskFilename(desk.settingsSnapshot().name));
+    const path=as?await askFilePath(t('files:saveAsTitle'),(desk.filePath??desk.fileNameHint)||downloadDeskFilename(desk.settingsSnapshot().name,t('creation:untitled'))):desk.filePath??await askFilePath(t('files:saveLocation'),desk.fileNameHint||downloadDeskFilename(desk.settingsSnapshot().name,t('creation:untitled')));
     if(!path)return null;
     if(desk.documentGeneration!==generation)throw new Error(t('files:switchedSaving'));
     const overwrite=!as&&!!desk.filePath;
@@ -117,7 +117,7 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
     saving=true;save.disabled=true;
     try {
       const revision = desk.revision;
-      const filename = downloadDeskFilename(desk.settingsSnapshot().name);
+      const filename = downloadDeskFilename(desk.settingsSnapshot().name,t('creation:untitled'));
       const bytes = await encodeDeskFile(desk);
       const url = URL.createObjectURL(new Blob([new Uint8Array(bytes).buffer], { type: 'application/zip' }));
       const link = document.createElement('a');

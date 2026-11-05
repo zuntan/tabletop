@@ -202,6 +202,7 @@ export class Desk {
   }
   private objects: Snapshot = [];
   private settings: Settings = initialSettings();
+  constructor(settings?: Settings) { if (settings) this.settings = settingsSchema.parse(settings); }
   private undoStack: Entry[] = [];
   private redoStack: Entry[] = [];
   private changes: Change[] = [];

@@ -1,0 +1,19 @@
+{
+  "digits": "数字",
+  "wayfinder": "道しるべ",
+  "qrcode": "QRコード",
+  "doodle": "落書き",
+  "untitled": "無題",
+  "mermaidSource": "flowchart LR\n  A[開始] --> B{判断}\n  B -->|はい| C[実行]\n  B -->|いいえ| D[終了]",
+  "qrEmpty": "文字を入力してください",
+  "qrTooLong": "長すぎます",
+  "qrFailed": "QRコードを生成できません",
+  "mermaidLoading": "Mermaidを描画中…",
+  "mermaidFailed": "図を描画できません。ダブルクリックでソースを修正",
+  "image": "画像",
+  "preparingImage": "画像を準備中…",
+  "imageFailed": "画像を表示できませんでした。",
+  "qrDisplayFailed": "QRコードを表示できませんでした",
+  "diagramDisplayFailed": "図を表示できませんでした：{{error}}",
+  "noImage": "画像がありません。"
+}

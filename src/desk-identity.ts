@@ -12,11 +12,11 @@ export function createDeskId() {
 }
 
 /** Only the suggested download filename is sanitized; the document name stays unchanged. */
-export function downloadDeskFilename(name: string) {
+export function downloadDeskFilename(name: string, untitled = '無題') {
   let stem = name.trim().replace(/[<>:"/\\|?*\u0000-\u001f\u007f]/gu, '_').replace(/[. ]+$/u, '');
   // Leave room for the extension and browser duplicate suffix on common filesystems.
   while (new TextEncoder().encode(stem).length > 200) stem = Array.from(stem).slice(0, -1).join('');
-  stem = stem.replace(/[. ]+$/u, '') || '無題';
+  stem = stem.replace(/[. ]+$/u, '') || untitled;
   if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/iu.test(stem)) stem = `_${stem}`;
   return `${stem}.tabletop`;
 }

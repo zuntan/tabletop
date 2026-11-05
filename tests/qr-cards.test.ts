@@ -43,3 +43,14 @@ test('QR cards participate in clips, rulers, files and cutout as media',()=>{
  }
  const d=new Desk();d.execute({operations:[{kind:'add',object:{id:'q',type:'qrcode',qrText:'hello',width:300,height:334}},{kind:'add',object:{id:'mask',type:'ellipse',x:10,y:50,width:100,height:100}},{kind:'cutout',id:'q',moldId:'mask'}]});assert.ok(d.get('q').cutout?.enabled);
 });
+
+test('QR fallback caches are isolated by language while ready codes encode the same original data', async () => {
+ const source='あ'.repeat(1000);
+ const en=await renderQrCode(source,'en'),ja=await renderQrCode(source,'ja');
+ assert.equal(en.status,'too-long');assert.equal(ja.status,'too-long');
+ assert.match(en.svg,/>Too long<\/text>/);assert.match(ja.svg,/>長すぎます<\/text>/);
+ assert.equal((await renderQrCode(source,'en')).svg,en.svg);
+ assert.match((await renderQrCode('','en')).svg,/>Enter text<\/text>/);
+ const original='  日本語\nhttps://example.com/?a=1&b=2';
+ assert.equal((await renderQrCode(original,'en')).svg,(await renderQrCode(original,'ja')).svg);
+});

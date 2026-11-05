@@ -1,8 +1,10 @@
+import { uiText } from './i18n/dom';
+import { resources } from './i18n/resources';
 import type { DeskObject } from './model';
 import { element } from './diagram-drawing';
 import { IMAGE_TITLE_HEIGHT } from './image-geometry';
 
-export const defaultMermaidSource = 'flowchart LR\n  A[開始] --> B{判断}\n  B -->|はい| C[実行]\n  B -->|いいえ| D[終了]';
+export const defaultMermaidSource = resources.ja.creation.mermaidSource;
 type Rendered = { src: string; svg: string };
 const cache = new Map<string, Promise<Rendered>>();
 let sequence = 0;
@@ -21,7 +23,7 @@ export function renderMermaid(source: string): Promise<Rendered> {
   const known = cache.get(source);
   if (known) { cache.delete(source); cache.set(source, known); return known; }
   const task = (async () => {
-    if (!source.trim()) throw new Error('Mermaidソースを入力してください');
+    if (!source.trim()) throw new Error('Enter Mermaid source.');
     // This first version is self-contained: external pictures are not part of the document.
     if (/\bimg\s*:|!\[[^\]]*\]\s*\(/i.test(source)) throw new Error('外部画像を使うMermaid図は未対応です');
     const mermaid = await loadLibrary();
@@ -48,12 +50,12 @@ export function drawMermaidCard(group: SVGGElement, object: DeskObject) {
     'pointer-events': 'none' });
   const message = element('text', { x: 12, y: IMAGE_TITLE_HEIGHT + 24, fill: '#64748b', 'font-size': 14,
     'pointer-events': 'none', class: 'mermaid-status' });
-  message.textContent = 'Mermaidを描画中…'; group.dataset.mermaidStatus = 'loading'; group.append(image, message);
+  uiText(message,'creation:mermaidLoading'); group.dataset.mermaidStatus = 'loading'; group.append(image, message);
   void renderMermaid(object.mermaidSource ?? '').then(result => {
     image.setAttribute('href', result.src); message.remove(); group.dataset.mermaidStatus = 'ready';
   }).catch(error => {
     group.dataset.mermaidStatus = 'error';
-    message.setAttribute('fill', '#b91c1c'); message.textContent = '図を描画できません。ダブルクリックでソースを修正';
+    message.setAttribute('fill', '#b91c1c'); uiText(message,'creation:mermaidFailed');
     const title = element('title'); title.textContent = error instanceof Error ? error.message : String(error); group.append(title);
   });
 }

@@ -1,4 +1,4 @@
-import { languageChangeEvent, t } from './i18n';
+import { languageChangeEvent, t, getUiLanguage } from './i18n';
 import { translateUi, uiAttribute, uiText, type UiKey } from './i18n/dom';
 import {initialFocusTarget} from './initial-focus';
 import {KeyboardGeometryEdit} from './keyboard-geometry';
@@ -65,7 +65,7 @@ import { Desk, dispatch, objectSchema, type DeskObject, type Operation } from '.
 import { anchorPoint, bounds, endpoints, isConnector, isShape } from './geometry';
 import { createColorControls } from './color-controls';
 import { buildJunctionRounding } from './junction-rounding';
-import { drawMermaidCard, defaultMermaidSource, renderMermaid } from './mermaid-card';
+import { drawMermaidCard, renderMermaid } from './mermaid-card';
 import { drawConnector, drawShapeText, drawEndpointHandles, drawSnapTargets, updateScenePreview } from './diagram-drawing';
 import { gestureOperations, gesturePreview, endpointSnap, endpointDragPoint, type Gesture } from './diagram-gestures';
 import { createPropertyEditor } from './property-editor';
@@ -76,7 +76,7 @@ import './diagram.css';
 import './authoring.css';
 import { createInlineEditor } from './inline-editor';
 import { createAuthoring } from './authoring';
-import { type Series } from './settings';
+import { initialSettings, type Series } from './settings';
 import { createFormatControls } from './format-controls';
 import { groupToolbar, iconButton } from './toolbar';
 import { drawLabelDescription, labelVisualBounds } from './label-description';
@@ -125,7 +125,9 @@ import { lockOperations, lockSelectionState } from './object-lock';
 import { createLockControls } from './lock-controls';
 import { drawLockedSelection } from './lock-drawing';
 
-const desk = new Desk();
+const creationSettings = initialSettings();
+creationSettings.series[0].name = t('creation:digits');
+const desk = new Desk(creationSettings);
 const doodleEditor=createDoodleEditor((id,patch)=>{execute([{kind:'update',id,patch}]);render();},notify);
 const partClipboard = new PartClipboard();
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -435,7 +437,7 @@ editActions.prepend($('#clipboard'));editActions.setAttribute('aria-label','貼�
 $('#authoring-tools').append(formatGroup,editActions,deskOptions);
 const wayfinderCreate=document.createElement('button');wayfinderCreate.id='wayfinder-create';wayfinderCreate.type='button';iconButton(wayfinderCreate,'','道しるべ');
 $('#pin-series-menu').after(wayfinderCreate);
-wayfinderCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>newObject('wayfinder',{fill:'#dcfce7',fillOpacity:1,stroke:'#166534',text:'道しるべ'}));};
+wayfinderCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>newObject('wayfinder',{fill:'#dcfce7',fillOpacity:1,stroke:'#166534',text:t('creation:wayfinder')}));};
 const clipCreate=document.createElement('button');clipCreate.id='clip-create';iconButton(clipCreate, '', 'クリップ');clipCreate.title='選択を束ねる（Ctrl/⌘＋G）。未選択ならクリップを置く';
 clipCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{
   const operations=bundleOperations(desk.snapshot(),desk.selected());
@@ -871,8 +873,8 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
     ...(isShapeType(type) ? { textFit: 'shrink' } : {}),
     ...formatControls.appearance(type, desk.settingsSnapshot().defaults),
     ...initialPartSize(type),
-    ...(type === 'qrcode'?{text:'QRコード',qrText:defaultQrText}:{}),
-    ...(type === 'mermaid' ? { text: 'Mermaid', mermaidSource: defaultMermaidSource } : {}),
+    ...(type === 'qrcode'?{text:t('creation:qrcode'),qrText:defaultQrText}:{}),
+    ...(type === 'mermaid' ? { text: 'Mermaid', mermaidSource: t('creation:mermaidSource') } : {}),
     ...(['line', 'arrow'].includes(type) ? {...initialLinePoints(center),...selectedConnection(desk.selected().map(id => desk.get(id)),desk.snapshot(),initialLineDelta)} : {}),
     ...extra });
   Object.assign(object,newPartGridSize(object,desk.settingsSnapshot().grid));
@@ -881,7 +883,7 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
   execute([{ kind: 'add', object }], 'desk'); desk.select([object.id]);
 }
 const doodleButton=document.createElement('button');doodleButton.id='doodle-create';iconButton(doodleButton,'✎','落書き');$('#image').after(doodleButton);
-doodleButton.onclick=()=>{if(busy||gesture||editor.isActive()||doodleEditor.isActive())return;attempt(()=>{const doodle=emptyDoodle();newObject('svg',{doodle,src:doodleSource(doodle,480,320),text:'落書き',width:480,height:354});});};
+doodleButton.onclick=()=>{if(busy||gesture||editor.isActive()||doodleEditor.isActive())return;attempt(()=>{const doodle=emptyDoodle();newObject('svg',{doodle,src:doodleSource(doodle,480,320),text:t('creation:doodle'),width:480,height:354});});};
 app.querySelectorAll<HTMLButtonElement>('[data-add]').forEach(button => button.onclick = () => {
   const kind = button.dataset.add!;
   const type = (kind === 'arrow' ? 'line' : kind) as DeskObject['type'];
@@ -1388,7 +1390,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
       let animatedMove = false;
       if (message.request.method === 'load_document') {cancelWayfinding('changed');cameraAnimator.cancel('Desk contents replaced');}
       const beforeRevision=desk.revision;
-      let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid, scale => rasterPointedCard(desk, id => drawnNodes.get(id), scale),renderQrCode,{
+      let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid, scale => rasterPointedCard(desk, id => drawnNodes.get(id), scale),text=>renderQrCode(text,getUiLanguage()),{
         pdf:async()=>{
           const r=await deskPdf(desk,canvas,id=>pinDescriptionVisible(desk.get(id)));
           if(r.bytes.length>MAX_PDF_EXPORT_BYTES)throw new Error('PDF exceeds 250MB');

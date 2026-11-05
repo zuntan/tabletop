@@ -1,0 +1,19 @@
+{
+  "digits": "Numbers",
+  "wayfinder": "Wayfinder",
+  "qrcode": "QR code",
+  "doodle": "Doodle",
+  "untitled": "Untitled",
+  "mermaidSource": "flowchart LR\n  A[Start] --> B{Decision}\n  B -->|Yes| C[Action]\n  B -->|No| D[End]",
+  "qrEmpty": "Enter text",
+  "qrTooLong": "Too long",
+  "qrFailed": "Could not generate the QR code",
+  "mermaidLoading": "Rendering Mermaid…",
+  "mermaidFailed": "Could not render the diagram. Double-click to edit the source.",
+  "image": "Image",
+  "preparingImage": "Preparing image…",
+  "imageFailed": "Could not display the image.",
+  "qrDisplayFailed": "Could not display the QR code",
+  "diagramDisplayFailed": "Could not display the diagram: {{error}}",
+  "noImage": "No image available."
+}
