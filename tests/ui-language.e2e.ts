@@ -256,3 +256,30 @@ test('creation uses the current language and QR fallback refreshes without chang
   assert.deepEqual(errors,[]);
  }finally{await close();}
 });
+
+test('camera, deletion and pin navigation labels switch without editing the selected objects', {timeout:35_000}, async()=>{
+ const {page,call,close,errors}=await openTestDesk('ui-language-actions',undefined,undefined,'en-US');page.setDefaultTimeout(5000);
+ try{
+  await call('desk_execute',{operations:[{kind:'add',object:{id:'note',type:'text',text:'Keep me',x:100,y:100}},{kind:'label_add',id:'p1',seriesId:'series-1',x:100,y:400},{kind:'label_add',id:'p2',seriesId:'series-1',x:600,y:400}]});
+  await call('desk_select',{ids:['note']});
+  const before=await call('desk_state');
+  await page.locator('#camera-capture').click();
+  await page.getByRole('dialog',{name:'Camera capture area',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Cancel',exact:true}).click();
+  await page.locator('#delete-style').click();
+  await page.getByRole('menuitemradio',{name:'Delete with Eraser',exact:true}).waitFor();
+  await page.locator('#delete-style').click();
+  await page.locator('#line-input-open').click();
+  await page.getByRole('menuitem',{name:'Connected lines',exact:true}).waitFor();
+  await page.locator('#line-input-open').click();
+  assert.deepEqual(await call('desk_state'),before);
+  await call('desk_select',{ids:['p1']});
+  await page.getByRole('button',{name:'Go to next pin',exact:true}).waitFor();
+  const pins=await call('desk_state');
+  await page.locator('#desk-menu').click();await page.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();await page.locator('#ui-language').selectOption('ja');
+  await page.waitForFunction(()=>document.documentElement.lang==='ja');
+  assert.equal(await page.locator('#pin-navigation [data-direction="next"]').getAttribute('aria-label'),'次のピンへ移動');
+  assert.equal(await page.locator('#delete-eraser').textContent(),'まるっと消しゴムで削除');
+  assert.deepEqual(await call('desk_state'),pins);assert.deepEqual(errors,[]);
+ }finally{await close();}
+});

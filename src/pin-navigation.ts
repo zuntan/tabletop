@@ -1,3 +1,4 @@
+import { uiAttribute } from './i18n/dom';
 import type {DeskObject} from './model';
 import type {Series} from './settings';
 import {pinThreadMembers} from './pin-series';
@@ -12,12 +13,11 @@ export function pinNeighbours(scene:DeskObject[],series:Series,pinId:string){
 
 /** Screen-sized controls belong to the selection UI, never the desk document. */
 export function createPinNavigation(canvas:SVGSVGElement,start:(id:string,direction:'previous'|'next')=>void){
-  const panel=document.createElement('div');panel.id='pin-navigation';panel.hidden=true;panel.setAttribute('role','group');panel.setAttribute('aria-label','ピンの糸をたどる');
+  const panel=document.createElement('div');panel.id='pin-navigation';panel.hidden=true;panel.setAttribute('role','group');uiAttribute(panel,'aria-label','actions:pinNavigate');
   let selectedId='';
   const buttons=(['previous','next'] as const).map(direction=>{
     const button=document.createElement('button');button.type='button';button.textContent=direction==='previous'?'◀':'▶';
-    button.dataset.direction=direction;button.setAttribute('aria-label',direction==='previous'?'前のピンへ移動':'次のピンへ移動');
-    button.title=button.getAttribute('aria-label')!;button.onclick=()=>start(selectedId,direction);panel.append(button);return button;
+    button.dataset.direction=direction;for(const attr of ['aria-label','title'] as const)uiAttribute(button,attr,direction==='previous'?'actions:previousPin':'actions:nextPin');button.onclick=()=>start(selectedId,direction);panel.append(button);return button;
   });
   panel.addEventListener('pointerdown',event=>event.stopPropagation());panel.addEventListener('click',event=>event.stopPropagation());
   document.body.append(panel);

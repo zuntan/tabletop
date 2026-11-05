@@ -20,7 +20,7 @@ test('BH button commits one deletion, queues afterimages, and Undo rescues all; 
   await call('desk_select',{ids:['a']});await page.locator('#delete-style').click();await page.locator('#delete-suction').click();
   await page.locator('#bh-delete-overlay').waitFor();await page.waitForFunction(()=>!document.querySelector('#bh-delete-overlay'));
   assert.equal((await call('desk_summary')).count,2);
-  await call('desk_undo');await call('desk_select',{ids:['a']});await page.locator('#canvas').click({position:{x:20,y:20}});
+  await call('desk_undo');await call('desk_select',{ids:['a']});await page.locator('#canvas').click({position:{x:300,y:30}});
   await call('desk_select',{ids:['a']});await page.keyboard.press('Delete');assert.equal((await call('desk_summary')).count,2);
   assert.equal(await page.locator('#bh-delete-overlay').count(),0);
   assert.deepEqual(errors,[]);

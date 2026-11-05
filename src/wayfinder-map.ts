@@ -1,3 +1,5 @@
+import { t } from './i18n';
+import { uiText, uiAttribute } from './i18n/dom';
 import type {DeskObject} from './model';
 import {endpoints} from './geometry';
 import {drawConnector,element} from './diagram-drawing';
@@ -21,12 +23,12 @@ export function clippedMapLine(x:number,y:number,x2:number,y2:number){
 }
 
 export function createWayfinderMap(canvas:SVGSVGElement){
-  const panel=document.createElement('div');panel.id='wayfinder-map';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-label','分岐の進路選択');
-  const title=document.createElement('strong');title.textContent='分岐：進路を選んでください';
+  const panel=document.createElement('div');panel.id='wayfinder-map';panel.hidden=true;panel.setAttribute('role','dialog');uiAttribute(panel,'aria-label','actions:branchDialog');
+  const title=document.createElement('strong');uiText(title,'actions:branchTitle');
   const map=document.createElement('div');map.className='wayfinder-map-scene';
   const footer=document.createElement('div');footer.className='wayfinder-map-footer';
-  const note=document.createElement('small');note.textContent='矢印は関係の向きです';
-  const stop=document.createElement('button');stop.type='button';stop.textContent='停止';stop.id='wayfinder-map-stop';
+  const note=document.createElement('small');uiText(note,'actions:branchHint');
+  const stop=document.createElement('button');stop.type='button';uiText(stop,'actions:stop');stop.id='wayfinder-map-stop';
   footer.append(note,stop);panel.append(title,map,footer);document.body.append(panel);
   let pending:{resolve:(value:RouteChoice)=>void;reject:(reason:Error)=>void;timer:ReturnType<typeof setInterval>}|undefined;
   const close=()=>{if(pending)clearInterval(pending.timer);pending=undefined;panel.hidden=true;canvas.focus({preventScroll:true});};
@@ -67,7 +69,7 @@ export function createWayfinderMap(canvas:SVGSVGElement){
         const line=scene.find(o=>o.id===choice.lineId)!;const e=endpoints(line),p=e[choice.from],q=e[choice.from==='start'?'end':'start'];
         const dx=q.x-p.x,dy=q.y-p.y,length=Math.hypot(dx,dy)||1,angle=Math.atan2(dy,dx);
         const button=document.createElement('button');button.type='button';button.className='wayfinder-map-choice';button.dataset.lineId=choice.lineId;button.dataset.from=choice.from;
-        button.setAttribute('aria-label',`進路 ${index+1}：${line.text||line.id}`);button.title=line.text||line.id;
+        button.setAttribute('aria-label',t('actions:routeChoice',{number:index+1,name:line.text||line.id}));button.title=line.text||line.id;
         button.style.left=`${(width/2+dx/length*80)/width*100}%`;button.style.top=`${(height/2+dy/length*80)/height*100}%`;
         const arrow=document.createElement('span');arrow.textContent='▶';arrow.style.transform=`rotate(${angle}rad)`;button.append(arrow);
         button.onclick=()=>{if(!pending)return;const resolve=pending.resolve;close();resolve(choice);};map.append(button);

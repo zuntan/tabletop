@@ -1,3 +1,4 @@
+import { uiAttribute } from './i18n/dom';
 import info from './assets/toast/info.svg?raw';
 import success from './assets/toast/success.svg?raw';
 import warning from './assets/toast/warning.svg?raw';
@@ -9,7 +10,7 @@ export function createDeskToast(){
  const panel=document.createElement('div');panel.id='desk-toast';panel.popover='manual';
  const icon=document.createElement('span');icon.className='desk-toast-icon';icon.setAttribute('aria-hidden','true');
  const text=document.createElement('div');text.className='desk-toast-text';text.setAttribute('role','status');text.setAttribute('aria-live','polite');
- const close=document.createElement('button');close.type='button';close.textContent='×';close.setAttribute('aria-label','AIメッセージを閉じる');
+ const close=document.createElement('button');close.type='button';close.textContent='×';uiAttribute(close,'aria-label','actions:closeToast');
  panel.append(icon,text,close);document.body.append(panel);
  let timer:ReturnType<typeof setTimeout>|undefined;
  const hide=()=>{clearTimeout(timer);if(panel.matches(':popover-open'))panel.hidePopover();};close.onclick=hide;

@@ -1,3 +1,5 @@
+import { uiText, uiAttribute } from './i18n/dom';
+import { t } from './i18n';
 import {checkAssetBytes} from './data-limits';
 import type {Desk} from './model';
 import {bounds} from './geometry';
@@ -8,14 +10,14 @@ type Camera={x:number;y:number;zoom:number};
 const ns='http://www.w3.org/2000/svg';
 /** A transient crop editor. No scene objects, history entries or saved preferences. */
 export function createCaptureCamera(desk:Desk,canvas:SVGSVGElement,camera:Camera,changed:()=>void,descriptions:(id:string)=>boolean,report:(s:string,error?:boolean)=>void){
- const modal=document.createElement('div');modal.id='capture-camera';modal.hidden=true;modal.tabIndex=-1;modal.setAttribute('role','dialog');modal.setAttribute('aria-label','カメラの撮影範囲');modal.setAttribute('aria-modal','true');
- const surface=document.createElementNS(ns,'svg');surface.id='capture-surface';surface.setAttribute('aria-label','ドラッグで撮影範囲を指定');
+ const modal=document.createElement('div');modal.id='capture-camera';modal.hidden=true;modal.tabIndex=-1;modal.setAttribute('role','dialog');uiAttribute(modal,'aria-label','actions:cameraRegion');modal.setAttribute('aria-modal','true');
+ const surface=document.createElementNS(ns,'svg');surface.id='capture-surface';uiAttribute(surface,'aria-label','actions:cameraDrag');
  const frame=document.createElementNS(ns,'rect');frame.id='capture-frame';surface.append(frame);
  const handles=['nw','ne','sw','se'].map(corner=>{const h=document.createElementNS(ns,'rect');h.dataset.corner=corner;h.setAttribute('width','12');h.setAttribute('height','12');surface.append(h);return h;});
  const actions=document.createElement('div');actions.id='capture-actions';
- const hint=document.createElement('span');hint.textContent='範囲を移動・四隅で調整';
- const copy=document.createElement('button');copy.id='capture-copy';copy.textContent='コピー';
- const cancel=document.createElement('button');cancel.textContent='キャンセル';cancel.id='capture-cancel';actions.append(hint,copy,cancel);modal.append(surface,actions);document.body.append(modal);
+ const hint=document.createElement('span');uiText(hint,'actions:cameraHint');
+ const copy=document.createElement('button');copy.id='capture-copy';uiText(copy,'actions:copy');
+ const cancel=document.createElement('button');uiText(cancel,'actions:cancel');cancel.id='capture-cancel';actions.append(hint,copy,cancel);modal.append(surface,actions);document.body.append(modal);
  let rect:Rect|undefined,last:Rect|undefined,generation=desk.documentGeneration,working=false,previous:HTMLElement|null=null;
  let drag:undefined|{id:number;mode:string;start:{x:number;y:number};rect?:Rect};
  const active=()=>!modal.hidden;
@@ -33,15 +35,15 @@ export function createCaptureCamera(desk:Desk,canvas:SVGSVGElement,camera:Camera
  cancel.onclick=close;
  async function capture(){
   if(!rect||working)return;
-  if(!navigator.clipboard?.write||typeof ClipboardItem==='undefined'){report('このブラウザでは画像のクリップボード転送を利用できません',true);return;}
+  if(!navigator.clipboard?.write||typeof ClipboardItem==='undefined'){report(t('actions:clipboardUnavailable'),true);return;}
   working=true;draw();cancel.disabled=true;const crop={...rect};
   try{
    let webCount=0;
-   const png=deskSceneRaster(desk,canvas,descriptions,crop).then(async result=>{webCount=result.webCount;return new Promise<Blob>((resolve,reject)=>result.bitmap.toBlob(blob=>{try{if(!blob)throw Error('PNGを作成できません');checkAssetBytes(blob.size);resolve(blob);}catch(error){reject(error);}},'image/png'));});
+   const png=deskSceneRaster(desk,canvas,descriptions,crop).then(async result=>{webCount=result.webCount;return new Promise<Blob>((resolve,reject)=>result.bitmap.toBlob(blob=>{try{if(!blob)throw Error(t('actions:pngFailed'));checkAssetBytes(blob.size);resolve(blob);}catch(error){reject(error);}},'image/png'));});
    // Start the clipboard operation in the click/key activation, before asynchronous rendering.
    await navigator.clipboard.write([new ClipboardItem({'image/png':png})]);
-   last=crop;working=false;close();report(`撮影した画像をコピーしました${webCount?'（Web資料の本文は代替表示）':''}`);
-  }catch(error){report(`画像コピーに失敗しました：${error instanceof Error?error.message:String(error)}`,true);}
+   last=crop;working=false;close();report(t('actions:captured',{warning:webCount?t('actions:webPlaceholder'):''}));
+  }catch(error){report(t('actions:captureFailed',{error:error instanceof Error?error.message:String(error)}),true);}
   finally{working=false;cancel.disabled=false;draw();}
  }
  copy.onclick=()=>void capture();

@@ -1,3 +1,5 @@
+import { uiText, uiAttribute } from './i18n/dom';
+import { t, languageChangeEvent } from './i18n';
 import {publicAsset} from './runtime-mode';
 import type { Desk } from './model';
 import { rasterRenderedPart } from './part-raster';
@@ -8,7 +10,7 @@ import './bh-delete.css';
 type View = { x: number; y: number; zoom: number };
 export type DeleteMode = BhMode | StationeryMode;
 export const DELETE_MODES = ['fall','suction','eraser','particles'] as const;
-const modeNames:Record<DeleteMode,string>={fall:'落下',suction:'吸引',eraser:'まるっと消しゴム',particles:'三角パーティクル'};
+const modeKeys={fall:'actions:fall',suction:'actions:suction',eraser:'actions:eraser',particles:'actions:particles'} as const;
 /** Presentation is disposable. The actual deletion is one ordinary, already committed batch. */
 export class BhDeletion {
   private epoch=0;
@@ -32,7 +34,7 @@ export class BhDeletion {
       let eraser:HTMLImageElement|undefined;
       if(mode==='eraser'){
         eraser=new Image();eraser.src=publicAsset('props/eraser.svg');await eraser.decode();
-        if(!valid())throw new Error('机が変更されたため、アニメ削除を中止しました');
+        if(!valid())throw new Error(t('actions:deleteChanged'));
       }
       const scene=desk.snapshot(), selected=new Set(ids);
       // A member deletion also removes its clip; surviving papers are not deleted.
@@ -44,13 +46,13 @@ export class BhDeletion {
         const bbox=source.getBBox();
         const scale=Math.min(2,Math.max(.05,camera.zoom),2040/Math.max(1,bbox.width,bbox.height),Math.sqrt(budget/Math.max(1,bbox.width*bbox.height)));
         const raster=await rasterRenderedPart(object,source,scale);
-        if(!valid())throw new Error('机が変更されたため、アニメ削除を中止しました');
+        if(!valid())throw new Error(t('actions:deleteChanged'));
         const image=new Image();image.src=raster.dataUrl;await image.decode();
-        if(!valid())throw new Error('机が変更されたため、アニメ削除を中止しました');
+        if(!valid())throw new Error(t('actions:deleteChanged'));
         frames.push({image,box:{x:camera.x+raster.bounds.x*camera.zoom,y:camera.y+raster.bounds.y*camera.zoom,
           width:raster.bounds.width*camera.zoom,height:raster.bounds.height*camera.zoom}});
       }
-      if(!valid())throw new Error('机が変更されたため、アニメ削除を中止しました');
+      if(!valid())throw new Error(t('actions:deleteChanged'));
       commit();const deletedRevision=desk.revision;render();this.preparing=false;
       if(!frames.length||reduced())return;
       const overlay=document.createElement('canvas');overlay.id='bh-delete-overlay';overlay.dataset.mode=mode;overlay.setAttribute('aria-hidden','true');
@@ -87,12 +89,12 @@ export class BhDeletion {
 export function bhDeleteControls(button: HTMLButtonElement, run:(mode:DeleteMode)=>void) {
   let mode:DeleteMode='fall';
   const wrapper=document.createElement('span');wrapper.className='bh-delete-controls';button.replaceWith(wrapper);wrapper.append(button);
-  const choose=document.createElement('button');choose.id='delete-style';choose.type='button';choose.textContent='▾';choose.title='アニメ削除の種類';choose.setAttribute('aria-label',choose.title);choose.setAttribute('aria-haspopup','menu');
+  const choose=document.createElement('button');choose.id='delete-style';choose.type='button';choose.textContent='▾';uiAttribute(choose,'title','actions:deleteStyle');uiAttribute(choose,'aria-label','actions:deleteStyle');choose.setAttribute('aria-haspopup','menu');
   const menu=document.createElement('div');menu.id='delete-style-menu';menu.popover='auto';menu.setAttribute('role','menu');
-  const sync=()=>{button.textContent='削除';button.title=`アニメ削除：${modeNames[mode]}（Deleteキーは即削除）`;};
+  const sync=()=>{uiText(button,'actions:delete');button.title=t('actions:deleteTitle',{name:t(modeKeys[mode])});};
   for(const value of DELETE_MODES){
     const item=document.createElement('button');item.id=`delete-${value}`;item.type='button';item.setAttribute('role','menuitemradio');
-    item.textContent=`${modeNames[value]}で削除`;item.onclick=()=>{mode=value;sync();menu.hidePopover();run(mode);};menu.append(item);
+    const translate=()=>{item.textContent=t('actions:deleteWith',{name:t(modeKeys[value])});};translate();document.addEventListener(languageChangeEvent,translate);item.onclick=()=>{mode=value;sync();menu.hidePopover();run(mode);};menu.append(item);
   }
   choose.onclick=()=>{
     if(menu.matches(':popover-open')){menu.hidePopover();return;}
@@ -100,6 +102,6 @@ export function bhDeleteControls(button: HTMLButtonElement, run:(mode:DeleteMode
     for(const item of menu.querySelectorAll('button'))item.setAttribute('aria-checked',String(item.id===`delete-${mode}`));menu.showPopover();
     const height=menu.getBoundingClientRect().height;menu.style.top=`${Math.max(8,rect.top-height-4)}px`;
   };
-  button.onclick=()=>run(mode);wrapper.append(choose);document.body.append(menu);sync();
+  button.onclick=()=>run(mode);wrapper.append(choose);document.body.append(menu);sync();document.addEventListener(languageChangeEvent,sync);
   return {refresh:()=>{choose.disabled=button.disabled;}};
 }

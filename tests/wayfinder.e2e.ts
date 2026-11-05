@@ -94,7 +94,7 @@ test('branch map resumes raw line travel, preserves arrows and consumes outside 
   await call('desk_wayfinder_start',{lineId:'road',from:'start'});
   await page.waitForSelector('#wayfinder-map:not([hidden])');
   const selectedBefore=await call('desk_selection');
-  await page.locator('#canvas').click({position:{x:20,y:20}});
+  await page.locator('#canvas').click({position:{x:300,y:30}});
   assert.deepEqual((await call('desk_selection')).ids,selectedBefore.ids);
   await page.waitForSelector('#wayfinder-map[hidden]',{state:'attached'});
   assert.equal((await call('desk_camera_get')).navigation.reason,'human');

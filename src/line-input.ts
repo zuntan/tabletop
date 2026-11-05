@@ -1,3 +1,5 @@
+import { uiText, uiAttribute } from './i18n/dom';
+import { t } from './i18n';
 import type {Desk,DeskObject} from './model';
 import {createIcon} from './icons';
 import {endpoints,type Point} from './geometry';
@@ -8,15 +10,15 @@ type Mode='continuous'|'free';
 export function createLineInput(canvas:SVGSVGElement,viewport:SVGGElement,button:HTMLButtonElement,desk:Desk,
  world:(event:PointerEvent)=>Point,zoom:()=>number,appearance:()=>Partial<DeskObject>,refresh:()=>void,canStart:()=>boolean,report:(text:string,error?:boolean)=>void,snapScene:()=>DeskObject[]=()=>desk.snapshot()){
  const wrap=document.createElement('span');wrap.className='line-input-tools';button.before(wrap);wrap.append(button);
- const trigger=document.createElement('button');trigger.type='button';trigger.id='line-input-open';trigger.textContent='▾';trigger.title='線の入力方法';trigger.setAttribute('aria-label',trigger.title);trigger.setAttribute('aria-haspopup','menu');trigger.setAttribute('aria-expanded','false');wrap.append(trigger);
- const menu=document.createElement('div');menu.id='line-input-menu';menu.popover='auto';menu.setAttribute('role','menu');menu.setAttribute('aria-label','線の入力方法');document.body.append(menu);trigger.popoverTargetElement=menu;
+ const trigger=document.createElement('button');trigger.type='button';trigger.id='line-input-open';trigger.textContent='▾';uiAttribute(trigger,'title','actions:lineInput');uiAttribute(trigger,'aria-label','actions:lineInput');trigger.setAttribute('aria-haspopup','menu');trigger.setAttribute('aria-expanded','false');wrap.append(trigger);
+ const menu=document.createElement('div');menu.id='line-input-menu';menu.popover='auto';menu.setAttribute('role','menu');uiAttribute(menu,'aria-label','actions:lineInput');document.body.append(menu);trigger.popoverTargetElement=menu;
  const layer=svg('g',{'pointer-events':'none','aria-hidden':'true','data-line-input-preview':''});viewport.append(layer);
  let mode:Mode|null=null,tail:LinePoint|undefined,origin:LinePoint|undefined,created:string[]=[],revision=0,generation='',pointer:number|undefined,stroke:Point[]=[],strokeZoom=1,space=false;
  const existing=()=>created.filter(id=>desk.snapshot().some(o=>o.id===id));
- function finish(message=true){const ids=existing();mode=null;tail=origin=undefined;stroke=[];const captured=pointer;pointer=undefined;if(captured!==undefined&&canvas.hasPointerCapture(captured))canvas.releasePointerCapture(captured);layer.replaceChildren();delete canvas.dataset.lineInput;trigger.removeAttribute('data-active');document.querySelector('#selection-mode')?.setAttribute('aria-pressed','true');if(ids.length)desk.select(ids);created=[];refresh();if(message)report(ids.length?`${ids.length}本の線を作成しました`:'線の入力を終了しました');}
- const valid=()=>{if(desk.documentGeneration===generation&&desk.revision===revision)return true;finish(false);report('机が変更されたため線の入力を終了しました',true);return false;};
- function start(value:Mode){if(!canStart())return;finish(false);mode=value;revision=desk.revision;generation=desk.documentGeneration;canvas.dataset.lineInput=value;trigger.dataset.active='true';document.querySelector('#selection-mode')?.setAttribute('aria-pressed','false');canvas.focus({preventScroll:true});report(value==='continuous'?'連続線：始点をクリック。Enter／Escで終了、Altで吸着解除':'フリー連続線：ドラッグして描き、離すと清書します');}
- for(const [value,label]of [['continuous','連続線'],['free','フリー連続線']] as const){const item=document.createElement('button');item.type='button';item.append(createIcon(value==='continuous'?'stroke-dynamic':'pencil'),document.createTextNode(label));item.setAttribute('role','menuitem');item.onclick=()=>{menu.hidePopover();start(value);};menu.append(item);}
+ function finish(message=true){const ids=existing();mode=null;tail=origin=undefined;stroke=[];const captured=pointer;pointer=undefined;if(captured!==undefined&&canvas.hasPointerCapture(captured))canvas.releasePointerCapture(captured);layer.replaceChildren();delete canvas.dataset.lineInput;trigger.removeAttribute('data-active');document.querySelector('#selection-mode')?.setAttribute('aria-pressed','true');if(ids.length)desk.select(ids);created=[];refresh();if(message)report(ids.length?t('actions:linesCreated',{count:ids.length}):t('actions:linesFinished'));}
+ const valid=()=>{if(desk.documentGeneration===generation&&desk.revision===revision)return true;finish(false);report(t('actions:linesChanged'),true);return false;};
+ function start(value:Mode){if(!canStart())return;finish(false);mode=value;revision=desk.revision;generation=desk.documentGeneration;canvas.dataset.lineInput=value;trigger.dataset.active='true';document.querySelector('#selection-mode')?.setAttribute('aria-pressed','false');canvas.focus({preventScroll:true});report(value==='continuous'?t('actions:continuousHint'):t('actions:freeHint'));}
+ for(const [value,label]of [['continuous','actions:continuous'],['free','actions:free']] as const){const item=document.createElement('button');item.type='button';item.append(createIcon(value==='continuous'?'stroke-dynamic':'pencil'),uiText(document.createElement('span'),label));item.setAttribute('role','menuitem');item.onclick=()=>{menu.hidePopover();start(value);};menu.append(item);}
  menu.addEventListener('toggle',()=>{const open=menu.matches(':popover-open');trigger.setAttribute('aria-expanded',String(open));if(open){const rect=trigger.getBoundingClientRect();menu.style.left=`${Math.max(8,Math.min(button.getBoundingClientRect().left,innerWidth-menu.offsetWidth-8))}px`;menu.style.top=`${rect.bottom+6}px`;}});
  menu.addEventListener('keydown',event=>{event.stopPropagation();if(event.key==='Escape'){menu.hidePopover();trigger.focus();}if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();const items=[...menu.querySelectorAll('button')],index=items.indexOf(document.activeElement as HTMLButtonElement);items[(index+(event.key==='ArrowDown'?1:-1)+items.length)%items.length].focus();}});
  trigger.addEventListener('keydown',event=>{if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();menu.showPopover();menu.querySelector('button')?.focus();}});
@@ -31,7 +33,7 @@ export function createLineInput(canvas:SVGSVGElement,viewport:SVGGElement,button
   try{
    if(mode==='continuous'){
     let end=point(event);
-    if(!tail){tail=origin=end;preview([end.point]);report('連続線：次の頂点をクリック。Enter／Escで終了');return;}
+    if(!tail){tail=origin=end;preview([end.point]);report(t('actions:nextVertex'));return;}
     const closes=closed(end,event);if(closes){const first=existing()[0];end={point:origin!.point,endpoint:{id:first,side:'start'}};}
     if(Math.hypot(end.point.x-tail.point.x,end.point.y-tail.point.y)<1e-6)return;
     if(commit([tail.point,end.point],tail,end)){const id=existing().at(-1)!;tail={point:end.point,endpoint:{id,side:'end'}};preview([end.point]);if(closes)finish();}
