@@ -1,24 +1,28 @@
+import { t, languageChangeEvent } from './i18n';
+import { uiText, uiAttribute } from './i18n/dom';
+import { stampCaption } from './badge-labels';
 import type { DeskObject, Operation } from './model';
 import { createStamp, stampPatterns } from './stamp-values';
 import { stampArtwork } from './stamps';
 import { stationerySplitButton } from './stationery-split-button';
 
 export function createStampControls(container: HTMLElement, selected: () => DeskObject[], apply: (ops: Operation[]) => void | boolean) {
-  const {button:repeat,menu:trigger}=stationerySplitButton('stamp','ハンコ');
-  let last={designId:'done_ja',dated:false};repeat.title='ハンコ：済を適用';
+  const {button:repeat,menu:trigger}=stationerySplitButton('stamp');
+  let last={designId:'done_ja',dated:false};
+  const repeatTitle = () => { repeat.title=t('badges:repeatStamp',{name:stampCaption(last.designId),date:last.dated?t('badges:withDate'):''}); };
   const panel = document.createElement('div'); panel.id = 'stamp-palette'; panel.popover = 'auto';
-  panel.setAttribute('aria-label', 'ハンコ一覧');
+  uiAttribute(panel,'aria-label','badges:stampList');
   trigger.popoverTargetElement = panel;
   const dated = document.createElement('input'); dated.type = 'checkbox'; dated.id = 'stamp-dated';
   const datedKey='tabletop.stamp.dated';
   try{dated.checked=localStorage.getItem(datedKey)==='true';}catch{/* Keep an in-memory preference when storage is unavailable. */}
-  last.dated=dated.checked;repeat.title=`ハンコ：済${dated.checked?'（日付付き）':''}を適用`;
-  const label = document.createElement('label'); label.append(dated, ' 日付付き');
+  last.dated=dated.checked;repeatTitle();
+  const label = document.createElement('label'); label.append(dated, uiText(document.createElement('span'),'badges:dated'));
   const choices = document.createElement('div'); choices.className = 'stamp-choices';
   const categories = [
-    {caption:'確認・判定',ids:['done_ja','done_en','on_hold_ja','on_hold_en','unread_ja','unread_en','read_ja','read_en','pass_ja','pass_en','fail_ja','fail_en','rejected_ja','rejected_en','physical_checked_ja','handle_with_care_ja']},
-    {caption:'注意・機密',ids:['sealed_ja','sealed_en','confidential_ja','confidential_en','do_not_remove_ja','keep_secret_ja']},
-    {caption:'気持ち・ひとこと',ids:['hanamaru_ja','smile_ja','well_done_ja','keep_going_ja','nandeyanen_ja','shirangana_ja','wanted_ja','wanted_en','copy_paste_only_ja','copy_paste_only_en']},
+    {ids:['done_ja','done_en','on_hold_ja','on_hold_en','unread_ja','unread_en','read_ja','read_en','pass_ja','pass_en','fail_ja','fail_en','rejected_ja','rejected_en','physical_checked_ja','handle_with_care_ja']},
+    {ids:['sealed_ja','sealed_en','confidential_ja','confidential_en','do_not_remove_ja','keep_secret_ja']},
+    {ids:['hanamaru_ja','smile_ja','well_done_ja','keep_going_ja','nandeyanen_ja','shirangana_ja','wanted_ja','wanted_en','copy_paste_only_ja','copy_paste_only_en']},
   ];
   const palettePatterns=categories.flatMap(category=>category.ids.map(id=>stampPatterns.find(pattern=>pattern.id===id)!));
   const detail=document.createElement('div');detail.className='stamp-detail';
@@ -28,7 +32,7 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
   let active=palettePatterns[0];
   const show=(pattern:typeof active)=>{
     active=pattern;sample.setAttribute('viewBox',pattern.shape==='square'?'-110 -57 220 114':'-58 -58 116 116');
-    sample.replaceChildren(stampArtwork(createStamp(pattern.id,dated.checked)));sampleName.textContent=pattern.caption;
+    sample.replaceChildren(stampArtwork(createStamp(pattern.id,dated.checked)));sampleName.textContent=stampCaption(pattern.id);
     for(const button of choices.querySelectorAll<HTMLButtonElement>('[data-stamp-design]'))button.classList.toggle('stamp-previewed',button.dataset.stampDesign===pattern.id);
   };
   dated.onchange=()=>{try{localStorage.setItem(datedKey,String(dated.checked));}catch{/* Applying stamps still works without storage. */}show(active);};
@@ -36,12 +40,13 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
     const targets=selected().filter(o=>['text','file'].includes(o.type));if(!targets.length)return;
     const stamp=createStamp(designId,withDate);
     if(apply(targets.map(o=>({kind:'update',id:o.id,patch:{stamp}})))===false)return;
-    last={designId,dated:withDate};repeat.title=`ハンコ：${stampPatterns.find(p=>p.id===designId)?.caption??designId}${withDate?'（日付付き）':''}を適用`;
+    last={designId,dated:withDate};repeatTitle();
   };
   repeat.onclick=()=>press(last.designId,last.dated);
   const buttons = palettePatterns.map(pattern => {
     const button = document.createElement('button'); button.type = 'button'; button.dataset.stampDesign = pattern.id;
-    button.title = pattern.caption; button.setAttribute('aria-label', `${pattern.caption}を押す`);
+    const translate = () => {button.title=stampCaption(pattern.id);button.setAttribute('aria-label',t('badges:pressStamp',{name:stampCaption(pattern.id)}));};
+    translate();document.addEventListener(languageChangeEvent,translate);
     const preview = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     preview.setAttribute('viewBox', pattern.shape==='square'?'-110 -57 220 114':'-58 -58 116 116'); preview.setAttribute('aria-hidden', 'true');
     preview.append(stampArtwork({ designId: pattern.id, text: '', angle: -6 }));
@@ -53,7 +58,7 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
     };
     return button;
   });
-  const clear = document.createElement('button'); clear.id = 'stamp-clear'; clear.type = 'button'; clear.textContent = '取り消し';
+  const clear = document.createElement('button'); clear.id = 'stamp-clear'; clear.type = 'button'; uiText(clear,'badges:clearStamp');
   clear.onclick = () => apply(selected().filter(o => ['text','file'].includes(o.type) && o.stamp).map(o => ({ kind: 'update', id: o.id, patch: { stamp: null } })));
   const actions=document.createElement('div');actions.className='stamp-actions';actions.append(label,clear);detail.append(actions);show(active);
   panel.append(choices, detail); container.append(repeat, trigger, panel);
@@ -65,6 +70,7 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
   panel.addEventListener('toggle', () => { const open = panel.matches(':popover-open'); trigger.setAttribute('aria-expanded', String(open)); if (open) position(); });
   window.addEventListener('resize', position);
   container.addEventListener('keydown', event => { if (event.code === 'Space') event.stopPropagation(); });
+  document.addEventListener(languageChangeEvent,()=>{repeatTitle();show(active);});
   return { update(objects: DeskObject[]) {
     const texts = objects.filter(o => ['text','file'].includes(o.type));
     repeat.disabled=!texts.length;trigger.disabled=!texts.length;

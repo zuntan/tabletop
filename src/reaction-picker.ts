@@ -1,28 +1,32 @@
-import { reactionChoices, reactionSymbolGroups, reactionDisplay, reactionBars, reactionMoons, reactionNames, isReactionBar, type Reaction } from './reaction-values';
+import { t, languageChangeEvent } from './i18n';
+import { uiAttribute } from './i18n/dom';
+import { reactionName } from './badge-labels';
+import { reactionChoices, reactionSymbolGroups, reactionDisplay, reactionBars, reactionMoons, isReactionBar, type Reaction } from './reaction-values';
 import { stationeryButton } from './stationery-button';
 
 /** Stay open while selecting targets; close explicitly with the trigger or Escape. */
 export function createReactionButtons(container: HTMLElement, toggle: (reaction: Reaction) => void) {
   const quick = document.createElement('div'); quick.className = 'reaction-quick';
-  quick.setAttribute('role', 'group'); quick.setAttribute('aria-label', 'リアクションを開く');
+  quick.setAttribute('role', 'group'); uiAttribute(quick,'aria-label','badges:reactionOpen');
   const palette = document.createElement('div'); palette.id = 'reaction-palette'; palette.popover = 'manual';
-  palette.setAttribute('role', 'group'); palette.setAttribute('aria-label', 'すべてのリアクション');
-  const more = document.createElement('button'); more.type = 'button'; more.id = 'reaction-more'; more.textContent = 'リアクション ▾';
-  more.setAttribute('aria-label', 'リアクション一覧'); more.title = 'リアクション一覧';
-  stationeryButton(more, 'reaction', 'リアクション一覧');
+  palette.setAttribute('role', 'group'); uiAttribute(palette,'aria-label','badges:reactionAll');
+  const more = document.createElement('button'); more.type = 'button'; more.id = 'reaction-more'; more.textContent = '';
+  stationeryButton(more, 'reaction', t('badges:reactionList'));
+  uiAttribute(more,'title','badges:reactionList');uiAttribute(more,'aria-label','badges:reactionList');
   more.setAttribute('aria-expanded', 'false'); more.setAttribute('aria-controls', palette.id);
   more.popoverTargetElement = palette; more.popoverTargetAction = 'toggle';
   const makeButton = (reaction: Reaction) => {
     const button = document.createElement('button'); button.type = 'button'; button.textContent = reactionDisplay(reaction);
-    button.classList.toggle('reaction-bar',isReactionBar(reaction));button.dataset.reaction = reaction; button.setAttribute('aria-label', `${reaction} ${reactionNames[reaction]}`);
-    button.title = `${reactionNames[reaction]}を付け外し`; button.onclick = () => toggle(reaction);
+    button.classList.toggle('reaction-bar',isReactionBar(reaction));button.dataset.reaction = reaction;
+    const translate = () => { button.setAttribute('aria-label', `${reaction} ${reactionName(reaction)}`); button.title = t('badges:reactionToggle', { name: reactionName(reaction) }); };
+    translate(); document.addEventListener(languageChangeEvent, translate); button.onclick = () => toggle(reaction);
     return button;
   };
 
   const paletteButtons = reactionChoices.map(makeButton);
   quick.append(more);
   const symbols=paletteButtons.filter(button=>!reactionBars.some(v=>v===button.dataset.reaction)&&!reactionMoons.some(v=>v===button.dataset.reaction));
-  const strip=(name:string,values:readonly string[])=>{const row=document.createElement('div');row.className='reaction-level-strip '+name;row.setAttribute('role','group');row.setAttribute('aria-label',name==='reaction-bars'?'棒の高さ':'月の満ち欠け');row.append(...paletteButtons.filter(button=>values.includes(button.dataset.reaction!)));return row;};
+  const strip=(name:string,values:readonly string[])=>{const row=document.createElement('div');row.className='reaction-level-strip '+name;row.setAttribute('role','group');uiAttribute(row,'aria-label',name==='reaction-bars'?'badges:bars':'badges:moons');row.append(...paletteButtons.filter(button=>values.includes(button.dataset.reaction!)));return row;};
   const groups=reactionSymbolGroups.map(values=>{const row=document.createElement('div');row.className='reaction-symbol-group';row.append(...symbols.filter(button=>(values as readonly string[]).includes(button.dataset.reaction!)));return row;});
   palette.append(...groups,strip('reaction-bars',reactionBars),strip('reaction-moons',reactionMoons));container.append(quick, palette);
   const position = () => {

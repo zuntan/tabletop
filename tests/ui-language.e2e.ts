@@ -149,3 +149,46 @@ test('new pin series use the creation language while existing series names survi
     assert.deepEqual(errors, []);
   } finally { await close(); }
 });
+
+test('localized stationery explains Japanese artwork and preserves badge data when switching languages', { timeout: 40_000 }, async () => {
+  const { page, call, close, errors } = await openTestDesk('ui-language-badges', undefined, undefined, 'en-US');
+  page.setDefaultTimeout(5000);
+  try {
+    await call('desk_execute', { operations: [{ kind: 'add', object: { id: 'note', type: 'text', text: '日本語の本文', x: 100, y: 100 } }] });
+    await call('desk_select', { ids: ['note'] });
+    await page.locator('#stamp-menu').click();
+    const stamp = page.locator('[data-stamp-design="done_ja"]');
+    assert.equal(await stamp.getAttribute('aria-label'), 'Apply 済 — Completed stamp');
+    assert.match(await stamp.locator('svg').textContent() ?? '', /済/);
+    await stamp.click();
+    await page.locator('#stamp-menu').click();
+    await page.locator('#sticker-menu').click();
+    await page.locator('#sticker-shape-menu').click();
+    const choices = page.locator('#sticker-choice-palette');
+    await choices.getByRole('tab', { name: 'Shapes', exact: true }).click();
+    await choices.getByRole('button', { name: 'Heart', exact: true }).click();
+    await page.locator('#sticker-shape-menu').click();
+    await page.locator('#sticker-add').click();
+    await page.locator('#sticker-menu').click();
+    await page.locator('#reaction-more').click();
+    await page.locator('[data-reaction="✔"]').click();
+    await page.locator('#reaction-more').click();
+    await page.locator('#reaction-placement-menu').click();
+    const placements = page.locator('.reaction-placement-palette:popover-open');
+    assert.equal(await placements.locator('button svg').count(), 8);
+    await placements.getByRole('button', { name: 'Top left→', exact: true }).click();
+    const before = await call('desk_state');
+    const note = await call('desk_get', { id: 'note' });
+    assert.equal(note.stamp.designId, 'done_ja');
+    assert.equal(note.stickers.items[0].shape, 'heart');
+    assert.deepEqual(note.reactions, ['✔']);
+    await page.locator('#desk-menu').click();
+    await page.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();
+    await page.locator('#ui-language').selectOption('ja');
+    await page.waitForFunction(() => document.documentElement.lang === 'ja');
+    assert.equal(await stamp.getAttribute('aria-label'), '済を押す');
+    assert.equal(await page.locator('[data-reaction="✔"]').getAttribute('aria-label'), '✔ チェック');
+    assert.deepEqual(await call('desk_state'), before);
+    assert.deepEqual(errors, []);
+  } finally { await close(); }
+});

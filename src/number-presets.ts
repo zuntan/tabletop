@@ -14,8 +14,8 @@ export const numberPresets = {
 } as const;
 
 /** A small palette of values; keep the existing input and its commit behavior. */
-export function addNumberPresets(input: HTMLInputElement, values: readonly number[], label: string) {
-  return addPresetPalette(input, values.map(String), label);
+export function addNumberPresets(input: HTMLInputElement, values: readonly number[], label: string, labelKey?: UiKey) {
+  return addPresetPalette(input, values.map(String), label, labelKey);
 }
 
 export function addPresetPalette(input: HTMLInputElement | HTMLSelectElement, values: readonly string[], label: string, labelKey?: UiKey) {
@@ -66,7 +66,8 @@ export function addPresetPalette(input: HTMLInputElement | HTMLSelectElement, va
     if (input.disabled) return;
     const title = t('tools:presetTitle', { name: currentLabel() });
     menu.title = title; menu.setAttribute('aria-label', title); popup.setAttribute('aria-label', title);
-    for (const choice of choices.querySelectorAll<HTMLButtonElement>('button')) choice.textContent = choiceLabel(choice.dataset.value!);
+    if (input.name === 'clipSize' || input.name === 'junctionRounding')
+      for (const choice of choices.querySelectorAll<HTMLButtonElement>('button')) choice.textContent = choiceLabel(choice.dataset.value!);
     if(input.name==='clipOffsetPercent'){
       const previous=(input.form?.elements.namedItem('clipOffsetMode') as HTMLSelectElement|null)?.value==='percent';
       const buttons=[...choices.querySelectorAll<HTMLButtonElement>('button')];

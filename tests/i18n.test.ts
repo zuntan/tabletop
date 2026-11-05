@@ -41,3 +41,19 @@ test('file collision handling uses the canonical transport message rather than t
   assert.equal(isFileExistsError(new Error(resources.ja.messages.fileExists)), false);
   assert.equal(isFileExistsError(new Error('Some unrelated filesystem error')), false);
 });
+
+test('localized badge labels cover all existing symbols, placements, sticker shapes and stamp designs', async () => {
+  const { reactions } = await import('../src/reaction-values');
+  const { reactionPlacements } = await import('../src/reaction-layout');
+  const { stickerShapeIds } = await import('../src/sticker-shapes');
+  const { stampPatterns } = await import('../src/stamp-values');
+  const sorted = (values: readonly string[]) => [...values].sort();
+  const catalog = resources.en.badges;
+  assert.deepEqual(sorted(Object.keys(catalog.reactions)), sorted(reactions));
+  assert.deepEqual(sorted(Object.keys(catalog.placements)), sorted(reactionPlacements));
+  assert.deepEqual(sorted(Object.keys(catalog.shapes)), sorted(stickerShapeIds));
+  assert.deepEqual(sorted(Object.keys(catalog.stamps)), sorted(stampPatterns.map(pattern => pattern.id)));
+  const english = createUiI18n('en');
+  assert.equal(english.t('badges:stamps.done_ja'), '済 — Completed');
+  assert.equal(stampPatterns.find(pattern => pattern.id === 'done_ja')!.title, '済');
+});

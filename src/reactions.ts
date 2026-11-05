@@ -1,3 +1,5 @@
+import { t } from './i18n';
+import { uiText, uiAttribute } from './i18n/dom';
 import {reactionPositions,defaultReactionPlacement} from './reaction-layout';
 import {createReactionPlacementPicker} from './reaction-placement-picker';
 import {addNumberPresets,numberPresets} from './number-presets';
@@ -21,7 +23,7 @@ export function reactionOperations(objects: DeskObject[], reaction: Reaction): O
 }
 
 export function createReactionControls(container: HTMLElement, selected: () => DeskObject[], apply: (operations: Operation[]) => void) {
-  container.setAttribute('role', 'group'); container.setAttribute('aria-label', 'リアクション');
+  container.setAttribute('role', 'group'); uiAttribute(container,'aria-label','badges:reaction');
 
   const buttons = createReactionButtons(container, reaction => apply(reactionOperations(selected(), reaction)));
 
@@ -68,19 +70,19 @@ export function drawReactions(group: SVGGElement, object: DeskObject, descriptio
 export function createReactionSizeControls(form:HTMLElement, selected:()=>DeskObject[], apply:(operations:Operation[])=>void, report:(message:string,error?:boolean)=>void){
   const selectedTargets=()=>selected().filter(object=>object.type!=='clip');
   const box=document.createElement('fieldset');box.id='reaction-size-controls';box.hidden=true;
-  const legend=document.createElement('legend');legend.textContent='リアクション';
-  const label=document.createElement('label');label.textContent='大きさ';
-  const input=document.createElement('input');input.id='reaction-size';input.type='number';input.min='1';input.max='100000';input.step='any';input.setAttribute('aria-label','リアクションの大きさ');
+  const legend=document.createElement('legend');uiText(legend,'badges:reaction');
+  const label=document.createElement('label');label.append(uiText(document.createElement('span'),'badges:size'));
+  const input=document.createElement('input');input.id='reaction-size';input.type='number';input.min='1';input.max='100000';input.step='any';uiAttribute(input,'aria-label','badges:reactionSize');
   const row=document.createElement('div');row.className='reaction-settings-row';
   label.append(input);row.append(label);box.append(legend,row);form.after(box);
-  addNumberPresets(input,[...reactionSizePresets],'リアクションの大きさ');
-  input.onchange=()=>{try{const size=Number(input.value);if(!input.value||!input.checkValidity())throw new Error('大きさを確認してください');apply(selectedTargets().map(object=>({kind:'update',id:object.id,patch:{reactionSize:size}})));}catch(error){report(error instanceof Error?error.message:String(error),true);}update();};
+  addNumberPresets(input,[...reactionSizePresets],t('badges:reactionSize'),'badges:reactionSize');
+  input.onchange=()=>{try{const size=Number(input.value);if(!input.value||!input.checkValidity())throw new Error(t('badges:invalidSize'));apply(selectedTargets().map(object=>({kind:'update',id:object.id,patch:{reactionSize:size}})));}catch(error){report(error instanceof Error?error.message:String(error),true);}update();};
   const placement=createReactionPlacementPicker(row,value=>{try{apply(selectedTargets().map(object=>({kind:'update',id:object.id,patch:{reactionPlacement:value}})));}catch(error){report(error instanceof Error?error.message:String(error),true);}update();});
   const fixedLabel=document.createElement('label');fixedLabel.className='reaction-fixed';
-  const fixed=document.createElement('input');fixed.type='checkbox';fixed.id='reaction-fixed';fixedLabel.append(fixed,'ズーム固定');box.append(fixedLabel);
+  const fixed=document.createElement('input');fixed.type='checkbox';fixed.id='reaction-fixed';fixedLabel.append(fixed,uiText(document.createElement('span'),'badges:fixed'));box.append(fixedLabel);
   fixed.onchange=()=>{try{apply(selectedTargets().map(object=>({kind:'update',id:object.id,patch:{reactionFixed:fixed.checked}})));}catch(error){report(error instanceof Error?error.message:String(error),true);}update();};
   input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();input.blur();}});
   box.addEventListener('keydown',event=>event.stopPropagation());
-  function update(){const objects=selectedTargets();box.hidden=!objects.length;const flags=objects.map(o=>o.reactionFixed??false);fixed.checked=flags[0]??false;fixed.indeterminate=flags.some(value=>value!==flags[0]);const sizes=objects.map(o=>o.reactionSize??defaultReactionSize);input.value=sizes.length&&sizes.every(s=>s===sizes[0])?String(sizes[0]):'';input.placeholder='複数';const values=objects.map(o=>o.reactionPlacement??defaultReactionPlacement);placement.update(values.length&&values.every(value=>value===values[0])?values[0]:undefined);}
+  function update(){const objects=selectedTargets();box.hidden=!objects.length;const flags=objects.map(o=>o.reactionFixed??false);fixed.checked=flags[0]??false;fixed.indeterminate=flags.some(value=>value!==flags[0]);const sizes=objects.map(o=>o.reactionSize??defaultReactionSize);input.value=sizes.length&&sizes.every(s=>s===sizes[0])?String(sizes[0]):'';uiAttribute(input,'placeholder','badges:mixed');const values=objects.map(o=>o.reactionPlacement??defaultReactionPlacement);placement.update(values.length&&values.every(value=>value===values[0])?values[0]:undefined);}
   return {update};
 }

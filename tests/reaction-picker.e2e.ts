@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { openTestDesk } from './desk-browser';
-import { reactionChoices } from '../src/reaction-values';
+import { reactionChoices, reactionDisplay } from '../src/reaction-values';
 
 test('a single toolbar trigger keeps the reaction palette open across target changes', { timeout: 45_000 }, async () => {
   const { page, call, close, errors } = await openTestDesk('reaction-picker');
@@ -23,11 +23,11 @@ test('a single toolbar trigger keeps the reaction palette open across target cha
     assert.deepEqual((await call('desk_get', { id: 'memo' })).reactions, ['✅', '💡']);
     await more.click(); await palette.waitFor({ state: 'visible' });
     assert.equal(await palette.locator('[data-reaction]').count(), reactionChoices.length);
-    assert.deepEqual(await palette.locator('[data-reaction]').allTextContents(), [...reactionChoices]);
+    assert.deepEqual(await palette.locator('[data-reaction]').allTextContents(), reactionChoices.map(reactionDisplay));
     assert.equal(await palette.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length), 7);
     const first = (await palette.locator('[data-reaction="👍"]').boundingBox())!;
-    const second = (await palette.locator('[data-reaction="👀"]').boundingBox())!;
-    const third = (await palette.locator('[data-reaction="📌"]').boundingBox())!;
+    const second = (await palette.locator('[data-reaction="✔"]').boundingBox())!;
+    const third = (await palette.locator('[data-reaction="❤️"]').boundingBox())!;
     assert.equal(first.x, second.x); assert.equal(first.x, third.x);
     assert.ok(first.y < second.y && second.y < third.y);
     const smile = palette.getByRole('button', { name: '😊 にっこり', exact: true });

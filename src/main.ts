@@ -400,7 +400,7 @@ centerViewButton.onclick=()=>{void cameraControls.move({center:{x:0,y:0}}).catch
 });};
 const bellControls=createBellControls(centerViewButton,$('footer'),note=>recovery.ringBell(desk.selected(),note),notify);
 const reactionControls = createReactionControls($('#reaction-controls'), () => desk.selected().map(id => desk.get(id)), operations => {
-  if(!busy&&!gesture&&!editor.isActive()&&operations.length)try{execute(operations);renderDecorations(operations.map(op=>'id' in op?op.id:''));notify('リアクションを更新しました');}catch(error){notify(error instanceof Error?error.message:String(error),true);}
+  if(!busy&&!gesture&&!editor.isActive()&&operations.length)try{execute(operations);renderDecorations(operations.map(op=>'id' in op?op.id:''));notify(t('badges:updated'));}catch(error){notify(error instanceof Error?error.message:String(error),true);}
 });
 const reactionSizeControls=createReactionSizeControls(form,()=>desk.selected().map(id=>desk.get(id)),operations=>{if(!busy&&!editor.isActive())attempt(()=>execute(operations));},notify);
 const stampContainer = document.createElement('div'); stampContainer.id = 'stamp-controls'; editActions.insertBefore(stampContainer, $('#reaction-controls'));
