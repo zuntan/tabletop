@@ -446,3 +446,15 @@ vacant-lot-en／work-in-progress-en／temporary-area-enを新しい小物IDと�
 次の対策候補は固定印影文字のアウトライン化。ユーザーの補足文字列まで機械的に変更しない。使用するフォントの利用条件、見た目と寸法、SVG／PNG／PDFへの出力を確認してから実装する。今回のコミットは英語小物の追加と再現記録までで、フォント不足は未修正。
 
 追加確認：Pagesビルド成功（`/tmp/tabletop-v011-area-en-pages.log`）。
+
+### 工程4：固定印影のアウトライン化
+
+通常の人間向け候補32種類と、互換用に残すhandle_with_care_enの1種類を対象に確認。計33図案のうち固定文字のある31図案をアウトライン化し、図形のみのhanamaru_ja／smile_jaは既存ベクターを維持した。全固定ラベル42個。日付・任意の補足文字は文字のままで、サイズ・太さ・位置は変更していない。保存するdesignId/text/angleや机のversion、既存ID、候補の順序・個数も不変。
+
+基準Linux/Chromeでの字形・文字送り・middleベースラインを計測し、Noto Sans CJK JP Regular、Liberation Sans Bold／Serif Boldの実字形から生成。総称serif／sans-serifの2指定と実際のフォールバック3フェイスは区別する。生成済み輪郭データは約91KB（gzip約31KB）。実行時フォント取得やフォント変換ライブラリーの追加はない。再生成用メトリクス・元フォントSHA256・Pythonスクリプト・元フォントの著作権とOFL全文を保持し、配布通知集へ追加した。詳細は `stamp-outlines.md`。
+
+検証：全単体336件、通常版・Pagesビルド成功。関連ブラウザは初回19件中18件成功。残る1件は「よくできました」のpath総数を文字変換前の1本と決め打ちしていたため、固定文字3行のアウトラインを検証する形に更新し、該当テストと新規2件を含む再実行3件が成功。通常／日本語フォントなしの両環境で、日付を除く全33印影のSVGラスタ画像ハッシュが一致。補足文字が固定ラベルと同じ「済」でも文字のままであること、未知IDと任意文字の保持、日英切替・保存、日付位置の既存確認も通過。PDF・カメラ・ラスタ画像化3件も成功。
+
+ログ：`/tmp/tabletop-stamp-outline-unit.log`、`/tmp/tabletop-stamp-outline-build.log`、`/tmp/tabletop-stamp-outline-pages.log`、`/tmp/tabletop-stamp-outline-e2e.log`、`/tmp/tabletop-stamp-outline-final-check.log`、`/tmp/tabletop-stamp-outline-export.log`。比較画像：`/tmp/stamp-gallery-before.png`／`/tmp/stamp-gallery-after.png`。
+
+開発机の確認カード33枚へ✔リアクションを追加。字体シールとユーザーの赤▲（items2）は保持。凡例を通常32＋互換用1へ訂正。机は保存済み。現在開いている旧UIへは再読込後に反映される。ここでは勝手に机を再読込せず、日付調整と形別の並べ替えは次工程に残した。

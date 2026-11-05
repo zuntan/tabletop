@@ -1,0 +1,1456 @@
+{
+  "note": "SVG middle-baseline offset and per-character placement captured from Chrome with font-synthesis:none. Fixed artwork only; dates and supplementary text excluded.",
+  "cases": [
+    {
+      "key": "[\"serif\",\"800\",\"済\"]",
+      "text": "済",
+      "family": "serif",
+      "weight": "800",
+      "width": 999.9999389648438,
+      "baseline": 229.4893798828125,
+      "glyphs": [
+        {
+          "char": "済",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"DONE\"]",
+      "text": "DONE",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 2889.15625,
+      "baseline": 264.1563720703125,
+      "glyphs": [
+        {
+          "char": "D",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "O",
+          "x": 722.1641845703125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "N",
+          "x": 1499.9886474609375,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "E",
+          "x": 2222.15283203125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"却下\"]",
+      "text": "却下",
+      "family": "serif",
+      "weight": "800",
+      "width": 1999.9998779296875,
+      "baseline": 229.4893798828125,
+      "glyphs": [
+        {
+          "char": "却",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "下",
+          "x": 999.9944458007812,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"REJECTED\"]",
+      "text": "REJECTED",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 5334.458984375,
+      "baseline": 264.1563720703125,
+      "glyphs": [
+        {
+          "char": "R",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "E",
+          "x": 722.1641845703125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "J",
+          "x": 1389.1500244140625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "E",
+          "x": 1945.29736328125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "C",
+          "x": 2612.2919921875,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "T",
+          "x": 3334.456298828125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "E",
+          "x": 3945.291015625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "D",
+          "x": 4612.28564453125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"封印\"]",
+      "text": "封印",
+      "family": "serif",
+      "weight": "800",
+      "width": 1999.9998779296875,
+      "baseline": 229.4893798828125,
+      "glyphs": [
+        {
+          "char": "封",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "印",
+          "x": 999.9944458007812,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"SEALED\"]",
+      "text": "SEALED",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 4056.138427734375,
+      "baseline": 264.1563720703125,
+      "glyphs": [
+        {
+          "char": "S",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "E",
+          "x": 666.9859008789062,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "A",
+          "x": 1333.9718017578125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "L",
+          "x": 2056.135986328125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "E",
+          "x": 2666.9794921875,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "D",
+          "x": 3333.96533203125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"保留\"]",
+      "text": "保留",
+      "family": "serif",
+      "weight": "800",
+      "width": 1999.9998779296875,
+      "baseline": 229.4893798828125,
+      "glyphs": [
+        {
+          "char": "保",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "留",
+          "x": 999.9944458007812,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"ON HOLD\"]",
+      "text": "ON HOLD",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 4610.822265625,
+      "baseline": 264.1563720703125,
+      "glyphs": [
+        {
+          "char": "O",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "N",
+          "x": 777.824462890625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": " ",
+          "x": 1499.9886474609375,
+          "y": 0,
+          "font": null
+        },
+        {
+          "char": "H",
+          "x": 1777.81689453125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "O",
+          "x": 2499.989990234375,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "L",
+          "x": 3277.814453125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "D",
+          "x": 3888.649169921875,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"取扱注意\"]",
+      "text": "取扱注意",
+      "family": "serif",
+      "weight": "800",
+      "width": 3999.994384765625,
+      "baseline": 229.4893798828125,
+      "glyphs": [
+        {
+          "char": "取",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "扱",
+          "x": 999.9944458007812,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "注",
+          "x": 1999.994384765625,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "意",
+          "x": 2999.994384765625,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"HANDLE\"]",
+      "text": "HANDLE",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 4166.50537109375,
+      "baseline": 264.1614990234375,
+      "glyphs": [
+        {
+          "char": "H",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "A",
+          "x": 722.1665649414062,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "N",
+          "x": 1444.3331298828125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "D",
+          "x": 2166.499755859375,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "L",
+          "x": 2888.671875,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "E",
+          "x": 3499.51025390625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"WITH CARE\"]",
+      "text": "WITH CARE",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 5666.015625,
+      "baseline": 264.1614990234375,
+      "glyphs": [
+        {
+          "char": "W",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "I",
+          "x": 943.843505859375,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "T",
+          "x": 1221.6768798828125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "H",
+          "x": 1832.515380859375,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": " ",
+          "x": 2554.6875,
+          "y": 0,
+          "font": null
+        },
+        {
+          "char": "C",
+          "x": 2832.515380859375,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "A",
+          "x": 3554.6875,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "R",
+          "x": 4276.85400390625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "E",
+          "x": 4999.0205078125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"!\"]",
+      "text": "!",
+      "family": "serif",
+      "weight": "800",
+      "width": 333.0105895996094,
+      "baseline": 229.4893798828125,
+      "glyphs": [
+        {
+          "char": "!",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSerif-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"しらんがな\"]",
+      "text": "しらんがな",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 4999.994140625,
+      "baseline": 264.1614990234375,
+      "glyphs": [
+        {
+          "char": "し",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "ら",
+          "x": 999.9944458007812,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "ん",
+          "x": 1999.994384765625,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "が",
+          "x": 2999.994384765625,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "な",
+          "x": 3999.98876953125,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"?\"]",
+      "text": "?",
+      "family": "serif",
+      "weight": "800",
+      "width": 499.9999694824219,
+      "baseline": 229.4893798828125,
+      "glyphs": [
+        {
+          "char": "?",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSerif-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"なんでやねん\"]",
+      "text": "なんでやねん",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 5949.9921875,
+      "baseline": 264.1614990234375,
+      "glyphs": [
+        {
+          "char": "な",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "ん",
+          "x": 999.9944458007812,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "で",
+          "x": 1949.9921875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "や",
+          "x": 2949.9921875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "ね",
+          "x": 3949.9921875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "ん",
+          "x": 4949.98681640625,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"がんばり\"]",
+      "text": "がんばり",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 3999.998046875,
+      "baseline": 264.1629638671875,
+      "glyphs": [
+        {
+          "char": "が",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "ん",
+          "x": 999.9979248046875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "ば",
+          "x": 1999.995849609375,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "り",
+          "x": 2999.99365234375,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"ましょう\"]",
+      "text": "ましょう",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 3999.998046875,
+      "baseline": 264.1629638671875,
+      "glyphs": [
+        {
+          "char": "ま",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "し",
+          "x": 999.9979248046875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "ょ",
+          "x": 1999.995849609375,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "う",
+          "x": 2999.99365234375,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"たいへん\"]",
+      "text": "たいへん",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 3999.998046875,
+      "baseline": 264.1629638671875,
+      "glyphs": [
+        {
+          "char": "た",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "い",
+          "x": 999.9979248046875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "へ",
+          "x": 1999.995849609375,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "ん",
+          "x": 2999.99365234375,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"よくでき\"]",
+      "text": "よくでき",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 3969.995361328125,
+      "baseline": 264.1629638671875,
+      "glyphs": [
+        {
+          "char": "よ",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "く",
+          "x": 999.9979248046875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "で",
+          "x": 1969.9930419921875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "き",
+          "x": 2969.990966796875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"ました\"]",
+      "text": "ました",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 3000.000244140625,
+      "baseline": 264.1629638671875,
+      "glyphs": [
+        {
+          "char": "ま",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "し",
+          "x": 999.9979248046875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "た",
+          "x": 1999.995849609375,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"現物\"]",
+      "text": "現物",
+      "family": "serif",
+      "weight": "800",
+      "width": 1999.9993896484375,
+      "baseline": 229.49755859375,
+      "glyphs": [
+        {
+          "char": "現",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "物",
+          "x": 999.9935913085938,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"確認\"]",
+      "text": "確認",
+      "family": "serif",
+      "weight": "800",
+      "width": 1999.9993896484375,
+      "baseline": 229.49755859375,
+      "glyphs": [
+        {
+          "char": "確",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "認",
+          "x": 999.9935913085938,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"門外不出\"]",
+      "text": "門外不出",
+      "family": "serif",
+      "weight": "800",
+      "width": 3999.975830078125,
+      "baseline": 229.4840087890625,
+      "glyphs": [
+        {
+          "char": "門",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "外",
+          "x": 999.9749145507812,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "不",
+          "x": 1999.968994140625,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "出",
+          "x": 2999.962890625,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"秘\"]",
+      "text": "秘",
+      "family": "serif",
+      "weight": "800",
+      "width": 1000.0057373046875,
+      "baseline": 229.49755859375,
+      "glyphs": [
+        {
+          "char": "秘",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"CONFIDENTIAL\"]",
+      "text": "CONFIDENTIAL",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 7443.8173828125,
+      "baseline": 264.1590576171875,
+      "glyphs": [
+        {
+          "char": "C",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "O",
+          "x": 722.1554565429688,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "N",
+          "x": 1499.9814453125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "F",
+          "x": 2222.156005859375,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "I",
+          "x": 2832.9892578125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "D",
+          "x": 3110.808837890625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "E",
+          "x": 3832.983154296875,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "N",
+          "x": 4499.96337890625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "T",
+          "x": 5222.13818359375,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "I",
+          "x": 5832.97119140625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "A",
+          "x": 6110.79052734375,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "L",
+          "x": 6832.96533203125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"未読\"]",
+      "text": "未読",
+      "family": "serif",
+      "weight": "800",
+      "width": 1999.9993896484375,
+      "baseline": 229.49755859375,
+      "glyphs": [
+        {
+          "char": "未",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "読",
+          "x": 999.9935913085938,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"UNREAD\"]",
+      "text": "UNREAD",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 4277.83447265625,
+      "baseline": 264.15447998046875,
+      "glyphs": [
+        {
+          "char": "U",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "N",
+          "x": 722.1577758789062,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "R",
+          "x": 1444.32763671875,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "E",
+          "x": 2166.49755859375,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "A",
+          "x": 2833.49462890625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "D",
+          "x": 3555.65234375,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"既読\"]",
+      "text": "既読",
+      "family": "serif",
+      "weight": "800",
+      "width": 1999.9993896484375,
+      "baseline": 229.49755859375,
+      "glyphs": [
+        {
+          "char": "既",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "読",
+          "x": 999.9935913085938,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"READ\"]",
+      "text": "READ",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 2833.5068359375,
+      "baseline": 264.15447998046875,
+      "glyphs": [
+        {
+          "char": "R",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "E",
+          "x": 722.1577758789062,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "A",
+          "x": 1389.1549072265625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "D",
+          "x": 2111.32470703125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"コピペ\"]",
+      "text": "コピペ",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 3000.005126953125,
+      "baseline": 264.15447998046875,
+      "glyphs": [
+        {
+          "char": "コ",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "ピ",
+          "x": 999.9935913085938,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "ペ",
+          "x": 1999.9871826171875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"しただけ\"]",
+      "text": "しただけ",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 3999.998779296875,
+      "baseline": 264.15447998046875,
+      "glyphs": [
+        {
+          "char": "し",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "た",
+          "x": 999.9935913085938,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "だ",
+          "x": 1999.9871826171875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "け",
+          "x": 2999.992919921875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"COPY & PASTE\"]",
+      "text": "COPY & PASTE",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 7353.49072265625,
+      "baseline": 264.1590576171875,
+      "glyphs": [
+        {
+          "char": "C",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "O",
+          "x": 722.1554565429688,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "P",
+          "x": 1499.9814453125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "Y",
+          "x": 2166.980712890625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": " ",
+          "x": 2815.8994140625,
+          "y": 0,
+          "font": null
+        },
+        {
+          "char": "&",
+          "x": 3093.718994140625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": " ",
+          "x": 3815.893310546875,
+          "y": 0,
+          "font": null
+        },
+        {
+          "char": "P",
+          "x": 4093.712890625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "A",
+          "x": 4686.48486328125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "S",
+          "x": 5408.6591796875,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "T",
+          "x": 6075.63916015625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "E",
+          "x": 6686.47265625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"ONLY\"]",
+      "text": "ONLY",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 2686.039306640625,
+      "baseline": 264.1590576171875,
+      "glyphs": [
+        {
+          "char": "O",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "N",
+          "x": 777.8260498046875,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "L",
+          "x": 1499.9814453125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "Y",
+          "x": 2019.0211181640625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"欲しい\"]",
+      "text": "欲しい",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 3000.005126953125,
+      "baseline": 264.15447998046875,
+      "glyphs": [
+        {
+          "char": "欲",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "し",
+          "x": 999.9935913085938,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "い",
+          "x": 1999.9871826171875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"…\"]",
+      "text": "…",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 1000.0057373046875,
+      "baseline": 264.15447998046875,
+      "glyphs": [
+        {
+          "char": "…",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"WANTED\"]",
+      "text": "WANTED",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 4332.98974609375,
+      "baseline": 264.1590576171875,
+      "glyphs": [
+        {
+          "char": "W",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "A",
+          "x": 888.65283203125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "N",
+          "x": 1610.8272705078125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "T",
+          "x": 2332.982666015625,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "E",
+          "x": 2943.81591796875,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "D",
+          "x": 3610.815185546875,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"他言\"]",
+      "text": "他言",
+      "family": "serif",
+      "weight": "800",
+      "width": 1999.9993896484375,
+      "baseline": 229.49755859375,
+      "glyphs": [
+        {
+          "char": "他",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "言",
+          "x": 999.9935913085938,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"無用\"]",
+      "text": "無用",
+      "family": "serif",
+      "weight": "800",
+      "width": 1999.9993896484375,
+      "baseline": 229.49755859375,
+      "glyphs": [
+        {
+          "char": "無",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "用",
+          "x": 999.9935913085938,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"不合格\"]",
+      "text": "不合格",
+      "family": "serif",
+      "weight": "800",
+      "width": 3000.005126953125,
+      "baseline": 229.49755859375,
+      "glyphs": [
+        {
+          "char": "不",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "合",
+          "x": 999.9935913085938,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "格",
+          "x": 1999.9871826171875,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"FAIL\"]",
+      "text": "FAIL",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 2166.509765625,
+      "baseline": 264.15447998046875,
+      "glyphs": [
+        {
+          "char": "F",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "A",
+          "x": 555.6595458984375,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "I",
+          "x": 1277.8294677734375,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "L",
+          "x": 1555.6531982421875,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    },
+    {
+      "key": "[\"serif\",\"800\",\"合格\"]",
+      "text": "合格",
+      "family": "serif",
+      "weight": "800",
+      "width": 1999.9993896484375,
+      "baseline": 229.49755859375,
+      "glyphs": [
+        {
+          "char": "合",
+          "x": 0,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        },
+        {
+          "char": "格",
+          "x": 999.9935913085938,
+          "y": 0,
+          "font": "NotoSansCJKjp-Regular"
+        }
+      ]
+    },
+    {
+      "key": "[\"sans-serif\",\"800\",\"PASS\"]",
+      "text": "PASS",
+      "family": "sans-serif",
+      "weight": "800",
+      "width": 2648.936279296875,
+      "baseline": 264.15447998046875,
+      "glyphs": [
+        {
+          "char": "P",
+          "x": 0,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "A",
+          "x": 592.7720336914062,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "S",
+          "x": 1314.9298095703125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        },
+        {
+          "char": "S",
+          "x": 1981.9268798828125,
+          "y": 0,
+          "font": "LiberationSans-Bold"
+        }
+      ]
+    }
+  ],
+  "fonts": {
+    "NotoSansCJKjp-Regular": {
+      "file": "NotoSansCJK-Regular.ttc",
+      "index": 0,
+      "sha256": "b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a",
+      "copyright": "© 2014-2021 Adobe (http://www.adobe.com/).",
+      "version": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603"
+    },
+    "LiberationSans-Bold": {
+      "file": "LiberationSans-Bold.ttf",
+      "index": 0,
+      "sha256": "3973aa5054fb467dd5627245d3dc82e37bf16fe075756156a570455871351582",
+      "copyright": "Digitized data copyright (c) 2010 Google Corporation.\nCopyright (c) 2012 Red Hat, Inc.",
+      "version": "Version 2.1.5"
+    },
+    "LiberationSerif-Bold": {
+      "file": "LiberationSerif-Bold.ttf",
+      "index": 0,
+      "sha256": "9e66c25e20868756bf12eb24a520a4552727c9cd108f577f7ae33e3c0110e39c",
+      "copyright": "Digitized data copyright (c) 2010 Google Corporation.\nCopyright (c) 2012 Red Hat, Inc.",
+      "version": "Version 2.1.5"
+    }
+  }
+}

@@ -47,6 +47,7 @@ for(const required of ['OFL-1.1.txt','Apache-2.0.txt','EPL-1.0.txt','katex-notic
 const supplementalNames=(await readdir(path.join(root,'licenses/supplemental'))).filter(f=>f!=='sources.json').sort();
 for(const name of supplementalNames)documents.set(`generated/supplemental/${name}`,await read(`licenses/supplemental/${name}`));
 const extras=[
+ {name:'Fixed stamp lettering outlines',version:'vendored',license:'OFL-1.1',source:'https://github.com/notofonts/noto-cjk',notice:'generated/supplemental/stamp-outlines.txt'},
  {name:'Tabler Icons',version:'vendored',license:'MIT',source:'https://github.com/tabler/tabler-icons',notice:'tabler-icons.txt'},
  {name:'KaTeX（補足）',version:'0.18.10',license:'OFL-1.1 / Apache-2.0',notice:'generated/supplemental/katex-notices.txt'},
  {name:'ELK（補足・ソース）',version:'0.9.3',license:'EPL-2.0 / EPL-1.0 / Apache-2.0',notice:'generated/supplemental/elk-sources.txt'},

@@ -34,7 +34,7 @@ test('stamp palette, arbitrary fallback text, selection retreat, resize and shar
     await page.locator('#stamp-palette').screenshot({ path: 'tmp/stamps/palette.png' });
     const praise = page.locator('[data-stamp-design="well_done_ja"] svg');
     assert.ok((await praise.textContent())?.includes('たいへんよくできました'));
-    assert.equal(await praise.locator('path').count(), 1); // Cherry-blossom border accompanies the large lettering.
+    assert.equal(await praise.locator('[data-stamp-outline]').count(), 3); // Fixed praise lettering is outlined alongside its cherry-blossom border.
     const encouragement=page.locator('[data-stamp-design="keep_going_ja"] svg');
     assert.ok((await encouragement.textContent())?.includes('がんばりましょう'));
     assert.equal(await encouragement.locator('path').first().getAttribute('d'),await praise.locator('path').first().getAttribute('d'));

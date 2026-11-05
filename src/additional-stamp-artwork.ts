@@ -1,3 +1,4 @@
+import {outlineStampLabels} from './stamp-outline';
 // Original Tabletop SVG stamp artwork, based on the approved desk design sheet.
 import {element} from './diagram-drawing';
 const definitions="<mask id=\"bullet-holes\" maskUnits=\"userSpaceOnUse\" x=\"-250\" y=\"-120\" width=\"500\" height=\"240\"><rect x=\"-250\" y=\"-120\" width=\"500\" height=\"240\" fill=\"white\"/><path d=\"M0 -14 4 -7 11 -10 9 -3 16 1 8 5 10 13 2 9 -4 16 -6 7 -14 8 -9 0 -15 -6 -6 -6 -5 -15Z\" transform=\"translate(-195 -52)\" fill=\"black\"/><path d=\"M0 -14 4 -7 11 -10 9 -3 16 1 8 5 10 13 2 9 -4 16 -6 7 -14 8 -9 0 -15 -6 -6 -6 -5 -15Z\" transform=\"translate(193 28) rotate(25) scale(.8)\" fill=\"black\"/><path d=\"M-21 -5C-22 -16 -12 -23 -3 -22C7 -25 19 -18 21 -8C26 2 19 14 10 19C0 24 -12 21 -18 12C-23 8 -24 0 -21 -5Z\" transform=\"translate(-126 12) rotate(-12)\" fill=\"black\"/></mask><mask id=\"keyhole-outline\" maskUnits=\"userSpaceOnUse\" x=\"-130\" y=\"-130\" width=\"260\" height=\"260\"><rect x=\"-130\" y=\"-130\" width=\"260\" height=\"260\" fill=\"white\"/><path d=\"M0 -65C-28 -65 -48 -45 -48 -20C-48 -3 -39 11 -25 19L-40 73H40L25 19C39 11 48 -3 48 -20C48 -45 28 -65 0 -65Z\" fill=\"black\"/></mask>";
@@ -30,6 +31,7 @@ export function additionalStampArtwork(designId:string,text:string){
  const parsed=new DOMParser().parseFromString(markup,'image/svg+xml');
  const group=element('g',{'pointer-events':'none'});
  for(const child of Array.from(parsed.documentElement.children))group.append(document.importNode(child,true));
+ outlineStampLabels(group,true);
  if(text){const label=element('text',{x:0,y:rectangular?28:29,'data-stamp-date':'inside','text-anchor':'middle','dominant-baseline':'middle','font-size':rectangular?10:7.8,'font-family':'monospace',fill:'#c93428',opacity:.9});label.textContent=text;if(text.length>10){label.setAttribute('textLength',String(['confidential_en','copy_paste_only_en','wanted_en'].includes(designId)?170:65));label.setAttribute('lengthAdjust','spacingAndGlyphs');}group.append(label);}
  return group;
 }

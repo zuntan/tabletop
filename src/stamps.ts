@@ -1,3 +1,4 @@
+import {outlineStampLabels} from './stamp-outline';
 import {additionalStampArtwork} from './additional-stamp-artwork';
 import type { DeskObject } from './model';
 import { element as svg } from './diagram-drawing';
@@ -17,10 +18,11 @@ export function stampArtwork(stamp: Stamp) {
   const pattern = stampPattern(stamp.designId), rectangular = pattern.shape === 'square';
   const g = svg('g', { fill: 'none', stroke: pattern.color, opacity: pattern.opacity,
     'stroke-width': 3, 'stroke-linejoin': 'round', 'pointer-events': 'none' });
-  const text = (value: string, y: number, size: number, maxWidth: number, family = 'serif') => {
+  const text = (value: string, y: number, size: number, maxWidth: number, family = 'serif', fixed = true) => {
     const node = svg('text', { x: 0, y, fill: pattern.color, stroke: 'none', 'text-anchor': 'middle',
       'dominant-baseline': 'middle', 'font-size': size, 'font-weight': 800, 'font-family': family });
     node.textContent = value;
+    if (fixed) node.setAttribute('data-stamp-fixed', 'true');
     // Bound arbitrary supplementary strings without interpreting them as dates or markup.
     if ([...value].length * size * .8 > maxWidth) {
       node.setAttribute('textLength', String(maxWidth)); node.setAttribute('lengthAdjust', 'spacingAndGlyphs');
@@ -28,7 +30,7 @@ export function stampArtwork(stamp: Stamp) {
     g.append(node);
   };
   const footerDate=()=>{
-    text(stamp.text,63,8,65,'monospace');g.lastElementChild!.setAttribute('data-stamp-date','footer');
+    text(stamp.text,63,8,65,'monospace',false);g.lastElementChild!.setAttribute('data-stamp-date','footer');
     // Preserve the artwork proportions while fitting its separate date into the same footprint.
     g.setAttribute('transform','translate(0 -6) scale(.86)');
   };
@@ -49,7 +51,7 @@ export function stampArtwork(stamp: Stamp) {
     defs.append(mask); mark.append(defs,
       svg('path', { d: 'M0 -26 22 -13 0 0 -22 -13ZM-22 -10-2 3V23L-22 10ZM2 3 22 -10V10L2 23Z', mask: `url(#${maskId})` }));
     mark.append(svg('path', { d: hand }), svg('path', { d: hand, transform: 'scale(-1 1)' })); g.append(mark);
-    if (stamp.text) text(stamp.text, 36, 8, 56, 'monospace');
+    if (stamp.text) text(stamp.text, 36, 8, 56, 'monospace',false);
   } else if (stamp.designId === 'shirangana_ja' || stamp.designId === 'nandeyanen_ja') {
     const squareBadge = pattern.shape === 'squareBadge';
     if (squareBadge) g.append(svg('rect', { x: -46, y: -46, width: 92, height: 92, rx: 4 }), svg('rect', { x: -41, y: -41, width: 82, height: 82, rx: 1, 'stroke-width': 1 }));
@@ -59,12 +61,12 @@ export function stampArtwork(stamp: Stamp) {
     symbol.setAttribute('transform', squareBadge ? 'scale(1.25 1)' : 'scale(1 .94)');
     text(pattern.title, 3, squareBadge ? 17 : 15, squareBadge ? 78 : 77, 'sans-serif');
     const title = g.lastElementChild!; title.setAttribute('stroke', 'white'); title.setAttribute('stroke-width', '3'); title.setAttribute('paint-order', 'stroke fill');
-    if (stamp.text) text(stamp.text, 31, 8, squareBadge ? 70 : 56, 'monospace');
+    if (stamp.text) text(stamp.text, 31, 8, squareBadge ? 70 : 56, 'monospace',false);
   } else if (rectangular) {
     g.append(svg('rect', { x: -99, y: -44, width: 198, height: 88, rx: 5 }),
       svg('rect', { x: -94, y: -39, width: 188, height: 78, rx: 2, 'stroke-width': 1 }));
     text(pattern.title, stamp.text ? -10 : 2, 33, 176, 'sans-serif');
-    if (stamp.text) { g.append(svg('path', { d: 'M -86 12 H 86', 'stroke-width': 1 })); text(stamp.text, 27, 16, 170, 'monospace'); }
+    if (stamp.text) { g.append(svg('path', { d: 'M -86 12 H 86', 'stroke-width': 1 })); text(stamp.text, 27, 16, 170, 'monospace',false); }
   } else {
     if (pattern.shape === 'flower') {
       // Separate, rounded pentagonal petals, rather than a sinusoidal scalloped ring.
@@ -113,13 +115,14 @@ export function stampArtwork(stamp: Stamp) {
     } else {
       g.append(svg('circle', { r: 46 }), svg('circle', { r: 41, 'stroke-width': 1 }));
       text(pattern.title, stamp.text ? -9 : 2, pattern.title.length === 1 ? 49 : 32, 74);
-      if (stamp.text) { g.append(svg('path', { d: 'M -37 13 H 37', 'stroke-width': 1 })); text(stamp.text, 26, 11, 65, 'monospace'); }
+      if (stamp.text) { g.append(svg('path', { d: 'M -37 13 H 37', 'stroke-width': 1 })); text(stamp.text, 26, 11, 65, 'monospace',false); }
     }
   }
   if (pattern.shape === 'care' || stamp.designId === 'shirangana_ja' || stamp.designId === 'nandeyanen_ja') {
     // Small, transparent interruptions in the new outlines suggest a lightly inked stamp.
     for (const border of g.querySelectorAll(':scope > circle, :scope > rect')) border.setAttribute('stroke-dasharray', '31 .7 19 .5 43 1');
   }
+  outlineStampLabels(g);
   return g;
 }
 export function drawStamp(group: SVGGElement, object: DeskObject, compact: boolean) {

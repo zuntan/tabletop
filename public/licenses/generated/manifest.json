@@ -3,6 +3,13 @@
   "scope": "Production dependency closure (browser and MCP server); includes conservative transitive/type/CLI entries, excludes devDependencies.",
   "entries": [
     {
+      "name": "Fixed stamp lettering outlines",
+      "version": "vendored",
+      "license": "OFL-1.1",
+      "source": "https://github.com/notofonts/noto-cjk",
+      "notice": "generated/supplemental/stamp-outlines.txt"
+    },
+    {
       "name": "Tabler Icons",
       "version": "vendored",
       "license": "MIT",
