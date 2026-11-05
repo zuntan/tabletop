@@ -447,9 +447,9 @@ clipCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{
 });};
 app.querySelector('[data-add="text"]')!.after(clipCreate);
 const fileCreate=document.createElement('button');fileCreate.id='file-create';iconButton(fileCreate,'',t('messages:clearFolder'));uiAttribute(fileCreate,'title','messages:fileHint');
-fileCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{const operations=fileCreateOperations(desk.snapshot(),desk.selected(),desk.settingsSnapshot().grid);execute(operations);const add=operations.find(op=>op.kind==='add');if(add?.kind==='add')desk.select([add.object.id]);});};clipCreate.after(fileCreate);
+fileCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{const operations=fileCreateOperations(desk.snapshot(),desk.selected(),desk.settingsSnapshot().grid,t('messages:clearFolder'));execute(operations);const add=operations.find(op=>op.kind==='add');if(add?.kind==='add')desk.select([add.object.id]);});};clipCreate.after(fileCreate);
 const rulerCreate=document.createElement('button');rulerCreate.id='ruler-create';iconButton(rulerCreate,'',t('messages:ruler'));uiAttribute(rulerCreate,'title','messages:rulerHint');
-rulerCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{const operations=rulerCreateOperations(desk.snapshot(),desk.selected(),newPartPoint());execute(operations,'exact');const op=operations[0];if(op.kind==='add')desk.select([op.object.id]);});};fileCreate.after(rulerCreate);
+rulerCreate.onclick=()=>{if(!busy&&!editor.isActive())attempt(()=>{const operations=rulerCreateOperations(desk.snapshot(),desk.selected(),newPartPoint(),t('messages:ruler'));execute(operations,'exact');const op=operations[0];if(op.kind==='add')desk.select([op.object.id]);});};fileCreate.after(rulerCreate);
 const thinkingMode = createThinkingMode($('header'), () => { objectAnimator.finish(); cameraAnimator.cancel('Human-only thinking mode'); desk.point([]); drawSelection(); }, notify);
 const identityControls = createDeskIdentityControls($('header'), desk,
   () => !busy && !gesture && !editor.isActive(), () => render(false), notify);

@@ -14,7 +14,7 @@ export const fileGroup=(objects:DeskObject[],id:string):DeskObject[]=>{
 const differs=(a:number|undefined,b:number|undefined)=>a===undefined||b===undefined?a!==b:Math.abs(a-b)>1e-8;
 const geometryKeys=['x','y','x2','y2','width','height','callout','startBinding','endBinding','startJunction','endJunction','cutout'] as const;
 const structuralClip=['clipMembers','clipAnchor','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipStyle'];
-export function fileCreateOperations(objects:DeskObject[],ids:string[],grid?:GridSettings):Operation[]{
+export function fileCreateOperations(objects:DeskObject[],ids:string[],grid?:GridSettings,title='クリアファイル'):Operation[]{
  if(!ids.length)throw new Error('クリアファイルに入れるものを選択してください');
  const selected=ids.map(id=>objects.find(o=>o.id===id)!);
  if(selected.some(o=>!o||['label','prop','wayfinder'].includes(o.type)))throw new Error('ピン・小物・道しるべはクリアファイルに入れられません。選択から外してください');
@@ -26,7 +26,7 @@ export function fileCreateOperations(objects:DeskObject[],ids:string[],grid?:Gri
  const boxes=contents.map(bounds),x=Math.min(...boxes.map(b=>b.x))-FILE_MARGIN,y=Math.min(...boxes.map(b=>b.y))-FILE_MARGIN-FILE_TITLE;
  const corner={x:Math.max(...boxes.map(b=>b.x+b.width))+FILE_MARGIN,y:Math.max(...boxes.map(b=>b.y+b.height))+FILE_MARGIN};
  const origin=grid?.enabled?gridPoint({x,y},grid):{x,y},dx=origin.x-x,dy=origin.y-y;
- return [...(dx||dy?contents.map(o=>({kind:'update' as const,id:o.id,patch:translated(o,dx,dy)})):[]),{kind:'add',object:{id:'file-'+randomUuid(),type:'file',x:origin.x,y:origin.y,width:corner.x-x,height:corner.y-y,fileMembers:contents.map(o=>o.id),text:'クリアファイル',fill:'#93c5fd',fillOpacity:.12,stroke:'#6b91b8',strokeWidth:1.5,fontSize:14,textColor:'#243247'}}];
+ return [...(dx||dy?contents.map(o=>({kind:'update' as const,id:o.id,patch:translated(o,dx,dy)})):[]),{kind:'add',object:{id:'file-'+randomUuid(),type:'file',x:origin.x,y:origin.y,width:corner.x-x,height:corner.y-y,fileMembers:contents.map(o=>o.id),text:title,fill:'#93c5fd',fillOpacity:.12,stroke:'#6b91b8',strokeWidth:1.5,fontSize:14,textColor:'#243247'}}];
 }
 function translated(o:DeskObject,dx:number,dy:number):Partial<DeskObject>{
  const points=isConnector(o)?endpoints(o):undefined;

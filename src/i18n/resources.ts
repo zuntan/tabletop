@@ -1,3 +1,5 @@
+import enDrawing from './en/drawing.json';
+import jaDrawing from './ja/drawing.json';
 import enConnection from './en/connection.json';
 import jaConnection from './ja/connection.json';
 import enActions from './en/actions.json';
@@ -33,8 +35,8 @@ import jaTools from './ja/tools.json';
 
 // English is the complete source catalog. Every locale uses the same namespaces.
 export const resources = {
-  en: { connection: enConnection, actions: enActions, creation: enCreation, editing: enEditing, badges: enBadges, doodle: enDoodle, authoring: enAuthoring, paint: enPaint, files: enFiles, common: enCommon, menu: enMenu, messages: enMessages, shell: enShell, toolbar: enToolbar, controls: enControls, tools: enTools },
-  ja: { connection: jaConnection, actions: jaActions, creation: jaCreation, editing: jaEditing, badges: jaBadges, doodle: jaDoodle, authoring: jaAuthoring, paint: jaPaint, files: jaFiles, common: jaCommon, menu: jaMenu, messages: jaMessages, shell: jaShell, toolbar: jaToolbar, controls: jaControls, tools: jaTools },
+  en: { drawing: enDrawing, connection: enConnection, actions: enActions, creation: enCreation, editing: enEditing, badges: enBadges, doodle: enDoodle, authoring: enAuthoring, paint: enPaint, files: enFiles, common: enCommon, menu: enMenu, messages: enMessages, shell: enShell, toolbar: enToolbar, controls: enControls, tools: enTools },
+  ja: { drawing: jaDrawing, connection: jaConnection, actions: jaActions, creation: jaCreation, editing: jaEditing, badges: jaBadges, doodle: jaDoodle, authoring: jaAuthoring, paint: jaPaint, files: jaFiles, common: jaCommon, menu: jaMenu, messages: jaMessages, shell: jaShell, toolbar: jaToolbar, controls: jaControls, tools: jaTools },
 };
 export type UiLanguage = keyof typeof resources;
 

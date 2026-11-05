@@ -1,3 +1,4 @@
+import { uiText } from './i18n/dom';
 import type {DeskObject} from './model';
 import {element as svg} from './diagram-drawing';
 import {rulerVertical} from './ruler-layout';
@@ -14,5 +15,5 @@ export function drawRuler(group:SVGGElement,r:DeskObject){
  pattern.append(svg('path',{d:ticks,fill:'none',stroke:colors.ink,'stroke-width':.8,opacity:.75}));defs.append(pattern);
  if(material==='steel'){const g=svg('linearGradient',{id:gradient,x1:'0%',y1:'0%',x2:'0%',y2:'100%'});for(const [offset,color]of [['0%','#e0e5e9'],['42%','#bcc6ce'],['65%','#e9edf0'],['100%','#aebbc5']])g.append(svg('stop',{offset,'stop-color':color}));defs.append(g);}
  body.append(defs,svg('rect',{width:length,height:thickness,rx:2,fill:material==='steel'?`url(#${gradient})`:colors.fill,'fill-opacity':colors.opacity,stroke:colors.stroke,'stroke-width':1.2}),svg('rect',{x:1,y:1,width:Math.max(0,length-2),height:Math.max(0,thickness-2),fill:`url(#${id})`,'pointer-events':'none'}));
- const title=svg('title');title.textContent=`定規：${{free:'自由',gap:'均等',center:'中心均等'}[r.rulerMode??'free']}・${{acrylic:'アクリル',bamboo:'竹',steel:'ステンレス'}[material]}・${r.rulerMembers?.length??0}枚`;body.append(title);group.append(body);
+ const title=svg('title');uiText(title,'drawing:rulerTitle',{count:r.rulerMembers?.length??0},{mode:`drawing:rulerModes.${r.rulerMode??'free'}`,material:`drawing:materials.${material}`});body.append(title);group.append(body);
 }

@@ -1,3 +1,4 @@
+import { uiText } from './i18n/dom';
 import type { DeskObject } from './model';
 import { element as svg } from './diagram-drawing';
 import { clipAppearance } from './clip-appearance';
@@ -23,5 +24,5 @@ export function drawClip(group: SVGGElement, object: DeskObject, base?: DeskObje
   });
   drawing.append(image);
   group.append(svg('rect', { width: object.width, height: object.height, fill: 'transparent', 'pointer-events': 'all' }), drawing);
-  const title = svg('title'); title.textContent = `クリップ：${object.clipMembers?.length ?? 0}枚 · 間隔 ${object.clipOffsetMode==='percent'?`${object.clipOffsetPercent??30}%（直前の紙）`:object.clipOffsetMode==='base-short-side'?`${object.clipOffsetPercent??30}%（1枚目の短辺）`:object.clipOffset??32}`; group.append(title);
+  const title = svg('title'); uiText(title,object.clipOffsetMode==='percent'?'drawing:clipPercent':object.clipOffsetMode==='base-short-side'?'drawing:clipShortSide':'drawing:clipFixed',{count:object.clipMembers?.length??0,offset:object.clipOffsetMode==='percent'||object.clipOffsetMode==='base-short-side'?object.clipOffsetPercent??30:object.clipOffset??32}); group.append(title);
 }

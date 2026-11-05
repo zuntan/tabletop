@@ -1,0 +1,28 @@
+{
+  "openDesk": "机を開く：{{name}}",
+  "openMedia": "画像を別タブで開く：{{name}}",
+  "openUrl": "別タブで開く：{{name}}",
+  "clearFolder": "クリアファイル",
+  "rulerTitle": "定規：{{mode}}・{{material}}・{{count}}枚",
+  "clipFixed": "クリップ：{{count}}枚 · 間隔 {{offset}}",
+  "clipPercent": "クリップ：{{count}}枚 · 間隔 {{offset}}%（直前の紙）",
+  "clipShortSide": "クリップ：{{count}}枚 · 間隔 {{offset}}%（1枚目の短辺）",
+  "rulerModes": {
+    "free": "自由",
+    "gap": "均等",
+    "center": "中心均等"
+  },
+  "materials": {
+    "acrylic": "アクリル",
+    "bamboo": "竹",
+    "steel": "ステンレス"
+  },
+  "rulerTitle_one": "定規：{{mode}}・{{material}}・{{count}}枚",
+  "rulerTitle_other": "定規：{{mode}}・{{material}}・{{count}}枚",
+  "clipFixed_one": "クリップ：{{count}}枚 · 間隔 {{offset}}",
+  "clipFixed_other": "クリップ：{{count}}枚 · 間隔 {{offset}}",
+  "clipPercent_one": "クリップ：{{count}}枚 · 間隔 {{offset}}%（直前の紙）",
+  "clipPercent_other": "クリップ：{{count}}枚 · 間隔 {{offset}}%（直前の紙）",
+  "clipShortSide_one": "クリップ：{{count}}枚 · 間隔 {{offset}}%（1枚目の短辺）",
+  "clipShortSide_other": "クリップ：{{count}}枚 · 間隔 {{offset}}%（1枚目の短辺）"
+}

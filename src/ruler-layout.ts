@@ -8,13 +8,13 @@ export function rulerGroup(scene:DeskObject[],id:string):DeskObject[]{const r=ru
 export const rulerVertical=(r:DeskObject)=>r.rulerAxis==='vertical';
 const filed=(scene:DeskObject[],id:string)=>scene.find(o=>o.type==='file'&&o.fileMembers?.includes(id));
 const clipped=(scene:DeskObject[],id:string)=>scene.some(o=>o.type==='clip'&&o.clipMembers?.includes(id));
-export function rulerCreateOperations(scene:DeskObject[],ids:string[],point:{x:number;y:number}):Operation[]{
+export function rulerCreateOperations(scene:DeskObject[],ids:string[],point:{x:number;y:number},title='定規'):Operation[]{
  const objects=ids.map(id=>scene.find(o=>o.id===id)!);
  if(objects.some(o=>!o||!rulerTarget(o)||rulerFor(scene,o.id)||filed(scene,o.id)||clipped(scene,o.id)||o.locked))throw Error('束・ファイルに属さないカードや図形を選んでください');
  const x=objects.length?Math.min(...objects.map(o=>o.x))-36:point.x;
  const y=objects.length?Math.min(...objects.map(o=>o.y)):point.y;
  const length=objects.length?Math.max(120,...objects.map(o=>o.y+o.height-y)):480;
- return [{kind:'add',object:{id:'ruler-'+randomUuid(),type:'ruler',x,y,width:36,height:length,rulerAxis:'vertical',rulerThickness:36,rulerMode:'free',rulerMaterial:'acrylic',rulerMembers:objects.map(o=>({id:o.id,side:'after' as const})),text:'定規'}}];
+ return [{kind:'add',object:{id:'ruler-'+randomUuid(),type:'ruler',x,y,width:36,height:length,rulerAxis:'vertical',rulerThickness:36,rulerMode:'free',rulerMaterial:'acrylic',rulerMembers:objects.map(o=>({id:o.id,side:'after' as const})),text:title}}];
 }
 /** Single owner, stable member order, and zoom-independent world coordinates. */
 export function resolveRulers(input:DeskObject[],before:DeskObject[]=[]):DeskObject[]{

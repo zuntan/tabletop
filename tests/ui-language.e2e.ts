@@ -345,3 +345,31 @@ test('connection diagnostics and released details use the UI language without ex
   assert.equal((await page.locator('[data-id="kept"] .markdown-text').textContent())?.trim(),'Stay here');assert.equal(sockets,0);assert.deepEqual(errors,[]);
  }finally{await close();}
 });
+
+test('object control labels keep user text literal and translated drawing hints do not edit data', {timeout:40_000},async()=>{
+ const {page,call,close,errors}=await openTestDesk('ui-language-drawing',undefined,undefined,'en-US');page.setDefaultTimeout(5000);
+ try{
+  const name='My <b>{{name}}</b> & note';
+  const src='data:image/svg+xml;base64,'+Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="red"/></svg>').toString('base64');
+  await call('desk_execute',{operations:[{kind:'add',object:{id:'pic',type:'svg',src,text:name,x:100,y:100}},{kind:'add',object:{id:'desk',type:'link',deskPath:'/tmp/example.tabletop',text:'Example',x:400,y:100}},{kind:'add',object:{id:'paper',type:'text',text:'A',x:100,y:400,width:96,height:80}},{kind:'add',object:{id:'clip',type:'clip',clipMembers:[],clipOffsetMode:'percent',clipOffsetPercent:30,x:700,y:100}}]});
+  assert.equal(await page.locator('[data-open-media="pic"]').getAttribute('aria-label'),`Open image in a new tab: ${name}`);
+  assert.equal(await page.locator('[data-open-desk="desk"]').getAttribute('aria-label'),'Open desk: Example');
+  await call('desk_select',{ids:['paper']});await page.locator('#file-create').click();
+  const file=(await call('desk_state')).objects.find((object:any)=>object.type==='file');assert.equal(file.text,'Clear folder');
+  await call('desk_execute',{operations:[{kind:'update',id:file.id,patch:{text:''}}]});
+  const title=page.locator(`[data-id="${file.id}"] [data-file-title]`);assert.equal(await title.textContent(),'Clear folder');assert.notEqual(await title.getAttribute('textLength'),null);
+  await call('desk_select',{ids:[]});await page.locator('#ruler-create').click();
+  const ruler=(await call('desk_state')).objects.find((object:any)=>object.type==='ruler');assert.equal(ruler.text,'Ruler');
+  await call('desk_execute',{operations:[{kind:'update',id:ruler.id,patch:{rulerMode:'center',rulerMaterial:'bamboo'}}]});
+  const rulerTitle=page.locator(`[data-id="${ruler.id}"] [data-ruler-body] > title`);assert.equal(await rulerTitle.textContent(),'Ruler: Equal centers · Bamboo · 0 cards');
+  const before=await call('desk_state');
+  await page.locator('#desk-menu').click();await page.locator('#desk-menu-panel > .desk-menu-item').nth(1).click();await page.locator('#ui-language').selectOption('ja');await page.waitForFunction(()=>document.documentElement.lang==='ja');
+  assert.equal(await page.locator('[data-open-media="pic"]').getAttribute('aria-label'),`画像を別タブで開く：${name}`);
+  assert.equal(await page.locator('[data-open-media="pic"] b').count(),0);
+  assert.equal(await page.locator('[data-open-desk="desk"]').getAttribute('aria-label'),'机を開く：Example');
+  assert.equal(await rulerTitle.textContent(),'定規：中心均等・竹・0枚');
+  assert.equal(await title.textContent(),'クリアファイル');assert.equal(await title.getAttribute('textLength'),null);
+  assert.match(await page.locator('[data-id="clip"] > title').textContent()??'',/クリップ：0枚 · 間隔 30%（直前の紙）/);
+  assert.deepEqual(await call('desk_state'),before);assert.deepEqual(errors,[]);
+ }finally{await close();}
+});

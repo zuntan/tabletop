@@ -1,0 +1,28 @@
+{
+  "openDesk": "Open desk: {{name}}",
+  "openMedia": "Open image in a new tab: {{name}}",
+  "openUrl": "Open in a new tab: {{name}}",
+  "clearFolder": "Clear folder",
+  "rulerTitle": "Ruler: {{mode}} · {{material}} · {{count}} cards",
+  "clipFixed": "Clip: {{count}} sheets · Gap {{offset}}",
+  "clipPercent": "Clip: {{count}} sheets · Gap {{offset}}% (previous sheet)",
+  "clipShortSide": "Clip: {{count}} sheets · Gap {{offset}}% (first sheet’s short side)",
+  "rulerModes": {
+    "free": "Free",
+    "gap": "Equal gaps",
+    "center": "Equal centers"
+  },
+  "materials": {
+    "acrylic": "Acrylic",
+    "bamboo": "Bamboo",
+    "steel": "Stainless steel"
+  },
+  "rulerTitle_one": "Ruler: {{mode}} · {{material}} · {{count}} card",
+  "rulerTitle_other": "Ruler: {{mode}} · {{material}} · {{count}} cards",
+  "clipFixed_one": "Clip: {{count}} sheet · Gap {{offset}}",
+  "clipFixed_other": "Clip: {{count}} sheets · Gap {{offset}}",
+  "clipPercent_one": "Clip: {{count}} sheet · Gap {{offset}}% (previous sheet)",
+  "clipPercent_other": "Clip: {{count}} sheets · Gap {{offset}}% (previous sheet)",
+  "clipShortSide_one": "Clip: {{count}} sheet · Gap {{offset}}% (first sheet’s short side)",
+  "clipShortSide_other": "Clip: {{count}} sheets · Gap {{offset}}% (first sheet’s short side)"
+}
