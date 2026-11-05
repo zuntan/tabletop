@@ -16,7 +16,7 @@
   "keep_going_ja": "Keep trying / let's do our best (がんばりましょう). Large encouragement lettering in a cherry-blossom petal border.",
   "well_done_ja": "Very well done (たいへんよくできました). Large Japanese praise lettering in a cherry-blossom petal border.",
   "physical_checked_ja": "Physical item checked (現物確認). Japanese vermilion seal for visual marking of an in-person check.",
-  "do_not_remove_ja": "Do not take outside / keep on premises (門外不出). Japanese vermilion seal.",
+  "do_not_remove_ja": "Do not remove / keep on premises (門外不出). Large Noto Serif JP lettering in the same tall double striped warning border as CAUTION, with a bold lower date.",
   "confidential_ja": "Confidential / secret (秘密／㊙). Japanese vermilion seal.",
   "confidential_en": "Confidential (CONFIDENTIAL). English lettering in a vermilion stamp design.",
   "unread_ja": "Unread (未読). Japanese vermilion seal.",
@@ -31,5 +31,10 @@
   "fail_ja": "Fail / did not pass (不合格). Round Japanese vermilion seal.",
   "fail_en": "Fail (FAIL). Round English stamp.",
   "pass_ja": "Pass (合格). Round Japanese vermilion seal.",
-  "pass_en": "Pass (PASS). Round English stamp."
+  "pass_en": "Pass (PASS). Round English stamp.",
+  "good_en": "Good (GOOD). Double square border, pale original thumbs-up background, English lettering, and an optional lower date.",
+  "bad_en": "Bad (BAD). Double square border, pale original screaming face with hands against its cheeks, English lettering, and an optional lower date.",
+  "caution_en": "Caution (CAUTION). Tall, bold double rectangular border with strong diagonal stripes only in the broad band between borders. Clear background behind large English lettering and optional lower date.",
+  "danger_en": "Danger (DANGER). Tall double rectangular border with bold diagonal stripes in the band. Solid red upper interior with white English lettering; white lower date area. No background icon.",
+  "excellent_en": "Excellent. Large, vertically prominent Libre Bodoni serif lettering inside a double rounded rectangular banner, with two decorative circular arcs behind it, three stars following each upper and lower arc, and an optional date beneath the circle."
 }

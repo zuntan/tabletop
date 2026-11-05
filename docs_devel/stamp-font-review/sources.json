@@ -1,0 +1,176 @@
+{
+  "repository": "https://github.com/google/fonts",
+  "commit": "bbda7253fc363238b05d97515ca71f8ae49c4fa9",
+  "families": [
+    {
+      "slug": "anton",
+      "files": [
+        {
+          "name": "Anton-Regular.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/anton/Anton-Regular.ttf",
+          "sha256": "a4ba3a92350ebb031da0cb47630ac49eb265082ca1bc0450442f4a83ab947cab"
+        },
+        {
+          "name": "METADATA.pb",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/anton/METADATA.pb",
+          "sha256": "53e7d98a610693d7163915083540a2400f2663ec775753230d15861087c116e1"
+        },
+        {
+          "name": "DESCRIPTION.en_us.html",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/anton/DESCRIPTION.en_us.html",
+          "sha256": "613e88bbbb5ed0edd4ef6f1658e4d6e5942cdf0dcb34d0975e69901444dd891c"
+        },
+        {
+          "name": "OFL.txt",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/anton/OFL.txt",
+          "sha256": "ee67e6ee22790b7929f1a3769ca2801d565c64b5a9096942c1adf5596de9c9e4"
+        }
+      ]
+    },
+    {
+      "slug": "chewy",
+      "files": [
+        {
+          "name": "METADATA.pb",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/apache/chewy/METADATA.pb",
+          "sha256": "3cad94d93966036676dba3acd10cea588cd3e1c1363a5380ba778c7a5963a38f"
+        },
+        {
+          "name": "DESCRIPTION.en_us.html",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/apache/chewy/DESCRIPTION.en_us.html",
+          "sha256": "f46599dc62d3f0c1ce1c8a1892e2b8c40a570e30546940847133223be9a8c2d3"
+        },
+        {
+          "name": "Chewy-Regular.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/apache/chewy/Chewy-Regular.ttf",
+          "sha256": "7cf75ea288f82fd20badea8ab4da7a656a96a7277c170811e813b3d3d6294147"
+        },
+        {
+          "name": "LICENSE.txt",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/apache/chewy/LICENSE.txt",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "slug": "librebodoni",
+      "files": [
+        {
+          "name": "LibreBodoni[wght].ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/librebodoni/LibreBodoni[wght].ttf",
+          "sha256": "0d543665bd869819ffd7d46608804e245497ba835960832d44be89e561b0c717"
+        },
+        {
+          "name": "METADATA.pb",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/librebodoni/METADATA.pb",
+          "sha256": "1c0a8da55f965635c41325deae0e82e2bb537f0e17f76d86e2ab218be6326ea5"
+        },
+        {
+          "name": "DESCRIPTION.en_us.html",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/librebodoni/DESCRIPTION.en_us.html",
+          "sha256": "e72491d6684d0506f0b90bbfee67c1acb23f40ce41470ab111f0f3126bf1b972"
+        },
+        {
+          "name": "OFL.txt",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/librebodoni/OFL.txt",
+          "sha256": "7ce3bf8e8087bf7495a3e1ed2044e83439db990c778d61b128fd09b7876d0420"
+        }
+      ]
+    },
+    {
+      "slug": "notosansjp",
+      "files": [
+        {
+          "name": "METADATA.pb",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/notosansjp/METADATA.pb",
+          "sha256": "5aa23f70fba3eb1afa6d92cb89de3b5c4690018caddbdded678b5e595e56825b"
+        },
+        {
+          "name": "DESCRIPTION.en_us.html",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/notosansjp/DESCRIPTION.en_us.html",
+          "sha256": "3da090d026ef9e0a8f530f098836f95609d4696ff95137d506560ac631eb1196"
+        },
+        {
+          "name": "OFL.txt",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/notosansjp/OFL.txt",
+          "sha256": "1c05c68c34f9708415aada51f17e1b0092d2cea709bf4a94cd38114f9e73d7d9"
+        },
+        {
+          "name": "NotoSansJP[wght].ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/notosansjp/NotoSansJP[wght].ttf",
+          "sha256": "c2f3b4d463500a2ddcd3849cded1fceeb9fd6d1c32e6cbecd568453ba50fc68f"
+        }
+      ]
+    },
+    {
+      "slug": "notoserifjp",
+      "files": [
+        {
+          "name": "NotoSerifJP[wght].ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/notoserifjp/NotoSerifJP[wght].ttf",
+          "sha256": "2fd527ba12b6a44ec30d796d633360da0aeba6c5d4af1304ce12bb4dc15a7dfc"
+        },
+        {
+          "name": "METADATA.pb",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/notoserifjp/METADATA.pb",
+          "sha256": "265cb1cd38f7c12837feb5b26c59328ef7ff8f0b2b5683b1a47303c68d373622"
+        },
+        {
+          "name": "DESCRIPTION.en_us.html",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/notoserifjp/DESCRIPTION.en_us.html",
+          "sha256": "e9227c4754aab0de00d115816c281a09ecbc93b2ba8012e964ee58fba042a3da"
+        },
+        {
+          "name": "OFL.txt",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/notoserifjp/OFL.txt",
+          "sha256": "5e0da210fb04058a8c0087985d2d456b931c2579811a49655721d3cf0c36b6d6"
+        }
+      ]
+    },
+    {
+      "slug": "zenmarugothic",
+      "files": [
+        {
+          "name": "METADATA.pb",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/zenmarugothic/METADATA.pb",
+          "sha256": "ca7003349939baf51b9d493fc556be2a02bcae9adf954750b64968aeb0bef784"
+        },
+        {
+          "name": "ZenMaruGothic-Light.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/zenmarugothic/ZenMaruGothic-Light.ttf",
+          "sha256": "c4e6fa10ff517df37cb0c13038fe2813f3c47afe6577fa4a5573200e4508b2c1"
+        },
+        {
+          "name": "DESCRIPTION.en_us.html",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/zenmarugothic/DESCRIPTION.en_us.html",
+          "sha256": "fc9a3897b9a2001c07f9f85f6b336378644eb43e77b36aed2cfe984d1180c723"
+        },
+        {
+          "name": "OFL.txt",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/zenmarugothic/OFL.txt",
+          "sha256": "2a20cf7ce1909d8ee1e949095d340f7d7656705f7c810a2d6faf56800ad0cb3d"
+        },
+        {
+          "name": "ZenMaruGothic-Black.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/zenmarugothic/ZenMaruGothic-Black.ttf",
+          "sha256": "6bd74fe76cd39ee0ec18775c3661d845343fb3f6f8fa09a3076638417baf741f"
+        },
+        {
+          "name": "ZenMaruGothic-Regular.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/zenmarugothic/ZenMaruGothic-Regular.ttf",
+          "sha256": "a0c0b53543e0993ae2225e629c833f3d51495ad31720694ff112ce4ce11111ef"
+        },
+        {
+          "name": "ZenMaruGothic-Bold.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/zenmarugothic/ZenMaruGothic-Bold.ttf",
+          "sha256": "fe24426b9c8b5523a0146a8235c8674eccf0493af354a53ec895c3596d9eb745"
+        },
+        {
+          "name": "ZenMaruGothic-Medium.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/bbda7253fc363238b05d97515ca71f8ae49c4fa9/ofl/zenmarugothic/ZenMaruGothic-Medium.ttf",
+          "sha256": "3cfdb98a13571ede17fcc769f5093a97c38b80a7b9b2ab754a26b4d822092b3b"
+        }
+      ]
+    }
+  ]
+}

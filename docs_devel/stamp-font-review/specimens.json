@@ -1,0 +1,44 @@
+[
+  {
+    "key": "a",
+    "family": "Noto Serif JP",
+    "weight": 900,
+    "file": "NotoSerifJP[wght].ttf",
+    "license": "SIL OFL 1.1"
+  },
+  {
+    "key": "b",
+    "family": "Noto Sans JP",
+    "weight": 900,
+    "file": "NotoSansJP[wght].ttf",
+    "license": "SIL OFL 1.1"
+  },
+  {
+    "key": "c",
+    "family": "Zen Maru Gothic",
+    "weight": 700,
+    "file": "ZenMaruGothic-Bold.ttf",
+    "license": "SIL OFL 1.1"
+  },
+  {
+    "key": "d",
+    "family": "Libre Bodoni",
+    "weight": 700,
+    "file": "LibreBodoni[wght].ttf",
+    "license": "SIL OFL 1.1"
+  },
+  {
+    "key": "e",
+    "family": "Anton",
+    "weight": 400,
+    "file": "Anton-Regular.ttf",
+    "license": "SIL OFL 1.1"
+  },
+  {
+    "key": "f",
+    "family": "Chewy",
+    "weight": 400,
+    "file": "Chewy-Regular.ttf",
+    "license": "Apache-2.0"
+  }
+]

@@ -8,11 +8,24 @@ test('all fixed stamp lettering is outlined while dates and arbitrary supplement
     const {patterns}=await call('desk_stamp_patterns');
     await call('desk_execute',{operations:patterns.map((p:any)=>({kind:'add',object:{id:p.id,type:'text',text:'',x:0,y:0,width:480,height:360,stamp:{designId:p.id,text:'2026.11.05',angle:0}}}))});
     const result=await page.locator('[data-id] [data-stamp]').evaluateAll(nodes=>nodes.map(n=>({id:n.getAttribute('data-stamp'),text:[...n.querySelectorAll('text')].map(t=>t.textContent),outlines:n.querySelectorAll('[data-stamp-outline] path').length})));
-    assert.equal(result.length,33);
+    assert.equal(result.length,38);
     for(const r of result){
       assert.deepEqual(r.text,['2026.11.05'],r.id ?? '');
       assert.equal(r.outlines>0,!['hanamaru_ja','smile_ja'].includes(r.id!),r.id ?? '');
     }
+    const lettering = await page.locator('[data-id] [data-stamp-outline]').evaluateAll(nodes => nodes.map(n => {
+      const box=(n as SVGGraphicsElement).getBBox();
+      return {text:n.getAttribute('data-stamp-outline'),category:n.getAttribute('data-stamp-font-category'),height:box.height,width:box.width};
+    }));
+    const done=lettering.find(n=>n.text==='DONE')!,rejected=lettering.find(n=>n.text==='REJECTED')!;
+    assert.equal(done.category,'E');assert.equal(rejected.category,'E');
+    assert.ok(Math.abs(done.height-rejected.height)<.01,'long English words retain the same ink height');
+    assert.equal(lettering.find(n=>n.text==='済')?.category,'A');
+    assert.equal(lettering.find(n=>n.text==='が')?.category,'B');
+    assert.equal(lettering.find(n=>n.text==='しらんがな')?.category,'C');
+    assert.equal(lettering.find(n=>n.text==='READ')?.category,'D');
+    assert.equal(lettering.find(n=>n.text==='?')?.category,'F');
+    assert.ok(lettering.find(n=>n.text==='…')!.height<lettering.find(n=>n.text==='欲しい')!.height*.35,'ellipsis dots stay much smaller than the main lettering');
     // A supplementary value equal to a fixed label is still user text, never substituted.
     for(const designId of ['done_ja','handle_with_care_ja','shirangana_ja','done_en','hanamaru_ja','physical_checked_ja']) {
       await call('desk_execute',{operations:[{kind:'update',id:designId,patch:{stamp:{designId,text:'済',angle:-7}}}]});
@@ -53,7 +66,7 @@ test('fixed stamp raster output is identical with and without system Japanese fo
           }
           return hashes;
         });
-        assert.equal(hashes.length,33);results.push(hashes);assert.deepEqual(errors,[]);
+        assert.equal(hashes.length,38);results.push(hashes);assert.deepEqual(errors,[]);
       } finally {await close();}
     }
     assert.deepEqual(results[1],results[0]);
@@ -61,4 +74,18 @@ test('fixed stamp raster output is identical with and without system Japanese fo
     if(previous)process.env.FONTCONFIG_FILE=previous;else delete process.env.FONTCONFIG_FILE;
     await rm(directory,{recursive:true,force:true});
   }
+});
+
+test('turning dates off removes only the date, retaining all artwork and dividers',{timeout:45000},async()=>{
+ const {page,call,close,errors}=await openTestDesk('stamp-date-only');
+ try{
+  const {patterns}=await call('desk_stamp_patterns');
+  await call('desk_execute',{operations:patterns.flatMap((p:any)=>['dated','blank'].map(mode=>({kind:'add',object:{id:p.id+'-'+mode,type:'text',x:0,y:0,width:480,height:360,text:'',stamp:{designId:p.id,text:mode==='dated'?'2026.11.05':'',angle:0}}})))});
+  const artwork=await page.locator('[data-id] [data-stamp]').evaluateAll(nodes=>nodes.map(node=>{
+   const copy=node.cloneNode(true) as Element;copy.querySelectorAll('[data-stamp-date]').forEach(n=>n.remove());
+   return{id:node.closest('[data-id]')!.getAttribute('data-id'),svg:copy.innerHTML.replace(/(?:stamp-care-hands-\d+|additional-stamp-\d+-)/g,'stable-id-')};
+  }));
+  for(const pattern of patterns){assert.equal(artwork.find(n=>n.id===pattern.id+'-dated')!.svg,artwork.find(n=>n.id===pattern.id+'-blank')!.svg,pattern.id);}
+  assert.deepEqual(errors,[]);
+ }finally{await close();}
 });

@@ -1,7 +1,7 @@
 import outlines from './stamp-outlines.json';
 import {element} from './diagram-drawing';
 
-type Outline = {width: number; d: string};
+type Outline = {width: number; d: string; category?: string};
 const labels: Readonly<Record<string, Outline>> = outlines;
 function inherited(node: Element, name: string, fallback: string): string {
   for (let current: Element | null = node; current; current = current.parentElement) {
@@ -22,11 +22,16 @@ export function outlineStampLabels(root: SVGGElement, allText = false) {
     if (!outline) throw new Error(`Missing fixed stamp outline: ${key}`);
     const size = Number(inherited(node, 'font-size', '16')), scale = size / 1000;
     const requested = node.getAttribute('textLength');
-    const width = requested === null ? outline.width * scale : Number(requested);
+    const naturalWidth = outline.width * scale;
+    const maximum = node.getAttribute('data-stamp-max-width');
+    const widthScale = Number(node.getAttribute('data-stamp-width-scale') ?? (outline.category === 'E' || outline.category === 'D' ? '1.35' : '1'));
+    const width = maximum !== null
+      ? Math.min(Number(maximum), naturalWidth * widthScale)
+      : requested === null ? naturalWidth : Number(requested);
     const x = Number(node.getAttribute('x') ?? 0), y = Number(node.getAttribute('y') ?? 0);
     const anchor = inherited(node, 'text-anchor', 'start');
     const left = x - (anchor === 'middle' ? width / 2 : anchor === 'end' ? width : 0);
-    const group = element('g', {'data-stamp-outline': value});
+    const group = element('g', {'data-stamp-outline': value, 'data-stamp-font-category': outline.category ?? ''});
     for (const attr of node.attributes) if (attr.name !== 'data-stamp-fixed') group.setAttribute(attr.name, attr.value);
     const title = element('title'); title.textContent = value;
     const path = element('path', {d: outline.d, transform: `translate(${left} ${y}) scale(${width / outline.width} ${scale})`});

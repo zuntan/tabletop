@@ -155,7 +155,12 @@
     "fail_ja": "不合格 — Fail",
     "fail_en": "FAIL",
     "pass_ja": "合格 — Pass",
-    "pass_en": "PASS"
+    "pass_en": "PASS",
+    "good_en": "GOOD",
+    "bad_en": "BAD",
+    "caution_en": "CAUTION",
+    "danger_en": "DANGER",
+    "excellent_en": "Excellent"
   },
   "reaction": "Reactions",
   "size": "Size",

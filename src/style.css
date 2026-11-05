@@ -92,11 +92,13 @@ iframe { width: 100%; height: 100%; border: none; background: white; }
 .stamp-choices .stamp-previewed {background:var(--ui-active-bg,#eaf2ff);border-color:#93b4ef;}
 .stamp-detail {display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-top:8px;}
 .stamp-sample-box {display:flex;flex-direction:column;align-items:center;width:208px;min-width:0;}
+#stamp-sample-button {display:flex;flex-direction:column;align-items:center;width:100%;min-height:0;padding:2px;border:1px solid transparent;border-radius:6px;background:transparent;}
+#stamp-sample-button:hover:not(:disabled) {border-color:#93b4ef;background:var(--ui-active-bg,#eaf2ff);}
 #stamp-sample {width:190px;max-width:100%;height:94px;}
 #stamp-sample-name {height:28px;font-size:11px;line-height:14px;text-align:center;overflow-wrap:anywhere;}
 .stamp-actions {display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;align-self:stretch;min-width:80px;}
-#stamp-palette .stamp-actions label {display:flex;flex-direction:row;align-items:center;white-space:nowrap;margin:8px 0 0;gap:4px;font-size:11px;}
-#stamp-palette .stamp-actions input {width:auto;margin:0;}
+#stamp-palette .stamp-sample-box label {display:flex;flex-direction:row;align-items:center;white-space:nowrap;margin:4px 0 0;gap:4px;font-size:11px;}
+#stamp-palette .stamp-sample-box input {width:auto;margin:0;}
 #stamp-clear {margin:0 0 0 auto;padding:4px 6px;min-height:0;font-size:11px;line-height:1.4;align-self:flex-end;}
 @media(max-width:360px){.stamp-choices {grid-template-columns:repeat(6,minmax(0,1fr));}}
 

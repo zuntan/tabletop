@@ -5,8 +5,8 @@
     {
       "name": "Fixed stamp lettering outlines",
       "version": "vendored",
-      "license": "OFL-1.1",
-      "source": "https://github.com/notofonts/noto-cjk",
+      "license": "OFL-1.1 / Apache-2.0",
+      "source": "https://github.com/google/fonts",
       "notice": "generated/supplemental/stamp-outlines.txt"
     },
     {

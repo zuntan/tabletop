@@ -20,19 +20,25 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
   const label = document.createElement('label'); label.append(dated, uiText(document.createElement('span'),'badges:dated'));
   const choices = document.createElement('div'); choices.className = 'stamp-choices';
   const categories = [
-    {ids:['done_ja','done_en','on_hold_ja','on_hold_en','unread_ja','unread_en','read_ja','read_en','pass_ja','pass_en','fail_ja','fail_en','rejected_ja','rejected_en','physical_checked_ja','handle_with_care_ja']},
-    {ids:['sealed_ja','sealed_en','confidential_ja','confidential_en','do_not_remove_ja','keep_secret_ja']},
-    {ids:['hanamaru_ja','smile_ja','well_done_ja','keep_going_ja','nandeyanen_ja','shirangana_ja','wanted_ja','wanted_en','copy_paste_only_ja','copy_paste_only_en']},
+    {ids:['done_ja','done_en','on_hold_ja','on_hold_en','unread_ja','unread_en','read_ja','read_en']},
+    {ids:['pass_ja','pass_en','fail_ja','fail_en','rejected_ja','rejected_en','physical_checked_ja','keep_secret_ja']},
+    {ids:['sealed_ja','sealed_en','confidential_ja','confidential_en','do_not_remove_ja','caution_en','danger_en','handle_with_care_en']},
+    {ids:['hanamaru_ja','smile_ja','well_done_ja','keep_going_ja','excellent_en','good_en','bad_en','handle_with_care_ja']},
+    {ids:['nandeyanen_ja','shirangana_ja','wanted_ja','wanted_en','copy_paste_only_ja','copy_paste_only_en']},
   ];
   const palettePatterns=categories.flatMap(category=>category.ids.map(id=>stampPatterns.find(pattern=>pattern.id===id)!));
   const detail=document.createElement('div');detail.className='stamp-detail';
   const sample=document.createElementNS('http://www.w3.org/2000/svg','svg');sample.id='stamp-sample';sample.setAttribute('aria-hidden','true');
   const sampleName=document.createElement('div');sampleName.id='stamp-sample-name';sampleName.setAttribute('aria-live','polite');
-  const sampleBox=document.createElement('div');sampleBox.className='stamp-sample-box';sampleBox.append(sample,sampleName);detail.append(sampleBox);
+  const sampleButton=document.createElement('button');sampleButton.type='button';sampleButton.id='stamp-sample-button';sampleButton.append(sample,sampleName);
+  const sampleBox=document.createElement('div');sampleBox.className='stamp-sample-box';sampleBox.append(sampleButton,label);detail.append(sampleBox);
   let active=palettePatterns[0];
+  const viewBox=(pattern:typeof active)=>pattern.id==='excellent_en'?'-110 -58 220 132':pattern.shape==='square'
+    ? (['caution_en','danger_en','do_not_remove_ja'].includes(pattern.id)?'-110 -67 220 134':'-110 -57 220 114'):'-58 -58 116 116';
   const show=(pattern:typeof active)=>{
-    active=pattern;sample.setAttribute('viewBox',pattern.shape==='square'?'-110 -57 220 114':'-58 -58 116 116');
+    active=pattern;sample.setAttribute('viewBox',viewBox(pattern));
     sample.replaceChildren(stampArtwork(createStamp(pattern.id,dated.checked)));sampleName.textContent=stampCaption(pattern.id);
+    sampleButton.title=t('badges:pressStamp',{name:stampCaption(pattern.id)});sampleButton.setAttribute('aria-label',sampleButton.title);
     for(const button of choices.querySelectorAll<HTMLButtonElement>('[data-stamp-design]'))button.classList.toggle('stamp-previewed',button.dataset.stampDesign===pattern.id);
   };
   dated.onchange=()=>{try{localStorage.setItem(datedKey,String(dated.checked));}catch{/* Applying stamps still works without storage. */}show(active);};
@@ -43,12 +49,13 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
     last={designId,dated:withDate};repeatTitle();
   };
   repeat.onclick=()=>press(last.designId,last.dated);
+  sampleButton.onclick=()=>press(active.id,dated.checked);
   const buttons = palettePatterns.map(pattern => {
     const button = document.createElement('button'); button.type = 'button'; button.dataset.stampDesign = pattern.id;
     const translate = () => {button.title=stampCaption(pattern.id);button.setAttribute('aria-label',t('badges:pressStamp',{name:stampCaption(pattern.id)}));};
     translate();document.addEventListener(languageChangeEvent,translate);
     const preview = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    preview.setAttribute('viewBox', pattern.shape==='square'?'-110 -57 220 114':'-58 -58 116 116'); preview.setAttribute('aria-hidden', 'true');
+    preview.setAttribute('viewBox',viewBox(pattern)); preview.setAttribute('aria-hidden', 'true');
     preview.append(stampArtwork({ designId: pattern.id, text: '', angle: -6 }));
     button.append(preview);choices.append(button);
     button.onpointerenter=()=>show(pattern);button.onfocus=()=>show(pattern);
@@ -60,7 +67,7 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
   });
   const clear = document.createElement('button'); clear.id = 'stamp-clear'; clear.type = 'button'; uiText(clear,'badges:clearStamp');
   clear.onclick = () => apply(selected().filter(o => ['text','file'].includes(o.type) && o.stamp).map(o => ({ kind: 'update', id: o.id, patch: { stamp: null } })));
-  const actions=document.createElement('div');actions.className='stamp-actions';actions.append(label,clear);detail.append(actions);show(active);
+  const actions=document.createElement('div');actions.className='stamp-actions';actions.append(clear);detail.append(actions);show(active);
   panel.append(choices, detail); container.append(repeat, trigger, panel);
   const position = () => {
     const rect = trigger.getBoundingClientRect();
@@ -75,6 +82,7 @@ export function createStampControls(container: HTMLElement, selected: () => Desk
     const texts = objects.filter(o => ['text','file'].includes(o.type));
     repeat.disabled=!texts.length;trigger.disabled=!texts.length;
     buttons.forEach(button => { button.disabled = !texts.length; });
+    sampleButton.disabled=!texts.length;
     clear.disabled = !texts.some(o => o.stamp);
   } };
 }

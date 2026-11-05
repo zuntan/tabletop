@@ -17,7 +17,7 @@ export const stampPatterns = [
   { id: 'keep_going_ja', caption: 'がんばりましょう', title: 'がんばりましょう', shape: 'words', style: '桜の花びらの縁取りと励ましの大きな文字' },
   { id: 'well_done_ja', caption: 'よくできました', title: 'たいへんよくできました', shape: 'words', style: '大きなごほうび文字と桜の花びらの縁取り' },
   {id:"physical_checked_ja",caption:"現物確認",title:"現物確認",shape:"round",style:'追加図案：用途別の朱印'},
-  {id:"do_not_remove_ja",caption:"門外不出",title:"門外不出",shape:"square",style:'追加図案：用途別の朱印'},
+  {id:"do_not_remove_ja",caption:"門外不出",title:"門外不出",shape:"square",style:'CAUTIONと同じ太いストライプ枠に大きな明朝文字'},
   {id:"confidential_ja",caption:"秘密／㊙",title:"秘密／㊙",shape:"round",style:'追加図案：用途別の朱印'},
   {id:"confidential_en",caption:"CONFIDENTIAL",title:"CONFIDENTIAL",shape:"square",style:'追加図案：用途別の朱印'},
   {id:"unread_ja",caption:"未読",title:"未読",shape:"round",style:'追加図案：用途別の朱印'},
@@ -33,6 +33,11 @@ export const stampPatterns = [
   {id:"fail_en",caption:"FAIL",title:"FAIL",shape:"round",style:'追加図案：用途別の朱印'},
   {id:"pass_ja",caption:"合格",title:"合格",shape:"round",style:'追加図案：用途別の朱印'},
   {id:"pass_en",caption:"PASS",title:"PASS",shape:"round",style:'追加図案：用途別の朱印'},
+  {id:'good_en',caption:'GOOD',title:'GOOD',shape:'squareBadge',style:'正方形の二重枠にGOOD、薄いサムズアップ'},
+  {id:'bad_en',caption:'BAD',title:'BAD',shape:'squareBadge',style:'正方形の二重枠にBAD、薄い叫び顔'},
+  {id:'caution_en',caption:'CAUTION',title:'CAUTION',shape:'square',style:'太い二重長方形枠の帯に濃い斜めストライプ'},
+  {id:'danger_en',caption:'DANGER',title:'DANGER',shape:'square',style:'太いストライプ枠、赤地の白抜きDANGERと白い日付欄'},
+  {id:'excellent_en',caption:'Excellent',title:'Excellent',shape:'square',style:'二重円に沿って上下3つずつの星、二重角丸帯に大きなSerifのExcellent'},
 ].map(pattern => ({ ...pattern, color: '#c93428', opacity: 0.9 }));
 export const fallbackStamp = { id: 'fallback', caption: '未知ID用', title: '', shape: 'round', style: '基本文字なしの代替印', color: '#c93428', opacity: 0.9 };
 export type Stamp = { designId: string; text: string; angle: number };
