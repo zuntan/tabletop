@@ -1,16 +1,67 @@
-# Stamp font specimen review — 2026-11-05
+# Stamp fonts — final selection (2026-11-05)
 
-Selected families: A Noto Serif JP 900; B Noto Sans JP 900; C Zen Maru Gothic 700; D Libre Bodoni 700; E Anton 400; F Chewy 400. Weights and proportions remain provisional. Anton and Chewy use their regular face; 400 does not imply a thin appearance.
+The v0.1.1 development desk records the reviewed designs and specimens. The six selected categories are final; earlier candidate lists and provisional notes on the desk are review history. See [the final stamp specification](../stamp-outlines.md) for artwork, dates and menu behavior.
 
-Fonts were downloaded from the official google/fonts repository into `/tmp/tabletop-selected-fonts`. No font binary is added to the repository or installed. `sources.json` records the repository commit, download URLs and SHA256. `generate.py` generates outlined red specimens using fontTools. Headings remain ordinary SVG text.
+| Category | Purpose | Family | Weight |
+| --- | --- | --- | --- |
+| A | Japanese Mincho | Noto Serif JP | 900 |
+| B | Bold Japanese Gothic | Noto Sans JP | 900 |
+| C | Rounded Japanese Gothic | Zen Maru Gothic | 700 |
+| D | Sharp English Serif | Libre Bodoni | 700 |
+| E | Heavy English Sans | Anton | 400 (Regular) |
+| F | Soft punctuation | Chewy | 400 (Regular) |
 
-A–E: SIL Open Font License 1.1. Official FAQ 1.1–1.1.3 permits artwork and objects based on outlines without imposing OFL on the artwork. Redistribution of font software itself requires retaining its copyright and license; modified font software may also have reserved-name conditions. This specimen does not distribute font software.
+All six categories are used. F uses 120% horizontal scale. The heavier, stroked F specimen was a comparison only. Anton and Chewy are visually heavy even though their weight is named Regular. Fixed lettering is stored as SVG paths; dates and arbitrary supplementary strings remain text.
 
-F: Apache License 2.0. Chewy font copyright: Copyright (c) 2010 by Font Diner, Inc DBA Sideshow. All rights reserved. Chewy is their trademark. License and copyright are retained conservatively alongside generated-outline provenance. F variants are geometric modifications of the SVG artwork: horizontal scale 120%, or a 3-unit same-color outline stroke; no alternate font weight or modified font binary is claimed. No separate NOTICE file was present in the reviewed distribution directory. Retain these records when distributing the specimen desk; carry the relevant notices into release notices if the design is adopted.
+## Download and regeneration
 
-This review found no licensing obstacle to creating these SVG specimens. The current fixed stamp lettering now uses A/B/E/F under the existing category assignments. C/D remain unassigned. Release notices include the font license texts and source/copyright records via licenses/supplemental/stamp-outlines.txt. Stamp-date layout remains a later step.
+Fonts are obtained from the official google/fonts repository. [sources.json](sources.json) records the exact repository commit, per-file URLs and SHA256 values. [specimens.json](specimens.json) records the selected faces and weights. Do not substitute a current download without deliberately reviewing and updating these records.
 
-Sources:
+Download only to a temporary directory, without installing fonts or adding font binaries to Git. The following script fetches the six selected font files and verifies their hashes:
+
+```sh
+python3 - <<'PY'
+import hashlib, json, urllib.request
+from pathlib import Path
+sources = json.loads(Path('docs_devel/stamp-font-review/sources.json').read_text())
+selection = json.loads(Path('docs_devel/stamp-font-review/specimens.json').read_text())
+wanted = {item['file'] for item in selection}
+root = Path('/tmp/tabletop-selected-fonts')
+for family in sources['families']:
+    for record in family['files']:
+        if record['name'] not in wanted:
+            continue
+        data = urllib.request.urlopen(record['url']).read()
+        if hashlib.sha256(data).hexdigest() != record['sha256']:
+            raise SystemExit('SHA256 mismatch: ' + record['name'])
+        target = root / family['slug'] / record['name']
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        print(target)
+PY
+```
+
+Run from the repository root. Use a temporary Python environment with fontTools installed to regenerate:
+
+```sh
+python3 -m venv /tmp/tabletop-stamp-font-tools
+/tmp/tabletop-stamp-font-tools/bin/pip install fonttools
+/tmp/tabletop-stamp-font-tools/bin/python scripts/generate-stamp-outlines.py --font-root /tmp/tabletop-selected-fonts
+```
+
+The generator verifies font SHA256 values again. `--categories C D` regenerates selected categories while preserving the other existing paths. `generate.py` in this directory generates the review specimens; it is separate from the production outline generator.
+
+Review the generated changes and run the stamp tests. Temporary fonts and the temporary Python environment may then be deleted. Normal builds, application startup and Pages do not download fonts or require fontTools: they use the committed `src/stamp-outlines.json`.
+
+## License records
+
+A–E use SIL Open Font License 1.1; F uses Apache License 2.0. Original license texts are retained in [licenses/](licenses/), with pinned source URLs and hashes in `sources.json`. Chewy's copyright is Copyright (c) 2010 by Font Diner, Inc DBA Sideshow; Chewy is their trademark. No separate NOTICE file was present in the reviewed distribution directory.
+
+The OFL FAQ covers artwork made from outlines separately from redistribution of font software. Font binaries are not distributed here. Preserve the copyright, license and source records with the adopted outlines. Horizontal scaling and other fitting are SVG artwork transformations, not claims of a different font weight or modified font binary.
+
+Release notices already include the six families through `licenses/supplemental/stamp-outlines.txt`, generated by `scripts/generate-licenses.mjs` into `public/licenses/`. This is completed work, not a pending adoption step.
+
+Reference links retained from the review:
+
 - https://openfontlicense.org/ofl-faq/
 - https://www.apache.org/licenses/LICENSE-2.0
-- Exact pinned per-family license URLs: sources.json
