@@ -5,7 +5,9 @@ import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 const root=fileURLToPath(new URL('../',import.meta.url));
-const read=p=>readFile(path.join(root,p),'utf8');
+// Git may check these inputs out as CRLF on Windows. Notices and lock hashes
+// must depend on their text, not the checkout's line-ending convention.
+const read=async p=>(await readFile(path.join(root,p),'utf8')).replace(/\r\n?/g,'\n');
 const lockSource=await read('package-lock.json'), lock=JSON.parse(lockSource);
 const out=path.join(root,'public/licenses/generated');
 const allowed=new Set(['MIT','ISC','BSD-2-Clause','BSD-3-Clause','Apache-2.0','PSF-2.0','Unlicense','EPL-2.0','(MPL-2.0 OR Apache-2.0)']);

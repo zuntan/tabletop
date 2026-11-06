@@ -1,0 +1,5 @@
+# Keep license generation inputs and outputs identical on Windows and Unix.
+/package-lock.json text eol=lf
+/LICENSE text eol=lf
+/licenses/supplemental/** text eol=lf
+/public/licenses/** text eol=lf

@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 
 test('distributed notices cover the locked production closure and retain component notices',async()=>{
-  const read=(p:string)=>readFile(new URL('../'+p,import.meta.url),'utf8');
+  const read=async(p:string)=>(await readFile(new URL('../'+p,import.meta.url),'utf8')).replace(/\r\n?/g,'\n');
   const source=await read('package-lock.json'), lock=JSON.parse(source);
   const manifest=JSON.parse(await read('public/licenses/generated/manifest.json'));
   assert.equal(manifest.lockSha256,createHash('sha256').update(source).digest('hex'),'Regenerate notices after dependency changes');
