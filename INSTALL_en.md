@@ -169,7 +169,6 @@ Restart MCP, reload the browser to the new version and restore your saved desks.
 
 If updating is blocked by changes under `public/licenses` after building an older version on Windows, first check that you have not edited those files yourself. Run `git restore -- public/licenses`, then retry the update. This discards uncommitted changes in that directory.
 
-
 ## Troubleshooting
 
 ### No Tabletop tools
