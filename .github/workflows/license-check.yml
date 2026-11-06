@@ -1,0 +1,33 @@
+name: Check Windows license generation
+on:
+  push:
+    branches: [develop]
+    paths:
+      - '.gitattributes'
+      - '.github/workflows/license-check.yml'
+      - 'scripts/generate-licenses.mjs'
+      - 'tests/license*.test.ts'
+      - 'licenses/**'
+      - 'public/licenses/**'
+      - 'package*.json'
+      - 'LICENSE'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  licenses:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --import tsx --test tests/licenses.test.ts tests/license-generation.test.ts
+      - run: npm run licenses
+      - run: npm run licenses
+      - name: License generation must leave Git status clean
+        run: node -e "const s=require('node:child_process').execFileSync('git',['status','--porcelain','--','public/licenses'],{encoding:'utf8'});if(s)throw Error(s);"
