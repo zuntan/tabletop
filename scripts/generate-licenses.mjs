@@ -58,10 +58,25 @@ const unique=[...new Map(entries.map(e=>[e.notice,e])).values()].sort((a,b)=>a.n
 const manifest={lockSha256:createHash('sha256').update(lockSource).digest('hex'),scope:'Production dependency closure (browser and MCP server); includes conservative transitive/type/CLI entries, excludes devDependencies.',entries:[...extras,...unique]};
 const header=`Tabletop — Third-party notices\n\nTabletop itself is MIT licensed; third-party components retain their own licenses.\nThis collection covers the locked production dependency closure, not only browser chunks.\nDOMPurify uses its Apache-2.0 option. Supplemental notices include KaTeX and ELK internals.\nDevelopment tools, Node and Chrome are not included in this collection and must not be bundled without their own notices.\n\n`;
 const aggregate=header+[...documents].map(([file,text])=>`\n${'='.repeat(72)}\n${file}\n${'='.repeat(72)}\n${text}`).join('\n')+`\n${'='.repeat(72)}\nTabler Icons\n${await read('public/licenses/tabler-icons.txt')}`;
-// Construct everything successfully before replacing the generated output.
-await rm(out,{recursive:true,force:true});await mkdir(out,{recursive:true});
-for(const [url,text] of documents){const dest=path.join(root,'public/licenses',decodeURIComponent(url));await mkdir(path.dirname(dest),{recursive:true});await writeFile(dest,text);}
-await writeFile(path.join(out,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
-await writeFile(path.join(root,'public/licenses/THIRD_PARTY_NOTICES.txt'),aggregate);
-await writeFile(path.join(root,'public/licenses/tabletop-MIT.txt'),await read('LICENSE'));
+// Preserve unchanged files, including older CRLF checkouts. Rewriting those as
+// LF can leave Git's cached checkout size reporting a change until re-checkout.
+async function writeChanged(dest,text){
+  try{if((await readFile(dest,'utf8')).replace(/\r\n?/g,'\n')===text)return;}catch(error){if(error.code!=='ENOENT')throw error;}
+  await mkdir(path.dirname(dest),{recursive:true});await writeFile(dest,text);
+}
+const expected=new Set([...documents.keys()].map(url=>decodeURIComponent(url.slice('generated/'.length))));
+expected.add('manifest.json');
+// Remove obsolete generated notices only after all inputs have been validated.
+async function removeObsolete(dir,prefix=''){
+  let entries;try{entries=await readdir(dir,{withFileTypes:true});}catch(error){if(error.code==='ENOENT')return;throw error;}
+  for(const entry of entries){const relative=prefix+entry.name,full=path.join(dir,entry.name);
+    if(entry.isDirectory())await removeObsolete(full,relative+'/');
+    else if(!expected.has(relative))await rm(full);
+  }
+}
+await removeObsolete(out);
+for(const [url,text] of documents)await writeChanged(path.join(root,'public/licenses',decodeURIComponent(url)),text);
+await writeChanged(path.join(out,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
+await writeChanged(path.join(root,'public/licenses/THIRD_PARTY_NOTICES.txt'),aggregate);
+await writeChanged(path.join(root,'public/licenses/tabletop-MIT.txt'),await read('LICENSE'));
 console.log(`License notices: ${unique.length} package versions (${entries.length} dependency locations), ${extras.length} supplemental entries.`);

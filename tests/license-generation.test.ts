@@ -40,5 +40,15 @@ test('license generation is identical for LF and CRLF checkouts and repeat build
     for(const [name,text]of Object.entries(crlf))assert.ok(!text.includes('\r'),name+' must use LF');
     generate();const repeated=await files(path.join(temporary,'public/licenses'));delete repeated['tabler-icons.txt'];
     assert.deepEqual(repeated,crlf);
+    // Existing users may retain unchanged CRLF outputs after pulling .gitattributes.
+    // Keep those bytes and mtimes instead of manufacturing Git status changes.
+    const legacy:Record<string,string>={};
+    for(const [name,text]of Object.entries(lf)){
+      legacy[name]=text.replace(/\n/g,'\r\n');
+      await writeFile(path.join(temporary,'public/licenses',name),legacy[name]);
+    }
+    await writeFile(path.join(temporary,'public/licenses/generated/obsolete.txt'),'stale notice');
+    generate();const preserved=await files(path.join(temporary,'public/licenses'));delete preserved['tabler-icons.txt'];
+    assert.deepEqual(preserved,legacy,'unchanged CRLF notices are preserved and obsolete notices removed');
   }finally{await rm(temporary,{recursive:true,force:true});}
 });
