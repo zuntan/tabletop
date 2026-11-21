@@ -5,3 +5,6 @@ dist/
 dist-pages/
 release-info.json
 release-artifacts/
+tmp/
+output/pdf/tabletop-desk-export-test.pdf
+output/pdf/tabletop-desk-export-test.png
