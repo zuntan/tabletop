@@ -1,0 +1,40 @@
+[
+  {
+    "id": "checkbox-original",
+    "status": "ok"
+  },
+  {
+    "id": "checkbox-label-right",
+    "status": "ok"
+  },
+  {
+    "id": "checkbox-japanese",
+    "status": "ok"
+  },
+  {
+    "id": "settings",
+    "status": "ok"
+  },
+  {
+    "id": "list",
+    "status": "ok"
+  },
+  {
+    "id": "complex",
+    "status": "ok"
+  },
+  {
+    "id": "long-japanese",
+    "status": "ok"
+  },
+  {
+    "id": "escaping",
+    "status": "ok",
+    "safe": true
+  },
+  {
+    "id": "invalid",
+    "status": "error",
+    "message": "Line 3, col 5: unknown primitive \"nonexistent\" (valid: window, header, footer, navbar, leading, center, trailing, tabbar, tabitem, sheet, panel, section, tabs, tab, row, col, list, item, slot, segmented, segment, grid, cell, resourcebar, resource, stats, stat, text, button, backbutton, input, combo, slider, kv, image, icon, divider, spacer, progress, chart, tree, node, menubar, menu, menuitem, separator, chip, avatar, breadcrumb, crumb, spinner, status)"
+  }
+]

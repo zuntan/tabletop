@@ -1,0 +1,11 @@
+window "机の一覧":
+  header:
+    text "最近使った机" bold
+  panel:
+    input placeholder="机の名前で検索" type=search
+    list:
+      item "開発の相談" chevron
+      item "来年の秋の温泉旅行計画" chevron
+      item "紹介動画の準備と公開後の記録" chevron
+  footer:
+    button "新しい机" primary

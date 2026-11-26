@@ -1,0 +1,20 @@
+window "開発作業の管理":
+  header:
+    text "作業一覧" bold
+  panel:
+    row:
+      col 160:
+        text "分類" bold
+        text "すべての作業"
+        text "確認を待っている作業"
+      col fill:
+        text "日本語表示の確認" bold
+        input placeholder="作業名を入力してください"
+        checkbox "作業内容を保存して終了する" checked label-right
+        row:
+          button "内容を確認する"
+          button "担当者に確認を依頼する" primary
+  footer:
+    button "取消"
+    spacer
+    button "保存して閉じる" primary

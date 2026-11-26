@@ -1,0 +1,4 @@
+window "Original":
+  panel:
+    row:
+      checkbox "Notifications / 通知する" checked

@@ -1,0 +1,11 @@
+@startsalt
+{+
+  <b>Settings / 設定
+  ==
+  Display name / 表示名 | "Tabletop            "
+  Language / 言語 | ^日本語^
+  [X] Notifications / 通知する
+  ==
+  [ Cancel / 取消 ] | [ Save / 保存 ]
+}
+@endsalt

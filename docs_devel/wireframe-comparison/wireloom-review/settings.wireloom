@@ -1,0 +1,11 @@
+window "設定":
+  panel:
+    text "表示名"
+    input placeholder="テーブルトップ"
+    text "表示言語"
+    combo "日本語"
+    checkbox "通知を表示する" checked label-right
+    checkbox "机を開いたら全体を表示する" label-right
+  footer:
+    button "取消"
+    button "保存" primary

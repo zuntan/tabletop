@@ -1,0 +1,4 @@
+window "Label right":
+  panel:
+    row:
+      checkbox "Notifications / 通知する" checked label-right

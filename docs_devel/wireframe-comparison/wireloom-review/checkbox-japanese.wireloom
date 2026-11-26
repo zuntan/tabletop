@@ -1,0 +1,4 @@
+window "日本語":
+  panel:
+    row:
+      checkbox "作業内容を保存して終了する" checked

@@ -1,0 +1,11 @@
+window "Settings / 設定":
+  panel:
+    text "Display name / 表示名"
+    input placeholder="Tabletop"
+    text "Language / 言語"
+    combo "日本語"
+    row:
+      checkbox "Notifications / 通知する" checked
+  footer:
+    button "Cancel / 取消"
+    button "Save / 保存" primary

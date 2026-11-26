@@ -1,0 +1,11 @@
+Wireframe #settings w=480 h=420
+  Stack column spacing=2
+    Typography h5 "Settings / 設定"
+    TextField "Display name / 表示名" value="Tabletop"
+    Select "Language / 言語" value="日本語"
+    Stack row spacing=1
+      Control checkbox checked
+      Typography body2 "Notifications / 通知する"
+    Stack row spacing=2
+      Button "Cancel / 取消" outlined
+      Button "Save / 保存" contained
