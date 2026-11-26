@@ -13,5 +13,13 @@
 .markdown-text code { font-family: monospace; background: #94a3b826; border-radius: 3px; }
 .markdown-text pre { padding: .4em; background: #94a3b826; white-space: pre-wrap; }
 .markdown-text pre code { background: none; }
+.markdown-text table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 0 0 .5em; }
+.markdown-text th, .markdown-text td { border: 1px solid currentColor; padding: .25em .4em; vertical-align: top; overflow-wrap: anywhere; }
+.markdown-text th { font-weight: bold; }
+.markdown-text .task-list-item { list-style: none; }
+.markdown-text .task-list-checkbox { appearance: none; position: relative; box-sizing: border-box; width: .85em; height: .85em; margin: 0 .2em 0 -1.2em; vertical-align: -.05em; font: inherit; color: inherit; opacity: 1; background: transparent; border: .08em solid currentColor; border-radius: .1em; }
+.markdown-text .task-list-checkbox:checked::after { content: ''; position: absolute; left: 25%; top: 5%; width: 25%; height: 55%; border: solid currentColor; border-width: 0 .1em .1em 0; transform: rotate(45deg); }
+.markdown-text .task-list-checkbox:enabled { cursor: pointer; }
+.markdown-text .task-list-checkbox:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .markdown-text a { color: #1d4ed8; font-size: inherit; text-decoration: underline; cursor: pointer; }
 .markdown-text a:focus-visible { outline: 2px solid #2563eb; }

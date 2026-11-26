@@ -81,6 +81,14 @@ export async function cloneSvgForRaster<T extends SVGElement>(source:T):Promise<
     if (element instanceof HTMLElement && copy instanceof HTMLElement) {
       const style = getComputedStyle(element);
       for (const key of style) copy.style.setProperty(key, style.getPropertyValue(key));
+      if (element.matches('.task-list-checkbox:checked')) {
+        copy.setAttribute('data-raster-task', String(index));
+        const tick = getComputedStyle(element, '::after');
+        const rule = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        const properties = ['content', 'position', 'left', 'top', 'width', 'height', 'border', 'border-width', 'transform'];
+        rule.textContent = `[data-raster-task="${index}"]::after{${properties.map(key => `${key}:${tick.getPropertyValue(key)}`).join(';')}}`;
+        clone.append(rule);
+      }
     }
     if (element instanceof SVGTextElement) copy.setAttribute('font-family', getComputedStyle(element).fontFamily);
   });

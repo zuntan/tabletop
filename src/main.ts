@@ -89,7 +89,7 @@ import { drawOpenLink, drawDeskLinkIcon } from './link-card';
 import { readClipboardContent, svgClipboardFile, type ClipboardContent } from './clipboard';
 import { PartClipboard, partClipboardType, singleClipboardUrl } from './part-clipboard';
 import { effectivePinVisibility, pinTransform, pinScreenObject, pinThreadMembers, pinVisibilityNames, type PinVisibility } from './pin-series';
-import { drawMarkdown } from './markdown';
+import { drawMarkdown, toggleMarkdownTask } from './markdown';
 import { createActivityLed } from './activity-led';
 import { createDeskBackground } from './desk-background';
 import './activity-led.css';
@@ -1047,9 +1047,21 @@ function launchNavigation(first:WayfinderRoute,mode:'move'|'tour',input:Wayfinde
 }
 function startWayfinder(id:string){try{beginWayfinder({id});}catch(error){notify(uiErrorMessage(error),true);}}
 
+canvas.addEventListener('change', event => {
+  const input = event.target as HTMLInputElement;
+  if (!input.matches('[data-markdown-task]')) return;
+  const id = input.closest('[data-id]')?.getAttribute('data-id');
+  if (!id || busy || editor.isActive() || lineInput.isActive() || space) { render(); return; }
+  try {
+    const object = desk.get(id);
+    const text = toggleMarkdownTask(object.text, Number(input.dataset.markdownTask));
+    if (text !== object.text) execute([{ kind: 'update', id, patch: { text } }]);
+  } catch (error) { notify(uiErrorMessage(error), true); }
+  render();
+});
 canvas.addEventListener('dblclick', event => {
   const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
-  if (target.closest('[data-open-url], [data-open-media], [data-open-desk], [data-markdown-link]')) return;
+  if (target.closest('[data-open-url], [data-open-media], [data-open-desk], [data-markdown-link], [data-markdown-task]')) return;
   const id = target.closest('[data-id]')?.getAttribute('data-id');
   if (!id || busy || editor.isActive() || lineInput.isActive()) return;
   const object = desk.get(id);
@@ -1061,7 +1073,7 @@ canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture
 canvas.addEventListener('auxclick', event => { if (event.button === 1) event.preventDefault(); });
 canvas.addEventListener('pointerdown', event => {
   if (gesture || editor.isActive() || (event.button !== 0 && event.button !== 1)) return;
-  if (!space && (event.target as Element).closest('[data-open-url], [data-open-media], [data-open-desk], [data-markdown-link]')) return;
+  if (!space && (event.target as Element).closest('[data-open-url], [data-open-media], [data-open-desk], [data-markdown-link], [data-markdown-task]')) return;
   const target = event.target as Element;
   const resize = target.closest('[data-resize]')?.getAttribute('data-resize');
   const calloutTip = target.closest('[data-callout-tip]')?.getAttribute('data-callout-tip');

@@ -1,5 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { openTestDesk } from './desk-browser';
 
 test('Markdown memo keeps source editing, independent colors and safe links without disrupting gestures', { timeout: 45_000 }, async () => {
@@ -42,6 +45,39 @@ test('Markdown memo keeps source editing, independent colors and safe links with
     assert.equal((await call('desk_get', { id: 'memo' })).x, 298);
     await call('desk_execute', { operations: [{ kind: 'update', id: 'memo', patch: { text: '<script>alert(1)</script>\n\n![image](https://example.com/a.png)' } }] });
     assert.equal(await memo.locator('script,img').count(), 0);
+    await call('desk_execute', { operations: [{ kind: 'update', id: 'memo', patch: { text: '| 項目 | 数量 |\n| --- | ---: |\n| 長い日本語の説明文 | 123 |\n\n- [ ] 未完了\n- [x] 完了\n\nhttps://example.com/' } }] });
+    assert.equal(await memo.locator('table').count(), 1);
+    assert.equal(await memo.locator('td').last().evaluate(element => getComputedStyle(element).textAlign), 'right');
+    assert.equal(await memo.locator('th').first().evaluate(element => getComputedStyle(element).borderTopStyle), 'solid');
+    assert.equal(await memo.locator('input:enabled').count(), 2);
+    assert.equal(await memo.locator('input:checked').count(), 1);
+    const checkboxStyle = await memo.locator('input:checked').evaluate(element => {
+      const box = getComputedStyle(element), tick = getComputedStyle(element, '::after');
+      return { appearance: box.appearance, opacity: box.opacity, color: box.color, tickColor: tick.borderRightColor };
+    });
+    assert.deepEqual(checkboxStyle, { appearance: 'none', opacity: '1', color: 'rgb(127, 29, 29)', tickColor: 'rgb(127, 29, 29)' });
+    assert.equal(await memo.locator('a').getAttribute('href'), 'https://example.com/');
+    const beforeToggle = await call('desk_get', { id: 'memo' });
+    const beforeSelection = await call('desk_selection');
+    await memo.locator('input').first().click();
+    const afterToggle = await call('desk_get', { id: 'memo' });
+    assert.equal(afterToggle.text, beforeToggle.text.replace('- [ ] 未完了', '- [x] 未完了'));
+    assert.equal(afterToggle.x, beforeToggle.x);
+    assert.deepEqual((await call('desk_selection')).ids, beforeSelection.ids);
+    const directory = await mkdtemp(join(tmpdir(), 'tabletop-task-'));
+    try {
+      const saved = await call('desk_save', { path: join(directory, 'tasks.tabletop') });
+      const exported = await call('desk_pdf', { path: join(directory, 'tasks.pdf') });
+      assert.ok(exported.bytes > 0);
+      await call('desk_execute', { operations: [{ kind: 'update', id: 'memo', patch: { text: 'temporary' } }] });
+      const summary = await call('desk_summary');
+      await call('desk_load', { path: saved.path, confirm: true, expectedRevision: summary.revision, expectedSessionId: summary.sessionId });
+      assert.equal((await call('desk_get', { id: 'memo' })).text, afterToggle.text);
+    } finally { await rm(directory, { recursive: true, force: true }); }
+    await call('desk_undo');
+    await call('desk_undo');
+    await call('desk_undo');
+    assert.equal((await call('desk_get', { id: 'memo' })).text, beforeToggle.text);
     assert.equal(await memo.locator('.markdown-text').evaluate(element => getComputedStyle(element).overflow), 'hidden');
     assert.deepEqual(errors, []);
   } finally { await close(); }
