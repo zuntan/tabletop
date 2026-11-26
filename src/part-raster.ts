@@ -4,6 +4,7 @@ import {checkAssetBytes} from './data-limits';
 import {dataBytes} from './binary-envelope';
 import type { Desk, DeskObject } from './model';
 import { cutoutTitle } from './logical-cutout';
+import { markdownImageUnavailable } from './markdown-images';
 
 /** Experimental single-card capture. No screen capture, edits, or selection changes. */
 export async function rasterPointedCard(desk: Desk, node: (id: string) => SVGGElement | undefined, scale = 1) {
@@ -72,6 +73,7 @@ export async function rasterRenderedPart(object: DeskObject, source: SVGGElement
 
 /** Freeze current styles and make image resources self-contained, without changing the desk. */
 export async function cloneSvgForRaster<T extends SVGElement>(source:T):Promise<T>{
+  if (source.querySelector('[data-markdown-image][data-image-status="loading"]')) throw new DeskError('imageRasterFailed');
   const clone = source.cloneNode(true) as T;
 
   // Freeze HTML layout/style inside foreignObject; SVG artwork already uses attributes.
@@ -109,6 +111,33 @@ export async function cloneSvgForRaster<T extends SVGElement>(source:T):Promise<
   for(const iframe of clone.querySelectorAll('iframe')) {
     const placeholder=document.createElement('div');placeholder.style.cssText='padding:18px;color:#64748b;font:14px sans-serif';
     placeholder.textContent=t('actions:webCapturePlaceholder');iframe.replaceWith(placeholder);
+  }
+  // HTML images inside Markdown also need embedded bytes for foreignObject export.
+  for (const image of clone.querySelectorAll<HTMLImageElement>('.markdown-image img')) {
+    if (image.src.startsWith('data:')) continue;
+    try {
+      // Use the image loader (img-src), keeping the server's restricted connect-src policy.
+      image.src = await new Promise<string>((resolve, reject) => {
+        const external = new Image(); external.crossOrigin = 'anonymous'; external.referrerPolicy = 'no-referrer';
+        const timer = setTimeout(() => { external.src = ''; reject(new Error('Image capture timed out')); }, 5000);
+        external.onerror = () => { clearTimeout(timer); reject(new Error('Image access denied')); };
+        external.onload = () => {
+          clearTimeout(timer);
+          try {
+            const width = external.naturalWidth, height = external.naturalHeight;
+            if (!width || !height || width * height > 16_000_000) throw new Error('Image too large');
+            const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
+            const context = canvas.getContext('2d'); if (!context) throw new Error('Canvas unavailable');
+            context.drawImage(external, 0, 0);
+            const src = canvas.toDataURL('image/png'); checkAssetBytes(dataBytes(src).length); resolve(src);
+          } catch (error) { reject(error); }
+        };
+        external.src = image.src;
+      });
+    } catch {
+      // The browser may display a cross-origin picture that cannot be fetched for export.
+      markdownImageUnavailable(image.parentElement!);
+    }
   }
   return clone;
 }

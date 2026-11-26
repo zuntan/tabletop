@@ -36,7 +36,11 @@ For cards, press **Fit frame to text** below the text input in Properties. It ad
 
 Follow the editor's instructions to commit. Ctrl+Enter (⌘+Enter on Mac) also commits; Escape cancels this edit. The editor's toggle chooses whether Enter commits or inserts a newline.
 
-Cards support safe Markdown: headings, emphasis, lists, quotes, code and HTTP(S) links. Tables, embedded images and raw HTML are not supported. Text inside shapes is plain text.
+Cards support safe Markdown: headings, emphasis, lists, quotes, code, tables, task lists, HTTP(S) links, automatic URL links and image references. Click a task checkbox to toggle its completion state. Raw HTML is not supported. Text inside shapes is plain text.
+
+Use `![Description](https://example.com/image.png)` for external images or `![Diagram](tabletop://./card-ID)` for an image on the same desk. Local targets can be images, SVGs (including doodles), Mermaid diagrams, QR codes, SVG props or URL cards in QR mode. Only the image content appears, without the title or marks. Source edits are reflected; moving the source does not break the reference. Text cards, missing IDs and references to other desks display an unavailable-image message.
+
+Images retain their aspect ratio within the card width; card frames do not grow automatically. External images load when displayed, and only their URLs are saved in the desk file. Offline or broken images show a fallback. PNG/PDF export temporarily embeds image bytes; images blocked by the host's access policy or other retrieval failures use a fallback with their description. Copying a card does not rewrite reference IDs in its Markdown.
 
 If text overflows, enlarge the card, reduce its font or split the content. Enlarging the inline editor alone does not resize the card itself.
 

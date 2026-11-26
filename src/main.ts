@@ -90,6 +90,7 @@ import { readClipboardContent, svgClipboardFile, type ClipboardContent } from '.
 import { PartClipboard, partClipboardType, singleClipboardUrl } from './part-clipboard';
 import { effectivePinVisibility, pinTransform, pinScreenObject, pinThreadMembers, pinVisibilityNames, type PinVisibility } from './pin-series';
 import { drawMarkdown, toggleMarkdownTask } from './markdown';
+import { configureMarkdownImages } from './markdown-images';
 import { createActivityLed } from './activity-led';
 import { createDeskBackground } from './desk-background';
 import { fontFamilies, readFontDefaults, saveFontDefaults } from './desk-fonts';
@@ -133,6 +134,7 @@ const creationSettings = initialSettings();
 creationSettings.fonts = readFontDefaults();
 creationSettings.series[0].name = t('creation:digits');
 const desk = new Desk(creationSettings);
+configureMarkdownImages(id => { try { return desk.get(id); } catch { return undefined; } });
 const doodleEditor=createDoodleEditor((id,patch)=>{execute([{kind:'update',id,patch}]);render();},notify);
 const partClipboard = new PartClipboard();
 const app = document.querySelector<HTMLDivElement>('#app')!;

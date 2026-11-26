@@ -55,5 +55,6 @@
   "resizeHint": "Drag toward the top left to enlarge",
   "bellEnterHint": "Enter: apply · Shift + Enter: new line",
   "bellModHint": "Enter: new line · Ctrl/⌘ + Enter: apply",
-  "openBellNote": "Open bell note"
+  "openBellNote": "Open bell note",
+  "imageUnavailable": "Image unavailable"
 }

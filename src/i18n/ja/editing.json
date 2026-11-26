@@ -55,5 +55,6 @@
   "resizeHint": "左上へドラッグして広げる",
   "bellEnterHint": "Enter：確定 · Shift＋Enter：改行",
   "bellModHint": "Enter：改行 · Ctrl/⌘＋Enter：確定",
-  "openBellNote": "ベルに添える文章を開く"
+  "openBellNote": "ベルに添える文章を開く",
+  "imageUnavailable": "画像を表示できません"
 }

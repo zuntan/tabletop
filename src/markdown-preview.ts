@@ -1,6 +1,7 @@
 import { uiAttribute } from './i18n/dom';
 import { createIcon } from './icons';
 import { renderMarkdown } from './markdown';
+import { hydrateMarkdownImages } from './markdown-images';
 
 /** A held view of the draft, never a write to the desk or a second editor. */
 export function createMarkdownPreview(panel: HTMLElement, input: HTMLTextAreaElement, actions: HTMLElement) {
@@ -25,6 +26,7 @@ export function createMarkdownPreview(panel: HTMLElement, input: HTMLTextAreaEle
       background: style.backgroundColor, color: style.color, border: style.border,
       borderRadius: style.borderRadius, padding: style.padding, fontSize: style.fontSize });
     preview.innerHTML = renderMarkdown(input.value);
+    hydrateMarkdownImages(preview);
     preview.hidden = false; input.style.visibility = 'hidden'; button.setAttribute('aria-pressed', 'true');
   };
   button.addEventListener('pointerdown', event => {

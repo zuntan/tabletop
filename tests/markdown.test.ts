@@ -1,12 +1,25 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderMarkdown, toggleMarkdownTask } from '../src/markdown';
+import { markdownImageReference } from '../src/markdown-images';
 
-test('Markdown supports text structure without images or executable HTML', () => {
+test('image references distinguish this desk from unsupported locations and escape attributes', () => {
+  assert.deepEqual(markdownImageReference('tabletop://./image-1'), { kind: 'local', id: 'image-1' });
+  assert.deepEqual(markdownImageReference('tabletop://./%E5%9B%B3'), { kind: 'local', id: '図' });
+  for (const value of ['tabletop://other/id', 'tabletop://./', 'tabletop://./id/extra', 'tabletop://./%', 'file:///tmp/a', 'javascript:alert(1)', 'data:image/svg+xml,test', '/image.png', 'https://user:pass@example.com/a']) {
+    assert.equal(markdownImageReference(value), undefined, value);
+  }
+  assert.match(renderMarkdown('![図](tabletop://./image-1)'), /data-markdown-image="tabletop:\/\/\.\/image-1"/);
+  assert.match(renderMarkdown('![a&quot;](https://example.com/a.png)'), /data-image-alt="a&quot;"/);
+  assert.doesNotMatch(renderMarkdown('[local](tabletop://./image-1)'), /<a\b/);
+});
+
+test('Markdown supports text structure and image placeholders without executable HTML', () => {
   const html = renderMarkdown('# Heading\n\n**bold** *italic* ~~gone~~\nnext\n\n- one\n- two\n\n1. first\n\n> quote\n\n`inline`\n\n```js\nconst value = 1;\n```');
   for (const tag of ['h1', 'strong', 'em', 's', 'br', 'ul', 'ol', 'blockquote', 'code', 'pre']) assert.match(html, new RegExp(`<${tag}[ >]`));
   const unsafe = renderMarkdown('<script>alert(1)</script>\n\n![image](https://example.com/a.png)\n\n| a | b |\n| - | - |\n| c | d |');
   assert.doesNotMatch(unsafe, /<(script|img)\b/);
+  assert.match(unsafe, /data-markdown-image="https:\/\/example.com\/a.png"/);
   assert.match(unsafe, /<table>/);
   assert.match(unsafe, /&lt;script&gt;/);
 });

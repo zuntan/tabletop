@@ -1,8 +1,8 @@
 import MarkdownIt from 'markdown-it';
 import type { DeskObject } from './model';
+import { hydrateMarkdownImages } from './markdown-images';
 
-const markdown = new MarkdownIt({ html: false, breaks: true, linkify: true, typographer: false })
-  .disable('image');
+const markdown = new MarkdownIt({ html: false, breaks: true, linkify: true, typographer: false });
 markdown.linkify.set({ fuzzyLink: false, fuzzyEmail: false });
 markdown.core.ruler.after('inline', 'task_lists', state => {
   let taskIndex = 0;
@@ -24,15 +24,29 @@ markdown.core.ruler.after('inline', 'task_lists', state => {
     state.tokens[i - 2].attrJoin('class', 'task-list-item');
   }
 });
-markdown.validateLink = href => {
+export function markdownHttpUrl(href: string) {
   try { return ['http:', 'https:'].includes(new URL(href).protocol); }
   catch { return false; }
+}
+markdown.validateLink = href => markdownHttpUrl(href) || href.startsWith('tabletop:');
+markdown.renderer.rules.image = (tokens, index, options, env, renderer) => {
+  const token = tokens[index];
+  const alt = renderer.renderInlineAsText(token.children ?? [], options, env);
+  return `<span class="markdown-image" data-markdown-image="${markdown.utils.escapeHtml(String(token.attrGet('src') ?? ''))}" data-image-alt="${markdown.utils.escapeHtml(alt)}"></span>`;
 };
 markdown.renderer.rules.link_open = (tokens, index, options, _env, renderer) => {
+  // The tabletop scheme is currently supported only for image references.
+  if (!markdownHttpUrl(String(tokens[index].attrGet('href') ?? ''))) return '<span>';
   tokens[index].attrSet('target', '_blank');
   tokens[index].attrSet('rel', 'noopener noreferrer');
   tokens[index].attrSet('data-markdown-link', '');
   return renderer.renderToken(tokens, index, options);
+};
+markdown.renderer.rules.link_close = (tokens, index) => {
+  for (let i = index - 1; i >= 0; i--) if (tokens[i].type === 'link_open') {
+    return markdownHttpUrl(String(tokens[i].attrGet('href') ?? '')) ? '</a>' : '</span>';
+  }
+  return '</span>';
 };
 export function renderMarkdown(source: string): string { return markdown.render(source); }
 
@@ -52,8 +66,9 @@ export function drawMarkdown(group: SVGGElement, object: DeskObject) {
   content.style.color = object.textColor; content.style.fontSize = `${object.fontSize}px`;
   content.style.padding = `${object.padding ?? 6}px`;
   content.style.borderRadius = `${Math.min(object.cornerRadius, object.width / 2, object.height / 2)}px`;
-  // Only parser-generated HTML is inserted; raw HTML and embedded images are disabled.
+  // Only parser-generated HTML is inserted; images resolve separately in image contexts.
   content.innerHTML = renderMarkdown(object.text);
+  hydrateMarkdownImages(content);
   content.querySelectorAll<HTMLInputElement>('[data-markdown-task]').forEach(input => { input.disabled = false; });
   foreign.append(content); group.append(foreign);
 }

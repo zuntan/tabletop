@@ -23,3 +23,6 @@
 .markdown-text .task-list-checkbox:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .markdown-text a { color: #1d4ed8; font-size: inherit; text-decoration: underline; cursor: pointer; }
 .markdown-text a:focus-visible { outline: 2px solid #2563eb; }
+.markdown-text .markdown-image { display: inline-block; max-width: 100%; vertical-align: middle; }
+.markdown-text .markdown-image img { display: block; max-width: 100%; height: auto; }
+.markdown-text .markdown-image[data-image-status="error"] { border: 1px dashed currentColor; padding: .25em; box-sizing: border-box; }
