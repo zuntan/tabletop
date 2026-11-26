@@ -41,6 +41,7 @@
   "propSvgLoad": "小物のSVGを読み込めませんでした",
   "rulerSelection": "束・ファイルに属さないカードや図形を選んでください",
   "rulerSameFile": "定規と所属カード全体を同じファイルへ入れてください",
+  "orderLocked": "並べ替える対象のロックを解除してください",
   "rulerLocked": "定規の束をロック解除してください",
   "rulerFiled": "ファイル内の定規は変更・削除できません",
   "clipRulerMember": "定規に所属するカードはクリップへ追加できません",

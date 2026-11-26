@@ -5,6 +5,8 @@
   "endMarker": "終点形状",
   "finishFormat": "編集中の操作を終えてから書式を使ってください",
   "editGroup": "重なり順・削除・スナップ・ロック",
+  "forward": "一つ前へ",
+  "backward": "一つ後ろへ",
   "front": "最前面",
   "back": "最背面",
   "animatedDelete": "アニメ削除（落下／吸引／消しゴム／三角片をランダム）",

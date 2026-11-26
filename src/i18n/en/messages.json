@@ -5,6 +5,8 @@
   "endMarker": "End marker",
   "finishFormat": "Finish editing before using styles.",
   "editGroup": "Layer order, deletion, snapping and locking",
+  "forward": "Bring forward",
+  "backward": "Send backward",
   "front": "Bring to front",
   "back": "Send to back",
   "animatedDelete": "Animated deletion (random drop, suction, eraser or triangles)",

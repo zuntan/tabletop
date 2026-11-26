@@ -1,4 +1,5 @@
 import { DeskError } from './desk-errors';
+import { orderObjects } from './stack-order';
 import {partialInputSchema} from './partial-input-schema';
 import {equalValue} from './value-equality';
 import {MAX_ASSET_BYTES,MAX_OBJECTS} from './data-limits';
@@ -136,6 +137,7 @@ export const operationSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('cutout'), id: z.string(), moldId: z.string() }).strict(),
   z.object({ kind: z.literal('delete'), id: z.string() }).strict(),
   z.object({ kind: z.literal('reorder'), id: z.string(), index: z.number().int().min(0) }).strict(),
+  z.object({ kind: z.literal('order'), ids: z.array(z.string()).min(1).max(MAX_OBJECTS), direction: z.enum(['front', 'forward', 'backward', 'back']) }).strict(),
 ]);
 export const batchSchema = z.object({
   operations: z.array(operationSchema).min(1).max(12000),
@@ -299,6 +301,10 @@ export class Desk {
     const placement = createGridPlacement(batch, before, value => objectSchema.parse(value));
     for (const inputOperation of batch.operations) {
       const normalized = placement.normalize(inputOperation, materializeLabels(after, afterSettings), afterSettings);
+      if (normalized.kind === 'order') {
+        after = orderObjects(after, normalized.ids, normalized.direction, batch.actor);
+        continue;
+      }
       const operation = normalized.kind==='cutout' ? (()=>{
         const target=after.find(o=>o.id===normalized.id),mold=after.find(o=>o.id===normalized.moldId);
         if(!target||!mold||target.id===mold.id)throw new DeskError('cutoutChoosePair');
@@ -368,7 +374,7 @@ export class Desk {
     }) } });
     if (equalValue(before,after)
       && equalValue(beforeSettings,afterSettings)) return result();
-    const targets = [...new Set(batch.operations.map(op => op.kind === 'add' ? op.object.id
+    const targets = [...new Set(batch.operations.flatMap(op => op.kind === 'order' ? op.ids : op.kind === 'add' ? op.object.id
       : op.kind === 'desk_rename' ? 'name' : op.kind === 'initial_view_update' ? 'initialFocusId' : op.kind === 'grid_update' ? 'grid' : op.kind === 'background_update' ? 'background' : op.kind === 'defaults_update' ? 'defaults' : op.kind === 'series_add' ? op.series.id : op.id))];
     const entry = { before, after, beforeSettings, afterSettings, actor: batch.actor, targets };
     this.undoStack.push(entry);

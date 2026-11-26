@@ -376,8 +376,13 @@ const formatControls = createFormatControls(desk, $('#authoring-tools'), operati
 }, notify);
 const editActions = document.createElement('div'); editActions.className = 'toolbar-edit-actions';
 editActions.setAttribute('role', 'group'); uiAttribute(editActions,'aria-label','messages:editGroup');
-for (const [id, icon, label] of [['front', '▣↑', t('messages:front')], ['back', '▣↓', t('messages:back')]]) {
-  const button = $<HTMLButtonElement>(`#${id}`); iconButton(button, icon, label); editActions.append(button);
+for (const [id, icon, label] of [['front', '▣↑', t('messages:front')], ['forward', '↑', t('messages:forward')], ['backward', '↓', t('messages:backward')], ['back', '▣↓', t('messages:back')]] as const) {
+  const button = document.querySelector<HTMLButtonElement>(`#${id}`) ?? document.createElement('button');
+  button.id = id; button.type = 'button';
+  iconButton(button, icon, label);
+  uiAttribute(button, 'title', `messages:${id}`);
+  uiAttribute(button, 'aria-label', `messages:${id}`);
+  editActions.append(button);
 }
 const animatedDeleteButton=document.createElement('button');animatedDeleteButton.id='delete-animated';animatedDeleteButton.type='button';
 iconButton(animatedDeleteButton,'×',t('messages:animatedDelete'));
@@ -805,7 +810,12 @@ function render(rebuild = true) {
   }
   lockControls.update([...new Set(ids.flatMap(id => fileGroup(renderedScene,id).map(object => object.id)))].map(id => desk.get(id)));
   for (const id of ['#front', '#back', '#delete', '#delete-animated']) $<HTMLButtonElement>(id).disabled = !ids.length;
-  for(const id of ['#front','#back'])if(ids.some(id=>{const f=fileFor(renderedScene,id);return f&&f.id!==id;}))$<HTMLButtonElement>(id).disabled=true;
+  for (const selector of ['#front', '#forward', '#backward', '#back']) {
+    $<HTMLButtonElement>(selector).disabled = !ids.length || ids.some(id => {
+      const file = fileFor(renderedScene, id);
+      return !!file && file.id !== id || fileGroup(renderedScene, id).some(object => object.locked);
+    });
+  }
   fileCreate.disabled=!ids.length;
   bhDelete.refresh();cutoutControls.update();
   stickerControls.update();
@@ -926,8 +936,9 @@ const stickerControls=createStickerControls(form,()=>desk.selected().map(id=>des
   if(busy||gesture||editor.isActive())throw new Error(t('messages:finishStickers'));
   execute(operations);renderDecorations(operations.map(op=>'id' in op?op.id:''));notify(t('messages:stickersUpdated'));
 },notify,stickerContainer);
-$('#front').onclick = () => attempt(() => execute(desk.selected().map(id => ({ kind: 'reorder', id, index: desk.summary().count - 1 }))));
-$('#back').onclick = () => attempt(() => execute(desk.selected().slice().reverse().map(id => ({ kind: 'reorder', id, index: 0 }))));
+for (const direction of ['front', 'forward', 'backward', 'back'] as const) {
+  $(`#${direction}`).onclick = () => attempt(() => execute([{ kind: 'order', ids: desk.selected(), direction }]));
+}
 $('#card-fit-text').onclick = () => {
   if(busy||gesture||editor.isActive()||desk.selected().length!==1)return;
   const object=desk.get(desk.selected()[0]);

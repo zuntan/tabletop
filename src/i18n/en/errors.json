@@ -41,6 +41,7 @@
   "propSvgLoad": "Could not load the prop SVG.",
   "rulerSelection": "Select cards or shapes that are not already in a bundle or clear folder.",
   "rulerSameFile": "Put the ruler and all its cards in the same clear folder.",
+  "orderLocked": "Unlock the selected objects before changing their order.",
   "rulerLocked": "Unlock the ruler bundle first.",
   "rulerFiled": "Cannot change or delete a ruler inside a clear folder.",
   "clipRulerMember": "A card belonging to a ruler cannot be added to a clip.",
