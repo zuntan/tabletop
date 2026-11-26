@@ -92,6 +92,7 @@ import { effectivePinVisibility, pinTransform, pinScreenObject, pinThreadMembers
 import { drawMarkdown, toggleMarkdownTask } from './markdown';
 import { createActivityLed } from './activity-led';
 import { createDeskBackground } from './desk-background';
+import { fontFamilies, readFontDefaults, saveFontDefaults } from './desk-fonts';
 import './activity-led.css';
 import { measureDeskText } from './text-measure';
 import './markdown.css';
@@ -129,6 +130,7 @@ import { createLockControls } from './lock-controls';
 import { drawLockedSelection } from './lock-drawing';
 
 const creationSettings = initialSettings();
+creationSettings.fonts = readFontDefaults();
 creationSettings.series[0].name = t('creation:digits');
 const desk = new Desk(creationSettings);
 const doodleEditor=createDoodleEditor((id,patch)=>{execute([{kind:'update',id,patch}]);render();},notify);
@@ -482,7 +484,13 @@ const deskMenu = createDeskMenu($('header'), desk, patch => {
   if (busy || gesture || editor.isActive()) { notify(t('messages:finishSettings'), true); deskMenu.refresh(); return; }
   attempt(()=>execute([{kind:'grid_update',patch}]));
 }, () => !busy && !gesture && !editor.isActive() && !identityControls.isEditing()
-  && !lineInput.isActive() && !doodleEditor.isActive() && !captureCamera.isActive() && !isConfirmDialogOpen());
+  && !lineInput.isActive() && !doodleEditor.isActive() && !captureCamera.isActive() && !isConfirmDialogOpen(), patch => {
+  if (busy || gesture || editor.isActive()) { notify(t('messages:finishSettings'), true); deskMenu.refresh(); return; }
+  attempt(() => {
+    execute([{ kind: 'fonts_update', patch }]);
+    saveFontDefaults(desk.settingsSnapshot().fonts!);
+  });
+});
 function objectListIncludes(object: DeskObject) {
   if ($('#object-filter-apply').getAttribute('aria-checked') !== 'true') return true;
   if ($('#object-filter-files').getAttribute('aria-pressed')==='true'&&fileFor(renderedScene,object.id))return true;
@@ -759,6 +767,9 @@ function renderDecorations(ids:string[]){
   refreshHistory();
 }
 function render(rebuild = true) {
+  const families = fontFamilies(desk.settingsSnapshot().fonts);
+  app.style.setProperty('--card-font-family', families.body);
+  app.style.setProperty('--card-code-font-family', families.code);
   pinSeriesMap.clear();
   for (const series of desk.settingsSnapshot().series) pinSeriesMap.set(series.id, series);
   identityControls.refresh();
@@ -1458,6 +1469,9 @@ async function connect(token: string, port: string, manual = false, host = '127.
         },
       });
       if(desk.revision!==beforeRevision)cancelWayfinding('changed');
+      if (message.request.method === 'execute' && message.request.operations?.some((op: Operation) => op.kind === 'fonts_update')) {
+        saveFontDefaults(desk.settingsSnapshot().fonts!);
+      }
       if (['camera_move', 'mermaid_render', 'qr_render', 'raster', 'pdf_export'].includes(message.request.method)) result = await result;
       if (message.request.method === 'fit') {
         const ids = desk.pointed();

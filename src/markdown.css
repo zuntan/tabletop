@@ -1,4 +1,4 @@
-.markdown-text { width: 100%; height: 100%; box-sizing: border-box; padding: 6px; overflow: hidden; font-family: sans-serif; line-height: 1.25; overflow-wrap: anywhere; user-select: none; }
+.markdown-text { width: 100%; height: 100%; box-sizing: border-box; padding: 6px; overflow: hidden; font-family: var(--card-font-family, sans-serif); line-height: 1.25; overflow-wrap: anywhere; user-select: none; }
 .markdown-text > :first-child { margin-top: 0; }
 .markdown-text > :last-child { margin-bottom: 0; }
 .markdown-text p, .markdown-text ul, .markdown-text ol, .markdown-text blockquote, .markdown-text pre { margin: 0 0 .5em; }
@@ -10,7 +10,7 @@
 .markdown-text ul, .markdown-text ol { padding-left: 1.5em; }
 .markdown-text li > p { margin-bottom: .2em; }
 .markdown-text blockquote { border-left: 3px solid currentColor; padding-left: .6em; }
-.markdown-text code { font-family: monospace; background: #94a3b826; border-radius: 3px; }
+.markdown-text code { font-family: var(--card-code-font-family, monospace); background: #94a3b826; border-radius: 3px; }
 .markdown-text pre { padding: .4em; background: #94a3b826; white-space: pre-wrap; }
 .markdown-text pre code { background: none; }
 .markdown-text table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 0 0 .5em; }

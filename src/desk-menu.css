@@ -67,6 +67,8 @@
 #desk-menu-panel #grid-interval { width:72px; min-width:0; }
 
 #desk-menu-panel.desk-appearance { width:360px; }
+#desk-menu-panel .desk-font-candidates { box-sizing: border-box; width: 100%; padding: 7px; border: 1px solid var(--ui-border, #cbd5e1); border-radius: 6px; color: inherit; background: var(--ui-input, #fff); }
+#desk-menu-panel #card-font-sample { height: auto; padding: 12px; border: 1px solid var(--ui-border, #cbd5e1); border-radius: 6px; font-size: 16px; user-select: text; }
 #desk-menu-panel .desk-menu-grid-field { display:grid; grid-template-columns:104px minmax(0,1fr); align-items:center; gap:8px; }
 #desk-menu-panel .desk-menu-grid-field > span { white-space:nowrap; }
 #desk-menu-panel .desk-menu-grid-controls { display:flex; align-items:center; gap:8px; min-width:0; }

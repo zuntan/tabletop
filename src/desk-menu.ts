@@ -5,13 +5,14 @@ import deskArtwork from './assets/desk-link.svg?raw';
 import {plainDeskColors,wallpaperChoice,wallpaperPatch} from './desk-appearance';
 import type { Desk } from './model';
 import type { Settings } from './settings';
+import { deskFontsSchema, fontFamilies, type DeskFonts } from './desk-fonts';
 import { createIcon } from './icons';
 import { frameColors } from './frame-colors';
 import packageSource from '../package.json?raw';
 import './desk-menu.css';
 import { getUiLanguage, isUiLanguage, languageChangeEvent, setUiLanguage, t } from './i18n';
 
-export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: Partial<Settings['background']>) => void, preview: (patch?: Partial<Settings['background']>) => void, bhPreview?: () => void, changeGrid?: (patch:Partial<Settings['grid']>)=>void, canChangeLanguage: () => boolean = () => true) {
+export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: Partial<Settings['background']>) => void, preview: (patch?: Partial<Settings['background']>) => void, bhPreview?: () => void, changeGrid?: (patch:Partial<Settings['grid']>)=>void, canChangeLanguage: () => boolean = () => true, changeFonts?: (patch: Partial<DeskFonts>) => void) {
   const button = document.createElement('button');
   button.id = 'desk-menu'; button.type = 'button'; button.className = 'header-icon';
   button.title = t('menu:title'); button.setAttribute('aria-label', t('menu:title'));
@@ -136,10 +137,45 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     const divisionPicker=addPresetPalette(divisions,['1','2','3','4'],t('menu:snapInterval'));divisionPicker.wrapper.classList.add('line-style-picker');panel.append(divisionPicker.popup);
     for(const button of divisionPicker.choices.querySelectorAll<HTMLButtonElement>('button'))button.textContent=button.dataset.value+':1';
     divisions.onchange=()=>changeGrid?.({snapDivisions:Number(divisions.value)});
+    const bodyFont = document.createElement('select'); bodyFont.id = 'card-body-font';
+    bodyFont.setAttribute('aria-label', t('menu:cardFont'));
+    for (const [value, key] of [['sans', 'fontSans'], ['serif', 'fontSerif'], ['monospace', 'fontMono']] as const) {
+      const option = document.createElement('option'); option.value = value; option.textContent = t(`menu:${key}`); bodyFont.append(option);
+    }
+    bodyFont.disabled = !changeFonts;
+    bodyFont.onchange = () => changeFonts?.({ body: bodyFont.value as DeskFonts['body'] });
+    label(t('menu:cardFont'), bodyFont);
+    const fontInputs = new Map<'sans' | 'serif' | 'monospace', HTMLInputElement>();
+    for (const [key, title] of [['sans', 'fontSansCandidates'], ['serif', 'fontSerifCandidates'], ['monospace', 'fontMonoCandidates']] as const) {
+      const input = document.createElement('input'); input.type = 'text'; input.id = `card-font-${key}`;
+      input.className = 'desk-font-candidates'; input.maxLength = 1000; input.disabled = !changeFonts;
+      input.setAttribute('aria-label', t(`menu:${title}`));
+      input.oninput = () => input.setCustomValidity('');
+      input.onchange = () => {
+        const parsed = deskFontsSchema.safeParse({ ...desk.settingsSnapshot().fonts, [key]: input.value });
+        const generic = key === 'sans' ? 'sans-serif' : key;
+        if (!parsed.success || !CSS.supports('font-family', input.value.trim() ? `${input.value}, ${generic}` : generic)) {
+          input.setCustomValidity(t('menu:invalidFontCandidates')); input.reportValidity(); return;
+        }
+        changeFonts?.({ [key]: parsed.data[key] });
+      };
+      label(t(`menu:${title}`), input); fontInputs.set(key, input);
+    }
+    const fontNote = document.createElement('p'); fontNote.className = 'desk-menu-note'; fontNote.textContent = t('menu:fontNote'); panel.append(fontNote);
+    const fontSample = document.createElement('div'); fontSample.id = 'card-font-sample'; fontSample.className = 'markdown-text';
+    const sampleText = document.createElement('p'); sampleText.textContent = t('menu:fontSample');
+    const sampleCode = document.createElement('code'); sampleCode.textContent = 'const value = 123;';
+    fontSample.append(sampleText, sampleCode); panel.append(fontSample);
     const initialFocus=document.createElement('output');initialFocus.id='initial-focus-id';
     label(t('menu:initialFocus'),initialFocus).classList.add('desk-menu-inline-field');
     sync = () => {
       const settings=desk.settingsSnapshot(),bg = settings.background, resolved = frameColors(bg);
+      const fonts = settings.fonts ?? deskFontsSchema.parse({});
+      bodyFont.value = fonts.body;
+      for (const [key, input] of fontInputs) if (document.activeElement !== input) input.value = fonts[key];
+      const families = fontFamilies(fonts);
+      fontSample.style.setProperty('--card-font-family', families.body);
+      fontSample.style.setProperty('--card-code-font-family', families.code);
       initialFocus.textContent=settings.initialFocusId??t('menu:notSet');
       divisions.value=String(settings.grid.snapDivisions??1);divisionPicker.menu.textContent=divisions.value+':1';
       gridColor.value=bg.gridColor??'#cbd5e1';gridStyle.value=bg.gridStyle??'dots';

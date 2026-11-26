@@ -310,7 +310,7 @@ export class Desk {
         if(!target||!mold||target.id===mold.id)throw new DeskError('cutoutChoosePair');
         return {kind:'update' as const,id:target.id,patch:applyCutoutPatch(target,mold)};
       })() : normalized;
-      if (operation.kind === 'desk_rename' || operation.kind === 'initial_view_update' || operation.kind === 'grid_update' || operation.kind === 'background_update' || operation.kind === 'defaults_update' || operation.kind === 'series_add'
+      if (operation.kind === 'desk_rename' || operation.kind === 'initial_view_update' || operation.kind === 'grid_update' || operation.kind === 'background_update' || operation.kind === 'fonts_update' || operation.kind === 'defaults_update' || operation.kind === 'series_add'
         || operation.kind === 'series_update' || operation.kind === 'label_add') {
         applySettingsOperation(operation, after, afterSettings);
         continue;
@@ -375,7 +375,7 @@ export class Desk {
     if (equalValue(before,after)
       && equalValue(beforeSettings,afterSettings)) return result();
     const targets = [...new Set(batch.operations.flatMap(op => op.kind === 'order' ? op.ids : op.kind === 'add' ? op.object.id
-      : op.kind === 'desk_rename' ? 'name' : op.kind === 'initial_view_update' ? 'initialFocusId' : op.kind === 'grid_update' ? 'grid' : op.kind === 'background_update' ? 'background' : op.kind === 'defaults_update' ? 'defaults' : op.kind === 'series_add' ? op.series.id : op.id))];
+      : op.kind === 'desk_rename' ? 'name' : op.kind === 'initial_view_update' ? 'initialFocusId' : op.kind === 'grid_update' ? 'grid' : op.kind === 'background_update' ? 'background' : op.kind === 'fonts_update' ? 'fonts' : op.kind === 'defaults_update' ? 'defaults' : op.kind === 'series_add' ? op.series.id : op.id))];
     const entry = { before, after, beforeSettings, afterSettings, actor: batch.actor, targets };
     this.undoStack.push(entry);
     this.redoStack = [];

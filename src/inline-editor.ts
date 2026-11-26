@@ -117,6 +117,7 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       for(const field of fields)field.style.width=`${Math.max(1,panelWidth-20)}px`;
       if (matchesTextPart && matrix) text.style.height = `${object.height * matrix.d}px`;
       if(object.type==='text'){
+        text.style.fontFamily='var(--card-code-font-family, monospace)';
         text.style.fontSize='16px';text.style.lineHeight='1.4';text.style.overflow='auto';
         text.style.height=`${Math.max(160,Math.min(480,object.height*(matrix?.d??1)))}px`;
       }

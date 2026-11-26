@@ -48,6 +48,10 @@ Fill transparency affects background fill only: 0% is opaque and 100% is transpa
 
 Menu → Desk appearance controls the desk wallpaper, grid and origin markers. Menu → Language… changes UI language locally. Existing content is never automatically translated.
 
+Card body font switches all Markdown cards on the desk between sans-serif, serif and monospace. Enter a comma-separated priority list for each family, such as `"Noto Sans JP", Arial`, or leave it empty for the generic font. Code and the Markdown source editor always use the monospace list; the editing preview uses the body font. Text inside shapes and diagrams such as Mermaid is unaffected.
+
+Font settings are saved in the desk file and support Undo. Your last explicitly configured settings also become the defaults for new desks in the same browser; opening a saved desk uses that file's settings. Available fonts depend on the device. Changing fonts may change wrapping and the required card height.
+
 ## Copy and paste
 
 Use Ctrl/⌘+C, X and V to copy, cut and paste selected items; a Paste button is also available. Inside a text editor, these shortcuts act on text.

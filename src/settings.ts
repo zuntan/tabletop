@@ -5,6 +5,7 @@ import type { DeskObject } from './model';
 import { tightFrame } from './pin-shape';
 import { gridSettingsSchema } from './grid-settings';
 import { deskNameSchema } from './desk-identity';
+import { deskFontsSchema } from './desk-fonts';
 
 export const colorSchema = z.string().regex(/^(#[0-9a-fA-F]{3,8}|transparent|[a-zA-Z]{1,20})$/);
 export const backgroundSchema = z.object({
@@ -62,6 +63,7 @@ export const settingsOperations = [
   z.object({ kind: z.literal('initial_view_update'), targetId:z.string().min(1).max(100).nullable() }).strict(),
   z.object({ kind: z.literal('grid_update'), patch: partialInputSchema(gridSettingsSchema) }).strict(),
   z.object({ kind: z.literal('background_update'), patch: partialInputSchema(backgroundSchema) }).strict(),
+  z.object({ kind: z.literal('fonts_update'), patch: partialInputSchema(deskFontsSchema) }).strict(),
   z.object({ kind: z.literal('defaults_update'), patch: partialInputSchema(appearanceSchema) }).strict(),
   z.object({ kind: z.literal('series_add'), series: partialInputSchema(seriesSchema).required({ id: true, name: true }) }).strict(),
   z.object({ kind: z.literal('series_update'), id: z.string(), patch: seriesPatchSchema }).strict(),
@@ -74,6 +76,7 @@ export type Series = z.infer<typeof seriesSchema>;
 export const settingsSchema = z.object({ defaults: appearanceSchema, series: z.array(seriesSchema).max(MAX_OBJECTS),
   grid: gridSettingsSchema.prefault({}),
   background: backgroundSchema.prefault({}),
+  fonts: deskFontsSchema.optional(),
   name: deskNameSchema.default(''),
   initialFocusId:z.string().min(1).max(100).nullable().optional(),
 }).strict();
@@ -128,6 +131,8 @@ export function applySettingsOperation(operation: SettingsOperation, objects: De
   } else if (operation.kind === 'background_update') {
     settings.background = backgroundSchema.parse({ ...settings.background,
       ...(operation.patch.wallpaper !== undefined ? { selectionColor: null, pointingColor: null } : {}), ...operation.patch });
+  } else if (operation.kind === 'fonts_update') {
+    settings.fonts = deskFontsSchema.parse({ ...settings.fonts, ...operation.patch });
   } else if (operation.kind === 'defaults_update') {
     settings.defaults = appearanceSchema.parse({ ...settings.defaults, ...operation.patch });
   } else if (operation.kind === 'series_add') {
