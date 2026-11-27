@@ -18,7 +18,7 @@ Add cards and shapes with the toolbar. Import image files or drop them onto the 
 
 Click to select, drag to move, or drag across empty space for a rectangular selection. Shift or Ctrl with a click or rectangle adds to the selection.
 
-When a bottom-right resize handle appears, drag it to resize. Lock, object type and membership in a tool may restrict movement or resizing. Enter exact positions and dimensions in Properties. Bring to front / Send to back changes stacking. Delete removes selected items.
+Drag a resize handle to change an item’s size. Larger items show eight handles at the corners and edge midpoints; small items show only the bottom-right handle. Corners change both dimensions, while edge midpoints change one dimension, keeping the opposite side fixed. Lock, object type and membership in a tool may restrict movement or resizing. Enter exact positions and dimensions in Properties. Bring to front / Send to back changes stacking. Delete removes selected items.
 
 ### Keyboard and snapping
 

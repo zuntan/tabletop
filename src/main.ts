@@ -1,3 +1,4 @@
+import {resizeHandles, type ResizeHandle} from './resize-handles';
 import { uiErrorMessage } from './i18n/errors';
 import { localizedLaunchName } from './desk-launch-name';
 import { languageChangeEvent, t, getUiLanguage } from './i18n';
@@ -747,10 +748,10 @@ function drawSelection(preview?: DeskObject[], scene = preview, refreshStamps=tr
       fill: object.callout.binding ? '#16a34a' : colors.selection, stroke: '#fff', 'stroke-width': 1.5 / camera.zoom,
       'data-callout-tip': object.id, class: 'endpoint-handle',
     }));
-    if (!selectingText && selected.length === 1 && !filed && object.type !== 'label' && object.type !== 'clip' && !headSelectedProp(object)) overlays.append(svg('rect', {
-      x: object.x + object.width - 5 / camera.zoom, y: object.y + object.height - 5 / camera.zoom,
+    if (!selectingText && selected.length === 1 && !filed && object.type !== 'label' && object.type !== 'clip' && !headSelectedProp(object)) for (const handle of resizeHandles(object, camera.zoom)) overlays.append(svg('rect', {
+      x: handle.x - 5 / camera.zoom, y: handle.y - 5 / camera.zoom,
       width: 10 / camera.zoom, height: 10 / camera.zoom, fill: colors.selection, stroke: '#fff',
-      'stroke-width': 1 / camera.zoom, 'data-resize': object.id, class: 'resize-handle',
+      'stroke-width': 1 / camera.zoom, 'data-resize': object.id, 'data-resize-handle': handle.handle, class: 'resize-handle',
     }));
   }
 }
@@ -1140,7 +1141,7 @@ canvas.addEventListener('pointerdown', event => {
     mode = 'move';
   } else { if (!extendSelection) desk.select([]); render(); mode = 'marquee'; }
   const scene = desk.snapshot();
-  gesture = { mode, start: p, screen: screen(event), originals: desk.selected().map(id => mode === 'callout' ? connectorForView(desk.get(id)) : desk.get(id)), scene, snapScene: scene.filter(pinIsVisible), preview: scene, revision: desk.revision, camera: { x: camera.x, y: camera.y }, additive, grid: gridEnabled, gridSettings: desk.settingsSnapshot().grid, anchorId: id ?? resize ?? calloutTip ?? undefined, detach: event.altKey };
+  gesture = { mode, resizeHandle: target.closest('[data-resize-handle]')?.getAttribute('data-resize-handle') as ResizeHandle | undefined, start: p, screen: screen(event), originals: desk.selected().map(id => mode === 'callout' ? connectorForView(desk.get(id)) : desk.get(id)), scene, snapScene: scene.filter(pinIsVisible), preview: scene, revision: desk.revision, camera: { x: camera.x, y: camera.y }, additive, grid: gridEnabled, gridSettings: desk.settingsSnapshot().grid, anchorId: id ?? resize ?? calloutTip ?? undefined, detach: event.altKey };
   busy = true; canvas.setPointerCapture(event.pointerId); event.preventDefault(); canvas.focus();
 });
 function previewGesture(current: Gesture, point: { x: number; y: number }) {

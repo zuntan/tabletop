@@ -1,3 +1,4 @@
+import {resizePatch, type ResizeHandle} from './resize-handles';
 import {headSelectedProp} from './prop-selection';
 import {rulerFor,rulerMoveOperations} from './ruler-layout';
 import {fileFor,fileMoveOperations} from './clear-files';
@@ -29,6 +30,7 @@ export type Gesture = {
   junctionId?: string;
   endpointMoved?: boolean;
   keyboard?: boolean;
+  resizeHandle?: ResizeHandle;
 };
 /** Shared by endpoint preview highlights and the committed operation. */
 export function endpointSnap(gesture: Gesture, object: DeskObject, point: Point, zoom: number) {
@@ -122,9 +124,7 @@ export function gestureOperations(gesture: Gesture, point: Point, zoom: number):
       if (sourceGroup && !gesture.detach) movingJunctions.add(sourceGroup);
     } else if (gesture.mode === 'resize') {
       if(headSelectedProp(object))return;
-      const corner = { x: object.x + object.width + dx, y: object.y + object.height + dy };
-      const next = gesture.grid ? gridPoint(corner, gesture.gridSettings) : corner;
-      patch = { width: Math.max(1, next.x - object.x), height: Math.max(1, next.y - object.y) };
+      patch = resizePatch(object, gesture.resizeHandle ?? 'se', {x: dx, y: dy}, gesture.grid ? (gesture.gridSettings ?? true) : false);
     } else if (isConnector(object)) {
       const { start, end } = endpoints(object);
       patch = { x: start.x + dx, y: start.y + dy, x2: end.x + dx, y2: end.y + dy, startBinding: object.startBinding && selected.has(object.startBinding.objectId) ? object.startBinding : null,
