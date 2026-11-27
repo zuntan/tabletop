@@ -21,7 +21,7 @@ export function gridMoveDelta(object: DeskObject, delta: Point, grid: GridSettin
 
 /** Initial creation only. Copies use exact placement and preserve their geometry. */
 export function newPartGridSize(object:Pick<DeskObject,'type'|'width'|'height'|'deskPath'|'linkDisplay'>,grid:GridSettings){
-  const supported=['text','rect','roundedRect','ellipse','diamond','parallelogram','cylinder','document','cloud','web','mermaid','image','svg','qrcode','link'].includes(object.type);
+  const supported=['text','rect','roundedRect','ellipse','diamond','parallelogram','cylinder','document','cloud','web','mermaid', 'wireloom','image','svg','qrcode','link'].includes(object.type);
   if(!grid.enabled||!supported)return {width:object.width,height:object.height};
   const step=snapInterval(grid);
   return {width:Math.ceil(object.width/step)*step,height:Math.ceil(object.height/step)*step};

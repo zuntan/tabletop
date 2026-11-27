@@ -71,5 +71,7 @@
   "oldBrowserTransfer": "Reload the browser to enable chunked transfer.",
   "operationBusy": "Another operation is in progress. Try again after it finishes.",
   "handoffFailed": "Could not hand off the connection. Check LAN authorization, connection state and any operation in progress.",
-  "thinkingMode": "The user is thinking alone. This operation was not performed. Do not ask them to disable the mode or retry automatically; wait for their request."
+  "thinkingMode": "The user is thinking alone. This operation was not performed. Do not ask them to disable the mode or retry automatically; wait for their request.",
+  "wireloomLoading": "Wireloom is still rendering. Try again when it finishes.",
+  "wireloomEmpty": "Enter Wireloom source."
 }

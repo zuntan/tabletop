@@ -177,7 +177,7 @@ export function createDeskFileControls(header: HTMLElement, desk: Desk, refresh:
       pdfBusy=true;pdf.disabled=true;report(t('files:exporting', { format: 'PDF' }));
       try{
         const deadline=Date.now()+30_000;
-        while(document.querySelector('#canvas [data-mermaid-status="loading"],#canvas [data-qr-status="loading"]')){
+        while(document.querySelector('#canvas [data-wireloom-status="loading"],#canvas [data-mermaid-status="loading"],#canvas [data-qr-status="loading"]')){
           if(Date.now()>deadline)throw new Error(t('files:renderTimeout'));
           await new Promise(resolve=>setTimeout(resolve,50));
         }

@@ -1,3 +1,4 @@
+import {renderWireloom} from './wireloom-card';
 import { t, getUiLanguage } from './i18n';
 import type { DeskObject } from './model';
 import { renderMermaid } from './mermaid-card';
@@ -31,6 +32,7 @@ async function resolveSource(source: string): Promise<string> {
     const src = object.doodle ? doodleSource(object.doodle, object.width, Math.max(1, object.height - 34)) : object.src;
     if (src && /^(?:data:image\/|https?:\/\/)/i.test(src)) return src;
   }
+  if (object.type === 'wireloom') return (await renderWireloom(object.wireloomSource??'')).src;
   if (object.type === 'mermaid') return (await renderMermaid(object.mermaidSource ?? '')).src;
   if (object.type === 'qrcode' || (object.type === 'link' && !object.deskPath && object.linkDisplay === 'qr')) {
     return (await renderQrCode(object.qrText ?? object.url ?? '', getUiLanguage())).src;

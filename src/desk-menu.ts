@@ -228,7 +228,7 @@ export function createDeskMenu(header: HTMLElement, desk: Desk, change: (patch: 
     const licenseHeading=document.createElement('h4');licenseHeading.className='about-library-label';licenseHeading.textContent=t('menu:libraryLicenses');
     const licenseList=document.createElement('div');licenseList.className='about-license-list';
     licenseList.tabIndex=0;licenseList.setAttribute('role','region');licenseList.setAttribute('aria-label',t('menu:libraryList'));
-    const directNames=[...new Set(['Tabler Icons','mermaid','markdown-it','@simonwep/pickr',...Object.keys(JSON.parse(packageSource).dependencies)])];
+    const directNames=[...new Set(['Tabler Icons','mermaid', 'wireloom','markdown-it','@simonwep/pickr',...Object.keys(JSON.parse(packageSource).dependencies)])];
     for(const name of directNames){
       const entry=thirdParty.entries.find(entry=>entry.name===name);
       if(!entry)continue;

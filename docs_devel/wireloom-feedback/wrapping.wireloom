@@ -1,0 +1,7 @@
+window "Confirm / 確認":
+  panel:
+    text "Please review the changes before saving your document." width=240
+    text "変更した内容を確認してください。保存後も編集を続けられます。" width=240
+  footer:
+    button "Cancel"
+    button "Save" primary

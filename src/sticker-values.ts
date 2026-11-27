@@ -16,7 +16,7 @@ export const stickerSchema = z.object({
   fixed: z.boolean().default(false),
 }).strict().refine(value=>!(value.items && value.colors), 'Use items or legacy colors, not both').transform(({colors,items,...settings})=>({...settings,items:items??(colors??[]).map(color=>({color,shape:'circle' as const}))}));
 export type Stickers = z.infer<typeof stickerSchema>;
-export const stickerTarget = (object: {type:string}) => object.type === 'text' || isShapeType(object.type) || ['image','svg','mermaid', 'qrcode','web','link'].includes(object.type);
+export const stickerTarget = (object: {type:string}) => object.type === 'text' || isShapeType(object.type) || ['image','svg','mermaid', 'wireloom', 'qrcode','web','link'].includes(object.type);
 export function stickerOperations(objects: DeskObject[], action: {kind:'append';color:string;shape?:StickerShape;column?:1|2} | {kind:'clear';column?:1|2} | {kind:'settings';patch:Partial<Omit<Stickers,'items'|'items2'>>}): Operation[] {
   return objects.filter(stickerTarget).flatMap(object => {
     const current = stickerSchema.parse(object.stickers ?? {});

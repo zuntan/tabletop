@@ -17,5 +17,8 @@
   "diagramDisplayFailed": "Could not display the diagram: {{error}}",
   "noImage": "No image available.",
   "clipboardSvg": "Clipboard.svg",
-  "clipboardImage": "Clipboard image"
+  "clipboardImage": "Clipboard image",
+  "wireloomSource": "window \"Settings\":\n  panel:\n    input placeholder=\"Display name\"\n    checkbox \"Show notifications\" checked label-right\n  footer:\n    button \"Cancel\"\n    button \"Save\" primary",
+  "wireloomLoading": "Rendering Wireloom…",
+  "wireloomFailed": "Could not render the wireframe. Double-click to edit the source."
 }

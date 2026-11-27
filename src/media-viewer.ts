@@ -1,3 +1,4 @@
+import {renderWireloom} from './wireloom-card';
 import { uiErrorMessage } from './i18n/errors';
 import { getUiLanguage, uiI18n } from './i18n';
 import {renderQrCode} from './qr-code';
@@ -12,7 +13,7 @@ export function openMedia(object: DeskObject) {
   const language=getUiLanguage();
   const text=uiI18n.getFixedT(language,'creation');
   const doc = popup.document;
-  doc.title = object.text || (object.type === 'mermaid' ? 'Mermaid' : text('image'));
+  doc.title = object.text || (object.type === 'wireloom' ? 'Wireloom' : object.type === 'mermaid' ? 'Mermaid' : text('image'));
   doc.documentElement.lang = language;
   const style = doc.createElement('style');
   style.textContent = 'html,body{margin:0;min-height:100%;background:#f8fafc;color:#334155;font-family:sans-serif}body{display:flex;align-items:center;justify-content:center;min-height:100vh}img{display:block;max-width:100%;max-height:100vh;object-fit:contain}p{padding:24px}';
@@ -26,8 +27,8 @@ export function openMedia(object: DeskObject) {
   };
   if(object.type==='qrcode'){
     void renderQrCode(object.qrText??'',language).then(result=>show(result.src)).catch(()=>{if(!popup.closed)message.textContent=text('qrDisplayFailed');});
-  }else if (object.type === 'mermaid') {
-    void renderMermaid(object.mermaidSource ?? '').then(result => show(result.src)).catch(error => {
+  }else if (object.type === 'mermaid'||object.type==='wireloom') {
+    void (object.type==='wireloom'?renderWireloom(object.wireloomSource??''):renderMermaid(object.mermaidSource ?? '')).then(result => show(result.src)).catch(error => {
       if (!popup.closed) message.textContent = text('diagramDisplayFailed',{error:uiErrorMessage(error, language)});
     });
   } else if (object.src) show(object.src);

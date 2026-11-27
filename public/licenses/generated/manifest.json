@@ -1,5 +1,5 @@
 {
-  "lockSha256": "47afc60cdd4f821c805573b08db2341217178884db294d907796fabd59ef7643",
+  "lockSha256": "6bc2f73176d613ddcb7cc54e6ee0aa89d61188815505177caa06e92086aba285",
   "scope": "Production dependency closure (browser and MCP server); includes conservative transitive/type/CLI entries, excludes devDependencies.",
   "entries": [
     {
@@ -2051,6 +2051,14 @@
       "path": "node_modules/which-module",
       "source": "https://github.com/nexdrew/which-module",
       "notice": "generated/which-module@2.0.1.txt"
+    },
+    {
+      "name": "wireloom",
+      "version": "0.7.0",
+      "license": "MIT",
+      "path": "node_modules/wireloom",
+      "source": "https://github.com/StardockCorp/Wireloom",
+      "notice": "generated/wireloom@0.7.0.txt"
     },
     {
       "name": "wrap-ansi",

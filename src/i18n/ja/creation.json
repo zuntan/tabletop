@@ -17,5 +17,8 @@
   "diagramDisplayFailed": "図を表示できませんでした：{{error}}",
   "noImage": "画像がありません。",
   "clipboardSvg": "クリップボード.svg",
-  "clipboardImage": "クリップボード画像"
+  "clipboardImage": "クリップボード画像",
+  "wireloomSource": "window \"設定\":\n  panel:\n    input placeholder=\"表示名\"\n    checkbox \"通知を表示する\" checked label-right\n  footer:\n    button \"取消\"\n    button \"保存\" primary",
+  "wireloomLoading": "Wireloomを描画中…",
+  "wireloomFailed": "画面ラフを描画できません。ダブルクリックしてソースを編集してください。"
 }

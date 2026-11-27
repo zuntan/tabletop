@@ -8,7 +8,7 @@ export function initialPartSize(type:string) {
   if(type==='wayfinder')return {width:72,height:72};
   if(type==='text')return {...initialTextSize};
   if(type==='link')return {width,height:height+34};
-  if(['image','svg','mermaid','web'].includes(type))return {width,height:height+34};
+  if(['image','svg','mermaid', 'wireloom','web'].includes(type))return {width,height:height+34};
   if(['rect','roundedRect','ellipse','diamond','parallelogram','cylinder','document','cloud'].includes(type))return {width,height};
   return {};
 }

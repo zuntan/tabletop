@@ -52,7 +52,7 @@ const bindingSchema = z.object({
 export const endpointShapeSchema = z.enum(['none', 'arrow', 'circle', 'diamond']);
 const objectFields = z.object({
   id: z.string().min(1).max(100),
-  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'mermaid', 'qrcode', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label', 'wayfinder']),
+  type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'text', 'image', 'svg', 'mermaid', 'wireloom', 'qrcode', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label', 'wayfinder']),
   cornerRadius: z.number().finite().min(0).max(100_000).default(16),
   padding: z.number().finite().min(0).max(100_000).optional(),
   rulerMembers: z.array(z.object({id:z.string().min(1).max(100),side:z.enum(['before','after'])}).strict()).max(1999).optional(),
@@ -110,6 +110,7 @@ const objectFields = z.object({
   textFit: z.enum(['auto', 'shrink']).optional(),
   fontSize: z.number().finite().min(1).max(1000).default(24),
   mermaidSource: z.string().max(100_000).optional(),
+  wireloomSource: z.string().max(100_000).optional(),
   qrText: z.string().max(100_000).optional(),
   doodle:doodleSchema.optional(),
   linkDisplay:z.enum(['url','qr']).optional(),
@@ -129,7 +130,7 @@ function normalizeLegacyConnector(input: unknown): unknown {
 export const objectSchema = z.preprocess(normalizeLegacyConnector, objectFields);
 export const patchSchema = partialInputSchema(objectFields.omit({ id: true, type: true }));
 const addObjectFields = partialInputSchema(objectFields).required({ id: true, type: true });
-const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'qrcode', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label', 'wayfinder']) })
+const addObjectSchema = addObjectFields.extend({ type: z.enum(['rect', 'roundedRect', 'ellipse', 'diamond', 'parallelogram', 'cylinder', 'document', 'cloud', 'line', 'arrow', 'text', 'image', 'svg', 'mermaid', 'wireloom', 'qrcode', 'prop', 'clip', 'ruler', 'file', 'web', 'link', 'label', 'wayfinder']) })
   .transform(object => normalizeLegacyConnector(object) as z.input<typeof addObjectFields>);
 export const operationSchema = z.discriminatedUnion('kind', [
   ...settingsOperations,
@@ -179,6 +180,8 @@ function validateObject(object: unknown): DeskObject {
   if(parsed.linkDisplay!==undefined&&(parsed.type!=='link'||parsed.deskPath))throw new Error('Link display belongs only to ordinary URL links');
   if(parsed.type==='qrcode'&&parsed.qrText===undefined)throw new Error('QR text required');
   if(parsed.type!=='qrcode'&&parsed.qrText!==undefined)throw new Error('QR text belongs only to QR cards');
+  if (parsed.type !== 'wireloom' && parsed.wireloomSource !== undefined) throw new Error('Wireloom source belongs only to Wireloom cards');
+  if (parsed.type === 'wireloom' && parsed.wireloomSource === undefined) throw new Error('Wireloom source required');
   if (parsed.type === 'mermaid' && parsed.mermaidSource === undefined) throw new Error('Mermaid source required');
   if (['image', 'svg', 'prop'].includes(parsed.type) && !parsed.src) throw new Error('Image source required');
   if (parsed.deskPath && (parsed.type!=='link'||parsed.url)) throw new Error('Desk links require type link, deskPath and no URL');
@@ -429,6 +432,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({method:z.literal('raster'),...captureFields}).strict(),
   z.object({method:z.literal('pdf_export'),...pdfExportFields}).strict(),
   z.object({ method: z.literal('mermaid_render'), id: z.string() }).strict(),
+  z.object({ method: z.literal('wireloom_render'), id: z.string() }).strict(),
   z.object({method:z.literal('qr_render'),id:z.string()}).strict(),
   z.object({ method: z.literal('file_snapshot'), includeGeneration:z.literal(true).optional() }).strict(),
   z.object({ method: z.literal('file_saved'), expectedSessionId:z.string().uuid(), expectedRevision:z.number().int().nonnegative(), expectedGeneration:z.string().uuid().optional(),filePath:z.string().max(4096).optional() }).strict(),
@@ -456,7 +460,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('redo'), actor: z.string().min(1).max(100).default('agent-01') }),
 ]);
 export type Request = z.input<typeof requestSchema>;
-export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge, ui?: { get(): { theme: 'light' | 'dark' }; set(theme: 'light' | 'dark'): { theme: 'light' | 'dark' } }, mermaid?: (source: string) => Promise<{ svg: string }>, raster?: (scale: number) => Promise<unknown>, qr?: (text:string)=>Promise<{svg:string;status:string}>,extra?:{textSelection?:{read:(id:string)=>unknown;select:(input:TextSelectionInput)=>unknown};pdf?:()=>Promise<unknown>;capture?:(input:CaptureInput)=>Promise<unknown>;pinFit?:(input:{seriesIds:string[];expectedRevision?:number;actor:string})=>unknown}): unknown {
+export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge, ui?: { get(): { theme: 'light' | 'dark' }; set(theme: 'light' | 'dark'): { theme: 'light' | 'dark' } }, mermaid?: (source: string) => Promise<{ svg: string }>, raster?: (scale: number) => Promise<unknown>, qr?: (text:string)=>Promise<{svg:string;status:string}>,extra?:{wireloom?:(source:string)=>Promise<{svg:string}>;textSelection?:{read:(id:string)=>unknown;select:(input:TextSelectionInput)=>unknown};pdf?:()=>Promise<unknown>;capture?:(input:CaptureInput)=>Promise<unknown>;pinFit?:(input:{seriesIds:string[];expectedRevision?:number;actor:string})=>unknown}): unknown {
   const request = requestSchema.parse(input);
   switch (request.method) {
     case 'pin_fit': {
@@ -480,6 +484,12 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, text
       const source=object.type==='qrcode'?object.qrText??'':object.url??'';
       const stamp={id:object.id,revision:desk.revision,qrText:source};
       return qr(source).then(({svg,status})=>({...stamp,svg,status}));
+    }
+    case 'wireloom_render': {
+      const object=desk.get(request.id);
+      if(object.type!=='wireloom'||!extra?.wireloom)throw new Error('Wireloom rendering requires a compatible browser and Wireloom object');
+      const stamp={id:object.id,revision:desk.revision,wireloomSource:object.wireloomSource};
+      return extra.wireloom(object.wireloomSource??'').then(({svg})=>({...stamp,svg}));
     }
     case 'mermaid_render': {
       const object = desk.get(request.id);

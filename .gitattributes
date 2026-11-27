@@ -3,3 +3,5 @@
 /LICENSE text eol=lf
 /licenses/supplemental/** text eol=lf
 /public/licenses/** text eol=lf
+# Wireloom's reproducible generator must not dirty Windows checkouts on build.
+/src/vendor/wireloom/** text eol=lf

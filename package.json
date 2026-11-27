@@ -6,14 +6,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "npm run locales:check && npm run licenses && tsc --noEmit && vite build",
+    "build": "npm run wireloom:prepare && npm run locales:check && npm run licenses && tsc --noEmit && vite build",
     "start": "tsx src/server.ts",
     "test": "tsx --test tests/*.test.ts",
     "test:e2e": "tsx --test tests/*.e2e.ts",
     "licenses": "node scripts/generate-licenses.mjs",
     "locales:check": "node --import tsx scripts/check-locales.ts",
-    "build:pages": "npm run locales:check && npm run licenses && tsc --noEmit && vite build --mode pages && node scripts/prepare-pages.mjs",
-    "preview:pages": "vite preview --mode pages --host 127.0.0.1"
+    "build:pages": "npm run wireloom:prepare && npm run locales:check && npm run licenses && tsc --noEmit && vite build --mode pages && node scripts/prepare-pages.mjs",
+    "preview:pages": "vite preview --mode pages --host 127.0.0.1",
+    "wireloom:prepare": "node scripts/prepare-wireloom.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
@@ -26,6 +27,7 @@
     "mermaid": "12.2.0",
     "open": "11.0.4",
     "qrcode": "1.5.4",
+    "wireloom": "0.7.0",
     "ws": "^8.18.3",
     "zod": "4.6.7"
   },

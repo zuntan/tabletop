@@ -131,5 +131,6 @@
   "connected": "MCP接続済み",
   "released": "AI接続解放済み",
   "blocked": "接続確認が必要",
-  "reconnecting": "AI再接続待ち"
+  "reconnecting": "AI再接続待ち",
+  "wireloomSource": "Wireloomソース"
 }

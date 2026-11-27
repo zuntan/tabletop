@@ -112,3 +112,11 @@ Static Pages uses Upload/Download rather than server-side Save/Load. PDF and PNG
 ## If an operation is unclear
 
 Select an item from Objects and use Fit selection to find it. If it will not move, check Lock and clip, clear-file or ruler membership. The tutorial demonstrates tools, but your own desk does not have to follow its examples.
+
+### Wireloom UI wireframes
+
+Choose **Wireloom** to add a UI wireframe card. As with Mermaid, double-click to edit its title and DSL source. Ctrl/Command+Enter applies changes and updates the card; Esc cancels. The source can also be edited in Properties. Hold the eye button to preview the draft Mermaid or Wireloom diagram in place. Release it to return to the source without saving the draft. Their source editors use the displayed card height, clamped to 160–480 pixels and reduced further if needed to fit the screen.
+
+Use `text "A longer notice" width=240` to wrap body text at an explicit pixel width. Without it, text stays on one line. This width is independent of the outer card frame: resizing the card scales the diagram, without reflowing it. Japanese width and punctuation handling use approximate metrics.
+
+The source is saved in the desk file. Older builds without Wireloom support cannot open a desk containing these cards; export SVG for use with those builds.

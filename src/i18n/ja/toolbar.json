@@ -134,5 +134,9 @@
   "camera": {
     "caption": "カメラ",
     "description": "カメラ"
+  },
+  "wireloom": {
+    "caption": "Wireloom",
+    "description": "Wireloomの画面ラフ"
   }
 }

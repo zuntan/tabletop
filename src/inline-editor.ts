@@ -1,10 +1,11 @@
 import { uiErrorMessage } from './i18n/errors';
 import { t } from './i18n';
 import { createMarkdownPreview } from './markdown-preview';
+import {createDiagramPreview} from './diagram-preview';
 import { shapeTypes } from './shape-definitions';
 import { pinScreenObject } from './pin-series';
 import type { DeskObject } from './model';
-type EditorPatch = { text?: string; description?: string; url?: string; deskPath?:string; qrText?:string; mermaidSource?: string };
+type EditorPatch = { text?: string; description?: string; url?: string; deskPath?:string; qrText?:string; wireloomSource?: string; mermaidSource?: string };
 
 export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement,
   save: (object: DeskObject, patch: EditorPatch, fresh: boolean) => void,
@@ -39,7 +40,7 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
     const { object, text, url, source, fresh, error } = active;
     try {
       const patch: EditorPatch = object.type === 'label' ? { description: text.value } : { text: text.value };
-      if(source){if(object.type==='qrcode')patch.qrText=source.value;else patch.mermaidSource=source.value;}
+      if(source){if(object.type==='qrcode')patch.qrText=source.value;else if(object.type==='wireloom')patch.wireloomSource=source.value;else patch.mermaidSource=source.value;}
       if(url&&object.deskPath){
         const value=url.value.trim();if(!value.endsWith('.tabletop')||/[\x00-\x1f]/.test(value))throw new Error(t('editing:pathRequired'));patch.deskPath=value;
       }else if (url && ['image', 'svg'].includes(object.type) && !url.value.trim()) patch.url = '';
@@ -64,15 +65,15 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       if (active && !commit()) return;
       const panel = document.createElement('div'); panel.className = 'inline-editor';
       const text = document.createElement('textarea'); text.dataset.inlineText = ''; text.rows = 3;
-      text.setAttribute('aria-label', object.type === 'label' ? t('editing:pinDescription') : ['image', 'svg', 'mermaid', 'qrcode', 'prop', 'file'].includes(object.type) ? t('editing:title') : ['link', 'web'].includes(object.type) ? t('editing:displayName') : t('editing:text'));
+      text.setAttribute('aria-label', object.type === 'label' ? t('editing:pinDescription') : ['image', 'svg', 'mermaid', 'wireloom', 'qrcode', 'prop', 'file'].includes(object.type) ? t('editing:title') : ['link', 'web'].includes(object.type) ? t('editing:displayName') : t('editing:text'));
       if (['image', 'svg'].includes(object.type)) text.placeholder = t('editing:title');
       text.value = object.type === 'label' ? object.description ?? '' : object.text;
       panel.append(text);
       let source: HTMLTextAreaElement | undefined;
-      if (object.type === 'mermaid'||object.type==='qrcode') {
+      if (object.type === 'mermaid'||object.type==='wireloom'||object.type==='qrcode') {
         source = document.createElement('textarea'); source.rows = 10; source.spellcheck = false;
-        if(object.type==='qrcode')source.dataset.inlineQr='';else source.dataset.inlineMermaid=''; source.setAttribute('aria-label',object.type==='qrcode'?t('editing:qrContent'):t('editing:mermaidSource'));
-        source.value = (object.type==='qrcode'?object.qrText:object.mermaidSource) ?? ''; panel.append(source);
+        if(object.type==='qrcode')source.dataset.inlineQr='';else if(object.type==='wireloom')source.dataset.inlineWireloom='';else source.dataset.inlineMermaid=''; source.setAttribute('aria-label',object.type==='qrcode'?t('editing:qrContent'):object.type==='wireloom'?t('editing:wireloomSource'):t('editing:mermaidSource'));
+        source.value = (object.type==='qrcode'?object.qrText:object.type==='wireloom'?object.wireloomSource:object.mermaidSource) ?? ''; panel.append(source);
       }
       let url: HTMLInputElement | undefined;
       if (['link', 'web', 'image', 'svg'].includes(object.type)) {
@@ -100,7 +101,8 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       };
       mode.setAttribute('aria-describedby', hint.id);
       actions.append(hint); if (!source) actions.append(mode); panel.append(actions); updateHint();
-      const disposePreview = object.type === 'text' ? createMarkdownPreview(panel, text, actions) : undefined;
+      const disposePreview = object.type === 'text' ? createMarkdownPreview(panel, text, actions)
+        : source&&(object.type==='mermaid'||object.type==='wireloom') ? createDiagramPreview(panel,source,actions,object.type) : undefined;
       const error = document.createElement('div'); error.className = 'editor-error'; error.setAttribute('role', 'alert'); panel.append(error);
       const matrix = viewport.getScreenCTM();
       let width = object.type === 'label' ? object.width : object.width * (matrix?.a ?? 1);
@@ -119,8 +121,9 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
       if(object.type==='text'){
         text.style.fontFamily='var(--card-code-font-family, monospace)';
         text.style.fontSize='16px';text.style.lineHeight='1.4';text.style.overflow='auto';
-        text.style.height=`${Math.max(160,Math.min(480,object.height*(matrix?.d??1)))}px`;
       }
+      const heightField=object.type==='text'?text:['mermaid','wireloom'].includes(object.type)?source:undefined;
+      if(heightField)heightField.style.height=`${Math.max(160,Math.min(480,object.height*(matrix?.d??1)))}px`;
       const fieldWidths=new Map<HTMLTextAreaElement,number>();
       const resizeObserver=new ResizeObserver(entries=>{
         if(active?.text!==text)return;
@@ -133,9 +136,9 @@ export function createInlineEditor(workspace: HTMLElement, viewport: SVGGElement
         reposition();
       });
       active = { object, fresh, panel, text, url, source, error, resizeObserver, disposePreview }; workspace.append(panel); onActiveChange();
-      if(object.type==='text'){
-        const overhead=panel.getBoundingClientRect().height-text.getBoundingClientRect().height;
-        text.style.height=`${Math.max(1,Math.min(text.getBoundingClientRect().height,availableHeight-overhead))}px`;
+      if(heightField){
+        const overhead=panel.getBoundingClientRect().height-heightField.getBoundingClientRect().height;
+        heightField.style.height=`${Math.max(1,Math.min(heightField.getBoundingClientRect().height,availableHeight-overhead))}px`;
       }
       for(const field of fields){fieldWidths.set(field,field.offsetWidth);resizeObserver.observe(field);}reposition();
       panel.addEventListener('compositionstart', () => { composing = true; });

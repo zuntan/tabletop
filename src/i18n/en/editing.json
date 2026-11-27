@@ -57,5 +57,9 @@
   "bellModHint": "Enter: new line · Ctrl/⌘ + Enter: apply",
   "openBellNote": "Open bell note",
   "imageUnavailable": "Image unavailable",
-  "textSelectionMode": "Text selection: drag to select, Ctrl/⌘+A for all, Ctrl/⌘+C to copy. Esc or click outside to exit."
+  "textSelectionMode": "Text selection: drag to select, Ctrl/⌘+A for all, Ctrl/⌘+C to copy. Esc or click outside to exit.",
+  "wireloomSource": "Wireloom source",
+  "diagramPreviewHold": "Hold to preview the diagram",
+  "diagramPreview": "Diagram preview",
+  "diagramPreviewDraft": "Draft diagram preview"
 }

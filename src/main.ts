@@ -1,3 +1,4 @@
+import {drawWireloomCard,renderWireloom} from './wireloom-card';
 import {resizeHandles, type ResizeHandle} from './resize-handles';
 import { uiErrorMessage } from './i18n/errors';
 import { localizedLaunchName } from './desk-launch-name';
@@ -150,7 +151,7 @@ app.innerHTML = `
   <nav data-i18n-aria-label="shell:addTools">
     <button data-add="rect" data-i18n="shell:rectButton"></button><button data-add="roundedRect" data-i18n="shell:roundedRectButton"></button><button data-add="ellipse" data-i18n="shell:ellipseButton"></button>
     <button data-add="line" data-i18n="shell:lineButton"></button><button data-add="arrow" data-i18n="shell:arrowButton"></button>
-    <button data-add="text" data-i18n="shell:cardButton"></button><button id="image" data-i18n="shell:imageButton"></button><button data-add="mermaid">Mermaid</button><button data-add="qrcode" data-i18n="shell:qrCode"></button>
+    <button data-add="text" data-i18n="shell:cardButton"></button><button id="image" data-i18n="shell:imageButton"></button><button data-add="mermaid">Mermaid</button><button data-add="wireloom">Wireloom</button><button data-add="qrcode" data-i18n="shell:qrCode"></button>
     <button id="clipboard" data-i18n-title="shell:paste" data-i18n-aria-label="shell:paste" data-i18n="shell:pasteButton"></button>
     <button data-add="web" data-i18n="shell:webPage"></button><button data-add="link" data-i18n="shell:link"></button>
     <button id="numbering" data-i18n="shell:pin"></button><div id="authoring-tools"></div>
@@ -204,6 +205,7 @@ app.innerHTML = `
           <label class="wide"><span data-i18n="shell:text"></span><textarea name="text" rows="3"></textarea></label>
           <button id="card-fit-text" class="wide" type="button" hidden data-i18n="authoring:fit"></button>
           <label class="wide" hidden><span data-i18n="shell:qrText"></span><textarea name="qrText" rows="8" spellcheck="false" disabled></textarea></label>
+          <label class="wide" hidden><span data-i18n="shell:wireloomSource"></span><textarea name="wireloomSource" rows="8" spellcheck="false" disabled></textarea></label>
           <label class="wide" hidden><span data-i18n="shell:mermaidSource"></span><textarea name="mermaidSource" rows="8" spellcheck="false" disabled></textarea></label>
           <label class="wide">URL<input name="url" type="url"></label>
         </form>
@@ -516,7 +518,7 @@ function objectListIncludes(object: DeskObject) {
   const category = object.type==='file'?'files':object.type === 'clip' ? 'clips' : object.type === 'label' ? 'pins' : object.type === 'text' ? 'text'
     : isShapeType(object.type) ? 'shapes'
       : object.type === 'line' ? 'lines'
-        : ['image', 'svg', 'mermaid', 'qrcode', 'prop'].includes(object.type) ? 'images' : 'other';
+        : ['image', 'svg', 'mermaid', 'wireloom', 'qrcode', 'prop'].includes(object.type) ? 'images' : 'other';
   return $(`#object-filter-${category}`).getAttribute('aria-pressed') === 'true';
 }
 
@@ -673,7 +675,7 @@ function drawObjectRaw(object: DeskObject) {
     drawMarkdown(group, object);
     drawStamp(group, object, compactStamp(object.id));
   }
-  if (['link', 'web', 'image', 'svg', 'mermaid', 'qrcode', 'prop'].includes(object.type)) {
+  if (['link', 'web', 'image', 'svg', 'mermaid', 'wireloom', 'qrcode', 'prop'].includes(object.type)) {
     if (object.type === 'prop') {
       // Head mode leaves the artwork transparent to pointer hit testing.
       group.append(svg('rect', { width: w, height: headSelectedProp(object)?Math.min(IMAGE_TITLE_HEIGHT,h):h, fill: 'transparent', stroke: 'none', 'pointer-events': 'all', 'data-prop-body': '' }));
@@ -697,6 +699,7 @@ function drawObjectRaw(object: DeskObject) {
       foreign.append(iframe); group.append(foreign);
     }
     if (object.type === 'mermaid') drawMermaidCard(group, object);
+    if (object.type === 'wireloom') drawWireloomCard(group, object);
     if(object.type==='qrcode')drawQrCard(group,object,camera.zoom);
     if(isUrlLink(object))drawLinkDisplay(group,object,camera.zoom);
     drawOpenLink(group, object, path=>{void deskFiles.open(path);});
@@ -923,12 +926,13 @@ function newObject(type: DeskObject['type'], extra: Partial<DeskObject> = {}) {
     ...formatControls.appearance(type, desk.settingsSnapshot().defaults),
     ...initialPartSize(type),
     ...(type === 'qrcode'?{text:t('creation:qrcode'),qrText:defaultQrText}:{}),
+    ...(type === 'wireloom' ? {text:'Wireloom',wireloomSource:t('creation:wireloomSource')} : {}),
     ...(type === 'mermaid' ? { text: 'Mermaid', mermaidSource: t('creation:mermaidSource') } : {}),
     ...(['line', 'arrow'].includes(type) ? {...initialLinePoints(center),...selectedConnection(desk.selected().map(id => desk.get(id)),desk.snapshot(),initialLineDelta)} : {}),
     ...extra });
   Object.assign(object,newPartGridSize(object,desk.settingsSnapshot().grid));
   if(!isConnector(object))Object.assign(object,gridPosition({x:center.x-object.width/2,y:center.y-object.height/2}));
-  if (['text', 'web', 'link', 'mermaid', 'qrcode'].includes(type)) { editor.open(object, true); return; }
+  if (['text', 'web', 'link', 'mermaid', 'wireloom', 'qrcode'].includes(type)) { editor.open(object, true); return; }
   execute([{ kind: 'add', object }], 'desk'); desk.select([object.id]);
 }
 const doodleButton=document.createElement('button');doodleButton.id='doodle-create';iconButton(doodleButton,'✎',t('messages:doodle'));$('#image').after(doodleButton);
@@ -1109,7 +1113,7 @@ canvas.addEventListener('dblclick', event => {
   if (!id || busy || editor.isActive() || lineInput.isActive()) return;
   const object = desk.get(id);
   if(object.doodle){if(!fileFor(desk.snapshot(),object.id))doodleEditor.open(object);else notify(t('messages:unfileDoodle'),true);return;}
-  if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg', 'mermaid', 'qrcode', 'prop', 'file'].includes(object.type)) editor.open(object);
+  if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg', 'mermaid', 'wireloom', 'qrcode', 'prop', 'file'].includes(object.type)) editor.open(object);
 });
 canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture && !textSelection.blocksWheel()) zoom(Math.exp(-event.deltaY * 0.001), screen(event)); }, { passive: false });
 // Middle-button release can paste the Linux primary selection after the pan ends.
@@ -1472,6 +1476,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if (message.request.method === 'load_document') {cancelWayfinding('changed');cameraAnimator.cancel('Desk contents replaced');}
       const beforeRevision=desk.revision;
       let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid, scale => rasterPointedCard(desk, id => drawnNodes.get(id), scale),text=>renderQrCode(text,getUiLanguage()),{
+        wireloom: renderWireloom,
         textSelection: aiTextSelection,
         pdf:async()=>{
           const r=await deskPdf(desk,canvas,id=>pinDescriptionVisible(desk.get(id)));
@@ -1498,7 +1503,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if (message.request.method === 'execute' && message.request.operations?.some((op: Operation) => op.kind === 'fonts_update')) {
         saveFontDefaults(desk.settingsSnapshot().fonts!);
       }
-      if (['camera_move', 'mermaid_render', 'qr_render', 'raster', 'pdf_export'].includes(message.request.method)) result = await result;
+      if (['camera_move', 'wireloom_render', 'mermaid_render', 'qr_render', 'raster', 'pdf_export'].includes(message.request.method)) result = await result;
       if (message.request.method === 'fit') {
         const ids = desk.pointed();
         await fitView(ids, { durationMs: message.request.durationMs });

@@ -8,7 +8,7 @@ import { isConnector } from './geometry';
 import { headSelectedProp } from './prop-selection';
 import { supportsFill, transparencyPercent, opacityFromPercent } from './fill-opacity';
 
-const fields = ['fixedWidth','linkDisplay','wayfinderMode','propSelection','rulerMode','rulerMaterial','rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'qrText', 'url','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
+const fields = ['fixedWidth','linkDisplay','wayfinderMode','propSelection','rulerMode','rulerMaterial','rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'junctionRounding', 'dash', 'startMarker', 'endMarker', 'calloutMode', 'textFit', 'fontSize', 'cornerRadius', 'padding', 'text', 'mermaidSource', 'wireloomSource', 'qrText', 'url','clipOffset','clipOffsetMode','clipOffsetPercent','clipSize','clipAutoSize','clipAnchor','clipStyle'] as const;
 const numeric = new Set(['rulerThickness','x', 'y', 'x2', 'y2', 'width', 'height', 'strokeWidth', 'junctionRounding', 'fontSize', 'cornerRadius', 'padding','clipOffset','clipOffsetPercent','clipSize']);
 export function syncProperties(form: HTMLFormElement, object: DeskObject) {
   const connector = isConnector(object);
@@ -43,6 +43,10 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
       continue;
     }
     if(name==='qrText'){input.disabled=object.type!=='qrcode';input.closest('label')!.hidden=input.disabled;input.value=object.qrText??'';continue;}
+    if (name === 'wireloomSource') {
+      input.disabled=object.type!=='wireloom';input.closest('label')!.hidden=object.type!=='wireloom';
+      input.value=object.wireloomSource??'';continue;
+    }
     if (name === 'mermaidSource') {
       input.disabled = object.type !== 'mermaid'; input.closest('label')!.hidden = object.type !== 'mermaid';
       input.value = object.mermaidSource ?? ''; continue;
@@ -73,7 +77,7 @@ export function syncProperties(form: HTMLFormElement, object: DeskObject) {
       continue;
     }
     if(name==='fontSize'&&isUrlLink(object)&&object.linkDisplay==='qr'){input.disabled=true;input.closest('label')!.hidden=true;continue;}
-    if (name === 'text') input.closest('label')!.firstChild!.textContent = object.type === 'label' ? t('tools:description') : ['image', 'svg', 'mermaid', 'qrcode', 'prop','file','link'].includes(object.type) ? t('tools:title') : t('shell:text');
+    if (name === 'text') input.closest('label')!.firstChild!.textContent = object.type === 'label' ? t('tools:description') : ['image', 'svg', 'mermaid', 'wireloom', 'qrcode', 'prop','file','link'].includes(object.type) ? t('tools:title') : t('shell:text');
     if (name === 'url') input.closest('label')!.firstChild!.textContent = ['image', 'svg'].includes(object.type) ? t('tools:optionalUrl') : 'URL';
     input.value = name === 'fillOpacity' ? String(transparencyPercent(object.fillOpacity))
       : String(object.type === 'label' && name === 'text' ? object.description ?? '' : object[name] ?? '');

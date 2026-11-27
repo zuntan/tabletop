@@ -111,7 +111,7 @@ export function updateScenePreview(layer: SVGGElement, scene: DeskObject[], orig
     if (!(forceLines && isConnector(object)) && equalValue(object,old)) continue;
     const node = [...layer.children].find(el => el.getAttribute('data-id') === object.id);
     if (!node) continue;
-    if (['web', 'image', 'svg', 'mermaid', 'qrcode', 'prop'].includes(object.type) && !(resizeMedia && (object.width!==old?.width||object.height!==old?.height))) {
+    if (['web', 'image', 'svg', 'mermaid', 'wireloom', 'qrcode', 'prop'].includes(object.type) && !(resizeMedia && (object.width!==old?.width||object.height!==old?.height))) {
       // Avoid reloading external media while moving. Resize is committed on release.
       node.setAttribute('transform', `translate(${object.x} ${object.y})`);
     } else {

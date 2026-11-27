@@ -18,6 +18,7 @@ export function objectPropertyNames(object: DeskObject): readonly (keyof DeskObj
   if (object.type === 'prop') return [...common, ...box, 'text', 'src', 'propSelection'];
   if(object.type==='link'&&!object.deskPath)return [...common,...decoration,...box,...paint,'text','url','linkDisplay','fontSize','textColor','cornerRadius'];
   if(object.type==='qrcode')return [...common,...decoration,...box,'text','qrText','cutout'];
+  if (object.type === 'wireloom') return [...common, ...decoration, ...box, 'text', 'wireloomSource', 'cutout'];
   if (object.type === 'mermaid') return [...common, ...decoration, ...box, 'text', 'mermaidSource', 'cutout'];
   if (object.type === 'text') return [...common, ...decoration, ...box, ...paint, ...text, 'cornerRadius', 'padding', 'callout', 'stamp', 'cutout'];
   if (isShapeType(object.type)) return [...common, ...decoration, ...box, ...paint, ...text, 'textFit',

@@ -4,7 +4,7 @@ import { createIcon, type IconName } from './icons';
 const buttonIcons: Record<string, IconName> = {
   'camera-capture':'camera', 'selection-mode': 'pointer', 'clear-ai-pointing': 'pointer-x',
   rect: 'rectangle', roundedRect: 'square-rounded', ellipse: 'circle', line: 'line', arrow: 'arrow-up-right',
-  text: 'typography', image: 'photo', mermaid: 'rectangle', qrcode:'qr-code', web: 'world', link: 'link', numbering: 'map-pin',
+  text: 'typography', image: 'photo', mermaid: 'sitemap', wireloom: 'layout-dashboard', qrcode:'qr-code', web: 'world', link: 'link', numbering: 'map-pin',
   'numbering-settings': 'map-pin', clipboard: 'clipboard', 'zoom-out': 'minus', 'zoom-in': 'plus',
   'wayfinder-create':'arrow-up-right', fit: 'maximize', 'view-center': 'crosshair', 'grid-snap': 'grid-dots', 'label-descriptions': 'list-numbers',
   'doodle-create':'pencil', 'ruler-create':'ruler-2', 'file-create':'file-lock', 'clip-create': 'paperclip', 'delete-animated': 'x', 'cutout-create': 'scissors',
@@ -22,6 +22,7 @@ export const toolKeys = {
   'text': 'card',
   'image': 'image',
   'mermaid': 'mermaid',
+  'wireloom': 'wireloom',
   'qrcode': 'qr',
   'web': 'web',
   'link': 'link',

@@ -134,5 +134,9 @@
   "camera": {
     "caption": "Camera",
     "description": "Camera"
+  },
+  "wireloom": {
+    "caption": "Wireloom",
+    "description": "Wireloom UI wireframe"
   }
 }

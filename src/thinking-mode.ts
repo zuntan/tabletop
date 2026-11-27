@@ -3,7 +3,7 @@ import diagnostics from './i18n/en/errors.json';
 import { t, languageChangeEvent } from './i18n';
 import { uiText, uiAttribute } from './i18n/dom';
 export const THINKING_MODE_REFUSAL = diagnostics.thinkingMode;
-const readMethods = new Set(['summary', 'list', 'get', 'state', 'file_snapshot', 'file_saved', 'settings', 'context', 'selection', 'changes', 'camera_get', 'ui_get', 'share_read', 'text_measure', 'text_selection_read', 'mermaid_render', 'qr_render', 'raster', 'pdf_export']);
+const readMethods = new Set(['summary', 'list', 'get', 'state', 'file_snapshot', 'file_saved', 'settings', 'context', 'selection', 'changes', 'camera_get', 'ui_get', 'share_read', 'text_measure', 'text_selection_read', 'wireloom_render', 'mermaid_render', 'qr_render', 'raster', 'pdf_export']);
 
 /** Human-only, per-tab UI state; reconnects and document loads do not change it. */
 export function createThinkingMode(header: HTMLElement, onAlone: () => void, notify: (message: string) => void) {

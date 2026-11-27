@@ -20,3 +20,7 @@ Additional icon: `file-lock.svg`, retrieved from upstream `main` on 2026-10-27
 
 Additional icon: `ruler-2.svg`, retrieved from upstream `main` on 2026-10-27
 (https://raw.githubusercontent.com/tabler/tabler-icons/main/icons/outline/ruler-2.svg), same MIT license.
+
+Provisional Wireloom toolbar icon: `layout-dashboard.svg`, retrieved from upstream `main` on 2026-11-27 (https://raw.githubusercontent.com/tabler/tabler-icons/main/icons/outline/layout-dashboard.svg), same MIT license. Final icon selection is pending.
+
+Mermaid toolbar icon: `sitemap.svg`, retrieved from upstream `main` on 2026-11-27 (https://raw.githubusercontent.com/tabler/tabler-icons/main/icons/outline/sitemap.svg), same MIT license. Selected by the user.
