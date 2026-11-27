@@ -121,7 +121,8 @@ async function compatibleRequest(request:DeskRequest,payload: Request): Promise<
   }
   return request(payload);
 }
-const mcp = new McpServer({ name: 'tabletop', version: '0.1.0' });
+const packageInfo = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')) as { version: string };
+const mcp = new McpServer({ name: 'tabletop', version: packageInfo.version });
 mcp.registerTool('desk_connections',{
  description:'List paired endpoints (no current desk), with deskId, connection state, name and background/title colors. Use names/colors/conversation to identify an endpoint, then supply its exact deskId on every individual tool. No model-level interpretation or backup guarantee is imposed.',inputSchema:{},annotations:{readOnlyHint:true,openWorldHint:false},
 },async()=>({content:[{type:'text' as const,text:JSON.stringify({desks:await desks.list()})}]}));
