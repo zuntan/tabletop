@@ -38,6 +38,7 @@ This release improves working with text on cards and adds Wireloom cards for des
 ### Fixes and updating
 
 - The application version announced during MCP initialization now comes from `package.json`, matching About.
+- Updated the transitive Hono dependencies used by the MCP SDK to patched versions, resolving the reported dependency audit findings.
 - Existing desks still load. The desk format version is unchanged, but older builds may reject desks containing new object types or settings, including Wireloom cards.
 - Character metrics and wrapping are approximate. Font changes can affect wrapping and required height; adjust card frames as needed. Diagram fonts remain independent of Markdown body font settings.
 - Save all desks and stop the affected MCP server before updating. After fetching the new version, run `npm ci` and `npm run build`, restart MCP, and reload the browser UI. There is no autosave.

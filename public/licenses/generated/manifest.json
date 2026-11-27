@@ -1,5 +1,5 @@
 {
-  "lockSha256": "8d2b51c9ad07a91ddc5bed9403a6ebd68ad0ec43ec2cd99cf9d6f24f092fbcd7",
+  "lockSha256": "24fb02abf0cc4e829ff009d6a4c7699e32db269715a0a4a6da7ab801b806e688",
   "scope": "Production dependency closure (browser and MCP server); includes conservative transitive/type/CLI entries, excludes devDependencies.",
   "entries": [
     {
@@ -86,11 +86,11 @@
     },
     {
       "name": "@hono/node-server",
-      "version": "2.1.5",
+      "version": "2.1.11",
       "license": "MIT",
       "path": "node_modules/@hono/node-server",
       "source": "https://github.com/honojs/node-server",
-      "notice": "generated/_hono_node-server@2.1.5.txt"
+      "notice": "generated/_hono_node-server@2.1.11.txt"
     },
     {
       "name": "@iconify/types",
@@ -1270,11 +1270,11 @@
     },
     {
       "name": "hono",
-      "version": "4.13.13",
+      "version": "4.13.23",
       "license": "MIT",
       "path": "node_modules/hono",
       "source": "https://github.com/honojs/hono",
-      "notice": "generated/hono@4.13.13.txt"
+      "notice": "generated/hono@4.13.23.txt"
     },
     {
       "name": "http-errors",

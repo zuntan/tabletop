@@ -1157,12 +1157,12 @@ npm artifact: https://registry.npmjs.org/@chevrotain/utils/-/utils-13.2.0.tgz
 
 
 ========================================================================
-generated/_hono_node-server@2.1.5.txt
+generated/_hono_node-server@2.1.11.txt
 ========================================================================
-@hono/node-server@2.1.5
+@hono/node-server@2.1.11
 License: MIT
 Source: https://github.com/honojs/node-server
-npm artifact: https://registry.npmjs.org/@hono/node-server/-/node-server-2.1.5.tgz
+npm artifact: https://registry.npmjs.org/@hono/node-server/-/node-server-2.1.11.tgz
 
 
 --- LICENSE ---
@@ -7198,12 +7198,12 @@ SOFTWARE.
 
 
 ========================================================================
-generated/hono@4.13.13.txt
+generated/hono@4.13.23.txt
 ========================================================================
-hono@4.13.13
+hono@4.13.23
 License: MIT
 Source: https://github.com/honojs/hono
-npm artifact: https://registry.npmjs.org/hono/-/hono-4.13.13.tgz
+npm artifact: https://registry.npmjs.org/hono/-/hono-4.13.23.tgz
 
 
 --- LICENSE ---

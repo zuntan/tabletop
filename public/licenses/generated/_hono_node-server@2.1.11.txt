@@ -1,7 +1,7 @@
-@hono/node-server@2.1.5
+@hono/node-server@2.1.11
 License: MIT
 Source: https://github.com/honojs/node-server
-npm artifact: https://registry.npmjs.org/@hono/node-server/-/node-server-2.1.5.tgz
+npm artifact: https://registry.npmjs.org/@hono/node-server/-/node-server-2.1.11.tgz
 
 
 --- LICENSE ---

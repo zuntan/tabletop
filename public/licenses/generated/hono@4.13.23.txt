@@ -1,7 +1,7 @@
-hono@4.13.13
+hono@4.13.23
 License: MIT
 Source: https://github.com/honojs/hono
-npm artifact: https://registry.npmjs.org/hono/-/hono-4.13.13.tgz
+npm artifact: https://registry.npmjs.org/hono/-/hono-4.13.23.tgz
 
 
 --- LICENSE ---
