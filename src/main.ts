@@ -92,6 +92,7 @@ import { effectivePinVisibility, pinTransform, pinScreenObject, pinThreadMembers
 import { drawMarkdown, toggleMarkdownTask } from './markdown';
 import { configureMarkdownImages } from './markdown-images';
 import { createTextSelection } from './text-selection';
+import { createAiTextSelection } from './ai-text-selection';
 import { createActivityLed } from './activity-led';
 import { createDeskBackground } from './desk-background';
 import { fontFamilies, readFontDefaults, saveFontDefaults } from './desk-fonts';
@@ -377,11 +378,13 @@ const textSelection = createTextSelection(canvas, {
   enter: (id, pointerId) => {
     if (editor.isActive() || gesture && gesture.mode !== 'move') return false;
     gesture = null; busy = false;
-    if (canvas.hasPointerCapture(pointerId)) canvas.releasePointerCapture(pointerId);
+    if (pointerId !== undefined && canvas.hasPointerCapture(pointerId)) canvas.releasePointerCapture(pointerId);
     desk.select([id]); render(false); return true;
   },
   announce: message => notify(message),
 });
+const aiTextSelection = createAiTextSelection(desk, id => drawnNodes.get(id), textSelection,
+  () => !busy && !gesture && !textSelection.isInteracting() && !editor.isActive() && !identityControls.isEditing() && !lineInput.isActive() && !doodleEditor.isActive() && !captureCamera.isActive() && !isConfirmDialogOpen() && !deskFiles.isBusy());
 const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'), $<HTMLButtonElement>('#numbering'), $<HTMLButtonElement>('#selection-mode'), (operations, selectId) => {
   if (!busy && !editor.isActive()) attempt(() => { execute(operations, selectId ? 'desk' : 'exact'); if (selectId) desk.select([selectId]); });
 }, newPartPoint,notify);
@@ -1456,9 +1459,9 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if (typeof message.request?.method === 'string') activityLed.pulse(message.request.method);
       thinkingMode.assertAllowed(message.request?.method);
       if(deskFiles.isBusy()&& !['summary','get','list','state','context','settings','selection','changes','file_saved','camera_get','ui_get'].includes(message.request?.method))throw new Error('Human file operation in progress. No change was made.');
-      if((isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())&&['pin_fit','execute','lock','undo','redo','select','point','load_document','fit','camera_move','wayfinder_start','ui_set'].includes(message.request?.method))throw new Error('Human confirmation in progress. No change was made; wait for the user.');
+      if((isConfirmDialogOpen()||doodleEditor.isActive()||captureCamera.isActive())&&['pin_fit','execute','lock','undo','redo','select','point','load_document','fit','camera_move','wayfinder_start','ui_set','text_select'].includes(message.request?.method))throw new Error('Human confirmation in progress. No change was made; wait for the user.');
       if (['fit', 'camera_move','wayfinder_start'].includes(message.request.method)) humanScroll.assertIdle();
-      if ((busy && message.request.method!=='camera_get') || (lineInput.isActive() && !['camera_get','summary','context','list','get','state','selection','settings','changes','file_saved','asset_read','ui_get','text_measure','raster','pdf_export'].includes(message.request.method)) || ((editor.isActive() || identityControls.isEditing()) && ['pin_fit', 'execute', 'lock', 'undo', 'redo', 'select', 'load_document'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
+      if ((busy && message.request.method!=='camera_get') || (lineInput.isActive() && !['camera_get','summary','context','list','get','state','selection','settings','changes','file_saved','asset_read','ui_get','text_measure','text_selection_read','raster','pdf_export'].includes(message.request.method)) || ((editor.isActive() || identityControls.isEditing()) && ['pin_fit', 'execute', 'lock', 'undo', 'redo', 'select', 'load_document', 'text_select'].includes(message.request.method))) throw new Error('Human editing in progress. Retry after it completes.');
       if (['fit', 'camera_move','wayfinder_start'].includes(message.request.method) && (gesture || editor.isActive() || identityControls.isEditing() || lineInput.isActive())) throw new Error('Human editing in progress. No camera change was made.');
       if (['pin_fit', 'execute', 'lock', 'undo', 'redo', 'select', 'point', 'load_document', 'fit', 'camera_move', 'wayfinder_start', 'ui_set'].includes(message.request.method)) objectAnimator.finish();
       const beforeMove = message.request.method === 'execute' ? desk.snapshot() : null;
@@ -1466,6 +1469,7 @@ async function connect(token: string, port: string, manual = false, host = '127.
       if (message.request.method === 'load_document') {cancelWayfinding('changed');cameraAnimator.cancel('Desk contents replaced');}
       const beforeRevision=desk.revision;
       let result = dispatch(desk, message.request, cameraControls, ids => measureDeskText(desk, ids, id => drawnNodes.get(id)), { get: () => ({ theme: getUiTheme() }), set: setUiTheme }, renderMermaid, scale => rasterPointedCard(desk, id => drawnNodes.get(id), scale),text=>renderQrCode(text,getUiLanguage()),{
+        textSelection: aiTextSelection,
         pdf:async()=>{
           const r=await deskPdf(desk,canvas,id=>pinDescriptionVisible(desk.get(id)));
           if(r.bytes.length>MAX_PDF_EXPORT_BYTES)throw new Error('PDF exceeds 250MB');

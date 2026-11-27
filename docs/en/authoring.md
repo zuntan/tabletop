@@ -44,6 +44,12 @@ With a mouse, middle-button panning and wheel zoom preserve the text selection. 
 
 Copying from text selection mode preserves a fully selected link as `[label](URL)`, an image as `![description](source)` and a task checkbox as `[ ]` or `[x]`. Selecting only part of a link label copies that text alone. Tables, emphasis and headings remain rendered text without added Markdown syntax.
 
+AI can call `desk_text_selection_read` for a card's logical position text, then `desk_text_select` to prepare selection. Actions are `mode` (enter), `all`, `range` and `clear` (exit). Every action except `clear` requires the card `id`. These tools do not search, highlight multiple cards or write to the clipboard.
+
+For `range`, use zero-based UTF-16 offsets `[start,end)` in the returned text, not in the Markdown source. Links contribute their displayed labels, images one U+FFFC character, and task boxes `[ ]` or `[x]`. Block separators are LF, table cells TAB and rows LF. Explicit breaks and code whitespace are retained; soft wrapping and list bullets are excluded. Image and checkbox spans are returned in `atoms`.
+
+A range also requires the returned `contentToken`. Changed text/task state, a reloaded document, out-of-bounds offsets or boundaries inside atomic parts/Unicode graphemes are rejected before replacing the current selection. Unrelated card edits do not invalidate the token. Selection is limited to one card, remains transient and adds no document edits or Undo entries. AI cannot change it during human editing/gestures or human-only thinking mode.
+
 Use `![Description](https://example.com/image.png)` for external images or `![Diagram](tabletop://./card-ID)` for an image on the same desk. Local targets can be images, SVGs (including doodles), Mermaid diagrams, QR codes, SVG props or URL cards in QR mode. Only the image content appears, without the title or marks. Source edits are reflected; moving the source does not break the reference. Text cards, missing IDs and references to other desks display an unavailable-image message.
 
 Images retain their aspect ratio within the card width; card frames do not grow automatically. External images load when displayed, and only their URLs are saved in the desk file. Offline or broken images show a fallback. PNG/PDF export temporarily embeds image bytes; images blocked by the host's access policy or other retrieval failures use a fallback with their description. Copying a card does not rewrite reference IDs in its Markdown.

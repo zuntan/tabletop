@@ -20,6 +20,7 @@ import { z } from 'zod';
 import { mcpBatchSchema as batchSchema, type Request } from './model.js';
 import { gridSettingsSchema } from './grid-settings.js';
 import { textMeasureFields } from './text-measure.js';
+import { textSelectionReadFields, textSelectionFields, textSelectionSchema } from './text-selection-input.js';
 import { registerBrowserTools } from './browser-tools.js';
 import { registerHelpTools } from './help-tools.js';
 import { registerAssetTools } from './asset-tools.js';
@@ -106,6 +107,7 @@ async function releaseDesk(desk:DeskConnection,handoff=false):Promise<Record<str
  finally{desk.releasing=false;}
 }
 async function compatibleRequest(request:DeskRequest,payload: Request): Promise<unknown> {
+  if (payload.method === 'text_select') { const { method: _method, ...selection } = payload; textSelectionSchema.parse(selection); }
   if(payload.method==='wayfinder_start'){const {method:_method,...start}=payload;wayfinderStartSchema.parse(start);}
   if (payload.method === 'camera_move') {
     const { method: _method, ...move } = payload;
@@ -139,6 +141,8 @@ const tools = [
   ['desk_context', sharedReadDescriptions.desk_context, { sinceRevision: z.number().int().nonnegative().default(0), limit: z.number().int().min(1).max(200).default(100) }],
   ['desk_settings', 'Get the persisted desk name (name, empty means untitled), shared grid settings (enabled, interval, origin), background (wallpaper: none/wood-1/wood-2/wood/cutting-mat/pink-notebook, optional color/showGrid overrides), creation defaults and all pin series with IDs, names, shared appearance, counts and next number. Grid defaults to enabled, interval 24, origin (0,0). Shapes use top-left, labels bottom-center, free line endpoints their coordinates; explicit bindings take priority. Pins retain type label and label_add for compatibility. They are independent objects referenced by ID or seriesId plus number; repeated capped numbers require an ID.', {}],
   ['desk_selection', 'Get human selection IDs, independent aiPointing IDs and last known canvas pointer.', {}],
+  ['desk_text_selection_read', 'Read the logical position text for one rendered Markdown text card. Returns text, length, offsetUnit:utf16, endExclusive:true, contentToken, sessionId/revision and atomic image/checkbox ranges. Positions are zero-based UTF-16 code units, NOT Markdown source offsets or grapheme counts. Links expose their display labels; images are U+FFFC; checkboxes are [ ]/[x]. Block boundaries use one LF, explicit breaks/code whitespace are retained; table cells use TAB and rows LF. No trailing synthetic block separator. Ignores soft wrapping/list bullets. Read-only, allowed in thinking mode; does not enter selection or touch the clipboard. Read again after source changes or LOAD.', textSelectionReadFields],
+  ['desk_text_select', 'Set transient human text selection on one Markdown card: action:mode enters without a range, all selects the whole body, range selects [start,end) in UTF-16 logical position text from desk_text_selection_read, clear exits with no id. mode/all/range require id; only range accepts and requires start,end,contentToken. Rejects stale tokens, empty/out-of-bounds ranges, split Unicode graphemes and boundaries inside checkbox/image atoms before changing any selection. Replaces the previous text selection, selects the target card, but never moves the camera or writes the clipboard. Reuses human copy and Esc/outside-click exit behavior. No document/revision/Undo or saved-data edits. Refuses human-only thinking mode and active editing/gestures. AI should use this only to prepare requested text selection/copy, not for multi-card search highlighting.', textSelectionFields],
   ['desk_select', 'Set the human editing selection without changing revision or history. For AI questions or attention, use desk_point instead; edits target object IDs and do not require selection.', { ids: z.array(z.string()).max(200) }],
   ['desk_point', 'Show AI pointing frames colored for the wallpaper for questions or attention, independently of the human selection. Explain the target in chat and clear with ids: [] when finished. Replaces the AI pointing set; no move/resize handles, document revision or Undo changes. Edit by object ID, not by pointing. Deleted targets and disconnected sessions clear pointing.', { ids: z.array(z.string()).max(200) }],
   ['desk_changes', 'Get changes after a revision from this session; before/after metadata omit irrelevant per-type properties. Page via nextRevision.', { sinceRevision: z.number().int().nonnegative(), limit: z.number().int().min(1).max(200).default(100) }],
@@ -156,7 +160,7 @@ const tools = [
   ['desk_redo', 'Redo the latest undone shared action. Advances revision.', { actor: z.string().min(1).max(100).default('agent-01') }],
 ] as const;
 for (const [name, description, inputSchema] of tools) {
-  mcp.registerTool(name, { description:deskTargetDescription+description, inputSchema:{...deskTargetFields,...inputSchema}, annotations: { readOnlyHint: !['desk_pin_fit', 'desk_select', 'desk_point', 'desk_fit', 'desk_lock', 'desk_camera_move', 'desk_wayfinder_start', 'desk_ui_set', 'desk_execute', 'desk_undo', 'desk_redo'].includes(name), openWorldHint: ['desk_execute', 'desk_undo', 'desk_redo'].includes(name) } }, async (args: Record<string, unknown>): Promise<import('@modelcontextprotocol/sdk/types.js').CallToolResult> => {
+  mcp.registerTool(name, { description:deskTargetDescription+description, inputSchema:{...deskTargetFields,...inputSchema}, annotations: { readOnlyHint: !['desk_text_select', 'desk_pin_fit', 'desk_select', 'desk_point', 'desk_fit', 'desk_lock', 'desk_camera_move', 'desk_wayfinder_start', 'desk_ui_set', 'desk_execute', 'desk_undo', 'desk_redo'].includes(name), openWorldHint: ['desk_execute', 'desk_undo', 'desk_redo'].includes(name) } }, async (args: Record<string, unknown>): Promise<import('@modelcontextprotocol/sdk/types.js').CallToolResult> => {
     try {
       const {deskId,...payload}=args;
       const request=desks.bind(deskId as string);

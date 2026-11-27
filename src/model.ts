@@ -30,6 +30,7 @@ import { shareRead } from './share-read';
 import { stickerSchema, stickerTarget } from './sticker-values';
 import {wayfinderStartFields,wayfinderStartSchema} from './wayfinder-input';
 import { textMeasureFields, type TextMeasureBridge } from './text-measure';
+import { textSelectionFields, textSelectionReadFields, textSelectionSchema, type TextSelectionInput } from './text-selection-input';
 
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000);
 const dimension = z.number().finite().min(1).max(100_000);
@@ -445,6 +446,8 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('ui_set'), theme: z.enum(['light', 'dark']) }).strict(),
   z.object({ method: z.literal('camera_get') }).strict(),
   z.object({ method: z.literal('text_measure'), ...textMeasureFields }).strict(),
+  z.object({ method: z.literal('text_selection_read'), ...textSelectionReadFields }).strict(),
+  z.object({ method: z.literal('text_select'), ...textSelectionFields }).strict(),
   z.object({ method: z.literal('camera_move'), ...cameraMoveFields }).strict(),
   z.object({ method:z.literal('wayfinder_start'),...wayfinderStartFields }).strict(),
   z.object({ method: z.literal('changes'), sinceRevision: z.number().int().nonnegative(), limit: z.number().int().min(1).max(200).default(100) }),
@@ -453,7 +456,7 @@ export const requestSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('redo'), actor: z.string().min(1).max(100).default('agent-01') }),
 ]);
 export type Request = z.input<typeof requestSchema>;
-export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge, ui?: { get(): { theme: 'light' | 'dark' }; set(theme: 'light' | 'dark'): { theme: 'light' | 'dark' } }, mermaid?: (source: string) => Promise<{ svg: string }>, raster?: (scale: number) => Promise<unknown>, qr?: (text:string)=>Promise<{svg:string;status:string}>,extra?:{pdf?:()=>Promise<unknown>;capture?:(input:CaptureInput)=>Promise<unknown>;pinFit?:(input:{seriesIds:string[];expectedRevision?:number;actor:string})=>unknown}): unknown {
+export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, textMeasure?: TextMeasureBridge, ui?: { get(): { theme: 'light' | 'dark' }; set(theme: 'light' | 'dark'): { theme: 'light' | 'dark' } }, mermaid?: (source: string) => Promise<{ svg: string }>, raster?: (scale: number) => Promise<unknown>, qr?: (text:string)=>Promise<{svg:string;status:string}>,extra?:{textSelection?:{read:(id:string)=>unknown;select:(input:TextSelectionInput)=>unknown};pdf?:()=>Promise<unknown>;capture?:(input:CaptureInput)=>Promise<unknown>;pinFit?:(input:{seriesIds:string[];expectedRevision?:number;actor:string})=>unknown}): unknown {
   const request = requestSchema.parse(input);
   switch (request.method) {
     case 'pin_fit': {
@@ -494,6 +497,16 @@ export function dispatch(desk: Desk, input: unknown, camera?: CameraBridge, text
     case 'text_measure': {
       if (!textMeasure) throw new Error('Text measurement requires a compatible browser');
       return textMeasure(request.ids);
+    }
+    case 'text_selection_read': {
+      if (!extra?.textSelection) throw new Error('Text selection requires a compatible browser');
+      return extra.textSelection.read(request.id);
+    }
+    case 'text_select': {
+      const { method: _method, ...input } = request;
+      const selection = textSelectionSchema.parse(input);
+      if (!extra?.textSelection) throw new Error('Text selection requires a compatible browser');
+      return extra.textSelection.select(selection);
     }
     case 'list': return { ...desk.summary(), objects: desk.list() };
     case 'get': {

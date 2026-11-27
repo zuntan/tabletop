@@ -8,15 +8,17 @@ const interactive = 'a,input,button,[data-markdown-task],[data-open-url],[data-o
 /** Transient browser text selection; never edits the desk or its history. */
 export function createTextSelection(canvas: SVGSVGElement, options: {
   canStart: () => boolean;
-  enter: (id: string, pointerId: number) => boolean;
+  enter: (id: string, pointerId?: number) => boolean;
   announce: (message: string) => void;
 }) {
   let pending: { host: HTMLElement; id: string; pointerId: number; x: number; y: number; input: string; timer: ReturnType<typeof setTimeout> } | undefined;
   let active: { host: HTMLElement; input: string; tabIndex: string | null } | undefined;
   let heldPointer: number | undefined;
+  const nativePointers = new Set<number>();
   const cancelHold = () => { if (pending) clearTimeout(pending.timer); pending = undefined; };
   const exit = () => {
     cancelHold(); heldPointer = undefined;
+    nativePointers.clear();
     if (!active) return;
     const { host, tabIndex } = active;
     const selection = getSelection();
@@ -26,8 +28,20 @@ export function createTextSelection(canvas: SVGSVGElement, options: {
     delete canvas.dataset.textSelection; active = undefined;
   };
   const inside = (target: EventTarget | null) => !!active && target instanceof Node && active.host.contains(target);
+  const enterMode = (id: string, host: HTMLElement, input: string, range?: Range) => {
+    exit();
+    active = { host, input, tabIndex: host.getAttribute('tabindex') };
+    host.dataset.textSelection = 'active'; host.tabIndex = -1; canvas.dataset.textSelection = id;
+    const selection = getSelection(); selection?.removeAllRanges();
+    host.focus({ preventScroll: true });
+    if (range) selection?.addRange(range);
+    options.announce(t('editing:textSelectionMode'));
+  };
   canvas.addEventListener('pointerdown', event => {
-    if (active && inside(event.target)) return;
+    if (active && inside(event.target)) {
+      if (event.button === 0) nativePointers.add(event.pointerId);
+      return;
+    }
     if (active && event.button === 1 && event.pointerType === 'mouse') return;
     if (active) exit();
     cancelHold();
@@ -39,12 +53,8 @@ export function createTextSelection(canvas: SVGSVGElement, options: {
     const timer = setTimeout(() => {
       const candidate = pending; pending = undefined;
       if (!candidate?.host.isConnected || !options.enter(candidate.id, candidate.pointerId)) return;
-      active = { host: candidate.host, input: candidate.input, tabIndex: candidate.host.getAttribute('tabindex') };
+      enterMode(candidate.id, candidate.host, candidate.input);
       heldPointer = candidate.pointerId;
-      candidate.host.dataset.textSelection = 'active'; candidate.host.tabIndex = -1;
-      canvas.dataset.textSelection = candidate.id;
-      getSelection()?.removeAllRanges(); candidate.host.focus({ preventScroll: true });
-      options.announce(t('editing:textSelectionMode'));
     }, holdMilliseconds);
     pending = { host, id, pointerId: event.pointerId, x: event.clientX, y: event.clientY, input: event.pointerType, timer };
   }, true);
@@ -56,6 +66,7 @@ export function createTextSelection(canvas: SVGSVGElement, options: {
     if (pending?.pointerId === event.pointerId && Math.hypot(event.clientX - pending.x, event.clientY - pending.y) > moveTolerance) cancelHold();
   }, true);
   for (const kind of ['pointerup', 'pointercancel'] as const) window.addEventListener(kind, event => {
+    nativePointers.delete(event.pointerId);
     if (pending?.pointerId === event.pointerId) cancelHold();
     if (heldPointer === event.pointerId) { heldPointer = undefined; event.preventDefault(); event.stopPropagation(); }
   }, true);
@@ -90,9 +101,14 @@ export function createTextSelection(canvas: SVGSVGElement, options: {
     const contained = active.host.contains(selection.anchorNode) && active.host.contains(selection.focusNode);
     event.clipboardData.setData('text/plain', copySelectedMarkdown(active.host, range, contained ? selection.toString() : range.toString()));
   }, true);
-  window.addEventListener('blur', cancelHold);
+  window.addEventListener('blur', () => { cancelHold(); heldPointer = undefined; nativePointers.clear(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) exit(); });
   return {
+    isInteracting: () => !!pending || heldPointer !== undefined || nativePointers.size > 0,
+    activate(id: string, host: HTMLElement, range?: Range) {
+      if (!host.isConnected || !options.enter(id)) throw new Error('Cannot enter text selection during human editing');
+      enterMode(id, host, 'mouse', range);
+    },
     exit,
     isPending: (pointerId: number) => pending?.pointerId === pointerId,
     blocksPointer: (event: PointerEvent) => !!active && (inside(event.target) && event.button !== 1 || active.input !== 'mouse'),
