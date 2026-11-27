@@ -83,6 +83,7 @@ export async function cloneSvgForRaster<T extends SVGElement>(source:T):Promise<
     if (element instanceof HTMLElement && copy instanceof HTMLElement) {
       const style = getComputedStyle(element);
       for (const key of style) copy.style.setProperty(key, style.getPropertyValue(key));
+      if (element.hasAttribute('data-text-selection')) copy.style.outline = 'none';
       if (element.matches('.task-list-checkbox:checked')) {
         copy.setAttribute('data-raster-task', String(index));
         const tick = getComputedStyle(element, '::after');

@@ -91,6 +91,7 @@ import { PartClipboard, partClipboardType, singleClipboardUrl } from './part-cli
 import { effectivePinVisibility, pinTransform, pinScreenObject, pinThreadMembers, pinVisibilityNames, type PinVisibility } from './pin-series';
 import { drawMarkdown, toggleMarkdownTask } from './markdown';
 import { configureMarkdownImages } from './markdown-images';
+import { createTextSelection } from './text-selection';
 import { createActivityLed } from './activity-led';
 import { createDeskBackground } from './desk-background';
 import { fontFamilies, readFontDefaults, saveFontDefaults } from './desk-fonts';
@@ -371,6 +372,16 @@ const editor = createInlineEditor($('#workspace'), viewport, (object, patch, fre
   if (fresh) desk.select([object.id]);
   render();
 }, () => drawSelection(), target => target instanceof Element && !!target.closest('#desk-menu, #desk-menu-panel'));
+const textSelection = createTextSelection(canvas, {
+  canStart: () => !busy && !gesture && !space && !editor.isActive() && !identityControls.isEditing() && !lineInput.isActive() && !doodleEditor.isActive() && !captureCamera.isActive() && !isConfirmDialogOpen(),
+  enter: (id, pointerId) => {
+    if (editor.isActive() || gesture && gesture.mode !== 'move') return false;
+    gesture = null; busy = false;
+    if (canvas.hasPointerCapture(pointerId)) canvas.releasePointerCapture(pointerId);
+    desk.select([id]); render(false); return true;
+  },
+  announce: message => notify(message),
+});
 const authoring = createAuthoring(desk, $('#authoring-tools'), $('#series-panel'), $<HTMLButtonElement>('#numbering'), $<HTMLButtonElement>('#selection-mode'), (operations, selectId) => {
   if (!busy && !editor.isActive()) attempt(() => { execute(operations, selectId ? 'desk' : 'exact'); if (selectId) desk.select([selectId]); });
 }, newPartPoint,notify);
@@ -777,6 +788,7 @@ function render(rebuild = true) {
   identityControls.refresh();
   deskMenu.refresh();
   if (rebuild) {
+    textSelection.exit();
     objectsLayer.replaceChildren(); drawnNodes.clear();
     const objects = desk.snapshot(); renderedScene = objects;
     renderedById.clear(); for (const object of objects) renderedById.set(object.id, object);
@@ -1084,6 +1096,7 @@ canvas.addEventListener('change', event => {
   render();
 });
 canvas.addEventListener('dblclick', event => {
+  if (textSelection.blocksDoubleClick()) return;
   const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target as Element;
   if (target.closest('[data-open-url], [data-open-media], [data-open-desk], [data-markdown-link], [data-markdown-task]')) return;
   const id = target.closest('[data-id]')?.getAttribute('data-id');
@@ -1092,12 +1105,13 @@ canvas.addEventListener('dblclick', event => {
   if(object.doodle){if(!fileFor(desk.snapshot(),object.id))doodleEditor.open(object);else notify(t('messages:unfileDoodle'),true);return;}
   if (isShapeType(object.type) || ['text', 'link', 'web', 'label', 'image', 'svg', 'mermaid', 'qrcode', 'prop', 'file'].includes(object.type)) editor.open(object);
 });
-canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture) zoom(Math.exp(-event.deltaY * 0.001), screen(event)); }, { passive: false });
+canvas.addEventListener('wheel', event => { event.preventDefault(); if (!gesture && !textSelection.blocksWheel()) zoom(Math.exp(-event.deltaY * 0.001), screen(event)); }, { passive: false });
 // Middle-button release can paste the Linux primary selection after the pan ends.
 canvas.addEventListener('auxclick', event => { if (event.button === 1) event.preventDefault(); });
 canvas.addEventListener('pointerdown', event => {
+  if (textSelection.blocksPointer(event)) return;
   if (gesture || editor.isActive() || (event.button !== 0 && event.button !== 1)) return;
-  if (!space && (event.target as Element).closest('[data-open-url], [data-open-media], [data-open-desk], [data-markdown-link], [data-markdown-task]')) return;
+  if (!space && event.button === 0 && (event.target as Element).closest('[data-open-url], [data-open-media], [data-open-desk], [data-markdown-link], [data-markdown-task]')) return;
   const target = event.target as Element;
   const resize = target.closest('[data-resize]')?.getAttribute('data-resize');
   const calloutTip = target.closest('[data-callout-tip]')?.getAttribute('data-callout-tip');
@@ -1163,6 +1177,7 @@ function previewGesture(current: Gesture, point: { x: number; y: number }) {
 }
 canvas.addEventListener('pointermove', event => {
   desk.pointer = world(event);
+  if (textSelection.isPending(event.pointerId)) return;
   if (!gesture) return;
   gesture.detach = event.altKey;
   if ((gesture.mode === 'start' || gesture.mode === 'end') && Math.hypot(world(event).x - gesture.start.x, world(event).y - gesture.start.y) * camera.zoom > 2) gesture.endpointMoved = true;
@@ -1181,16 +1196,18 @@ function endGesture(event: PointerEvent, cancel = false) {
   const current = gesture; if (!current) return;
   gesture = null; busy = false;
   if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+  // Camera-only movement must not rebuild Markdown and discard native text ranges.
+  if (current.mode === 'pan') { drawSelection(); return; }
   if (cancel) { render(); return; }
   current.detach = event.altKey;
   const p = world(event);
-  if (current.mode !== 'pan' && current.mode !== 'marquee' && !gestureOperations(current, p, camera.zoom).length) {
+  if (current.mode !== 'marquee' && !gestureOperations(current, p, camera.zoom).length) {
     if (JSON.stringify(current.preview) !== JSON.stringify(current.scene)) render();
     else drawSelection();
     return;
   }
   attempt(() => {
-    if (current.mode !== 'pan' && current.mode !== 'marquee') {
+    if (current.mode !== 'marquee') {
       const operations = gestureOperations(current, p, camera.zoom);
       if (operations.length) desk.execute({ actor: 'human', expectedRevision: current.revision, operations });
     } else if (current.mode === 'marquee') {

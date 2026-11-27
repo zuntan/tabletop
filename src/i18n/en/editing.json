@@ -56,5 +56,6 @@
   "bellEnterHint": "Enter: apply · Shift + Enter: new line",
   "bellModHint": "Enter: new line · Ctrl/⌘ + Enter: apply",
   "openBellNote": "Open bell note",
-  "imageUnavailable": "Image unavailable"
+  "imageUnavailable": "Image unavailable",
+  "textSelectionMode": "Text selection: drag to select, Ctrl/⌘+A for all, Ctrl/⌘+C to copy. Esc or click outside to exit."
 }

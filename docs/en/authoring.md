@@ -38,6 +38,12 @@ Follow the editor's instructions to commit. Ctrl+Enter (⌘+Enter on Mac) also c
 
 Cards support safe Markdown: headings, emphasis, lists, quotes, code, tables, task lists, HTTP(S) links, automatic URL links and image references. Click a task checkbox to toggle its completion state. Raw HTML is not supported. Text inside shapes is plain text.
 
+Hold still on rendered card text for about 0.6 seconds to enter text selection mode. Release, then drag to select text and use Ctrl/⌘+C to copy it. Ctrl/⌘+A selects that card's entire body. Esc or a click/tap outside the card exits. This does not edit the document. Delete, Backspace, cut, paste and desk keyboard shortcuts are disabled in this mode. Holding a link or checkbox does not enter the mode; their click actions are also disabled while selecting text.
+
+With a mouse, middle-button panning and wheel zoom preserve the text selection. When entered by touch, desk panning and zooming are disabled until the mode ends. Text clipped by the card frame remains clipped.
+
+Copying from text selection mode preserves a fully selected link as `[label](URL)`, an image as `![description](source)` and a task checkbox as `[ ]` or `[x]`. Selecting only part of a link label copies that text alone. Tables, emphasis and headings remain rendered text without added Markdown syntax.
+
 Use `![Description](https://example.com/image.png)` for external images or `![Diagram](tabletop://./card-ID)` for an image on the same desk. Local targets can be images, SVGs (including doodles), Mermaid diagrams, QR codes, SVG props or URL cards in QR mode. Only the image content appears, without the title or marks. Source edits are reflected; moving the source does not break the reference. Text cards, missing IDs and references to other desks display an unavailable-image message.
 
 Images retain their aspect ratio within the card width; card frames do not grow automatically. External images load when displayed, and only their URLs are saved in the desk file. Offline or broken images show a fallback. PNG/PDF export temporarily embeds image bytes; images blocked by the host's access policy or other retrieval failures use a fallback with their description. Copying a card does not rewrite reference IDs in its Markdown.
