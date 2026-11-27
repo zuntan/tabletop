@@ -6,6 +6,9 @@ on:
       - '.gitattributes'
       - '.github/workflows/license-check.yml'
       - 'scripts/generate-licenses.mjs'
+      - 'scripts/prepare-wireloom.mjs'
+      - 'src/vendor/wireloom/**'
+      - 'src/wireloom-text-layout.ts'
       - 'tests/license*.test.ts'
       - 'licenses/**'
       - 'public/licenses/**'
@@ -27,7 +30,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node --import tsx --test tests/licenses.test.ts tests/license-generation.test.ts
+      - run: npm run wireloom:prepare
+      - run: npm run wireloom:prepare
+      - run: node --import tsx --test tests/wireloom.test.ts
       - run: npm run licenses
       - run: npm run licenses
-      - name: License generation must leave Git status clean
-        run: node -e "const s=require('node:child_process').execFileSync('git',['status','--porcelain','--','public/licenses'],{encoding:'utf8'});if(s)throw Error(s);"
+      - name: License and renderer generation must leave Git status clean
+        run: node -e "const s=require('node:child_process').execFileSync('git',['status','--porcelain','--','public/licenses','src/vendor/wireloom'],{encoding:'utf8'});if(s)throw Error(s);"

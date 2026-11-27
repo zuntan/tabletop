@@ -2,6 +2,46 @@
 
 [日本語](../release-notes.md) · [Guide](README.md)
 
+## v0.2.0
+
+This release improves working with text on cards and adds Wireloom cards for describing UI wireframes as text.
+
+### Wireloom and diagram editing
+
+- Create a dedicated Wireloom card, edit its DSL source, and display the UI sketch as SVG, including Japanese and English labels and accent colors.
+- Wireloom is pinned to 0.7.0. Tabletop adds approximate full-width character metrics and explicit body-text wrapping with `text "A longer notice" width=240`. This width attribute is a Tabletop extension.
+- Mermaid and Wireloom editors now have an eye button: hold it to preview the draft diagram in the source field, then release to return to the source. Previewing alone does not change the desk.
+- Both source editors use the displayed card height, clamped to 160–480 pixels and reduced further when needed to fit the screen.
+- Mermaid now has an icon representing connected diagram nodes.
+
+### Markdown and text selection
+
+- Added Markdown tables, task lists and automatic HTTP(S) links. Click task checkboxes to toggle them; changes are saved and undoable.
+- Long-press a card's rendered body to select and copy text in place. Ctrl/Command+A selects the card's text; Esc or a click outside ends text selection. Delete/Backspace does not delete the card while in this mode.
+- Copying complete links, images or checkboxes retains their URLs, references or checked state as Markdown notation. Partial link selections copy only their text.
+- AI can also select all text or a character-position range in one card for you to copy. The selection is temporary and does not edit the document.
+- A dash-dot frame distinguishes text selection mode from normal card selection.
+
+### Image references and fonts
+
+- Markdown can reference external images and images, SVGs, Mermaid/Wireloom diagrams, QR codes and other supported image objects on the same desk. Use `![alt](tabletop://./OBJECT_ID)` for a same-desk reference.
+- External images remain URL references. Host restrictions or offline use may prevent display or PNG/PDF export; unavailable images use a fallback.
+- Desk appearance settings now select the Markdown body font and priority font-family lists for sans-serif, serif and monospace. Code and the Markdown source editor use the monospace list.
+- Font settings are saved with the desk and support Undo/Redo. New desks inherit the last-used font preferences.
+
+### Arranging objects
+
+- Added Bring forward and Send backward. These cross the nearest overlapping layer while preserving the relative order within the selection.
+- Paper order inside a clip can change even when the papers do not overlap. Ordering also handles clip/paper mixed selections, ruler groups and clear folders.
+- Larger on-screen cards and other eligible objects show eight resize handles at corners and edge midpoints. Small on-screen objects keep the bottom-right handle. Corners change both dimensions; edge midpoints change one dimension.
+
+### Fixes and updating
+
+- The application version announced during MCP initialization now comes from `package.json`, matching About.
+- Existing desks still load. The desk format version is unchanged, but older builds may reject desks containing new object types or settings, including Wireloom cards.
+- Character metrics and wrapping are approximate. Font changes can affect wrapping and required height; adjust card frames as needed. Diagram fonts remain independent of Markdown body font settings.
+- Save all desks and stop the affected MCP server before updating. After fetching the new version, run `npm ci` and `npm run build`, restart MCP, and reload the browser UI. There is no autosave.
+
 ## v0.1.2
 
 Fixed generated license changes blocking Git updates after a build on Windows.

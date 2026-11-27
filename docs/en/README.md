@@ -6,7 +6,7 @@ See the [release notes](release-notes.md) for changes between versions.
 
 Tabletop is a place for humans and AI to spread out material, look at it, move it and think together. Read the parts you need; this is not a course you must finish in order.
 
-These guides cover Tabletop v0.1.1. Japanese and English UI share the same desk file format.
+These guides cover Tabletop v0.2.0. Japanese and English UI share the same desk file format.
 
 ## Try it first
 

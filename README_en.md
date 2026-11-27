@@ -26,7 +26,7 @@ You can also [read the Japanese introduction as a desk](https://zuntan.github.io
 
 ## Place things by hand, ask AI, then adjust them yourself
 
-Put cards, images, shapes, Mermaid diagrams, links and freehand doodles anywhere on a large desk. Bundle material with clips or clear files, arrange cards along rulers, and add stamps or stickers.
+Put cards, images, shapes, Mermaid diagrams, Wireloom wireframes, links and freehand doodles anywhere on a large desk. Bundle material with clips or clear files, arrange cards along rulers, and add stamps or stickers.
 
 Do everything yourself, or hand over part of the work:
 

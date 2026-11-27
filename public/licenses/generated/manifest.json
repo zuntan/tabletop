@@ -1,5 +1,5 @@
 {
-  "lockSha256": "6bc2f73176d613ddcb7cc54e6ee0aa89d61188815505177caa06e92086aba285",
+  "lockSha256": "8d2b51c9ad07a91ddc5bed9403a6ebd68ad0ec43ec2cd99cf9d6f24f092fbcd7",
   "scope": "Production dependency closure (browser and MCP server); includes conservative transitive/type/CLI entries, excludes devDependencies.",
   "entries": [
     {

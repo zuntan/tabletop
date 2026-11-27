@@ -14,6 +14,10 @@ test('held Markdown draft preview matches the resized field, clips, and never co
     assert.equal(await mode.getAttribute('aria-pressed'), 'true');
     const stableWidth=async()=>{
       return page.locator('.inline-editor').evaluate(async panel=>{
+        // A requested field width reaches its parent in ResizeObserver after the
+        // first animation frame. Observe settling after that expected transition.
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
         const widths:number[]=[];
         for(let i=0;i<12;i++){await new Promise(requestAnimationFrame);widths.push(panel.getBoundingClientRect().width);}
         return Math.max(...widths)-Math.min(...widths);

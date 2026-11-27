@@ -4,7 +4,7 @@
 
 These steps install Tabletop on your PC for use through an AI agent. The public browser-only Pages edition needs no installation.
 
-These instructions cover v0.1.2.
+These instructions cover v0.2.0.
 
 ## 1. Requirements
 
@@ -26,7 +26,7 @@ For Git, clone the repository and select the release tag before installing and b
 ```sh
 git clone https://github.com/zuntan/tabletop.git
 cd tabletop
-git checkout v0.1.2
+git checkout v0.2.0
 node --version
 npm ci
 npm run build
@@ -154,11 +154,11 @@ If the MCP server stops, the open tab can still edit and download. Save first an
 
 ## 6. Update
 
-Save all desks and stop the relevant Tabletop MCP server first. For a Git installation, fetch tags and select the published release you want. This example selects v0.1.2; replace it with your intended published tag when updating:
+Save all desks and stop the relevant Tabletop MCP server first. For a Git installation, fetch tags and select the published release you want. This example selects v0.2.0; replace it with your intended published tag when updating:
 
 ```sh
 git fetch --tags
-git checkout v0.1.2
+git checkout v0.2.0
 npm ci
 npm run build
 ```
