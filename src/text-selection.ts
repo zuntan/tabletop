@@ -10,6 +10,7 @@ export function createTextSelection(canvas: SVGSVGElement, options: {
   canStart: () => boolean;
   enter: (id: string, pointerId?: number) => boolean;
   announce: (message: string) => void;
+  changed?: () => void;
 }) {
   let pending: { host: HTMLElement; id: string; pointerId: number; x: number; y: number; input: string; timer: ReturnType<typeof setTimeout> } | undefined;
   let active: { host: HTMLElement; input: string; tabIndex: string | null } | undefined;
@@ -26,6 +27,7 @@ export function createTextSelection(canvas: SVGSVGElement, options: {
     delete host.dataset.textSelection;
     if (tabIndex === null) host.removeAttribute('tabindex'); else host.setAttribute('tabindex', tabIndex);
     delete canvas.dataset.textSelection; active = undefined;
+    options.changed?.();
   };
   const inside = (target: EventTarget | null) => !!active && target instanceof Node && active.host.contains(target);
   const enterMode = (id: string, host: HTMLElement, input: string, range?: Range) => {
@@ -36,6 +38,7 @@ export function createTextSelection(canvas: SVGSVGElement, options: {
     host.focus({ preventScroll: true });
     if (range) selection?.addRange(range);
     options.announce(t('editing:textSelectionMode'));
+    options.changed?.();
   };
   canvas.addEventListener('pointerdown', event => {
     if (active && inside(event.target)) {

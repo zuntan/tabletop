@@ -26,4 +26,4 @@
 .markdown-text .markdown-image { display: inline-block; max-width: 100%; vertical-align: middle; }
 .markdown-text .markdown-image img { display: block; max-width: 100%; height: auto; }
 .markdown-text .markdown-image[data-image-status="error"] { border: 1px dashed currentColor; padding: .25em; box-sizing: border-box; }
-.markdown-text[data-text-selection] { user-select: text; -webkit-user-select: text; cursor: text; outline: 2px dashed #b45309; outline-offset: -2px; }
+.markdown-text[data-text-selection] { user-select: text; -webkit-user-select: text; cursor: text; outline: none; }

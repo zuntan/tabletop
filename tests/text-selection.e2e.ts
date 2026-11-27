@@ -17,6 +17,8 @@ test('long press selects rendered Markdown without editing, and preserves ranges
     await page.waitForFunction(() => document.querySelector('#canvas')?.getAttribute('data-text-selection') === 'memo');
     await page.mouse.up();
     assert.equal(await body.getAttribute('data-text-selection'), 'active');
+    assert.equal(await body.evaluate(element => getComputedStyle(element).outlineStyle), 'none');
+    assert.equal((await page.locator('[data-human-selection="memo"]').getAttribute('stroke-dasharray'))?.split(' ').length, 4);
     const before = await call('desk_state');
     // Select real rendered text with the mouse, rather than editing Markdown source.
     await page.mouse.move(start.x + 2, start.y + 12); await page.mouse.down();
@@ -53,6 +55,7 @@ test('long press selects rendered Markdown without editing, and preserves ranges
     assert.equal(await page.locator('[data-inline-text]').count(), 0);
     await page.keyboard.press('Escape');
     assert.equal(await body.getAttribute('data-text-selection'), null);
+    assert.equal((await page.locator('[data-human-selection="memo"]').getAttribute('stroke-dasharray'))?.split(' ').length, 2);
     assert.equal(await page.evaluate(() => getSelection()?.toString()), '');
     // A short drag remains a normal geometry edit, not a delayed text mode.
     const heading = (await body.locator('h1').boundingBox())!;

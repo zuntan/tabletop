@@ -382,6 +382,7 @@ const textSelection = createTextSelection(canvas, {
     desk.select([id]); render(false); return true;
   },
   announce: message => notify(message),
+  changed: () => drawSelection(),
 });
 const aiTextSelection = createAiTextSelection(desk, id => drawnNodes.get(id), textSelection,
   () => !busy && !gesture && !textSelection.isInteracting() && !editor.isActive() && !identityControls.isEditing() && !lineInput.isActive() && !doodleEditor.isActive() && !captureCamera.isActive() && !isConfirmDialogOpen() && !deskFiles.isBusy());
@@ -734,18 +735,19 @@ function drawSelection(preview?: DeskObject[], scene = preview, refreshStamps=tr
     const object = connectorForView(source);
     const selectionObject=headSelectedProp(object)?{...object,...propSelectionBounds(object)}:object;
     const filed=fileFor(scene??renderedScene,object.id);
-    if (object.locked && !filed) { drawLockedSelection(overlays, selectionObject, camera.zoom, pinDescriptionVisible(object), colors.selection); continue; }
+    const selectingText = canvas.dataset.textSelection === object.id;
+    if (!selectingText && object.locked && !filed) { drawLockedSelection(overlays, selectionObject, camera.zoom, pinDescriptionVisible(object), colors.selection); continue; }
     if (!filed && drawEndpointHandles(overlays, object, camera.zoom, selected.length === 1, colors.selection)) continue;
     const visual = labelVisualBounds(selectionObject, pinDescriptionVisible(object), camera.zoom);
     overlays.append(svg('rect', { x: visual.x - 3 / camera.zoom, y: visual.y - 3 / camera.zoom,
       width: visual.width + 6 / camera.zoom, height: visual.height + 6 / camera.zoom,
-      fill: 'none', stroke: colors.selection, 'stroke-width': 1.5 / camera.zoom, 'stroke-dasharray': `${5 / camera.zoom} ${3 / camera.zoom}`, 'pointer-events': 'none', 'data-human-selection': object.id }));
-    if (selected.length === 1 && !filed && object.callout) overlays.append(svg('circle', {
+      fill: 'none', stroke: colors.selection, 'stroke-width': 1.5 / camera.zoom, 'stroke-dasharray': (selectingText ? [12, 4, 2, 4] : [5, 3]).map(value => value / camera.zoom).join(' '), 'pointer-events': 'none', 'data-human-selection': object.id }));
+    if (!selectingText && selected.length === 1 && !filed && object.callout) overlays.append(svg('circle', {
       cx: object.callout.x, cy: object.callout.y, r: 6 / camera.zoom,
       fill: object.callout.binding ? '#16a34a' : colors.selection, stroke: '#fff', 'stroke-width': 1.5 / camera.zoom,
       'data-callout-tip': object.id, class: 'endpoint-handle',
     }));
-    if (selected.length === 1 && !filed && object.type !== 'label' && object.type !== 'clip' && !headSelectedProp(object)) overlays.append(svg('rect', {
+    if (!selectingText && selected.length === 1 && !filed && object.type !== 'label' && object.type !== 'clip' && !headSelectedProp(object)) overlays.append(svg('rect', {
       x: object.x + object.width - 5 / camera.zoom, y: object.y + object.height - 5 / camera.zoom,
       width: 10 / camera.zoom, height: 10 / camera.zoom, fill: colors.selection, stroke: '#fff',
       'stroke-width': 1 / camera.zoom, 'data-resize': object.id, class: 'resize-handle',
