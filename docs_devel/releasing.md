@@ -1,6 +1,6 @@
 # リリース用ソースZIPの生成
 
-最新状態（2026-11-04）：Tabletop 0.1.0は公開済み。配布元は `e7b8699`、タグは `v0.1.0` に固定。今後の開発先は `develop`。公開完了の詳細は末尾を参照。
+最新状態（2026-11-28）：Tabletop 0.2.0は公開済み。配布元は `5e06420`、タグは `v0.2.0` に固定。普段の開発先は `develop`。検証記録は `docs_devel/releases/0.2.0-verification.md`、公開先は https://github.com/zuntan/tabletop/releases/tag/v0.2.0 。以下の0.1.0の記録は過去の経緯として保持する。
 
 2026-11-03。配布は `tabletop-X.Y.Z.zip` とその `.sha256`。タグ時点のGit管理ファイルに `release-info.json` を加え、一つの `tabletop-X.Y.Z/` フォルダーへまとめる。node_modulesやdist、未追跡ファイルは入らない。docs_develの文章は現行の配布範囲に含むが、desk-snapshotsと作業用.tabletop、生成物のoutputは配布から除外する。docs/tabletopの公開用机は同梱する。
 
